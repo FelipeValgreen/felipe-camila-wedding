@@ -11,9 +11,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Montserrat:wght@300;400;500;600&family=Pinyon+Script&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Montserrat:wght@300;400;500;600&family=Great+Vibes&family=Cinzel+Decorative:wght@400;700&family=Pinyon+Script&family=Lato:wght@300;400;700&family=Monsieur+La+Doulaise&display=swap"
         rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -273,8 +273,8 @@
                         </div>
                         <p class="font-script text-2xl text-center text-charcoal">El Reencuentro</p>
                     </div>
-                    <div
-                        class="polaroid absolute left-1/2 -translate-x-1/2 top-80 md:top-60 w-72 md:w-96 transform -rotate-2 z-30">
+                    <div classoid absolute left-1/2 -translate-x-1/2 top-80 md:top-60 w-72 md:w-96 transform -rotate-2
+                        z-30">
                         <div class="aspect-[4/5] overflow-hidden mb-4 bg-gray-100">
                             <img src="images/uploaded_image_0_1764298805324.jpg" class="w-full h-full object-cover">
                         </div>
@@ -405,6 +405,138 @@
                 </div>
             </div>
         </section>
+
+        <!-- NEW INTERACTIVE SECTIONS START -->
+
+        <!-- 1. GUEST PAPARAZZI ("A través de tus ojos") -->
+        <section id="paparazzi" class="py-24 relative bg-ivory overflow-hidden">
+            <!-- Decorative Film Strip (CSS/SVG) -->
+            <div class="absolute top-0 right-0 h-full w-16 md:w-24 bg-charcoal opacity-10 flex flex-col items-center justify-around py-4 pointer-events-none"
+                style="background-image: linear-gradient(to bottom, transparent 50%, white 50%); background-size: 100% 40px;">
+                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
+                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
+                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
+                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
+                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
+                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
+                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
+                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
+            </div>
+
+            <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+                <div class="mb-8 text-6xl text-charcoal/80 animate-pulse">
+                    <i class="fa-solid fa-camera-retro"></i>
+                </div>
+                <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-4">A través de tus ojos</h2>
+                <p class="font-sans text-slate-600 mb-10 max-w-xl mx-auto">
+                    Queremos ver la fiesta desde tu perspectiva. Únete a nuestro álbum compartido y sube tus mejores
+                    fotos (¡y las peores también!).
+                </p>
+                <a href="#"
+                    class="inline-block bg-charcoal text-ivory px-8 py-4 rounded-full font-serif italic text-lg hover:bg-burgundy transition-colors shadow-lg transform hover:-translate-y-1">
+                    <i class="fa-solid fa-camera mr-2"></i> Unirse al Álbum Compartido
+                </a>
+            </div>
+        </section>
+
+        <!-- 2. DJ BOOTH ("Misión: Pista Llena") -->
+        <section id="dj-booth" class="py-24 relative bg-charcoal text-ivory">
+            <div class="max-w-3xl mx-auto px-6 text-center">
+                <div class="mb-6 text-5xl text-gold">
+                    <i class="fa-solid fa-compact-disc fa-spin" style="animation-duration: 3s;"></i>
+                </div>
+                <h2 class="font-serif text-4xl md:text-5xl text-gold mb-2">Misión: Pista Llena</h2>
+                <p class="font-sans text-white/70 mb-10">Ayúdanos a armar la playlist definitiva. ¿Qué canción no puede
+                    faltar?</p>
+
+                <div class="bg-white/5 backdrop-blur-md p-8 rounded-xl border border-white/10 shadow-2xl">
+                    <form class="space-y-6">
+                        <div>
+                            <label
+                                class="block text-left text-xs font-bold uppercase tracking-widest text-gold mb-2">Nombre
+                                de la Canción / Artista</label>
+                            <input type="text" placeholder="Ej: Dancing Queen - ABBA"
+                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-left text-xs font-bold uppercase tracking-widest text-gold mb-2">¿Para
+                                qué momento es?</label>
+                            <select
+                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold transition-colors appearance-none">
+                                <option class="bg-charcoal text-white">Cóctel Chill 🍸</option>
+                                <option class="bg-charcoal text-white">Fiesta Desatada 💃</option>
+                                <option class="bg-charcoal text-white">Cierre Épico 🎆</option>
+                            </select>
+                        </div>
+                        <button type="button"
+                            class="w-full bg-gold text-charcoal font-bold py-3 rounded-lg hover:bg-white transition-colors uppercase tracking-widest">
+                            Agregar a la Cola 🎵
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. TRIVIA DEL AMOR ("¿Cuánto nos conoces?") -->
+        <section id="trivia" class="py-24 relative bg-ivory bg-paper-texture">
+            <div class="max-w-6xl mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-4">¿Cuánto nos conoces?</h2>
+                    <p class="font-sans text-slate-600">Pon a prueba tu conocimiento sobre los novios.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <!-- Question 1 -->
+                    <div
+                        class="bg-white p-8 shadow-lg rotate-1 hover:rotate-0 transition-transform duration-300 border border-gray-100 relative">
+                        <div class="absolute -top-3 -left-3 text-4xl text-sage opacity-20"><i
+                                class="fa-solid fa-quote-left"></i></div>
+                        <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Dónde nos conocimos realmente?</h3>
+                        <div class="space-y-3">
+                            <button
+                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-sage hover:text-white hover:border-sage transition-all duration-200 group">
+                                <span class="font-bold text-sage group-hover:text-white mr-2">A.</span> Tinder
+                            </button>
+                            <button
+                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-sage hover:text-white hover:border-sage transition-all duration-200 group">
+                                <span class="font-bold text-sage group-hover:text-white mr-2">B.</span> Bocas del Toro
+                            </button>
+                            <button
+                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-sage hover:text-white hover:border-sage transition-all duration-200 group">
+                                <span class="font-bold text-sage group-hover:text-white mr-2">C.</span> En un taco
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Question 2 -->
+                    <div
+                        class="bg-white p-8 shadow-lg -rotate-1 hover:rotate-0 transition-transform duration-300 border border-gray-100 relative">
+                        <div class="absolute -top-3 -right-3 text-4xl text-burgundy opacity-20"><i
+                                class="fa-solid fa-heart"></i></div>
+                        <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Quién es más probable que llore
+                            primero?</h3>
+                        <div class="space-y-3">
+                            <button
+                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-burgundy hover:text-white hover:border-burgundy transition-all duration-200 group">
+                                <span class="font-bold text-burgundy group-hover:text-white mr-2">A.</span> Felipe
+                            </button>
+                            <button
+                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-burgundy hover:text-white hover:border-burgundy transition-all duration-200 group">
+                                <span class="font-bold text-burgundy group-hover:text-white mr-2">B.</span> Camila
+                            </button>
+                            <button
+                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-burgundy hover:text-white hover:border-burgundy transition-all duration-200 group">
+                                <span class="font-bold text-burgundy group-hover:text-white mr-2">C.</span> Gonzalo el
+                                Padrino
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW INTERACTIVE SECTIONS END -->
 
         <!-- F. RSVP (PARTY MODE) -->
         <section id="rsvp" class="py-32 bg-night relative overflow-hidden">
