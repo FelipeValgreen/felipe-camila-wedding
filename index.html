@@ -4,55 +4,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Felipe & Camila | 28.03.2026</title>
+    <meta name="description" content="Matrimonio Civil de Felipe y Camila. Celebración, Fiesta y Amor.">
+    <title>Felipe & Camila | Matrimonio Civil</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Montserrat:wght@300;400;500;600&family=Pinyon+Script&display=swap"
         rel="stylesheet">
-
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        ivory: '#F9F9F7',
-                        charcoal: '#2C2C2C',
                         sage: '#8FA382',
-                        'sage-light': '#E8EDE6',
-                        burgundy: '#7A1F31',
-                        'burgundy-dark': '#5A1623',
-                        gold: '#D4AF37',
+                        'sage-light': '#A9BFA8',
+                        'sage-dark': '#6B7F60',
+                        ivory: '#F9F9F7',
+                        sand: '#E6DDC6',
+                        'dusty-pink': '#D8B4A0',
+                        'sky-blue': '#B4C5C4',
+                        charcoal: '#2C3E50',
+                        gold: '#C5A059',
+                        night: '#111827',
                     },
                     fontFamily: {
-                        serif: ['"Playfair Display"', 'serif'],
+                        serif: ['"Cinzel Decorative"', 'serif'],
                         sans: ['"Montserrat"', 'sans-serif'],
-                        script: ['"Great Vibes"', 'cursive'],
+                        script: ['"Pinyon Script"', 'cursive'],
                     },
                     backgroundImage: {
                         'paper-texture': "url('https://www.transparenttextures.com/patterns/cream-paper.png')",
-                        'hero-img': "url('https://images.unsplash.com/photo-1519225421980-715cb0202128?q=80&w=2000&auto=format&fit=crop')",
-                        'night-texture': "url('https://www.transparenttextures.com/patterns/stardust.png')",
+                        'sage-texture': "url('https://www.transparenttextures.com/patterns/cubes.png')", /* Subtle texture for envelope */
                     },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
-                        'fade-in-up': 'fadeInUp 1s ease-out forwards',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'disco': 'disco 2s linear infinite',
                     },
                     keyframes: {
                         float: {
                             '0%, 100%': { transform: 'translateY(0)' },
                             '50%': { transform: 'translateY(-10px)' },
                         },
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        disco: {
+                            '0%': { filter: 'hue-rotate(0deg)' },
+                            '100%': { filter: 'hue-rotate(360deg)' },
                         }
                     }
                 }
@@ -67,7 +69,7 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #F9F9F7;
+            background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
@@ -75,9 +77,9 @@
             border-radius: 3px;
         }
 
-        /* Utility Classes */
-        .text-shadow {
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        /* Transitions */
+        body {
+            transition: background-color 1.5s ease, color 1.5s ease;
         }
 
         .reveal {
@@ -91,329 +93,399 @@
             transform: translateY(0);
         }
 
-        /* Envelope Overlay Transition */
+        /* Envelope Overlay */
         #envelope-overlay {
-            transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+            transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1);
         }
 
         body.locked {
             overflow: hidden;
         }
+
+        /* Navigation */
+        #main-nav {
+            transition: transform 0.5s ease, background-color 0.5s ease;
+            transform: translateY(-100%);
+        }
+
+        #main-nav.visible {
+            transform: translateY(0);
+        }
+
+        #main-nav.scrolled {
+            background-color: rgba(249, 249, 247, 0.95);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Polaroid Effect */
+        .polaroid {
+            background: white;
+            padding: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, z-index 0s;
+        }
+
+        .polaroid:hover {
+            z-index: 50;
+            transform: scale(1.1) rotate(0deg) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 
-<body class="font-sans text-charcoal bg-ivory antialiased locked">
+<body class="font-sans text-charcoal bg-ivory antialiased locked bg-paper-texture">
 
-    <!-- 1. ENVELOPE INTRO (Splash Screen) -->
+    <!-- 1. REALISTIC CSS ENVELOPE INTRO -->
     <div id="envelope-overlay"
-        class="fixed inset-0 z-50 bg-ivory flex flex-col items-center justify-center p-6 bg-paper-texture">
+        class="fixed inset-0 z-[100] bg-stone-100 flex items-center justify-center p-4 overflow-hidden">
+        <!-- Background Texture -->
         <div
-            class="relative border-2 border-sage/30 p-12 md:p-20 rounded-sm bg-white shadow-2xl max-w-lg w-full text-center transform transition-transform duration-700 hover:scale-[1.02]">
-            <!-- Monogram -->
-            <div class="font-serif text-6xl md:text-8xl text-charcoal mb-8 tracking-widest relative">
-                <span class="block">F <span class="text-sage text-4xl md:text-6xl align-middle mx-2">&</span> C</span>
-                <!-- Decorative flourish -->
-                <div class="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-sage opacity-50 text-2xl">
-                    <i class="fa-solid fa-leaf"></i>
-                </div>
+            class="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/concrete-wall.png')]">
+        </div>
+
+        <!-- Floral Accents (Surrounding the Envelope) -->
+        <img src="https://images.unsplash.com/photo-1596627689623-644c09358326?q=80&w=600&fit=crop"
+            class="absolute top-0 left-0 w-80 h-80 object-contain opacity-80 -translate-x-1/4 -translate-y-1/4 rotate-180 pointer-events-none drop-shadow-xl">
+        <img src="https://images.unsplash.com/photo-1596627689623-644c09358326?q=80&w=600&fit=crop"
+            class="absolute bottom-0 right-0 w-80 h-80 object-contain opacity-80 translate-x-1/4 translate-y-1/4 pointer-events-none drop-shadow-xl">
+
+        <!-- The Envelope Container -->
+        <div class="relative w-full max-w-lg aspect-[1.4/1] bg-white shadow-2xl flex items-center justify-center transform transition-transform duration-1000 cursor-pointer group"
+            id="open-btn">
+
+            <!-- Envelope Texture -->
+            <div
+                class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-50">
             </div>
 
-            <p class="font-sans text-xs tracking-[0.3em] uppercase text-gray-500 mb-12">Invitación de Boda</p>
+            <!-- Envelope Flap (CSS Triangle) -->
+            <div class="absolute top-0 left-0 w-full h-1/2 bg-gray-50 z-10 origin-top transition-transform duration-1000"
+                style="clip-path: polygon(0 0, 50% 100%, 100% 0); background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png'); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            </div>
 
-            <button id="open-btn"
-                class="group relative inline-block px-8 py-3 overflow-hidden rounded-full bg-charcoal text-white shadow-lg transition-all duration-300 hover:bg-sage hover:shadow-sage/40">
-                <span
-                    class="relative z-10 font-sans text-xs font-bold tracking-widest uppercase group-hover:text-white transition-colors">Abrir
-                    Invitación</span>
-            </button>
+            <!-- Envelope Content (Visible on top) -->
+            <div class="relative z-20 text-center flex flex-col items-center pt-12">
+                <p class="font-serif text-xl tracking-[0.2em] text-charcoal/80 mb-6 uppercase">La Boda de</p>
+
+                <!-- Wax Seal (Centered on Flap Tip) -->
+                <div class="relative w-24 h-24 transition-transform duration-500 group-hover:scale-110">
+                    <div
+                        class="absolute inset-0 bg-burgundy rounded-full shadow-lg flex items-center justify-center border-[3px] border-burgundy/80 ring-2 ring-burgundy/20">
+                        <span class="font-serif text-3xl text-gold font-bold italic pt-1 pr-0.5">F&C</span>
+                    </div>
+                    <div class="absolute top-4 left-4 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
+                </div>
+
+                <div class="mt-8 border-b border-charcoal/30 pb-1 group-hover:border-charcoal transition-colors">
+                    <p
+                        class="font-sans text-xs font-bold tracking-widest uppercase text-charcoal/60 group-hover:text-charcoal transition-colors">
+                        Abrir Invitación</p>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- NAVIGATION -->
+    <nav id="main-nav" class="fixed top-0 left-0 w-full z-50 py-4 transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+            <a href="#hero" class="font-serif text-2xl text-sage-dark font-bold">F&C</a>
+            <div class="hidden md:flex space-x-8">
+                <a href="#story"
+                    class="text-xs uppercase tracking-widest text-charcoal hover:text-sage-dark transition-colors">Historia</a>
+                <a href="#dresscode"
+                    class="text-xs uppercase tracking-widest text-charcoal hover:text-sage-dark transition-colors">Dress
+                    Code</a>
+                <a href="#party"
+                    class="text-xs uppercase tracking-widest text-charcoal hover:text-sage-dark transition-colors font-bold">Fiesta</a>
+                <a href="#rsvp"
+                    class="text-xs uppercase tracking-widest text-charcoal hover:text-sage-dark transition-colors">RSVP</a>
+            </div>
+        </div>
+    </nav>
+
     <!-- MAIN CONTENT -->
-    <main class="relative">
+    <main class="relative overflow-hidden">
 
-        <!-- A. HERO SECTION -->
-        <section class="relative h-screen w-full overflow-hidden flex items-center justify-center">
-            <!-- Background -->
-            <div class="absolute inset-0 bg-hero-img bg-cover bg-center bg-fixed">
-                <div class="absolute inset-0 bg-ivory/20 backdrop-blur-[1px]"></div>
-                <!-- Gradient Overlay for text readability -->
-                <div class="absolute inset-0 bg-gradient-to-b from-ivory/10 via-transparent to-ivory"></div>
-            </div>
-
-            <!-- Floral Frame (CSS Borders) -->
-            <div class="absolute inset-4 md:inset-8 border border-white/40 z-10 pointer-events-none"></div>
-            <div class="absolute inset-6 md:inset-10 border border-white/20 z-10 pointer-events-none"></div>
-
-            <!-- Content -->
-            <div class="relative z-20 text-center px-4 animate-fade-in-up" style="animation-delay: 0.5s;">
-                <p class="font-sans text-sm md:text-base tracking-[0.4em] uppercase mb-6 text-charcoal/80">Nos Casamos
-                </p>
-
-                <h1 class="font-serif text-6xl md:text-8xl lg:text-9xl mb-6 text-charcoal drop-shadow-sm">
-                    Felipe <span class="font-script text-5xl md:text-7xl text-sage mx-2">&</span> Camila
+        <!-- A. HERO (CIVIL WEDDING) -->
+        <section id="hero" class="min-h-screen flex items-center justify-center pt-24 pb-20 relative">
+            <div class="max-w-4xl mx-auto text-center px-4 z-10 reveal active">
+                <p class="font-sans text-sm tracking-[0.3em] uppercase text-sage-dark mb-6">Nos Casamos</p>
+                <h1 class="font-serif text-5xl md:text-7xl text-charcoal mb-4 leading-tight">
+                    Matrimonio Civil
                 </h1>
+                <h2 class="font-script text-5xl md:text-7xl text-sage mb-8">Felipe & Camila</h2>
 
-                <div class="flex items-center justify-center gap-4 mb-8 opacity-80">
-                    <div class="h-px w-12 bg-charcoal"></div>
-                    <i class="fa-regular fa-heart text-sage text-xs"></i>
-                    <div class="h-px w-12 bg-charcoal"></div>
+                <div class="flex items-center justify-center gap-6 mb-10">
+                    <div class="h-px w-16 bg-sage"></div>
+                    <div class="text-center">
+                        <p class="font-serif text-3xl text-charcoal">28</p>
+                        <p class="font-sans text-xs uppercase tracking-widest text-slate-500">Marzo 2026</p>
+                    </div>
+                    <div class="h-px w-16 bg-sage"></div>
                 </div>
 
-                <p class="font-serif text-xl md:text-2xl italic text-charcoal/90 mb-2">
-                    28 . 03 . 2026
-                </p>
-                <p class="font-sans text-xs tracking-widest uppercase text-charcoal/70">
-                    Chicureo, Chile
-                </p>
-            </div>
-
-            <!-- Scroll Indicator -->
-            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-float text-charcoal/50 z-20">
-                <span class="text-[10px] uppercase tracking-widest block mb-2">Scroll</span>
-                <i class="fa-solid fa-chevron-down"></i>
+                <div class="inline-block bg-white/50 px-8 py-4 rounded-full border border-sage/20 backdrop-blur-sm">
+                    <p class="font-sans text-xs tracking-widest uppercase text-charcoal">Condominio Las Canteras
+                        Chicureo</p>
+                </div>
             </div>
         </section>
 
-        <!-- B. NUESTRA HISTORIA (Timeline) -->
-        <section class="py-24 md:py-32 bg-ivory overflow-hidden">
-            <div class="container mx-auto px-6 max-w-5xl">
+        <!-- B. STORY (SERENDIPIA) -->
+        <section id="story" class="py-32 relative bg-white/40">
+            <div class="max-w-6xl mx-auto px-4">
                 <div class="text-center mb-20 reveal">
-                    <span class="font-script text-4xl text-sage block mb-2">Nuestra Historia</span>
-                    <h2 class="font-serif text-4xl md:text-5xl text-charcoal">Serendipia: De Bocas del Toro al 'Sí'</h2>
+                    <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-6 leading-tight">Serendipia: <br><span
+                            class="font-script text-5xl md:text-6xl text-sage">De Bocas del Toro a Santiago</span></h2>
+                    <p class="font-sans text-slate-600 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+                        Nos conocimos un 4 de Enero de 2019 en las playas de Panamá. Sin nombres, solo un momento
+                        perfecto.
+                        3 meses después, el destino jugó sus cartas: <strong>Daniela y Gonzalo</strong> (nuestros
+                        mejores amigos y hoy padrinos) nos reencontraron.
+                        Lo que empezó como una coincidencia, hoy es para siempre.
+                    </p>
                 </div>
 
-                <!-- Hito 1 -->
-                <div class="flex flex-col md:flex-row items-center gap-12 mb-24 reveal">
-                    <div class="w-full md:w-1/2 text-right md:pr-12 order-2 md:order-1">
-                        <span class="block text-sage font-bold text-sm tracking-widest uppercase mb-2">Enero 2019</span>
-                        <h3 class="font-serif text-3xl mb-4">El Encuentro</h3>
-                        <p class="font-sans text-gray-600 leading-relaxed font-light">
-                            En las playas de Bocas del Toro, Panamá. Sin nombres, sin expectativas, solo un atardecer
-                            perfecto y una conexión inexplicable. La magia de lo efímero que prometía volver.
-                        </p>
-                    </div>
-                    <div class="w-full md:w-1/2 order-1 md:order-2 relative">
-                        <div
-                            class="absolute inset-0 border-2 border-sage transform translate-x-4 translate-y-4 rounded-sm">
-                        </div>
-                        <img src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=800&auto=format&fit=crop"
-                            alt="Panama Beach"
-                            class="relative z-10 w-full h-80 object-cover shadow-lg rounded-sm grayscale hover:grayscale-0 transition-all duration-700">
-                    </div>
-                </div>
-
-                <!-- Hito 2 -->
-                <div class="flex flex-col md:flex-row items-center gap-12 reveal">
-                    <div class="w-full md:w-1/2 relative">
-                        <div
-                            class="absolute inset-0 border-2 border-sage transform -translate-x-4 translate-y-4 rounded-sm">
-                        </div>
-                        <img src="https://images.unsplash.com/photo-1623692343036-7243c4424759?q=80&w=800&auto=format&fit=crop"
-                            alt="Reencuentro Santiago"
-                            class="relative z-10 w-full h-80 object-cover shadow-lg rounded-sm grayscale hover:grayscale-0 transition-all duration-700">
-                    </div>
-                    <div class="w-full md:w-1/2 md:pl-12">
-                        <span class="block text-sage font-bold text-sm tracking-widest uppercase mb-2">3 Meses
-                            Después</span>
-                        <h3 class="font-serif text-3xl mb-4">El Reencuentro</h3>
-                        <p class="font-sans text-gray-600 leading-relaxed font-light">
-                            El destino jugó sus cartas en Santiago. Gracias a nuestros Cupidos y Padrinos, <strong
-                                class="text-sage font-medium">Daniela Pavez y Gonzalo Tramon</strong>, nuestros caminos
-                            se cruzaron nuevamente para no separarse jamás.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- C. EL MOOD (Transition) -->
-        <section class="py-32 bg-sage/10 relative">
-            <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-sage/30 to-transparent">
-            </div>
-
-            <div class="container mx-auto px-6 text-center max-w-3xl reveal">
-                <i class="fa-solid fa-quote-left text-3xl text-sage/40 mb-8"></i>
-                <blockquote class="font-script text-4xl md:text-6xl text-charcoal leading-relaxed mb-8">
-                    "We've come so far, my dear. Look how we've grown. And I wanna stay with you until we're grey and
-                    old."
-                </blockquote>
-                <cite class="font-sans text-xs tracking-widest uppercase text-gray-500 not-italic">— James Arthur</cite>
-            </div>
-
-            <div
-                class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-sage/30 to-transparent">
-            </div>
-        </section>
-
-        <!-- D. LOS DETALLES -->
-        <section class="py-24 bg-ivory">
-            <div class="container mx-auto px-6 max-w-6xl">
-                <div class="text-center mb-16 reveal">
-                    <h2 class="font-serif text-4xl text-charcoal mb-4">Los Detalles</h2>
-                    <p class="font-sans text-gray-500 text-sm tracking-widest uppercase">Acompáñanos en este día
-                        especial</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Card 1 -->
+                <div class="relative h-[900px] md:h-[800px] w-full reveal">
+                    <!-- Polaroids (Same layout as before, just ensuring they are present) -->
                     <div
-                        class="bg-white p-10 rounded-sm shadow-sm border border-gray-100 text-center hover:shadow-lg transition-all duration-300 group reveal">
-                        <div class="text-sage text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <i class="fa-regular fa-clock"></i>
+                        class="polaroid absolute left-4 top-0 md:left-10 md:top-0 w-56 md:w-72 transform -rotate-6 z-10">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100">
+                            <img src="images/uploaded_image_1_1764298805324.jpg"
+                                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
                         </div>
-                        <h3 class="font-serif text-xl mb-2">Ceremonia y Fiesta</h3>
-                        <p class="font-sans text-gray-600 text-sm leading-relaxed">
-                            28 de Marzo, 2026<br>
-                            <span class="font-bold text-charcoal">15:00 hrs</span>
-                        </p>
+                        <p class="font-script text-2xl text-center text-charcoal">Panamá 2019</p>
+                    </div>
+                    <div
+                        class="polaroid absolute right-4 top-20 md:right-20 md:top-10 w-60 md:w-72 transform rotate-3 z-20">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100">
+                            <img src="images/uploaded_image_2_1764298805324.jpg"
+                                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
+                        </div>
+                        <p class="font-script text-2xl text-center text-charcoal">El Reencuentro</p>
+                    </div>
+                    <div
+                        class="polaroid absolute left-1/2 -translate-x-1/2 top-80 md:top-60 w-72 md:w-96 transform -rotate-2 z-30">
+                        <div class="aspect-[4/5] overflow-hidden mb-4 bg-gray-100">
+                            <img src="images/uploaded_image_0_1764298805324.jpg" class="w-full h-full object-cover">
+                        </div>
+                        <p class="font-script text-3xl text-center text-charcoal mt-2">¡Dijo que Sí!</p>
+                    </div>
+                    <div
+                        class="polaroid absolute left-8 bottom-10 md:left-32 md:bottom-20 w-56 md:w-64 transform rotate-6 z-10">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100">
+                            <img src="images/uploaded_image_3_1764298805324.jpg"
+                                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
+                        </div>
+                        <p class="font-script text-2xl text-center text-charcoal">Para Siempre</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- C. MUSIC QUOTE -->
+        <section id="music" class="py-24 text-center reveal">
+            <div class="max-w-3xl mx-auto px-6">
+                <div class="w-16 h-px bg-sage mx-auto mb-8"></div>
+                <blockquote class="font-script text-4xl md:text-5xl text-charcoal leading-relaxed mb-6">
+                    "We've come so far, my dear. <br>Look how we've grown. <br>And I wanna stay with you <br>until we're
+                    grey and old."
+                </blockquote>
+                <cite class="font-sans text-xs uppercase tracking-[0.2em] text-sage-dark not-italic">— James
+                    Arthur</cite>
+                <div class="w-16 h-px bg-sage mx-auto mt-8"></div>
+            </div>
+        </section>
+
+        <!-- D. DRESS CODE (MEDITERRANEAN) -->
+        <section id="dresscode"
+            class="py-32 bg-gradient-to-b from-ivory to-sky-blue/10 text-center relative overflow-hidden">
+            <div class="max-w-3xl mx-auto px-4 relative z-10 reveal">
+                <h2 class="font-serif text-4xl text-charcoal mb-2">Código de Vestimenta</h2>
+                <p class="font-sans text-sage-dark text-sm uppercase tracking-widest mb-4 font-bold">Casual Mediterráneo
+                </p>
+                <p class="font-sans text-slate-500 text-xs italic mb-12">Tonos pasteles, telas ligeras y lino.</p>
+
+                <div class="flex flex-wrap justify-center gap-8 mb-8">
+                    <!-- Sage -->
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="w-16 h-16 rounded-full bg-sage shadow-lg ring-4 ring-white"></div>
+                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Salvia</span>
+                    </div>
+                    <!-- Dusty Pink -->
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="w-16 h-16 rounded-full bg-dusty-pink shadow-lg ring-4 ring-white"></div>
+                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Rosa Viejo</span>
+                    </div>
+                    <!-- Sand -->
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="w-16 h-16 rounded-full bg-sand shadow-lg ring-4 ring-white"></div>
+                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Arena</span>
+                    </div>
+                    <!-- Sky Blue -->
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="w-16 h-16 rounded-full bg-sky-blue shadow-lg ring-4 ring-white"></div>
+                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Celeste</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- E. PARTY (NEW SECTION) -->
+        <section id="party" class="py-32 bg-night text-white relative overflow-hidden">
+            <!-- Party Background Effects -->
+            <div class="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-blue-900/20"></div>
+            <div
+                class="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]">
+            </div>
+
+            <div class="max-w-4xl mx-auto px-4 text-center relative z-10 reveal">
+                <p class="font-sans text-sm tracking-[0.5em] uppercase text-gold mb-6 animate-pulse-slow">Let's Party
+                </p>
+                <h2
+                    class="font-serif text-6xl md:text-8xl mb-12 text-transparent bg-clip-text bg-gradient-to-r from-white via-gold to-white animate-disco">
+                    ¡A Celebrar!</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                    <!-- Ceremonia -->
+                    <div class="group flex flex-col items-center">
+                        <div class="w-16 h-16 mb-6 group-hover:scale-110 transition-transform duration-500">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                                class="w-full h-full text-gold">
+                                <circle cx="8" cy="12" r="6" />
+                                <circle cx="16" cy="12" r="6" />
+                            </svg>
+                        </div>
+                        <h3 class="font-serif text-2xl mb-2 text-gold">Ceremonia</h3>
+                        <p class="text-white/60 text-sm">El "Sí" quiero</p>
                     </div>
 
-                    <!-- Card 2 -->
-                    <div class="bg-white p-10 rounded-sm shadow-sm border border-gray-100 text-center hover:shadow-lg transition-all duration-300 group reveal"
-                        style="transition-delay: 100ms;">
-                        <div class="text-sage text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <i class="fa-solid fa-location-dot"></i>
+                    <!-- Cóctel -->
+                    <div class="group flex flex-col items-center">
+                        <div class="w-16 h-16 mb-6 group-hover:scale-110 transition-transform duration-500">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                                class="w-full h-full text-gold">
+                                <path
+                                    d="M8 21h8m-4-4v4M12 3a6 6 0 0 1 6 6c0 1.66-.67 3.16-1.76 4.24l-4.24 4.24-4.24-4.24A6 6 0 0 1 6 9a6 6 0 0 1 6-6z" />
+                                <line x1="12" y1="10" x2="12" y2="3" />
+                                <line x1="12" y1="10" x2="16" y2="6" />
+                            </svg>
                         </div>
-                        <h3 class="font-serif text-xl mb-2">Lugar</h3>
-                        <p class="font-sans text-gray-600 text-sm leading-relaxed mb-4">
-                            Condominio Las Canteras Norte,<br>Av. El Valle 147, Chicureo.
-                        </p>
-                        <a href="https://maps.google.com" target="_blank"
-                            class="inline-block text-[10px] font-bold tracking-widest uppercase text-sage border-b border-sage hover:text-charcoal hover:border-charcoal transition-colors">
-                            Ver Ubicación en Maps
+                        <h3 class="font-serif text-2xl mb-2 text-gold">Cóctel</h3>
+                        <p class="text-white/60 text-sm">Para compartir y celebrar</p>
+                    </div>
+
+                    <!-- Fiesta -->
+                    <div class="group flex flex-col items-center">
+                        <div class="w-16 h-16 mb-6 group-hover:scale-110 transition-transform duration-500">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                                class="w-full h-full text-gold">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93" />
+                            </svg>
+                        </div>
+                        <h3 class="font-serif text-2xl mb-2 text-gold">Fiesta</h3>
+                        <p class="text-white/60 text-sm">Baile hasta el amanecer</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- F. RSVP (PARTY MODE) -->
+        <section id="rsvp" class="py-32 bg-night relative overflow-hidden">
+            <div class="max-w-xl mx-auto px-4 w-full relative z-10 reveal">
+                <div class="glass p-8 md:p-12 rounded-2xl shadow-2xl border border-white/10 bg-white/5">
+                    <div class="text-center mb-10">
+                        <h2 class="font-serif text-4xl text-white mb-4">Confirmar Asistencia</h2>
+                        <p class="font-sans text-white/60 text-sm">¡No te quedes fuera de la fiesta!</p>
+                    </div>
+
+                    <form class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <input type="text" placeholder="Nombre"
+                                class="bg-white/5 border-b border-white/20 py-3 px-2 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
+                            <input type="text" placeholder="Apellido"
+                                class="bg-white/5 border-b border-white/20 py-3 px-2 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
+                        </div>
+                        <input type="email" placeholder="Correo Electrónico"
+                            class="w-full bg-white/5 border-b border-white/20 py-3 px-2 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
+
+                        <!-- Song Request -->
+                        <div class="relative">
+                            <span class="absolute top-3 right-2 text-xl">🎵</span>
+                            <input type="text" placeholder="¿Qué canción no puede faltar?"
+                                class="w-full bg-white/5 border-b border-white/20 py-3 px-2 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
+                        </div>
+
+                        <button type="submit"
+                            class="w-full bg-gold text-night font-bold py-4 uppercase tracking-widest hover:bg-white transition-colors duration-300 mt-4 shadow-[0_0_20px_rgba(197,160,89,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">
+                            Confirmar & Bailar
+                        </button>
+                    </form>
+
+                    <div class="mt-12 text-center border-t border-white/10 pt-8">
+                        <p class="font-serif text-lg text-white/80 mb-4">Lista de Novios</p>
+                        <a href="#"
+                            class="text-gold text-sm uppercase tracking-widest hover:text-white transition-colors border-b border-gold hover:border-white pb-1">
+                            Tiendas Paris - Código: 123456
                         </a>
                     </div>
-
-                    <!-- Card 3 -->
-                    <div class="bg-white p-10 rounded-sm shadow-sm border border-gray-100 text-center hover:shadow-lg transition-all duration-300 group reveal"
-                        style="transition-delay: 200ms;">
-                        <div class="text-sage text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <i class="fa-solid fa-shirt"></i>
-                        </div>
-                        <h3 class="font-serif text-xl mb-2">Dress Code</h3>
-                        <p class="font-sans text-gray-600 text-sm font-medium mb-1">Casual Mediterráneo / Chic</p>
-                        <p class="font-sans text-gray-400 text-xs italic">Colores claros y telas ligeras</p>
-                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- E. RSVP & REGALOS (Night Mode) -->
-        <section class="py-24 bg-charcoal relative text-ivory overflow-hidden">
-            <!-- Background Texture -->
-            <div class="absolute inset-0 bg-night-texture opacity-20"></div>
-            <!-- Gradient Accent -->
-            <div class="absolute top-0 right-0 w-1/2 h-full bg-burgundy/10 blur-3xl rounded-full pointer-events-none">
-            </div>
-
-            <div class="container mx-auto px-6 max-w-4xl relative z-10">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
-
-                    <!-- RSVP Form -->
-                    <div class="reveal">
-                        <h2 class="font-serif text-3xl md:text-4xl mb-2 text-white">RSVP</h2>
-                        <p class="font-sans text-gray-400 text-sm mb-8">Por favor confirmar antes del 1 de Marzo</p>
-
-                        <form class="space-y-5 bg-white/5 p-8 rounded-lg backdrop-blur-sm border border-white/10">
-                            <div>
-                                <label
-                                    class="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">Nombre
-                                    Completo</label>
-                                <input type="text"
-                                    class="w-full bg-white/5 border-b border-white/20 px-0 py-2 text-white focus:outline-none focus:border-sage transition-colors placeholder-gray-600"
-                                    placeholder="Escribe tu nombre">
-                            </div>
-
-                            <div>
-                                <label
-                                    class="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">Asistencia</label>
-                                <select
-                                    class="w-full bg-transparent border-b border-white/20 px-0 py-2 text-white focus:outline-none focus:border-sage transition-colors [&>option]:text-charcoal">
-                                    <option>Sí, asistiré</option>
-                                    <option>No podré asistir</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label
-                                    class="block text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">Restricción
-                                    Alimentaria</label>
-                                <input type="text"
-                                    class="w-full bg-white/5 border-b border-white/20 px-0 py-2 text-white focus:outline-none focus:border-sage transition-colors placeholder-gray-600"
-                                    placeholder="Opcional">
-                            </div>
-
-                            <button type="submit"
-                                class="w-full mt-4 bg-sage text-white font-sans text-xs font-bold tracking-widest uppercase py-4 rounded hover:bg-white hover:text-charcoal transition-all duration-300">
-                                Enviar Confirmación
-                            </button>
-                        </form>
-                    </div>
-
-                    <!-- Gifts & Farewell -->
-                    <div class="flex flex-col justify-center h-full text-center md:text-left reveal"
-                        style="transition-delay: 200ms;">
-                        <div class="mb-12">
-                            <i class="fa-solid fa-gift text-4xl text-gold mb-6"></i>
-                            <h3 class="font-serif text-2xl mb-4">Regalos</h3>
-                            <p class="font-sans text-gray-300 text-sm leading-relaxed mb-6">
-                                Su presencia es lo más importante para nosotros. Si desean hacernos un regalo, tenemos
-                                lista disponible.
-                            </p>
-                            <a href="#"
-                                class="inline-block border border-gold text-gold px-8 py-3 rounded-full font-sans text-xs tracking-widest uppercase hover:bg-gold hover:text-charcoal transition-all duration-300">
-                                Ir a Lista de Novios
-                            </a>
-                        </div>
-
-                        <div class="mt-auto pt-12 border-t border-white/10 text-center md:text-left">
-                            <p class="font-script text-3xl text-white/80 mb-2">¡Los esperamos!</p>
-                            <p class="font-sans text-[10px] tracking-widest uppercase text-gray-500">Felipe & Camila •
-                                2026</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
     </main>
+
+    <footer class="bg-night text-white/20 text-center py-12 border-t border-white/5">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="font-serif text-2xl mb-4 text-white/40">F&C</div>
+            <p class="text-[10px] uppercase tracking-widest">
+                &copy; 2026 Felipe & Camila. Nos vemos en la pista.
+            </p>
+        </div>
+    </footer>
 
     <!-- Scripts -->
     <script>
-        // Envelope Interaction
+        // 1. Envelope Intro & Navigation Reveal
         const openBtn = document.getElementById('open-btn');
         const overlay = document.getElementById('envelope-overlay');
         const body = document.body;
+        const nav = document.getElementById('main-nav');
 
         openBtn.addEventListener('click', () => {
-            // Slide up animation
             overlay.style.transform = 'translateY(-100%)';
-
-            // Unlock scroll after animation
             setTimeout(() => {
                 body.classList.remove('locked');
-            }, 500); // Unlock slightly before animation ends for smoother feel
+                nav.classList.add('visible');
+            }, 1000);
         });
 
-        // Scroll Reveal Animation
-        document.addEventListener('DOMContentLoaded', function () {
-            const reveals = document.querySelectorAll('.reveal');
+        // 2. Scroll Reveal & Sticky Nav
+        const reveals = document.querySelectorAll('.reveal');
+        const checkReveal = () => {
+            const triggerBottom = window.innerHeight * 0.85;
+            reveals.forEach(reveal => {
+                const top = reveal.getBoundingClientRect().top;
+                if (top < triggerBottom) reveal.classList.add('active');
+            });
 
-            function checkReveal() {
-                const triggerBottom = window.innerHeight * 0.85;
-
-                reveals.forEach(reveal => {
-                    const revealTop = reveal.getBoundingClientRect().top;
-
-                    if (revealTop < triggerBottom) {
-                        reveal.classList.add('active');
-                    }
-                });
+            // Sticky Nav Background
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
             }
-
-            window.addEventListener('scroll', checkReveal);
-            checkReveal(); // Check on load
-        });
+        };
+        window.addEventListener('scroll', checkReveal);
     </script>
 </body>
 
