@@ -484,16 +484,21 @@
         </section>
 
         <!-- 3. TRIVIA DEL AMOR ("¿Cuánto nos conoces?") -->
-        <section id="trivia" class="py-24 relative bg-ivory bg-paper-texture">
-            <div class="max-w-4xl mx-auto px-6">
-                <div class="text-center mb-16">
+        <!-- 3. TRIVIA DEL AMOR ("¿Cuánto nos conoces?") - CAROUSEL MODE -->
+        <section id="trivia" class="py-24 relative bg-ivory bg-paper-texture overflow-hidden">
+            <div class="max-w-6xl mx-auto px-6">
+                <div class="text-center mb-10">
                     <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-4">¿Cuánto nos conoces?</h2>
-                    <p class="font-sans text-slate-600">Pon a prueba tu conocimiento sobre los novios.</p>
+                    <p class="font-sans text-slate-600">Desliza para jugar 🎲</p>
                 </div>
 
-                <form id="trivia-form" class="space-y-12">
+                <!-- Carousel Container -->
+                <form id="trivia-form"
+                    class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-12 px-4 md:justify-center scrollbar-hide">
+
                     <!-- Q1 -->
-                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                    <div
+                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
                         <span
                             class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">1</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Dónde fue el flechazo inicial?</h3>
@@ -526,7 +531,8 @@
                     </div>
 
                     <!-- Q2 -->
-                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                    <div
+                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
                         <span
                             class="absolute -top-4 -right-4 w-10 h-10 bg-burgundy text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">2</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Quién es más probable que llegue
@@ -560,7 +566,8 @@
                     </div>
 
                     <!-- Q3 -->
-                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                    <div
+                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
                         <span
                             class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">3</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Cuál es el trago favorito de los
@@ -594,7 +601,8 @@
                     </div>
 
                     <!-- Q4 -->
-                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                    <div
+                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
                         <span
                             class="absolute -top-4 -right-4 w-10 h-10 bg-burgundy text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">4</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Quién dijo 'Te Amo' primero?</h3>
@@ -634,7 +642,8 @@
                     </div>
 
                     <!-- Q5 -->
-                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                    <div
+                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
                         <span
                             class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">5</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿A dónde nos iríamos de Luna de Miel
@@ -667,13 +676,21 @@
                         </div>
                     </div>
 
-                    <div class="text-center pt-8">
+                    <!-- Result Button (Last Slide) -->
+                    <div
+                        class="min-w-[85vw] md:min-w-[400px] snap-center flex items-center justify-center flex-shrink-0">
                         <button type="button" id="trivia-submit-btn"
                             class="bg-charcoal text-ivory px-10 py-4 rounded-full font-serif text-xl hover:bg-sage transition-colors shadow-xl transform hover:-translate-y-1">
                             Ver Resultado 🎲
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <!-- Scroll Indicator for RSVP -->
+            <div class="absolute bottom-4 left-0 right-0 text-center animate-bounce z-10 pointer-events-none">
+                <p class="text-xs uppercase tracking-widest text-charcoal/50 mb-1">Confirmar Asistencia abajo</p>
+                <i class="fa-solid fa-chevron-down text-charcoal/50 text-xl"></i>
             </div>
         </section>
 
@@ -718,6 +735,45 @@
                             Tiendas Paris - Código: 123456
                         </a>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- G. RELIGIOUS WEDDING TEASER ("Coming Soon") -->
+        <section id="religious-wedding" class="relative py-32 overflow-hidden">
+            <!-- Background Image with Overlay -->
+            <div class="absolute inset-0 z-0">
+                <img src="images/religious_wedding.jpg" alt="Centro de Eventos Arboledas"
+                    class="w-full h-full object-cover grayscale opacity-40 hover:grayscale-0 hover:opacity-60 transition-all duration-1000">
+                <div class="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/80 to-transparent"></div>
+            </div>
+
+            <div class="relative z-10 max-w-4xl mx-auto px-6 text-center text-ivory">
+                <div class="mb-6">
+                    <span
+                        class="inline-block px-4 py-1 border border-gold/50 rounded-full text-gold text-xs uppercase tracking-[0.2em] mb-4">Próximamente</span>
+                </div>
+                <h2 class="font-serif text-4xl md:text-6xl text-white mb-6">La Boda Religiosa</h2>
+                <div
+                    class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 text-white/80 font-sans mb-10">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-regular fa-calendar text-gold"></i>
+                        <span>23 de Octubre 2026 (Tentativo)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot text-gold"></i>
+                        <span>Centro de Eventos Arboledas</span>
+                    </div>
+                </div>
+
+                <div class="max-w-xl mx-auto bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-xl">
+                    <p class="font-serif italic text-lg mb-6">"Lo mejor está por venir..."</p>
+                    <button disabled
+                        class="bg-white/10 text-white/50 px-8 py-3 rounded-full uppercase tracking-widest text-sm cursor-not-allowed border border-white/10">
+                        Inscripciones Próximamente
+                    </button>
+                    <p class="text-xs text-white/30 mt-4 uppercase tracking-widest">Enfocados en el Civil por ahora ❤️
+                    </p>
                 </div>
             </div>
         </section>
