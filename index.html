@@ -257,28 +257,39 @@
 
                 <div class="relative h-[900px] md:h-[800px] w-full reveal">
                     <!-- Polaroids (Same layout as before, just ensuring they are present) -->
-                    <div
-                        class="polaroid absolute left-4 top-0 md:left-10 md:top-0 w-56 md:w-72 transform -rotate-6 z-10">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100">
-                            <img src="images/uploaded_image_1_1764298805324.jpg"
-                                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
+                    <div class="absolute left-4 top-0 md:left-10 md:top-0 w-56 md:w-72">
+                        <div
+                            class="bg-white p-3 pb-12 shadow-lg transform rotate-[-2deg] hover:rotate-0 transition duration-500 z-10">
+                            <div class="aspect-[3/4] overflow-hidden mb-2">
+                                <img src="images/story_1.jpg" alt="Paseitos"
+                                    class="w-full h-full object-cover filter sepia-[.2]">
+                            </div>
+                            <p class="font-handwriting text-2xl text-charcoal text-center">Paseitos</p>
                         </div>
-                        <p class="font-script text-2xl text-center text-charcoal">Panamá 2019</p>
                     </div>
-                    <div
-                        class="polaroid absolute right-4 top-20 md:right-20 md:top-10 w-60 md:w-72 transform rotate-3 z-20">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100">
-                            <img src="images/uploaded_image_2_1764298805324.jpg"
-                                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
+
+                    <!-- Polaroid 2 -->
+                    <div class="absolute right-4 top-20 md:right-20 md:top-10 w-60 md:w-72">
+                        <div
+                            class="bg-white p-3 pb-12 shadow-lg transform rotate-[3deg] hover:rotate-0 transition duration-500 z-20 mt-8">
+                            <div class="aspect-[3/4] overflow-hidden mb-2">
+                                <img src="images/story_2.jpg" alt="Caminatas"
+                                    class="w-full h-full object-cover filter sepia-[.2]">
+                            </div>
+                            <p class="font-handwriting text-2xl text-charcoal text-center">Caminatas</p>
                         </div>
-                        <p class="font-script text-2xl text-center text-charcoal">El Reencuentro</p>
                     </div>
-                    <div
-                        class="polaroid absolute left-1/2 -translate-x-1/2 top-80 md:top-60 w-72 md:w-96 transform -rotate-2 z-30">
-                        <div class="aspect-[4/5] overflow-hidden mb-4 bg-gray-100">
-                            <img src="images/uploaded_image_0_1764298805324.jpg" class="w-full h-full object-cover">
+
+                    <!-- Polaroid 3 -->
+                    <div class="absolute left-1/2 -translate-x-1/2 top-80 md:top-60 w-72 md:w-96">
+                        <div
+                            class="bg-white p-3 pb-12 shadow-lg transform rotate-[-1deg] hover:rotate-0 transition duration-500 z-10">
+                            <div class="aspect-[3/4] overflow-hidden mb-2">
+                                <img src="images/story_3.jpg" alt="Playita"
+                                    class="w-full h-full object-cover filter sepia-[.2]">
+                            </div>
+                            <p class="font-handwriting text-2xl text-charcoal text-center">Playita</p>
                         </div>
-                        <p class="font-script text-3xl text-center text-charcoal mt-2">¡Dijo que Sí!</p>
                     </div>
                     <div
                         class="polaroid absolute left-8 bottom-10 md:left-32 md:bottom-20 w-56 md:w-64 transform rotate-6 z-10">
@@ -416,12 +427,16 @@
                 <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
                 <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
                 <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
-                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
-                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
-                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
-                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
-                <div class="w-10 h-6 bg-white/50 rounded-sm"></div>
             </div>
+            <!-- Color Palette -->
+            <div class="flex justify-center gap-6 mb-8">
+                <div class="w-12 h-12 rounded-full bg-white border border-gray-200 shadow-sm" title="Blanco"></div>
+                <div class="w-12 h-12 rounded-full bg-[#E5D3B3] shadow-sm" title="Arena"></div>
+                <div class="w-12 h-12 rounded-full bg-[#A8C0CE] shadow-sm" title="Azul Suave"></div>
+                <div class="w-12 h-12 rounded-full bg-[#D28F79] shadow-sm" title="Terracota"></div>
+            </div>
+
+            <p class="text-charcoal/80 font-serif italic text-sm mb-8">* Colores sugeridos, no obligatorios</p>
 
             <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
                 <div class="mb-8 text-6xl text-charcoal/80 animate-pulse">
