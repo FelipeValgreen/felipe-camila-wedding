@@ -60,6 +60,70 @@
                 }
             }
         }
+
+        // C. Trivia Logic (Carousel Mode)
+        const triviaForm = document.getElementById('trivia-form');
+        const triviaSubmitBtn = document.getElementById('trivia-submit-btn');
+
+        // Handle "Other" inputs
+        document.querySelectorAll('.other-trigger').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const targetId = e.target.dataset.target;
+                const targetInput = document.getElementById(targetId);
+
+                // Hide all other text inputs in this question group
+                const questionGroup = e.target.closest('.space-y-3');
+                questionGroup.querySelectorAll('input[type="text"]').forEach(input => input.classList.add('hidden'));
+
+                // Show specific input
+                targetInput.classList.remove('hidden');
+                targetInput.focus();
+            });
+        });
+
+        // Hide text inputs if main options selected
+        document.querySelectorAll('input[type="radio"]:not(.other-trigger)').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const questionGroup = e.target.closest('.space-y-3');
+                questionGroup.querySelectorAll('input[type="text"]').forEach(input => input.classList.add('hidden'));
+            });
+        });
+
+        if (triviaSubmitBtn) {
+            triviaSubmitBtn.addEventListener('click', async () => {
+                const formData = new FormData(triviaForm);
+                let score = 0;
+                const answers = {};
+
+                // Correct Answers
+                const key = {
+                    q1: 'bocas',
+                    q2: 'felipe',
+                    q3: 'pisco',
+                    q4: 'same', // Trick question!
+                    q5: 'playa'
+                };
+
+                for (let [name, value] of formData.entries()) {
+                    if (name.includes('other')) continue; // Skip text inputs for scoring logic for now
+                    answers[name] = value;
+                    if (value === key[name]) score++;
+                }
+
+                // Save to Supabase
+                triviaSubmitBtn.disabled = true;
+                triviaSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+                if (typeof window.saveTriviaResult === 'function') {
+                    await window.saveTriviaResult(score, answers);
+                }
+
+                // Show Result
+                alert(`¡Tu puntaje es: ${score}/5!\n\nGracias por jugar.`);
+                triviaSubmitBtn.disabled = false;
+                triviaSubmitBtn.innerHTML = 'Ver Resultado 🎲';
+            });
+        }
     </script>
 
     <style>
@@ -439,10 +503,38 @@
                     Queremos ver la fiesta desde tu perspectiva. Únete a nuestro álbum compartido y sube tus mejores
                     fotos (¡y las peores también!).
                 </p>
-                <a href="#" id="guest-cam-link" target="_blank"
-                    class="inline-block bg-charcoal text-ivory px-8 py-4 rounded-full font-serif italic text-lg hover:bg-burgundy transition-colors shadow-lg transform hover:-translate-y-1">
-                    <i class="fa-solid fa-camera mr-2"></i> Abrir Álbum Compartido
-                </a>
+
+                <!-- Upload Form -->
+                <div class="bg-white p-8 rounded-xl shadow-xl max-w-md mx-auto mb-12">
+                    <div class="mb-4">
+                        <label class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Tu
+                            Nombre</label>
+                        <input type="text" id="uploader-name" placeholder="Ej: Tía Coty"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-sage">
+                    </div>
+                    <div class="mb-6">
+                        <label
+                            class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Sube
+                            tu Foto</label>
+                        <input type="file" id="photo-upload" accept="image/*"
+                            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sage/10 file:text-sage hover:file:bg-sage/20">
+                    </div>
+                    <button id="upload-btn"
+                        class="w-full bg-charcoal text-ivory font-bold py-3 rounded-lg hover:bg-sage transition-colors uppercase tracking-widest">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto
+                    </button>
+                    <p id="upload-status" class="mt-4 text-xs font-bold hidden"></p>
+                </div>
+
+                <!-- Live Gallery Carousel -->
+                <div id="guest-gallery"
+                    class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:justify-center scrollbar-hide h-64">
+                    <!-- Photos will be injected here via JS -->
+                    <div
+                        class="min-w-[200px] flex items-center justify-center bg-gray-100 rounded-lg text-gray-400 text-xs">
+                        Esperando fotos...
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -797,6 +889,10 @@
     </footer>
 
     <!-- Scripts -->
+    <!-- Supabase JS (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Custom Supabase Client -->
+    <script src="js/supabase-client.js"></script>
     <script>
         // 1. Envelope Intro & Navigation Reveal
         const openBtn = document.getElementById('open-btn');
@@ -832,12 +928,89 @@
 
         // 3. INTERACTIVE SECTIONS LOGIC
 
-        // A. Guest Cam Alert
-        document.getElementById('guest-cam-link').addEventListener('click', function (e) {
-            e.preventDefault();
-            alert("📸 Redirigiendo al álbum de Google Photos...");
-            // window.open('YOUR_GOOGLE_PHOTOS_LINK', '_blank'); // Uncomment when real link is available
-        });
+        // A. Guest Cam Logic
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadStatus = document.getElementById('upload-status');
+        const galleryContainer = document.getElementById('guest-gallery');
+
+        // Load Gallery on Page Load
+        async function loadGallery() {
+            if (typeof window.fetchGuestPhotos !== 'function') return;
+
+            const { data, error } = await window.fetchGuestPhotos();
+
+            if (error) {
+                console.error("Could not load gallery:", error);
+                galleryContainer.innerHTML = '<div class="text-red-400 text-xs">Error al cargar fotos</div>';
+                return;
+            }
+
+            if (data && data.length > 0) {
+                galleryContainer.innerHTML = data.map(photo => `
+                    <div class="min-w-[200px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform">
+                        <img src="${photo.url}" class="w-full h-full object-cover">
+                        <p class="absolute bottom-4 left-0 right-0 text-center font-handwriting text-charcoal text-lg bg-white/80 backdrop-blur-sm py-1">
+                            ${photo.uploader_name || 'Anónimo'}
+                        </p>
+                    </div>
+                `).join('');
+            } else {
+                galleryContainer.innerHTML = '<div class="min-w-[200px] flex items-center justify-center bg-gray-100 rounded-lg text-gray-400 text-xs">Sé el primero en subir una foto 📸</div>';
+            }
+        }
+
+        // Handle Upload
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', async () => {
+                const fileInput = document.getElementById('photo-upload');
+                const nameInput = document.getElementById('uploader-name');
+                const file = fileInput.files[0];
+                const name = nameInput.value.trim() || 'Anónimo';
+
+                if (!file) {
+                    alert('Por favor selecciona una foto.');
+                    return;
+                }
+
+                // UI Loading State
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Subiendo...';
+                uploadStatus.classList.remove('hidden', 'text-green-600', 'text-red-600');
+                uploadStatus.classList.add('text-gray-500');
+                uploadStatus.innerText = 'Subiendo a la nube...';
+
+                const { data, error } = await window.uploadGuestPhoto(file, name);
+
+                if (error) {
+                    console.error(error);
+                    uploadStatus.classList.replace('text-gray-500', 'text-red-600');
+                    uploadStatus.innerText = 'Error al subir. Intenta de nuevo.';
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
+                } else {
+                    uploadStatus.classList.replace('text-gray-500', 'text-green-600');
+                    uploadStatus.innerText = '¡Foto subida con éxito!';
+
+                    // Reset Form
+                    fileInput.value = '';
+                    nameInput.value = '';
+
+                    // Refresh Gallery
+                    await loadGallery();
+
+                    setTimeout(() => {
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
+                        uploadStatus.classList.add('hidden');
+                    }, 3000);
+                }
+            });
+        }
+
+        // Initialize Gallery
+        // Wait a bit for Supabase script to load
+        setTimeout(loadGallery, 1000);
+
 
         // B. DJ Booth Form Simulation
         const djForm = document.getElementById('dj-form');
