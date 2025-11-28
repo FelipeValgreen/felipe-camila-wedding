@@ -432,9 +432,9 @@
                     Queremos ver la fiesta desde tu perspectiva. Únete a nuestro álbum compartido y sube tus mejores
                     fotos (¡y las peores también!).
                 </p>
-                <a href="#"
+                <a href="#" id="guest-cam-link" target="_blank"
                     class="inline-block bg-charcoal text-ivory px-8 py-4 rounded-full font-serif italic text-lg hover:bg-burgundy transition-colors shadow-lg transform hover:-translate-y-1">
-                    <i class="fa-solid fa-camera mr-2"></i> Unirse al Álbum Compartido
+                    <i class="fa-solid fa-camera mr-2"></i> Abrir Álbum Compartido
                 </a>
             </div>
         </section>
@@ -449,90 +449,231 @@
                 <p class="font-sans text-white/70 mb-10">Ayúdanos a armar la playlist definitiva. ¿Qué canción no puede
                     faltar?</p>
 
-                <div class="bg-white/5 backdrop-blur-md p-8 rounded-xl border border-white/10 shadow-2xl">
-                    <form class="space-y-6">
+                <div
+                    class="bg-white/5 backdrop-blur-md p-8 rounded-xl border border-white/10 shadow-2xl relative overflow-hidden">
+                    <form id="dj-form" class="space-y-6 transition-opacity duration-500">
                         <div>
-                            <label
+                            <label for="dj-song"
                                 class="block text-left text-xs font-bold uppercase tracking-widest text-gold mb-2">Nombre
                                 de la Canción / Artista</label>
-                            <input type="text" placeholder="Ej: Dancing Queen - ABBA"
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
+                            <input type="text" id="dj-song" placeholder="Ej: Dancing Queen - ABBA" required
+                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors">
                         </div>
                         <div>
-                            <label
-                                class="block text-left text-xs font-bold uppercase tracking-widest text-gold mb-2">¿Para
-                                qué momento es?</label>
-                            <select
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold transition-colors appearance-none">
-                                <option class="bg-charcoal text-white">Cóctel Chill 🍸</option>
-                                <option class="bg-charcoal text-white">Fiesta Desatada 💃</option>
-                                <option class="bg-charcoal text-white">Cierre Épico 🎆</option>
-                            </select>
+                            <label for="dj-name"
+                                class="block text-left text-xs font-bold uppercase tracking-widest text-gold mb-2">Tu
+                                Nombre</label>
+                            <input type="text" id="dj-name" placeholder="Tu nombre" required
+                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors">
                         </div>
-                        <button type="button"
-                            class="w-full bg-gold text-charcoal font-bold py-3 rounded-lg hover:bg-white transition-colors uppercase tracking-widest">
-                            Agregar a la Cola 🎵
+                        <button type="submit" id="dj-submit-btn"
+                            class="w-full bg-gold text-charcoal font-bold py-3 rounded-lg hover:bg-white transition-colors uppercase tracking-widest flex items-center justify-center gap-2">
+                            <span>Solicitar Canción 🎵</span>
                         </button>
                     </form>
+
+                    <!-- Success Message (Hidden by default) -->
+                    <div id="dj-success"
+                        class="absolute inset-0 flex flex-col items-center justify-center bg-charcoal/95 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-500">
+                        <div class="text-6xl text-green-400 mb-4 animate-bounce">✅</div>
+                        <h3 class="font-serif text-3xl text-gold mb-2">¡Solicitud Enviada!</h3>
+                        <p class="text-white/80">¡Prepárate para bailar!</p>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- 3. TRIVIA DEL AMOR ("¿Cuánto nos conoces?") -->
         <section id="trivia" class="py-24 relative bg-ivory bg-paper-texture">
-            <div class="max-w-6xl mx-auto px-6">
+            <div class="max-w-4xl mx-auto px-6">
                 <div class="text-center mb-16">
                     <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-4">¿Cuánto nos conoces?</h2>
                     <p class="font-sans text-slate-600">Pon a prueba tu conocimiento sobre los novios.</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    <!-- Question 1 -->
-                    <div
-                        class="bg-white p-8 shadow-lg rotate-1 hover:rotate-0 transition-transform duration-300 border border-gray-100 relative">
-                        <div class="absolute -top-3 -left-3 text-4xl text-sage opacity-20"><i
-                                class="fa-solid fa-quote-left"></i></div>
-                        <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Dónde nos conocimos realmente?</h3>
+                <form id="trivia-form" class="space-y-12">
+                    <!-- Q1 -->
+                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                        <span
+                            class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">1</span>
+                        <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Dónde fue el flechazo inicial?</h3>
                         <div class="space-y-3">
-                            <button
-                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-sage hover:text-white hover:border-sage transition-all duration-200 group">
-                                <span class="font-bold text-sage group-hover:text-white mr-2">A.</span> Tinder
-                            </button>
-                            <button
-                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-sage hover:text-white hover:border-sage transition-all duration-200 group">
-                                <span class="font-bold text-sage group-hover:text-white mr-2">B.</span> Bocas del Toro
-                            </button>
-                            <button
-                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-sage hover:text-white hover:border-sage transition-all duration-200 group">
-                                <span class="font-bold text-sage group-hover:text-white mr-2">C.</span> En un taco
-                            </button>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q1" value="bocas" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">A.</span> Bocas del Toro
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q1" value="santiago" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">B.</span> Santiago
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q1" value="other" class="peer hidden other-trigger"
+                                    data-target="q1-other">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">C.</span> Otra / Escribir respuesta
+                                </div>
+                            </label>
+                            <input type="text" id="q1-other" placeholder="Escribe tu respuesta..."
+                                class="hidden w-full mt-2 px-4 py-2 border border-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-sage text-charcoal bg-white transition-all">
                         </div>
                     </div>
 
-                    <!-- Question 2 -->
-                    <div
-                        class="bg-white p-8 shadow-lg -rotate-1 hover:rotate-0 transition-transform duration-300 border border-gray-100 relative">
-                        <div class="absolute -top-3 -right-3 text-4xl text-burgundy opacity-20"><i
-                                class="fa-solid fa-heart"></i></div>
-                        <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Quién es más probable que llore
-                            primero?</h3>
+                    <!-- Q2 -->
+                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                        <span
+                            class="absolute -top-4 -right-4 w-10 h-10 bg-burgundy text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">2</span>
+                        <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Quién es más probable que llegue
+                            tarde a la ceremonia?</h3>
                         <div class="space-y-3">
-                            <button
-                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-burgundy hover:text-white hover:border-burgundy transition-all duration-200 group">
-                                <span class="font-bold text-burgundy group-hover:text-white mr-2">A.</span> Felipe
-                            </button>
-                            <button
-                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-burgundy hover:text-white hover:border-burgundy transition-all duration-200 group">
-                                <span class="font-bold text-burgundy group-hover:text-white mr-2">B.</span> Camila
-                            </button>
-                            <button
-                                class="w-full text-left px-4 py-3 border border-gray-200 rounded hover:bg-burgundy hover:text-white hover:border-burgundy transition-all duration-200 group">
-                                <span class="font-bold text-burgundy group-hover:text-white mr-2">C.</span> Gonzalo el
-                                Padrino
-                            </button>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q2" value="felipe" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">A.</span> Felipe
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q2" value="camila" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">B.</span> Camila
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q2" value="other" class="peer hidden other-trigger"
+                                    data-target="q2-other">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">C.</span> Otra / Escribir respuesta
+                                </div>
+                            </label>
+                            <input type="text" id="q2-other" placeholder="Escribe tu respuesta..."
+                                class="hidden w-full mt-2 px-4 py-2 border border-burgundy rounded-lg focus:outline-none focus:ring-2 focus:ring-burgundy text-charcoal bg-white transition-all">
                         </div>
                     </div>
-                </div>
+
+                    <!-- Q3 -->
+                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                        <span
+                            class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">3</span>
+                        <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Cuál es el trago favorito de los
+                            novios?</h3>
+                        <div class="space-y-3">
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q3" value="pisco" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">A.</span> Pisco Sour
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q3" value="gin" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">B.</span> Gin Tonic
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q3" value="other" class="peer hidden other-trigger"
+                                    data-target="q3-other">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">C.</span> Otra / Escribir respuesta
+                                </div>
+                            </label>
+                            <input type="text" id="q3-other" placeholder="Escribe tu respuesta..."
+                                class="hidden w-full mt-2 px-4 py-2 border border-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-sage text-charcoal bg-white transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Q4 -->
+                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                        <span
+                            class="absolute -top-4 -right-4 w-10 h-10 bg-burgundy text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">4</span>
+                        <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Quién dijo 'Te Amo' primero?</h3>
+                        <div class="space-y-3">
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q4" value="el" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">A.</span> Él
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q4" value="ella" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">B.</span> Ella
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q4" value="same" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">C.</span> Fue al mismo tiempo
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q4" value="other" class="peer hidden other-trigger"
+                                    data-target="q4-other">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">D.</span> Otra / Escribir respuesta
+                                </div>
+                            </label>
+                            <input type="text" id="q4-other" placeholder="Escribe tu respuesta..."
+                                class="hidden w-full mt-2 px-4 py-2 border border-burgundy rounded-lg focus:outline-none focus:ring-2 focus:ring-burgundy text-charcoal bg-white transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Q5 -->
+                    <div class="bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative">
+                        <span
+                            class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">5</span>
+                        <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿A dónde nos iríamos de Luna de Miel
+                            si fuera sorpresa?</h3>
+                        <div class="space-y-3">
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q5" value="playa" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">A.</span> Playa
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q5" value="montana" class="peer hidden">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">B.</span> Montaña
+                                </div>
+                            </label>
+                            <label class="block cursor-pointer group">
+                                <input type="radio" name="q5" value="other" class="peer hidden other-trigger"
+                                    data-target="q5-other">
+                                <div
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
+                                    <span class="font-bold mr-2">C.</span> Otra / Escribir respuesta
+                                </div>
+                            </label>
+                            <input type="text" id="q5-other" placeholder="Escribe tu respuesta..."
+                                class="hidden w-full mt-2 px-4 py-2 border border-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-sage text-charcoal bg-white transition-all">
+                        </div>
+                    </div>
+
+                    <div class="text-center pt-8">
+                        <button type="button" id="trivia-submit-btn"
+                            class="bg-charcoal text-ivory px-10 py-4 rounded-full font-serif text-xl hover:bg-sage transition-colors shadow-xl transform hover:-translate-y-1">
+                            Ver Resultado 🎲
+                        </button>
+                    </div>
+                </form>
             </div>
         </section>
 
@@ -625,6 +766,70 @@
             }
         };
         window.addEventListener('scroll', checkReveal);
+
+        // 3. INTERACTIVE SECTIONS LOGIC
+
+        // A. Guest Cam Alert
+        document.getElementById('guest-cam-link').addEventListener('click', function (e) {
+            e.preventDefault();
+            alert("📸 Redirigiendo al álbum de Google Photos...");
+            // window.open('YOUR_GOOGLE_PHOTOS_LINK', '_blank'); // Uncomment when real link is available
+        });
+
+        // B. DJ Booth Form Simulation
+        const djForm = document.getElementById('dj-form');
+        const djSubmitBtn = document.getElementById('dj-submit-btn');
+        const djSuccess = document.getElementById('dj-success');
+
+        djForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Show Loading State
+            const originalBtnContent = djSubmitBtn.innerHTML;
+            djSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando...';
+            djSubmitBtn.disabled = true;
+
+            // Simulate Network Request
+            setTimeout(() => {
+                // Hide Form, Show Success
+                djForm.style.opacity = '0';
+                djSuccess.classList.remove('opacity-0', 'pointer-events-none');
+
+                // Reset form (optional, for demo purposes)
+                setTimeout(() => {
+                    djForm.reset();
+                    djSubmitBtn.innerHTML = originalBtnContent;
+                    djSubmitBtn.disabled = false;
+                }, 2000);
+            }, 1500);
+        });
+
+        // C. Trivia "Other" Logic & Results
+
+        // Handle "Other" Input Visibility
+        const radioInputs = document.querySelectorAll('input[type="radio"]');
+        const otherInputs = document.querySelectorAll('input[type="text"][id$="-other"]');
+
+        radioInputs.forEach(radio => {
+            radio.addEventListener('change', function () {
+                // Find the parent question container
+                const questionContainer = this.closest('.space-y-3');
+                const otherInput = questionContainer.querySelector('input[type="text"][id$="-other"]');
+
+                if (this.value === 'other') {
+                    otherInput.classList.remove('hidden');
+                    otherInput.focus();
+                } else {
+                    otherInput.classList.add('hidden');
+                }
+            });
+        });
+
+        // Handle Trivia Submit
+        document.getElementById('trivia-submit-btn').addEventListener('click', function () {
+            alert("¡Gracias por participar! Veremos si acertaste en la fiesta 🍹");
+        });
+
     </script>
 </body>
 
