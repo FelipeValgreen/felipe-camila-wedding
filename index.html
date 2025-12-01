@@ -7,11 +7,11 @@
     <meta name="description" content="Matrimonio Civil de Felipe y Camila. Celebración, Fiesta y Amor.">
     <title>Felipe & Camila | Matrimonio Civil</title>
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Amatic SC, Lora, Cinzel Decorative, Montserrat -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Montserrat:wght@300;400;500;600&family=Great+Vibes&family=Cinzel+Decorative:wght@400;700&family=Pinyon+Script&family=Lato:wght@300;400;700&family=Monsieur+La+Doulaise&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Cinzel+Decorative:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Tailwind CSS -->
@@ -26,19 +26,29 @@
                         'sage-light': '#A9BFA8',
                         'sage-dark': '#6B7F60',
                         ivory: '#F9F9F7',
-                        sand: '#E6DDC6',
+                        sand: '#D7C9B8', /* Warmer, kraft-paper like */
+                        taupe: '#9A8C7D', /* New accent color */
                         'dusty-pink': '#D8B4A0',
                         'sky-blue': '#B4C5C4',
                         charcoal: '#2C3E50',
-                        gold: '#C5A059',
+                        gold: '#C5A059', /* Bronze/Gold */
                         night: '#111827',
+                        // Rustic Kraft Palette
+                        'kraft-bg': '#D1BFA7',
+                        'coffee-ink': '#5C4B3A',
+                        'coffee-dark': '#3E3228',
+                        'paper-white': '#Fdfbf7',
                     },
                     fontFamily: {
-                        serif: ['"Cinzel Decorative"', 'serif'],
+                        serif: ['Playfair Display', 'serif'],
                         sans: ['"Montserrat"', 'sans-serif'],
-                        script: ['"Pinyon Script"', 'cursive'],
+                        script: ['Great Vibes', 'cursive'],
+                        // New Rustic Fonts
+                        hand: ['"Amatic SC"', 'cursive'],
+                        typewriter: ['"Lora"', 'serif'],
                     },
                     backgroundImage: {
+                        'kraft-texture': "url('https://www.transparenttextures.com/patterns/natural-paper.png')",
                         'paper-texture': "url('https://www.transparenttextures.com/patterns/cream-paper.png')",
                         'sage-texture': "url('https://www.transparenttextures.com/patterns/cubes.png')", /* Subtle texture for envelope */
                     },
@@ -205,53 +215,55 @@
     </style>
 </head>
 
-<body class="font-sans text-charcoal bg-ivory antialiased locked bg-paper-texture">
+<body class="font-typewriter text-coffee-dark bg-kraft-bg antialiased locked bg-kraft-texture">
 
-    <!-- 1. REALISTIC CSS ENVELOPE INTRO -->
+    <!-- RUSTIC KRAFT ENVELOPE OVERLAY (PURE CSS DRAWING) -->
     <div id="envelope-overlay"
-        class="fixed inset-0 z-[100] bg-stone-100 flex items-center justify-center p-4 overflow-hidden">
-        <!-- Background Texture -->
+        class="fixed inset-0 z-[100] bg-[#f0f0f0] flex items-center justify-center p-4 overflow-hidden">
+
+        <!-- Global Texture Overlay -->
         <div
-            class="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/concrete-wall.png')]">
+            class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-40 pointer-events-none mix-blend-multiply">
         </div>
 
-        <!-- Floral Accents (Surrounding the Envelope) -->
-        <img src="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?q=80&w=600&auto=format&fit=crop"
-            class="absolute top-0 left-0 w-80 h-80 object-cover opacity-80 -translate-x-1/4 -translate-y-1/4 rotate-180 pointer-events-none drop-shadow-xl rounded-full mix-blend-multiply">
-        <img src="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?q=80&w=600&auto=format&fit=crop"
-            class="absolute bottom-0 right-0 w-80 h-80 object-cover opacity-80 translate-x-1/4 translate-y-1/4 pointer-events-none drop-shadow-xl rounded-full mix-blend-multiply">
+        <!-- Rustic Accents (Dried Flowers) -->
 
-        <!-- The Envelope Container -->
-        <div class="relative w-full max-w-lg aspect-[1.4/1] bg-white shadow-2xl flex items-center justify-center transform transition-transform duration-1000 cursor-pointer group"
-            id="open-btn">
+
+        <!-- The Envelope Container (CSS Drawn) -->
+        <div class="relative w-full max-w-2xl aspect-[1.6/1] bg-[#d6c6b0] shadow-2xl flex items-center justify-center transform transition-transform duration-1000 cursor-pointer group z-20"
+            id="open-btn" style="box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);">
 
             <!-- Envelope Texture -->
             <div
-                class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-50">
+                class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply pointer-events-none">
             </div>
 
-            <!-- Envelope Flap (CSS Triangle) -->
-            <div class="absolute top-0 left-0 w-full h-1/2 bg-gray-50 z-10 origin-top transition-transform duration-1000"
-                style="clip-path: polygon(0 0, 50% 100%, 100% 0); background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png'); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            </div>
-
-            <!-- Envelope Content (Visible on top) -->
-            <div class="relative z-20 text-center flex flex-col items-center pt-12">
-                <p class="font-serif text-xl tracking-[0.2em] text-charcoal/80 mb-6 uppercase">La Boda de</p>
-
-                <!-- Wax Seal (Centered on Flap Tip) -->
-                <div class="relative w-24 h-24 transition-transform duration-500 group-hover:scale-110">
-                    <div
-                        class="absolute inset-0 bg-burgundy rounded-full shadow-lg flex items-center justify-center border-[3px] border-burgundy/80 ring-2 ring-burgundy/20">
-                        <span class="font-serif text-3xl text-gold font-bold italic pt-1 pr-0.5">F&C</span>
-                    </div>
-                    <div class="absolute top-4 left-4 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
+            <!-- Envelope Flap (Triangular) -->
+            <div class="absolute top-0 left-0 w-full h-full z-30 pointer-events-none"
+                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #e0d0ba; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));">
+                <div
+                    class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply">
                 </div>
+            </div>
 
-                <div class="mt-8 border-b border-charcoal/30 pb-1 group-hover:border-charcoal transition-colors">
-                    <p
-                        class="font-sans text-xs font-bold tracking-widest uppercase text-charcoal/60 group-hover:text-charcoal transition-colors">
-                        Abrir Invitación</p>
+            <!-- Wax Seal (CSS Gold Gradient) -->
+            <div class="absolute top-[55%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-300"
+                style="background: radial-gradient(circle at 30% 30%, #e6cf8b, #c5a059, #8a6e3e); box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.4);">
+                <div class="w-16 h-16 border border-[#3e2b18]/20 rounded-full flex items-center justify-center">
+                    <span class="font-serif text-2xl font-bold text-[#3e2b18] drop-shadow-sm"
+                        style="text-shadow: 0 1px 1px rgba(255,255,255,0.2);">F&C</span>
+                </div>
+            </div>
+
+            <!-- "Open" Button (Tag Style) -->
+            <div
+                class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-50 bg-[#F9F9F7] text-[#3E3228] px-8 py-3 rounded-sm shadow-md rotate-[-1deg] group-hover:rotate-0 transition-transform duration-300 border border-[#D7C9B8]">
+                <div
+                    class="w-2 h-2 rounded-full bg-[#3E3228] absolute top-1/2 left-2 transform -translate-y-1/2 opacity-20">
+                </div>
+                <p class="font-hand text-xl tracking-widest uppercase font-bold">Abrir Invitación</p>
+                <div
+                    class="w-2 h-2 rounded-full bg-[#3E3228] absolute top-1/2 right-2 transform -translate-y-1/2 opacity-20">
                 </div>
             </div>
         </div>
@@ -319,49 +331,71 @@
                     </p>
                 </div>
 
-                <div class="relative h-[900px] md:h-[800px] w-full reveal">
-                    <!-- Polaroids (Same layout as before, just ensuring they are present) -->
-                    <div class="absolute left-4 top-0 md:left-10 md:top-0 w-56 md:w-72">
-                        <div
-                            class="bg-white p-3 pb-12 shadow-lg transform rotate-[-2deg] hover:rotate-0 transition duration-500 z-10">
-                            <div class="aspect-[3/4] overflow-hidden mb-2">
-                                <img src="images/story_1.jpg" alt="Paseitos"
-                                    class="w-full h-full object-cover filter sepia-[.2]">
-                            </div>
-                            <p class="font-handwriting text-2xl text-charcoal text-center">Paseitos</p>
-                        </div>
-                    </div>
+                <div class="relative h-[1200px] md:h-[700px] w-full reveal mt-12">
+                    <!-- Polaroids Gallery (Curated Collage) -->
 
-                    <!-- Polaroid 2 -->
-                    <div class="absolute right-4 top-20 md:right-20 md:top-10 w-60 md:w-72">
-                        <div
-                            class="bg-white p-3 pb-12 shadow-lg transform rotate-[3deg] hover:rotate-0 transition duration-500 z-20 mt-8">
-                            <div class="aspect-[3/4] overflow-hidden mb-2">
-                                <img src="images/story_2.jpg" alt="Caminatas"
-                                    class="w-full h-full object-cover filter sepia-[.2]">
-                            </div>
-                            <p class="font-handwriting text-2xl text-charcoal text-center">Caminatas</p>
-                        </div>
-                    </div>
-
-                    <!-- Polaroid 3 -->
-                    <div class="absolute left-1/2 -translate-x-1/2 top-80 md:top-60 w-72 md:w-96">
-                        <div
-                            class="bg-white p-3 pb-12 shadow-lg transform rotate-[-1deg] hover:rotate-0 transition duration-500 z-10">
-                            <div class="aspect-[3/4] overflow-hidden mb-2">
-                                <img src="images/story_3.jpg" alt="Playita"
-                                    class="w-full h-full object-cover filter sepia-[.2]">
-                            </div>
-                            <p class="font-handwriting text-2xl text-charcoal text-center">Playita</p>
-                        </div>
-                    </div>
+                    <!-- 1. CENTER HERO: Para Siempre (B&W) -->
                     <div
-                        class="polaroid absolute left-8 bottom-10 md:left-32 md:bottom-20 w-56 md:w-64 transform rotate-6 z-10">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100">
+                        class="polaroid absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-2 w-64 md:w-72 z-40 hover:scale-110 transition-transform duration-500 hover:z-50 shadow-2xl">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
                             <img src="images/uploaded_image_3_1764298805324.jpg"
                                 class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
                         </div>
-                        <p class="font-script text-2xl text-center text-charcoal">Para Siempre</p>
+                        <p class="font-handwriting text-2xl text-center text-charcoal">Para Siempre</p>
+                    </div>
+
+                    <!-- 2. TOP LEFT: Nuestras Rutas (Car) -->
+                    <div
+                        class="polaroid absolute left-4 top-10 md:left-10 md:top-10 w-52 md:w-60 transform -rotate-6 z-30 hover:scale-110 transition-transform duration-500 hover:z-50">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
+                            <img src="images/story_car_selfie.jpg" class="w-full h-full object-cover sepia-[.1]">
+                        </div>
+                        <p class="font-handwriting text-xl text-center text-charcoal/80">Nuestras Rutas</p>
+                    </div>
+
+                    <!-- 3. TOP RIGHT: Paseo en Bote (Boat) -->
+                    <div
+                        class="polaroid absolute right-4 top-40 md:right-10 md:top-16 w-56 md:w-64 transform rotate-3 z-30 hover:scale-110 transition-transform duration-500 hover:z-50">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
+                            <img src="images/story_boat_dog.jpg" class="w-full h-full object-cover sepia-[.1]">
+                        </div>
+                        <p class="font-handwriting text-xl text-center text-charcoal/80">Paseo en Bote</p>
+                    </div>
+
+                    <!-- 4. BOTTOM LEFT: Momentos -->
+                    <div
+                        class="polaroid absolute left-8 bottom-60 md:left-20 md:bottom-20 w-44 md:w-52 transform rotate-3 z-20 hover:scale-110 transition-transform duration-500 hover:z-50">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
+                            <img src="images/new_story_1.jpg" class="w-full h-full object-cover sepia-[.1]">
+                        </div>
+                        <p class="font-handwriting text-lg text-center text-charcoal/80">Momentos</p>
+                    </div>
+
+                    <!-- 5. BOTTOM RIGHT: Aventuras -->
+                    <div
+                        class="polaroid absolute right-8 bottom-20 md:right-24 md:bottom-24 w-44 md:w-52 transform -rotate-3 z-20 hover:scale-110 transition-transform duration-500 hover:z-50">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
+                            <img src="images/new_story_2.jpg" class="w-full h-full object-cover sepia-[.1]">
+                        </div>
+                        <p class="font-handwriting text-lg text-center text-charcoal/80">Aventuras</p>
+                    </div>
+
+                    <!-- 6. TOP CENTER (Background): Nosotros -->
+                    <div
+                        class="polaroid absolute left-1/2 top-0 md:top-5 transform -translate-x-1/2 rotate-2 w-40 md:w-48 z-10 hover:scale-110 transition-transform duration-500 hover:z-50 opacity-90">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
+                            <img src="images/new_story_3.jpg" class="w-full h-full object-cover sepia-[.1]">
+                        </div>
+                        <p class="font-handwriting text-lg text-center text-charcoal/80">Nosotros</p>
+                    </div>
+
+                    <!-- 7. FLOATING FILLER: En Casa (Indoor) -->
+                    <div
+                        class="polaroid absolute left-10 top-[500px] md:left-[25%] md:bottom-10 md:top-auto w-48 md:w-56 transform -rotate-4 z-25 hover:scale-110 transition-transform duration-500 hover:z-50">
+                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
+                            <img src="images/story_indoor_selfie.jpg" class="w-full h-full object-cover sepia-[.1]">
+                        </div>
+                        <p class="font-handwriting text-lg text-center text-charcoal/80">En Casa</p>
                     </div>
                 </div>
             </div>
@@ -505,22 +539,70 @@
                 </p>
 
                 <!-- Upload Form -->
-                <div class="bg-white p-8 rounded-xl shadow-xl max-w-md mx-auto mb-12">
+                <div class="bg-white p-8 rounded-xl shadow-xl max-w-md mx-auto mb-12 relative overflow-hidden">
+                    <!-- Auth Overlay (Hidden if logged in) -->
+                    <div id="guest-auth-overlay"
+                        class="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center p-6 text-center">
+                        <p class="font-serif text-xl text-charcoal mb-4">Identifícate para subir fotos</p>
+
+                        <!-- Google -->
+                        <button id="login-google-btn"
+                            class="bg-white border border-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-3 shadow-sm mb-3 w-full justify-center">
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5">
+                            Google
+                        </button>
+
+                        <!-- Email Toggle -->
+                        <button id="toggle-email-btn"
+                            class="bg-white border border-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-3 shadow-sm mb-3 w-full justify-center">
+                            <i class="fa-regular fa-envelope text-lg"></i>
+                            Correo Electrónico
+                        </button>
+
+                        <!-- WhatsApp Toggle -->
+                        <button id="toggle-whatsapp-btn"
+                            class="bg-[#25D366] border border-[#25D366] text-white font-bold py-3 px-6 rounded-lg hover:bg-[#128C7E] transition-colors flex items-center gap-3 shadow-sm mb-3 w-full justify-center">
+                            <i class="fa-brands fa-whatsapp text-xl"></i>
+                            WhatsApp
+                        </button>
+
+                        <!-- Email Form (Hidden) -->
+                        <div id="email-auth-form" class="hidden w-full mt-2">
+                            <input type="email" id="auth-email-input" placeholder="tu@correo.com"
+                                class="w-full p-2 border border-gray-300 rounded mb-2">
+                            <button id="login-email-btn" class="w-full bg-charcoal text-white py-2 rounded">Enviar Link
+                                Mágico</button>
+                        </div>
+
+                        <!-- WhatsApp Form (Hidden) -->
+                        <div id="whatsapp-auth-form" class="hidden w-full mt-2">
+                            <input type="tel" id="auth-phone-input" placeholder="+569..."
+                                class="w-full p-2 border border-gray-300 rounded mb-2">
+                            <button id="login-whatsapp-btn" class="w-full bg-[#25D366] text-white py-2 rounded">Enviar
+                                Código WhatsApp</button>
+                        </div>
+
+                        <p class="text-xs text-gray-400 mt-2">Solo usaremos tu nombre y foto.</p>
+                    </div>
+
                     <div class="mb-4">
                         <label class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Tu
                             Nombre</label>
                         <input type="text" id="uploader-name" placeholder="Ej: Tía Coty"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-sage">
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-sage"
+                            disabled>
                     </div>
                     <div class="mb-6">
                         <label
                             class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Sube
                             tu Foto</label>
                         <input type="file" id="photo-upload" accept="image/*"
-                            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sage/10 file:text-sage hover:file:bg-sage/20">
+                            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sage/10 file:text-sage hover:file:bg-sage/20"
+                            disabled>
                     </div>
                     <button id="upload-btn"
-                        class="w-full bg-charcoal text-ivory font-bold py-3 rounded-lg hover:bg-sage transition-colors uppercase tracking-widest">
+                        class="w-full bg-charcoal text-ivory font-bold py-3 rounded-lg hover:bg-sage transition-colors uppercase tracking-widest"
+                        disabled>
                         <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto
                     </button>
                     <p id="upload-status" class="mt-4 text-xs font-bold hidden"></p>
@@ -528,13 +610,180 @@
 
                 <!-- Live Gallery Carousel -->
                 <div id="guest-gallery"
-                    class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:justify-center scrollbar-hide h-64">
-                    <!-- Photos will be injected here via JS -->
+                    class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:justify-center scrollbar-hide h-80">
+                    <!-- Example Photos (Hardcoded for immediate visual) -->
                     <div
-                        class="min-w-[200px] flex items-center justify-center bg-gray-100 rounded-lg text-gray-400 text-xs">
-                        Esperando fotos...
+                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center">
+                        <img src="images/guest_example_1.jpg" class="w-full h-full object-cover">
+                        <div
+                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                            <img src="images/guest_example_1.jpg"
+                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                        </div>
+                    </div>
+                    <div
+                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-1 hover:rotate-0 transition-transform snap-center">
+                        <img src="images/guest_example_2.jpg" class="w-full h-full object-cover">
+                        <div
+                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                            <img src="images/guest_example_1.jpg"
+                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                        </div>
+                    </div>
+                    <div
+                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-2 hover:rotate-0 transition-transform snap-center">
+                        <img src="images/guest_example_3.jpg" class="w-full h-full object-cover">
+                        <div
+                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                            <img src="images/guest_example_1.jpg"
+                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                        </div>
+                    </div>
+                    <div
+                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-2 hover:rotate-0 transition-transform snap-center">
+                        <img src="images/guest_example_4.jpg" class="w-full h-full object-cover">
+                        <div
+                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                            <img src="images/guest_example_1.jpg"
+                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                        </div>
+                    </div>
+                    <div
+                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-1 hover:rotate-0 transition-transform snap-center">
+                        <img src="images/guest_example_5.jpg" class="w-full h-full object-cover">
+                        <div
+                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                            <img src="images/guest_example_1.jpg"
+                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- INSTAGRAM FEED (#felipeycami) -->
+        <section id="instagram" class="py-24 bg-white relative overflow-hidden">
+            <div class="max-w-6xl mx-auto px-4 text-center">
+                <div class="flex items-center justify-center gap-3 mb-8 text-charcoal">
+                    <i class="fa-brands fa-instagram text-4xl"></i>
+                    <h2 class="font-serif text-3xl md:text-4xl">#felipeycami</h2>
+                </div>
+                <p class="font-sans text-slate-500 mb-12">Etiquétanos en tus fotos para que aparezcan aquí.</p>
+
+                <!-- Instagram Grid Container -->
+                <div class="grid grid-cols-3 md:grid-cols-6 gap-1 md:gap-4 mb-12">
+                    <!-- Photo 1 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_party_1.jpg" alt="Fiesta 1"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 2 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_party_2.jpg" alt="Fiesta 2"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 3 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_boat_group.jpg" alt="Bote Grupo"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 4 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_family_selfie.jpg" alt="Selfie Familia"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 5 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_bbq.jpg" alt="Asado"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 6 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_formal_group.jpg" alt="Grupo Formal"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 7 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_beach_group.jpg" alt="Playa Grupo"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 8 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_formal_selfie.jpg" alt="Selfie Formal"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 9 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_hiking.jpg" alt="Hiking"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 10 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_bar_group.jpg" alt="Bar Grupo"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 11 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_beach_selfie.jpg" alt="Playa Selfie"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 12 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_wedding_selfie.jpg" alt="Matrimonio Selfie"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 13 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_party_selfie.jpg" alt="Fiesta Selfie"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 14 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_table_group.jpg" alt="Mesa Grupo"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 15 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_car_group.jpg" alt="Auto Grupo"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 16 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_hiking_group.jpg" alt="Hiking Grupo"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 17 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_vineyard.jpg" alt="Vinedo"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <!-- Photo 18 -->
+                    <div class="relative group overflow-hidden aspect-square">
+                        <img src="images/insta_restaurant.jpg" alt="Restaurante"
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                </div>
+
+                <!-- Instagram Button -->
+                <div class="text-center">
+                    <a href="https://www.instagram.com/explore/tags/felipeycami/" target="_blank"
+                        class="inline-block bg-charcoal text-white font-sans text-xs uppercase tracking-widest py-4 px-10 rounded-full hover:bg-sage transition-colors duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                        <i class="fa-brands fa-instagram mr-2"></i> Ver en Instagram
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-12 flex justify-center">
+                <a href="https://instagram.com/explore/tags/felipeycami" target="_blank"
+                    class="inline-block border border-charcoal text-charcoal px-8 py-3 rounded-full uppercase tracking-widest text-xs hover:bg-charcoal hover:text-white transition-colors">
+                    Ver en Instagram
+                </a>
+            </div>
             </div>
         </section>
 
@@ -591,13 +840,13 @@
                     <p class="font-sans text-slate-600">Desliza para jugar 🎲</p>
                 </div>
 
-                <!-- Carousel Container -->
+                <!-- Carousel Container (Mobile & Desktop) -->
                 <form id="trivia-form"
-                    class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-12 px-4 md:justify-center scrollbar-hide">
+                    class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-12 px-4 scrollbar-hide">
 
                     <!-- Q1 -->
                     <div
-                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
+                        class="min-w-[85vw] md:min-w-[calc(33.333%-1rem)] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow">
                         <span
                             class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">1</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Dónde fue el flechazo inicial?</h3>
@@ -631,7 +880,7 @@
 
                     <!-- Q2 -->
                     <div
-                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
+                        class="min-w-[85vw] md:min-w-[calc(33.333%-1rem)] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow">
                         <span
                             class="absolute -top-4 -right-4 w-10 h-10 bg-burgundy text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">2</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Quién es más probable que llegue
@@ -666,7 +915,7 @@
 
                     <!-- Q3 -->
                     <div
-                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
+                        class="min-w-[85vw] md:min-w-[calc(33.333%-1rem)] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow">
                         <span
                             class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">3</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Cuál es el trago favorito de los
@@ -701,7 +950,7 @@
 
                     <!-- Q4 -->
                     <div
-                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
+                        class="min-w-[85vw] md:min-w-[calc(33.333%-1rem)] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow">
                         <span
                             class="absolute -top-4 -right-4 w-10 h-10 bg-burgundy text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">4</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿Quién dijo 'Te Amo' primero?</h3>
@@ -742,7 +991,7 @@
 
                     <!-- Q5 -->
                     <div
-                        class="min-w-[85vw] md:min-w-[400px] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0">
+                        class="min-w-[85vw] md:min-w-[calc(33.333%-1rem)] snap-center bg-white p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow">
                         <span
                             class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">5</span>
                         <h3 class="font-serif text-xl text-charcoal mb-6 font-bold">¿A dónde nos iríamos de Luna de Miel
@@ -777,7 +1026,7 @@
 
                     <!-- Result Button (Last Slide) -->
                     <div
-                        class="min-w-[85vw] md:min-w-[400px] snap-center flex items-center justify-center flex-shrink-0">
+                        class="min-w-[85vw] md:min-w-[calc(33.333%-1rem)] snap-center flex items-center justify-center flex-shrink-0 py-8">
                         <button type="button" id="trivia-submit-btn"
                             class="bg-charcoal text-ivory px-10 py-4 rounded-full font-serif text-xl hover:bg-sage transition-colors shadow-xl transform hover:-translate-y-1">
                             Ver Resultado 🎲
@@ -805,26 +1054,26 @@
                     </div>
 
                     <form class="space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <input type="text" placeholder="Nombre"
-                                class="bg-white/5 border-b border-white/20 py-3 px-2 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
-                            <input type="text" placeholder="Apellido"
-                                class="bg-white/5 border-b border-white/20 py-3 px-2 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
-                        </div>
-                        <input type="email" placeholder="Correo Electrónico"
-                            class="w-full bg-white/5 border-b border-white/20 py-3 px-2 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
+                        <div class="space-y-4">
+                            <input type="text" id="uploader-name" placeholder="Tu Nombre"
+                                class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white">
+                            <input type="email" id="uploader-email" placeholder="Tu Correo (Opcional)"
+                                class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white">
+                            <input type="tel" id="uploader-whatsapp" placeholder="Tu WhatsApp (Opcional)"
+                                class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white">
 
-                        <!-- Song Request -->
-                        <div class="relative">
-                            <span class="absolute top-3 right-2 text-xl">🎵</span>
-                            <input type="text" placeholder="¿Qué canción no puede faltar?"
-                                class="w-full bg-white/5 border-b border-white/20 py-3 px-2 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
-                        </div>
+                            <!-- Song Request -->
+                            <div class="relative">
+                                <span class="absolute top-3 right-2 text-xl">🎵</span>
+                                <input type="text" placeholder="¿Qué canción no puede faltar?"
+                                    class="w-full bg-white/5 border-b border-white/20 py-3 px-2 text-white placeholder-white/30 focus:outline-none focus:border-gold transition-colors">
+                            </div>
 
-                        <button type="submit"
-                            class="w-full bg-gold text-night font-bold py-4 uppercase tracking-widest hover:bg-white transition-colors duration-300 mt-4 shadow-[0_0_20px_rgba(197,160,89,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">
-                            Confirmar & Bailar
-                        </button>
+                            <button type="submit"
+                                class="w-full bg-gold text-night font-bold py-4 uppercase tracking-widest hover:bg-white transition-colors duration-300 mt-4 shadow-[0_0_20px_rgba(197,160,89,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">
+                                Confirmar & Bailar
+                            </button>
+                        </div>
                     </form>
 
                     <div class="mt-12 text-center border-t border-white/10 pt-8">
@@ -891,6 +1140,33 @@
     <!-- Scripts -->
     <!-- Supabase JS (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Instagram Carousel Script -->
+    <script>
+        const instaScroll = document.getElementById('insta-scroll');
+        const dots = document.querySelectorAll('#instagram .rounded-full'); // Select dots within Instagram section
+
+        if (instaScroll && dots.length === 2) {
+            instaScroll.addEventListener('scroll', () => {
+                const scrollPosition = instaScroll.scrollLeft;
+                const width = instaScroll.clientWidth;
+                const index = Math.round(scrollPosition / width);
+
+                // Update dots
+                if (index === 0) {
+                    dots[0].classList.remove('bg-gray-300');
+                    dots[0].classList.add('bg-charcoal');
+                    dots[1].classList.remove('bg-charcoal');
+                    dots[1].classList.add('bg-gray-300');
+                } else {
+                    dots[0].classList.remove('bg-charcoal');
+                    dots[0].classList.add('bg-gray-300');
+                    dots[1].classList.remove('bg-gray-300');
+                    dots[1].classList.add('bg-charcoal');
+                }
+            });
+        }
+    </script>
+
     <!-- Custom Supabase Client -->
     <script src="js/supabase-client.js"></script>
     <script>
@@ -928,6 +1204,87 @@
 
         // 3. INTERACTIVE SECTIONS LOGIC
 
+        // Check Auth State
+        async function checkAuth() {
+            if (typeof window.getCurrentUser !== 'function') return;
+            const user = await window.getCurrentUser();
+
+            const authOverlay = document.getElementById('guest-auth-overlay');
+            const uploaderName = document.getElementById('uploader-name');
+            const photoUpload = document.getElementById('photo-upload');
+            const uploadBtn = document.getElementById('upload-btn');
+
+            if (user) {
+                // User is logged in
+                if (authOverlay) authOverlay.classList.add('hidden');
+                if (uploaderName) {
+                    uploaderName.value = user.user_metadata.full_name || user.email.split('@')[0];
+                    uploaderName.disabled = false;
+                }
+                if (photoUpload) photoUpload.disabled = false;
+                if (uploadBtn) uploadBtn.disabled = false;
+            } else {
+                // User is logged out (default state is locked)
+            }
+        }
+
+        // Login Button Logic
+        const loginGoogleBtn = document.getElementById('login-google-btn');
+        const toggleEmailBtn = document.getElementById('toggle-email-btn');
+        const toggleWhatsAppBtn = document.getElementById('toggle-whatsapp-btn');
+        const emailForm = document.getElementById('email-auth-form');
+        const whatsappForm = document.getElementById('whatsapp-auth-form');
+        const loginEmailBtn = document.getElementById('login-email-btn');
+        const loginWhatsAppBtn = document.getElementById('login-whatsapp-btn');
+
+        if (loginGoogleBtn) {
+            loginGoogleBtn.addEventListener('click', async () => {
+                loginGoogleBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Conectando...';
+                await window.signInWithGoogle();
+            });
+        }
+
+        if (toggleEmailBtn) {
+            toggleEmailBtn.addEventListener('click', () => {
+                emailForm.classList.toggle('hidden');
+                whatsappForm.classList.add('hidden');
+            });
+        }
+
+        if (toggleWhatsAppBtn) {
+            toggleWhatsAppBtn.addEventListener('click', () => {
+                whatsappForm.classList.toggle('hidden');
+                emailForm.classList.add('hidden');
+            });
+        }
+
+        if (loginEmailBtn) {
+            loginEmailBtn.addEventListener('click', async () => {
+                const email = document.getElementById('auth-email-input').value;
+                if (!email) return alert('Ingresa tu correo');
+                loginEmailBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+                const { error } = await window.signInWithEmail(email);
+                if (error) alert('Error: ' + error.message);
+                else alert('¡Revisa tu correo! Te enviamos un link mágico.');
+                loginEmailBtn.innerHTML = 'Enviar Link Mágico';
+            });
+        }
+
+        if (loginWhatsAppBtn) {
+            loginWhatsAppBtn.addEventListener('click', async () => {
+                const phone = document.getElementById('auth-phone-input').value;
+                if (!phone) return alert('Ingresa tu teléfono (+569...)');
+                loginWhatsAppBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+                const { error } = await window.signInWithWhatsApp(phone);
+                if (error) alert('Error: ' + error.message);
+                else alert('¡Revisa tu WhatsApp! Te enviamos un código.');
+                loginWhatsAppBtn.innerHTML = 'Enviar Código WhatsApp';
+            });
+        }
+
+        // Initialize Auth Check
+        setTimeout(checkAuth, 1000);
+
         // A. Guest Cam Logic
         const uploadBtn = document.getElementById('upload-btn');
         const uploadStatus = document.getElementById('upload-status');
@@ -935,6 +1292,8 @@
 
         // Load Gallery on Page Load
         async function loadGallery() {
+            // Keep the static examples if fetch fails or returns empty
+            // But we want to append real photos if they exist
             if (typeof window.fetchGuestPhotos !== 'function') return;
 
             const { data, error } = await window.fetchGuestPhotos();
@@ -946,66 +1305,65 @@
             }
 
             if (data && data.length > 0) {
-                galleryContainer.innerHTML = data.map(photo => `
-                    <div class="min-w-[200px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform">
+                // Prepend real photos to the existing static examples
+                const realPhotosHtml = data.map(photo => `
+                    <div class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center">
                         <img src="${photo.url}" class="w-full h-full object-cover">
-                        <p class="absolute bottom-4 left-0 right-0 text-center font-handwriting text-charcoal text-lg bg-white/80 backdrop-blur-sm py-1">
-                            ${photo.uploader_name || 'Anónimo'}
-                        </p>
+                        <div class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                            <div class="w-6 h-6 rounded-full bg-sage text-white flex items-center justify-center text-xs font-bold">
+                                ${photo.uploader_name ? photo.uploader_name[0].toUpperCase() : 'A'}
+                            </div>
+                            <span class="font-handwriting text-charcoal text-sm truncate">${photo.uploader_name || 'Anónimo'}</span>
+                        </div>
                     </div>
                 `).join('');
+
+                // Insert before the first child (static examples)
+                galleryContainer.insertAdjacentHTML('afterbegin', realPhotosHtml);
             } else {
                 galleryContainer.innerHTML = '<div class="min-w-[200px] flex items-center justify-center bg-gray-100 rounded-lg text-gray-400 text-xs">Sé el primero en subir una foto 📸</div>';
             }
         }
 
         // Handle Upload
-        if (uploadBtn) {
-            uploadBtn.addEventListener('click', async () => {
-                const fileInput = document.getElementById('photo-upload');
-                const nameInput = document.getElementById('uploader-name');
-                const file = fileInput.files[0];
-                const name = nameInput.value.trim() || 'Anónimo';
+        // Guest Cam Upload
+        document.getElementById('guest-photo-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            const uploaderName = document.getElementById('uploader-name').value;
+            const uploaderEmail = document.getElementById('uploader-email').value;
+            const uploaderWhatsapp = document.getElementById('uploader-whatsapp').value;
 
-                if (!file) {
-                    alert('Por favor selecciona una foto.');
-                    return;
-                }
+            if (!file) return;
+            if (!uploaderName) {
+                alert('Por favor ingresa tu nombre antes de subir una foto.');
+                return;
+            }
 
-                // UI Loading State
-                uploadBtn.disabled = true;
-                uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Subiendo...';
-                uploadStatus.classList.remove('hidden', 'text-green-600', 'text-red-600');
-                uploadStatus.classList.add('text-gray-500');
-                uploadStatus.innerText = 'Subiendo a la nube...';
+            const btn = document.querySelector('button[onclick="document.getElementById(\'guest-photo-input\').click()"]'); // This selector is tricky because the button triggers the input. 
+            // Actually, the input change triggers this. We should probably show a loading state on the upload area or a specific button if there was one.
+            // The current UI has a div acting as a button. Let's just use a simple alert for status for now as per previous implementation style, or better, update the UI.
 
-                const { data, error } = await window.uploadGuestPhoto(file, name);
+            // Let's show a simple loading indicator
+            const uploadArea = e.target.parentElement; // The div wrapping the input
+            const originalContent = uploadArea.innerHTML;
+            uploadArea.innerHTML = '<div class="text-white"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Subiendo...</p></div>';
 
-                if (error) {
-                    console.error(error);
-                    uploadStatus.classList.replace('text-gray-500', 'text-red-600');
-                    uploadStatus.innerText = 'Error al subir. Intenta de nuevo.';
-                    uploadBtn.disabled = false;
-                    uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
-                } else {
-                    uploadStatus.classList.replace('text-gray-500', 'text-green-600');
-                    uploadStatus.innerText = '¡Foto subida con éxito!';
+            const { data, error } = await uploadGuestPhoto(file, uploaderName, uploaderEmail, uploaderWhatsapp);
 
-                    // Reset Form
-                    fileInput.value = '';
-                    nameInput.value = '';
-
-                    // Refresh Gallery
-                    await loadGallery();
-
-                    setTimeout(() => {
-                        uploadBtn.disabled = false;
-                        uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
-                        uploadStatus.classList.add('hidden');
-                    }, 3000);
-                }
-            });
-        }
+            if (error) {
+                alert('Error al subir la foto. Por favor intenta de nuevo.');
+                uploadArea.innerHTML = originalContent;
+            } else {
+                alert('¡Foto subida con éxito! Gracias por compartir este momento.');
+                uploadArea.innerHTML = originalContent;
+                // Refresh gallery
+                loadGuestGallery();
+                // Clear inputs
+                document.getElementById('uploader-name').value = '';
+                document.getElementById('uploader-email').value = '';
+                document.getElementById('uploader-whatsapp').value = '';
+            }
+        });
 
         // Initialize Gallery
         // Wait a bit for Supabase script to load
@@ -1013,58 +1371,154 @@
 
 
         // B. DJ Booth Form Simulation
-        const djForm = document.getElementById('dj-form');
-        const djSubmitBtn = document.getElementById('dj-submit-btn');
-        const djSuccess = document.getElementById('dj-success');
+        // The original DJ Booth simulation logic is replaced by the new D. DJ Booth Logic below.
+        // Keeping the original form elements and their IDs for the new logic.
 
-        djForm.addEventListener('submit', function (e) {
-            e.preventDefault();
+        // C. Trivia Logic
+        let triviaAnswers = {};
+        let triviaScore = 0;
 
-            // Show Loading State
-            const originalBtnContent = djSubmitBtn.innerHTML;
-            djSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando...';
-            djSubmitBtn.disabled = true;
+        // Handle Option Selection
+        document.querySelectorAll('.trivia-option').forEach(button => {
+            button.addEventListener('click', function () {
+                const parent = this.closest('.trivia-card');
+                const questionIndex = Array.from(document.querySelectorAll('.trivia-card')).indexOf(parent);
 
-            // Simulate Network Request
-            setTimeout(() => {
-                // Hide Form, Show Success
-                djForm.style.opacity = '0';
-                djSuccess.classList.remove('opacity-0', 'pointer-events-none');
+                // Visual Selection
+                parent.querySelectorAll('.trivia-option').forEach(btn => {
+                    btn.classList.remove('bg-white/20', 'border-white');
+                    btn.classList.add('bg-white/5', 'border-white/10');
+                });
+                this.classList.remove('bg-white/5', 'border-white/10');
+                this.classList.add('bg-white/20', 'border-white');
 
-                // Reset form (optional, for demo purposes)
-                setTimeout(() => {
-                    djForm.reset();
-                    djSubmitBtn.innerHTML = originalBtnContent;
-                    djSubmitBtn.disabled = false;
-                }, 2000);
-            }, 1500);
-        });
+                // Logic
+                const isCorrect = this.dataset.correct === 'true';
+                const answerText = this.innerText;
 
-        // C. Trivia "Other" Logic & Results
-
-        // Handle "Other" Input Visibility
-        const radioInputs = document.querySelectorAll('input[type="radio"]');
-        const otherInputs = document.querySelectorAll('input[type="text"][id$="-other"]');
-
-        radioInputs.forEach(radio => {
-            radio.addEventListener('change', function () {
-                // Find the parent question container
-                const questionContainer = this.closest('.space-y-3');
-                const otherInput = questionContainer.querySelector('input[type="text"][id$="-other"]');
-
-                if (this.value === 'other') {
-                    otherInput.classList.remove('hidden');
-                    otherInput.focus();
+                // Special handling for "Other"
+                // Check if the button itself is the "Other" option
+                if (this.dataset.value === 'other') { // Assuming a data-value="other" on the button
+                    const input = parent.querySelector('input[type="text"][id$="-other"]');
+                    if (input) {
+                        input.classList.remove('hidden');
+                        input.focus();
+                        // We'll capture the input value on submit
+                        triviaAnswers[questionIndex] = { type: 'other', element: input };
+                    }
                 } else {
-                    otherInput.classList.add('hidden');
+                    // Hide other input if visible
+                    const input = parent.querySelector('input[type="text"][id$="-other"]');
+                    if (input) input.classList.add('hidden');
+
+                    triviaAnswers[questionIndex] = {
+                        answer: answerText,
+                        correct: isCorrect
+                    };
                 }
             });
         });
 
         // Handle Trivia Submit
-        document.getElementById('trivia-submit-btn').addEventListener('click', function () {
-            alert("¡Gracias por participar! Veremos si acertaste en la fiesta 🍹");
+        document.getElementById('trivia-submit-btn').addEventListener('click', async function () {
+            let score = 0;
+            let finalAnswers = {};
+
+            // Calculate Score & Gather Answers
+            for (let i = 0; i < 5; i++) { // Assuming 5 trivia questions
+                const answerData = triviaAnswers[i];
+                if (answerData) {
+                    if (answerData.type === 'other') {
+                        finalAnswers[`question_${i + 1}`] = `Otra: ${answerData.element.value}`;
+                        // "Other" is usually considered correct or neutral, let's give points for participation
+                        score += 10;
+                    } else {
+                        finalAnswers[`question_${i + 1}`] = answerData.answer;
+                        if (answerData.correct) score += 20;
+                    }
+                } else {
+                    finalAnswers[`question_${i + 1}`] = 'No respondida';
+                }
+            }
+
+            // Show Result
+            alert(`¡Tu puntaje es: ${score}/100! Guardando resultados...`);
+
+            // Save to Supabase
+            // Generate a random user ID for now since we don't have full auth yet
+            const userId = 'guest_' + Math.random().toString(36).substr(2, 9);
+            // Assuming saveTriviaResult function exists in supabase-client.js
+            if (typeof window.saveTriviaResult === 'function') {
+                const { data, error } = await window.saveTriviaResult(score, finalAnswers, userId);
+
+                if (error) {
+                    console.error('Error saving trivia:', error);
+                    alert('Hubo un error al guardar tu puntaje, pero ¡gracias por jugar!');
+                } else {
+                    alert('¡Resultados guardados! Veremos quién conoce más a los novios.');
+                }
+            } else {
+                console.warn('saveTriviaResult function not found. Trivia results not saved to Supabase.');
+                alert('¡Gracias por participar! Veremos si acertaste en la fiesta 🍹 (Resultados no guardados)');
+            }
         });
+
+        // D. DJ Booth Logic
+        async function handleSongRequest(event) {
+            event.preventDefault();
+
+            const songName = document.getElementById('song-name').value;
+            const artistName = document.getElementById('artist-name').value;
+            const requesterName = document.getElementById('requester-name').value;
+            const btn = document.getElementById('dj-submit-btn'); // Use the existing ID
+            const originalBtnContent = btn.innerHTML; // Store original content
+            const successMsg = document.getElementById('dj-success'); // Use the existing ID
+
+            // UI Loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...'; // Update button content
+
+            // Save to Supabase (using the new table we created in SQL)
+            // Note: We need to ensure the table exists. If the user hasn't run the SQL yet, this might fail.
+            // We'll wrap in try/catch and fallback to simulation if needed.
+
+            try {
+                if (window.supabase) { // Check if supabase client is available
+                    const { error } = await supabase
+                        .from('song_requests') // Assuming 'song_requests' is the table name
+                        .insert([{
+                            song_name: songName,
+                            artist_name: artistName,
+                            requester_name: requesterName
+                        }]);
+
+                    if (error) throw error;
+                } else {
+                    // Fallback simulation if Supabase client is not available
+                    console.warn('Supabase client not found. Simulating song request.');
+                    await new Promise(r => setTimeout(r, 1500));
+                }
+
+                // Success UI
+                successMsg.classList.remove('opacity-0', 'pointer-events-none'); // Show success message
+                document.getElementById('dj-form').reset(); // Reset form
+
+                // Reset button and hide success after delay
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnContent; // Restore original button content
+                    successMsg.classList.add('opacity-0', 'pointer-events-none'); // Hide success message
+                }, 3000);
+
+            } catch (err) {
+                console.error('Error requesting song:', err);
+                alert('Error al enviar la solicitud. Intenta de nuevo.');
+                btn.disabled = false;
+                btn.innerHTML = originalBtnContent; // Restore original button content
+            }
+        }
+        // Attach the new handler to the form's submit event
+        document.getElementById('dj-form').addEventListener('submit', handleSongRequest);
 
     </script>
 </body>

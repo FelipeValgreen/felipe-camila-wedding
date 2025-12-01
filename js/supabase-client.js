@@ -15,40 +15,46 @@ if (typeof supabase !== 'undefined') {
 }
 
 // Helper function to upload a photo
-async function uploadGuestPhoto(file, uploaderName) {
-    if (!supabaseClient) return { error: 'Supabase not initialized' };
-
-    const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
-    const filePath = `guest_uploads/${fileName}`;
-
-    // 1. Upload to Storage
-    const { data: uploadData, error: uploadError } = await supabaseClient.storage
-        .from('wedding-photos')
-        .upload(filePath, file);
-
-    if (uploadError) {
-        console.error('Error uploading photo:', uploadError);
-        return { error: uploadError };
+async function uploadGuestPhoto(file, uploaderName, email, whatsapp) {
+    if (!supabaseClient) {
+        console.error('Supabase client not initialized');
+        return { error: 'Supabase not initialized' };
     }
 
-    // 2. Get Public URL
-    const { data: { publicUrl } } = supabaseClient.storage
-        .from('wedding-photos')
-        .getPublicUrl(filePath);
+    try {
+        const fileName = `guest_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
 
-    // 3. Save Metadata to Database
-    const { data: dbData, error: dbError } = await supabaseClient
-        .from('guest_photos')
-        .insert([
-            { url: publicUrl, uploader_name: uploaderName }
-        ]);
+        // 1. Upload image to Storage
+        const { data: storageData, error: storageError } = await supabaseClient.storage
+            .from('wedding-photos')
+            .upload(fileName, file);
 
-    if (dbError) {
-        console.error('Error saving metadata:', dbError);
-        return { error: dbError };
+        if (storageError) throw storageError;
+
+        // 2. Get public URL
+        const { data: { publicUrl } } = supabaseClient.storage
+            .from('wedding-photos')
+            .getPublicUrl(fileName);
+
+        // 3. Save metadata to Database
+        const { data: dbData, error: dbError } = await supabaseClient
+            .from('guest_photos')
+            .insert([
+                {
+                    url: publicUrl,
+                    uploader_name: uploaderName,
+                    email: email,
+                    whatsapp: whatsapp
+                }
+            ]);
+
+        if (dbError) throw dbError;
+
+        return { data: { publicUrl, ...dbData }, error: null };
+    } catch (error) {
+        console.error('Error uploading photo:', error);
+        return { data: null, error };
     }
-
-    return { data: { publicUrl, ...dbData } };
 }
 
 // Helper function to save trivia results
@@ -87,7 +93,53 @@ async function fetchGuestPhotos() {
     return { data };
 }
 
+// Auth Functions
+async function signInWithGoogle() {
+    if (!supabaseClient) return { error: 'Supabase not initialized' };
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.href
+        }
+    });
+    return { data, error };
+}
+
+async function signInWithEmail(email) {
+    if (!supabaseClient) return { error: 'Supabase not initialized' };
+    const { data, error } = await supabaseClient.auth.signInWithOtp({
+        email: email,
+        options: {
+            emailRedirectTo: window.location.href
+        }
+    });
+    return { data, error };
+}
+
+async function signInWithWhatsApp(phone) {
+    if (!supabaseClient) return { error: 'Supabase not initialized' };
+    // Note: This requires WhatsApp provider configuration in Supabase
+    const { data, error } = await supabaseClient.auth.signInWithOtp({
+        phone: phone,
+        options: {
+            channel: 'whatsapp'
+        }
+    });
+    return { data, error };
+}
+
+async function getCurrentUser() {
+    if (!supabaseClient) return null;
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    return user;
+}
+
 // Expose functions globally
 window.uploadGuestPhoto = uploadGuestPhoto;
 window.saveTriviaResult = saveTriviaResult;
 window.fetchGuestPhotos = fetchGuestPhotos;
+window.signInWithGoogle = signInWithGoogle;
+window.signInWithEmail = signInWithEmail;
+window.signInWithWhatsApp = signInWithWhatsApp;
+window.getCurrentUser = getCurrentUser;
+window.supabaseClient = supabaseClient; // Expose client for direct access if needed
