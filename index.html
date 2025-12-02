@@ -542,53 +542,28 @@
                 <!-- Upload Form -->
                 <div class="bg-white p-8 rounded-xl shadow-xl max-w-md mx-auto mb-12 relative overflow-hidden">
                     <!-- Auth Overlay (Hidden if logged in) -->
-                    <div id="guest-auth-overlay"
-                        class="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
-                        <p class="font-serif text-xl text-charcoal mb-4">Identifícate para subir fotos</p>
-
-                        <!-- Google -->
-                        <button id="login-google-btn"
-                            class="bg-white border border-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-3 shadow-sm mb-3 w-full justify-center">
-                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5">
-                            Google
-                        </button>
-
-                        <!-- Email Toggle -->
-                        <button id="toggle-email-btn"
-                            class="bg-white border border-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-3 shadow-sm mb-3 w-full justify-center">
-                            <i class="fa-regular fa-envelope text-lg"></i>
-                            Correo Electrónico
-                        </button>
-
-                        <!-- Email Form (Hidden) -->
-                        <div id="email-auth-form" class="hidden w-full mt-2">
-                            <input type="email" id="auth-email-input" placeholder="tu@correo.com"
-                                class="w-full p-2 border border-gray-300 rounded mb-2">
-                            <button id="login-email-btn" class="w-full bg-charcoal text-white py-2 rounded">Enviar Link
-                                Mágico</button>
-                        </div>
-
-                        <p class="text-xs text-gray-400 mt-2">Solo usaremos tu nombre y foto.</p>
-                    </div>
-
+                    <!-- Simple Name/Email Form (No OAuth) -->
                     <div class="mb-4">
                         <label class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Tu
                             Nombre</label>
                         <input type="text" id="uploader-name" placeholder="Ej: Tía Coty"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-sage"
-                            disabled>
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-sage">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Tu
+                            Email (opcional)</label>
+                        <input type="email" id="uploader-email" placeholder="tu@correo.com"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-sage">
                     </div>
                     <div class="mb-6">
                         <label
                             class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Sube
                             tu Foto</label>
                         <input type="file" id="photo-upload" accept="image/*"
-                            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sage/10 file:text-sage hover:file:bg-sage/20"
-                            disabled>
+                            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sage/10 file:text-sage hover:file:bg-sage/20">
                     </div>
                     <button id="upload-btn"
-                        class="w-full bg-charcoal text-ivory font-bold py-3 rounded-lg hover:bg-sage transition-colors uppercase tracking-widest"
-                        disabled>
+                        class="w-full bg-charcoal text-ivory font-bold py-3 rounded-lg hover:bg-sage transition-colors uppercase tracking-widest">
                         <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto
                     </button>
                     <p id="upload-status" class="mt-4 text-xs font-bold hidden"></p>
@@ -1453,12 +1428,13 @@
         const photoInput = document.getElementById('photo-upload');
         const uploaderNameInput = document.getElementById('uploader-name');
         const statusMsg = document.getElementById('upload-status');
+        const uploaderEmailInput = document.getElementById('uploader-email');
 
         if (uploadBtn) {
             uploadBtn.addEventListener('click', async () => {
                 const file = photoInput.files[0];
                 const name = uploaderNameInput.value;
-                const user = await window.getCurrentUser();
+                const email = uploaderEmailInput.value || 'No proporcionado';
 
                 if (!file) return alert('Selecciona una foto');
                 if (!name) return alert('Ingresa tu nombre');
@@ -1466,7 +1442,7 @@
                 uploadBtn.disabled = true;
                 uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Subiendo...';
 
-                const { data, error } = await window.uploadGuestPhoto(file, name, user?.email || '', '');
+                const { data, error } = await window.uploadGuestPhoto(file, name, email, '');
 
                 if (error) {
                     console.error(error);
@@ -1475,7 +1451,7 @@
                     uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
                 } else {
                     // Send automatic email notification
-                    await window.sendPhotoUploadNotification(name, user?.email || 'email no disponible');
+                    await window.sendPhotoUploadNotification(name, email);
 
                     // Show thank you popup
                     statusMsg.classList.remove('hidden');
@@ -1497,6 +1473,7 @@
                     setTimeout(() => {
                         photoInput.value = '';
                         uploaderNameInput.value = '';
+                        uploaderEmailInput.value = '';
                         uploadBtn.disabled = false;
                         uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
                     }, 3000);
