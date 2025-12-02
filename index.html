@@ -584,55 +584,12 @@
 
                     <div id="guest-gallery"
                         class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 px-4 scrollbar-hide h-80 justify-start">
-                        <!-- Example Photos (Hardcoded for immediate visual) -->
-                        <div
-                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center">
-                            <img src="images/guest_example_1.jpg" class="w-full h-full object-cover">
-                            <div
-                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                                <img src="images/guest_example_1.jpg"
-                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
-                            </div>
-                        </div>
-                        <div
-                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-1 hover:rotate-0 transition-transform snap-center">
-                            <img src="images/guest_example_2.jpg" class="w-full h-full object-cover">
-                            <div
-                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                                <img src="images/guest_example_1.jpg"
-                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
-                            </div>
-                        </div>
-                        <div
-                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-2 hover:rotate-0 transition-transform snap-center">
-                            <img src="images/guest_example_3.jpg" class="w-full h-full object-cover">
-                            <div
-                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                                <img src="images/guest_example_1.jpg"
-                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
-                            </div>
-                        </div>
-                        <div
-                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-2 hover:rotate-0 transition-transform snap-center">
-                            <img src="images/guest_example_4.jpg" class="w-full h-full object-cover">
-                            <div
-                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                                <img src="images/guest_example_1.jpg"
-                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
-                            </div>
-                        </div>
-                        <div
-                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-1 hover:rotate-0 transition-transform snap-center">
-                            <img src="images/guest_example_5.jpg" class="w-full h-full object-cover">
-                            <div
-                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                                <img src="images/guest_example_1.jpg"
-                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                        <!-- Photos will be loaded dynamically from Supabase -->
+                        <div class="min-w-[300px] flex items-center justify-center text-center">
+                            <div class="text-sage-dark/60">
+                                <i class="fa-solid fa-camera text-4xl mb-3"></i>
+                                <p class="font-serif text-lg">Sé el primero en compartir un momento</p>
+                                <p class="text-sm text-sage-dark/40 mt-2">Sube tu foto arriba 📸</p>
                             </div>
                         </div>
 
@@ -881,9 +838,25 @@
                     <!-- Success Message (Hidden by default) -->
                     <div id="dj-success"
                         class="absolute inset-0 flex flex-col items-center justify-center bg-charcoal/95 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-500">
-                        <div class="text-6xl text-green-400 mb-4 animate-bounce">✅</div>
-                        <h3 class="font-serif text-3xl text-gold mb-2">¡Solicitud Enviada!</h3>
-                        <p class="text-white/80">¡Prepárate para bailar!</p>
+                        <div class="text-6xl text-gold mb-4">🎵</div>
+                        <h3 class="font-serif text-3xl text-gold mb-2">¡Gracias por tu canción!</h3>
+                        <p class="text-white/80 text-center px-6">Le diremos al DJ que vea la factibilidad de ponerla.
+                            ¡Muchas gracias!</p>
+                        <button
+                            onclick="document.getElementById('dj-success').classList.add('opacity-0', 'pointer-events-none'); document.getElementById('dj-form').reset();"
+                            class="mt-6 text-gold text-sm uppercase tracking-wider hover:text-white transition-colors">
+                            Cerrar
+                        </button>
+                    </div>
+
+                    <!-- Song Requests List (Background) -->
+                    <div id="song-requests-list"
+                        class="absolute -bottom-4 -right-4 -left-4 bg-white/5 p-6 rounded-t-xl border-t border-white/10 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-gold/30 scrollbar-track-transparent">
+                        <p class="text-xs uppercase tracking-wider text-gold/60 mb-3 font-bold">Canciones Solicitadas
+                        </p>
+                        <div id="song-list" class="space-y-2 text-xs text-white/60 font-handwriting">
+                            <!-- Songs will be added here dynamically -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1625,6 +1598,66 @@
 
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'De ahí somos!';
+            });
+        }
+
+        // DJ Song Request Form Handler
+        const djForm = document.getElementById('dj-form');
+        const djSuccess = document.getElementById('dj-success');
+        const songList = document.getElementById('song-list');
+
+        if (djForm) {
+            djForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const song = document.getElementById('dj-song').value;
+                const name = document.getElementById('dj-name').value;
+                const submitBtn = document.getElementById('dj-submit-btn');
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+                // Send email notification
+                const formData = new FormData();
+                formData.append('access_key', 'YOUR_WEB3FORMS_KEY');
+                formData.append('subject', 'Nueva Solicitud de Canción - Misión: Pista Llena');
+                formData.append('from_name', 'Sitio Web - Felipe y Camila');
+                formData.append('to_email', 'camilayfelipe.v@gmail.com');
+                formData.append('message', `Canción: ${song}\nSolicitada por: ${name}`);
+
+                try {
+                    const response = await fetch('https://api.web3forms.com/submit', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Show success message
+                        djSuccess.classList.remove('opacity-0', 'pointer-events-none');
+
+                        // Add song to list
+                        const songItem = document.createElement('div');
+                        songItem.className = 'text-white/70 leading-relaxed';
+                        songItem.innerHTML = `<span class="text-gold">♪</span> ${song} <span class="text-white/40">- solicitada por ${name}</span>`;
+                        songList.appendChild(songItem);
+
+                        // Hide success message after 3 seconds
+                        setTimeout(() => {
+                            djSuccess.classList.add('opacity-0', 'pointer-events-none');
+                            djForm.reset();
+                        }, 3000);
+                    } else {
+                        alert('Hubo un error al enviar tu solicitud. Por favor, intenta de nuevo.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Hubo un error al enviar tu solicitud. Por favor, intenta de nuevo.');
+                }
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Solicitar Canción 🎵</span>';
             });
         }
 
