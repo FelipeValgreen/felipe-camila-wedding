@@ -1186,18 +1186,43 @@
                         <p class="font-sans text-white/60 text-sm">¡No te quedes fuera de la fiesta!</p>
                     </div>
 
-                    <form class="space-y-6">
+                    <form id="rsvp-form" class="space-y-6">
                         <div class="space-y-4">
-                            <input type="text" id="uploader-name" placeholder="Tu Nombre"
+                            <input type="text" id="rsvp-name" placeholder="Tu Nombre" required
                                 class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white">
-                            <input type="email" id="uploader-email" placeholder="Tu Correo (Opcional)"
+                            <input type="email" id="rsvp-email" placeholder="Tu Correo (Opcional)"
                                 class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white">
-                            <input type="tel" id="uploader-whatsapp" placeholder="Tu WhatsApp" required
+                            <input type="tel" id="rsvp-whatsapp" placeholder="Tu WhatsApp" required
                                 class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white">
 
-                            <button type="submit"
+                            <!-- Partner Attendance -->
+                            <div class="space-y-3">
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" id="has-partner"
+                                        class="w-5 h-5 rounded border-white/20 bg-white/10 text-gold focus:ring-gold">
+                                    <span class="text-white/80 text-sm">¿Vienes con pareja?</span>
+                                </label>
+                                <input type="text" id="partner-name" placeholder="Nombre de tu pareja"
+                                    class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white hidden">
+                            </div>
+
+                            <button type="submit" id="rsvp-submit-btn"
                                 class="w-full bg-gold text-night font-bold py-4 uppercase tracking-widest hover:bg-white transition-colors duration-300 mt-4 shadow-[0_0_20px_rgba(197,160,89,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">
                                 De ahí somos!
+                            </button>
+                        </div>
+
+                        <!-- Success Message (Hidden by default) -->
+                        <div id="rsvp-success"
+                            class="hidden bg-white/10 border-2 border-gold rounded-lg p-6 text-center">
+                            <i class="fa-solid fa-heart text-gold text-4xl mb-3"></i>
+                            <h3 class="text-white font-serif text-2xl mb-2">¡Confirmación Recibida!</h3>
+                            <p class="text-white/80 text-sm mb-4">Estamos muy contentos de que nos acompañes en este día
+                                tan importante. ¡Muchas gracias y nos vemos en la fiesta!</p>
+                            <button
+                                onclick="document.getElementById('rsvp-success').classList.add('hidden'); document.getElementById('rsvp-form').reset();"
+                                class="text-gold text-sm uppercase tracking-wider hover:text-white transition-colors">
+                                Cerrar
                             </button>
                         </div>
                     </form>
@@ -1528,6 +1553,79 @@
             } else {
                 galleryContainer.innerHTML = '<div class="min-w-[200px] flex items-center justify-center bg-gray-100 rounded-lg text-gray-400 text-xs">Sé el primero en subir una foto 📸</div>';
             }
+        }
+
+        // RSVP Form Handler
+        const rsvpForm = document.getElementById('rsvp-form');
+        const hasPartnerCheckbox = document.getElementById('has-partner');
+        const partnerNameInput = document.getElementById('partner-name');
+        const rsvpSuccess = document.getElementById('rsvp-success');
+
+        // Toggle partner name field
+        if (hasPartnerCheckbox) {
+            hasPartnerCheckbox.addEventListener('change', () => {
+                if (hasPartnerCheckbox.checked) {
+                    partnerNameInput.classList.remove('hidden');
+                } else {
+                    partnerNameInput.classList.add('hidden');
+                    partnerNameInput.value = '';
+                }
+            });
+        }
+
+        // Handle RSVP form submission
+        if (rsvpForm) {
+            rsvpForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const name = document.getElementById('rsvp-name').value;
+                const email = document.getElementById('rsvp-email').value || 'No proporcionado';
+                const whatsapp = document.getElementById('rsvp-whatsapp').value;
+                const hasPartner = hasPartnerCheckbox.checked;
+                const partnerName = hasPartner ? partnerNameInput.value : '';
+
+                const submitBtn = document.getElementById('rsvp-submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+                // Send email notification using Web3Forms
+                const formData = new FormData();
+                formData.append('access_key', 'YOUR_WEB3FORMS_KEY');
+                formData.append('subject', `Nueva Confirmación de Asistencia: ${name}`);
+                formData.append('from_name', 'Sitio Web - Felipe y Camila');
+                formData.append('to_email', 'camilayfelipe.v@gmail.com');
+
+                let message = `Nombre: ${name}\nEmail: ${email}\nWhatsApp: ${whatsapp}`;
+                if (hasPartner) {
+                    message += `\n\n¿Viene con pareja?: Sí\nNombre de pareja: ${partnerName}`;
+                } else {
+                    message += `\n\n¿Viene con pareja?: No`;
+                }
+                formData.append('message', message);
+
+                try {
+                    const response = await fetch('https://api.web3forms.com/submit', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Show success message
+                        rsvpForm.classList.add('hidden');
+                        rsvpSuccess.classList.remove('hidden');
+                    } else {
+                        alert('Hubo un error al enviar tu confirmación. Por favor, intenta de nuevo.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Hubo un error al enviar tu confirmación. Por favor, intenta de nuevo.');
+                }
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'De ahí somos!';
+            });
         }
 
         // Handle Upload
