@@ -336,12 +336,31 @@
                     <div class="h-[1px] w-12 bg-[#2C241E]"></div>
                 </div>
 
-                <!-- Address Block -->
+                <!-- PARCHMENT MAP ADDRESS CARD (HERO) -->
                 <div
-                    class="relative inline-block p-8 border-2 border-dashed border-[#2C241E]/30 rounded-lg bg-[#F9F9F7]/50 backdrop-blur-sm transform rotate-1 hover:rotate-0 transition-transform duration-500">
-                    <i class="fa-solid fa-location-dot text-3xl text-[#556B2F] mb-4"></i>
-                    <p class="font-serif text-2xl text-[#2C241E]">Avenida El Valle 147, Casa 10</p>
-                    <p class="font-sans text-sm tracking-widest text-[#556B2F] uppercase mt-2">Chicureo, Santiago</p>
+                    class="relative max-w-md mx-auto mt-8 p-8 bg-[#EAE2D6] rounded-xl shadow-sm border-2 border-dashed border-[#A89F91] transform rotate-1 hover:rotate-0 transition-transform duration-300">
+                    <!-- Paper Texture Overlay -->
+                    <div
+                        class="absolute inset-0 rounded-xl bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-40 pointer-events-none mix-blend-multiply">
+                    </div>
+
+                    <div class="relative z-10 flex flex-col items-center text-center space-y-4">
+                        <!-- Map Pin Icon -->
+                        <div class="text-[#556B2F] text-4xl mb-2 drop-shadow-sm">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+
+                        <!-- Address Text -->
+                        <h3 class="font-serif text-2xl md:text-3xl text-[#2C241E] leading-tight">
+                            Avenida El Valle 147, Casa 10
+                        </h3>
+
+                        <!-- Location Text -->
+                        <p
+                            class="font-sans text-sm md:text-base text-[#556B2F] uppercase tracking-[0.15em] font-medium">
+                            Chicureo, Santiago
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
