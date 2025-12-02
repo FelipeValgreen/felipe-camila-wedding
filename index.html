@@ -262,17 +262,42 @@
                 </div>
             </div>
 
-            <!-- 4. DIRECCIÓN "ESCRITA A MANO" -->
-            <div class="absolute bottom-6 left-6 z-35 text-left transform -rotate-1 pointer-events-none opacity-90">
-                <p class="font-script text-2xl md:text-4xl text-[#3E3228] leading-none"
-                    style="text-shadow: 0 1px 0 rgba(255,255,255,0.4);">Avenida El Valle 147</p>
-                <p class="font-script text-2xl md:text-4xl text-[#3E3228] leading-none ml-4">Casa 10</p>
-                <p class="font-script text-xl md:text-3xl text-[#3E3228] leading-none mt-2">Chicureo, Santiago</p>
+            <!-- 3. DECORACIÓN DE ESQUINA: ESTAMPILLA BOHO (NUEVO ELEMENTO) -->
+            <div class="absolute top-5 right-5 z-35 transform rotate-3 pointer-events-none">
+                <!-- Stamp Container (Serrated Edge Simulation using radial gradient mask or dashed border) -->
+                <!-- Simple robust approach: White box with dashed border for perforation effect -->
+                <div class="w-20 h-24 bg-[#fdfbf7] p-1 shadow-sm relative overflow-hidden"
+                    style="mask-image: radial-gradient(circle at 2px 2px, transparent 2px, black 2.5px); mask-size: 10px 10px; mask-repeat: round; -webkit-mask-image: radial-gradient(circle at 2px 2px, transparent 2px, black 2.5px); -webkit-mask-size: 10px 10px; -webkit-mask-repeat: round;">
+                    <!-- Placeholder Image (Boho Dried Flowers) -->
+                    <img src="images/story_1.jpg" class="w-full h-full object-cover sepia opacity-80"
+                        alt="Estampilla Boho">
+                </div>
+
+                <!-- Postmark Overlay -->
+                <div class="absolute -bottom-4 -left-4 w-20 h-20 border-2 border-coffee-dark/60 rounded-full flex items-center justify-center rotate-[-15deg] mix-blend-multiply opacity-70"
+                    style="mask-image: url('https://www.transparenttextures.com/patterns/stardust.png');">
+                    <div class="w-16 h-16 border border-coffee-dark/40 rounded-full flex items-center justify-center">
+                        <span
+                            class="text-[0.5rem] font-sans text-coffee-dark font-bold tracking-widest text-center leading-tight">
+                            CORREOS<br>CHILE<br>2025
+                        </span>
+                    </div>
+                    <!-- Wavy lines -->
+                    <div
+                        class="absolute top-1/2 -right-8 w-12 h-3 border-t-2 border-b-2 border-coffee-dark/50 transform skew-x-12">
+                    </div>
+                </div>
             </div>
 
-            <!-- 6. BOTÓN DE APERTURA (Repositioned) -->
+            <!-- 2. CAMBIO DE TEXTO FRONTAL (NUEVO CONTENIDO) -->
+            <div class="absolute bottom-6 left-8 z-35 text-left transform -rotate-2 pointer-events-none opacity-90">
+                <p class="font-script text-3xl md:text-4xl text-[#3E3228] leading-tight"
+                    style="text-shadow: 0 1px 0 rgba(255,255,255,0.4);">Nuestra historia<br>comienza aquí...</p>
+            </div>
+
+            <!-- 4. BOTÓN DE ACCIÓN -->
             <div
-                class="absolute bottom-2 md:bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-[#F9F9F7] text-[#3E3228] px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 border border-[#D7C9B8] group-hover:-translate-y-1">
+                class="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 z-50 bg-[#F9F9F7] text-[#3E3228] px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 border border-[#D7C9B8] group-hover:-translate-y-1">
                 <p class="font-hand text-lg md:text-xl tracking-widest uppercase font-bold whitespace-nowrap">Abrir
                     Invitación</p>
             </div>
