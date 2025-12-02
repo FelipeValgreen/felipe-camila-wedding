@@ -224,7 +224,7 @@
 
     <!-- RUSTIC KRAFT ENVELOPE OVERLAY (PURE CSS DRAWING) -->
     <div id="envelope-overlay"
-        class="fixed inset-0 z-[100] bg-[#f0f0f0] flex items-center justify-center p-4 overflow-hidden">
+        class="fixed inset-0 z-[100] bg-[#F9F9F7] flex items-center justify-center p-4 overflow-hidden">
 
         <!-- Global Texture Overlay -->
         <div
@@ -232,7 +232,7 @@
         </div>
 
         <!-- The Envelope Container (CSS Drawn) -->
-        <div class="relative w-full max-w-2xl aspect-[1.6/1] bg-[#d6c6b0] flex items-center justify-center transform transition-transform duration-1000 cursor-pointer group z-20"
+        <div class="relative w-full max-w-2xl aspect-[1.6/1] bg-[#C8B296] flex items-center justify-center transform transition-transform duration-1000 cursor-pointer group z-20"
             id="open-btn" style="box-shadow: 0 25px 50px -12px rgba(62, 50, 40, 0.25);">
 
             <!-- Envelope Texture -->
@@ -242,12 +242,12 @@
 
             <!-- Envelope Flap (Triangular) -->
             <div class="absolute top-0 left-0 w-full h-full z-30 pointer-events-none"
-                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #e0d0ba; filter: drop-shadow(0 8px 12px rgba(0,0,0,0.15));">
+                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #D4C0A5; filter: drop-shadow(0 8px 12px rgba(0,0,0,0.15));">
                 <div
                     class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply">
                 </div>
                 <!-- Flap Border Line (Subtle) -->
-                <div class="absolute top-0 left-0 w-full h-full border-t border-[#cbbba5]/50"
+                <div class="absolute top-0 left-0 w-full h-full border-t border-[#B09A80]/50"
                     style="clip-path: polygon(0 0, 50% 55%, 100% 0);"></div>
             </div>
 
@@ -301,7 +301,7 @@
 
             <!-- 5. BOTÓN DE ACCIÓN (Rectangular) -->
             <div
-                class="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-50 bg-[#3E3228] text-[#F9F9F7] px-8 py-3 rounded-sm shadow-lg hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 border border-[#5c4b3e]">
+                class="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-50 bg-[#3E3228] text-[#F9F9F7] px-8 py-3 rounded-[2px] shadow-md hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1 border border-[#5c4b3e]">
                 <p class="font-sans text-sm tracking-[0.2em] uppercase font-bold whitespace-nowrap">Abrir Invitación</p>
             </div>
         </div>
