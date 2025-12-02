@@ -127,19 +127,28 @@ async function getCurrentUser() {
 // Send email notification when photo is uploaded
 async function sendPhotoUploadNotification(uploaderName, email) {
     try {
-        // Send email to couple using mailto (client-side)
-        const subject = encodeURIComponent(`Nueva foto subida por ${uploaderName}`);
-        const body = encodeURIComponent(`${uploaderName} (${email}) acaba de subir una foto en la sección "A través de tus ojos".\n\nRevisa las fotos en tu panel de administración.`);
-        const mailtoLink = `mailto:felipevalverde5673@gmail.com?subject=${subject}&body=${body}`;
+        // Use Web3Forms free API for email notifications
+        const formData = new FormData();
+        formData.append('access_key', 'YOUR_WEB3FORMS_KEY'); // You'll need to get this from web3forms.com
+        formData.append('subject', `Nueva foto subida por ${uploaderName}`);
+        formData.append('from_name', 'Felipe y Camila - Sitio Web');
+        formData.append('to_email', 'felipevalverde5673@gmail.com');
+        formData.append('message', `${uploaderName} (${email}) acaba de subir una foto en la sección "A través de tus ojos".\n\nRevisa las fotos en: ${window.location.origin}/#guest-paparazzi`);
 
-        // Open mailto in a hidden iframe to avoid navigation
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = mailtoLink;
-        document.body.appendChild(iframe);
-        setTimeout(() => document.body.removeChild(iframe), 1000);
+        const response = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            body: formData
+        });
 
-        return { success: true };
+        const result = await response.json();
+
+        if (result.success) {
+            console.log('Email notification sent successfully');
+            return { success: true };
+        } else {
+            console.error('Failed to send email:', result);
+            return { error: result.message };
+        }
     } catch (error) {
         console.error('Error sending notification:', error);
         return { error };

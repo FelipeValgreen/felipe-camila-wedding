@@ -1450,7 +1450,12 @@
                     uploadBtn.disabled = false;
                     uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
                 } else {
-                    // Send automatic email notification
+                    // Reload gallery to show new photo
+                    if (typeof loadGallery === 'function') {
+                        await loadGallery();
+                    }
+
+                    // Send email notification (note: mailto only opens email client, doesn't auto-send)
                     await window.sendPhotoUploadNotification(name, email);
 
                     // Show thank you popup
@@ -1459,7 +1464,8 @@
                         <div class="bg-sage-light/20 border-2 border-sage rounded-lg p-6 text-center">
                             <i class="fa-solid fa-circle-check text-5xl text-sage-dark mb-4"></i>
                             <h3 class="text-2xl font-serif text-charcoal mb-2">¡Gracias ${name}!</h3>
-                            <p class="text-sage-dark mb-4">Tu foto se ha subido exitosamente y hemos notificado a los novios.</p>
+                            <p class="text-sage-dark mb-4">Tu foto se ha subido exitosamente. Revisa el carrusel abajo para verla.</p>
+                            <p class="text-xs text-gray-500 mb-4">Nota: Para notificar a los novios, envíales un mensaje directamente.</p>
                             <button onclick="this.closest('.bg-sage-light\\/20').parentElement.classList.add('hidden')" 
                                     class="bg-charcoal text-white px-6 py-2 rounded-full hover:bg-sage transition-colors">
                                 Cerrar
