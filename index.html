@@ -233,22 +233,34 @@
 
         <!-- The Envelope Container (CSS Drawn) -->
         <div class="relative w-full max-w-2xl aspect-[1.6/1] bg-[#d6c6b0] flex items-center justify-center transform transition-transform duration-1000 cursor-pointer group z-20"
-            id="open-btn" style="box-shadow: 0 20px 40px -10px rgba(62, 50, 40, 0.15);">
+            id="open-btn" style="box-shadow: 0 25px 50px -12px rgba(62, 50, 40, 0.25);">
 
             <!-- Envelope Texture -->
             <div
-                class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply pointer-events-none">
+                class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-60 mix-blend-multiply pointer-events-none">
             </div>
 
             <!-- Envelope Flap (Triangular) -->
             <div class="absolute top-0 left-0 w-full h-full z-30 pointer-events-none"
-                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #e0d0ba; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
+                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #e0d0ba; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                 <div
                     class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply">
                 </div>
+                <!-- Flap Border Line (Subtle) -->
+                <div class="absolute top-0 left-0 w-full h-full border-t border-[#cbbba5]/50"
+                    style="clip-path: polygon(0 0, 50% 55%, 100% 0);"></div>
             </div>
 
-            <!-- 2. EL SELLO CENTRAL (Wax Seal - 3D Realistic) -->
+            <!-- 2. TEXTO "NUESTRA HISTORIA..." (Centered Top) -->
+            <div
+                class="absolute top-[25%] left-1/2 transform -translate-x-1/2 z-40 text-center w-full px-4 pointer-events-none">
+                <p class="font-script text-4xl md:text-5xl text-[#3E3228] leading-tight opacity-90"
+                    style="text-shadow: 0 1px 0 rgba(255,255,255,0.3); transform: rotate(-2deg);">
+                    Nuestra historia<br>comienza aquí
+                </p>
+            </div>
+
+            <!-- 3. EL SELLO CENTRAL (Wax Seal - Botanical) -->
             <div class="absolute top-[55%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-24 h-24 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-300"
                 style="background: radial-gradient(circle at 30% 30%, #e6cf8b, #c5a059, #8a6e3e); 
                        box-shadow: 
@@ -257,49 +269,41 @@
                            0 5px 15px rgba(0,0,0,0.3);">
                 <div class="w-20 h-20 border-2 border-[#3e2b18]/10 rounded-full flex items-center justify-center"
                     style="box-shadow: inset 0 0 10px rgba(0,0,0,0.2);">
-                    <span class="font-serif text-3xl font-bold text-[#8A6E3E] opacity-90"
-                        style="text-shadow: 1px 1px 0px rgba(255,255,255,0.4), -1px -1px 1px rgba(0,0,0,0.5);">F&C</span>
+                    <!-- Botanical Icon (FontAwesome Leaf/Branch) -->
+                    <i class="fa-solid fa-leaf text-4xl text-[#8A6E3E] opacity-80"
+                        style="text-shadow: 1px 1px 0px rgba(255,255,255,0.4), -1px -1px 1px rgba(0,0,0,0.5); transform: rotate(-45deg);"></i>
                 </div>
             </div>
 
-            <!-- 3. DECORACIÓN DE ESQUINA: ESTAMPILLA BOHO (NUEVO ELEMENTO) -->
-            <div class="absolute top-5 right-5 z-35 transform rotate-3 pointer-events-none">
-                <!-- Stamp Container (Serrated Edge Simulation using radial gradient mask or dashed border) -->
-                <!-- Simple robust approach: White box with dashed border for perforation effect -->
-                <div class="w-20 h-24 bg-[#fdfbf7] p-1 shadow-sm relative overflow-hidden"
-                    style="mask-image: radial-gradient(circle at 2px 2px, transparent 2px, black 2.5px); mask-size: 10px 10px; mask-repeat: round; -webkit-mask-image: radial-gradient(circle at 2px 2px, transparent 2px, black 2.5px); -webkit-mask-size: 10px 10px; -webkit-mask-repeat: round;">
-                    <!-- Placeholder Image (Boho Dried Flowers) -->
-                    <img src="images/story_1.jpg" class="w-full h-full object-cover sepia opacity-80"
-                        alt="Estampilla Boho">
+            <!-- 4. ESTAMPILLA BOHO ROMÁNTICA (Top Right) -->
+            <div class="absolute top-6 right-6 z-35 transform rotate-6 pointer-events-none">
+                <!-- Stamp Container -->
+                <div class="w-24 h-28 bg-white p-1 shadow-sm relative overflow-hidden"
+                    style="mask-image: radial-gradient(circle at 4px 4px, transparent 4px, black 4.5px); mask-size: 16px 16px; mask-repeat: round; -webkit-mask-image: radial-gradient(circle at 4px 4px, transparent 4px, black 4.5px); -webkit-mask-size: 16px 16px; -webkit-mask-repeat: round;">
+                    <!-- Image -->
+                    <img src="images/story_1.jpg" class="w-full h-full object-cover sepia-[.3] contrast-125"
+                        alt="Estampilla Couple">
                 </div>
 
-                <!-- Postmark Overlay -->
-                <div class="absolute -bottom-4 -left-4 w-20 h-20 border-2 border-coffee-dark/60 rounded-full flex items-center justify-center rotate-[-15deg] mix-blend-multiply opacity-70"
+                <!-- Postmark "LOVE" -->
+                <div class="absolute -bottom-2 -left-6 w-20 h-20 border-2 border-coffee-dark/60 rounded-full flex items-center justify-center rotate-[-15deg] mix-blend-multiply opacity-80"
                     style="mask-image: url('https://www.transparenttextures.com/patterns/stardust.png');">
                     <div class="w-16 h-16 border border-coffee-dark/40 rounded-full flex items-center justify-center">
-                        <span
-                            class="text-[0.5rem] font-sans text-coffee-dark font-bold tracking-widest text-center leading-tight">
-                            CORREOS<br>CHILE<br>2025
+                        <span class="text-xs font-sans text-coffee-dark font-bold tracking-widest text-center">
+                            LOVE
                         </span>
                     </div>
                     <!-- Wavy lines -->
                     <div
-                        class="absolute top-1/2 -right-8 w-12 h-3 border-t-2 border-b-2 border-coffee-dark/50 transform skew-x-12">
+                        class="absolute top-1/2 -right-6 w-10 h-3 border-t-2 border-b-2 border-coffee-dark/50 transform skew-x-12">
                     </div>
                 </div>
             </div>
 
-            <!-- 2. CAMBIO DE TEXTO FRONTAL (NUEVO CONTENIDO) -->
-            <div class="absolute bottom-6 left-8 z-35 text-left transform -rotate-2 pointer-events-none opacity-90">
-                <p class="font-script text-3xl md:text-4xl text-[#3E3228] leading-tight"
-                    style="text-shadow: 0 1px 0 rgba(255,255,255,0.4);">Nuestra historia<br>comienza aquí...</p>
-            </div>
-
-            <!-- 4. BOTÓN DE ACCIÓN -->
+            <!-- 5. BOTÓN DE ACCIÓN (Rectangular) -->
             <div
-                class="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 z-50 bg-[#F9F9F7] text-[#3E3228] px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 border border-[#D7C9B8] group-hover:-translate-y-1">
-                <p class="font-hand text-lg md:text-xl tracking-widest uppercase font-bold whitespace-nowrap">Abrir
-                    Invitación</p>
+                class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50 bg-[#3E3228] text-[#F9F9F7] px-8 py-3 rounded-sm shadow-lg hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 border border-[#5c4b3e]">
+                <p class="font-sans text-sm tracking-[0.2em] uppercase font-bold whitespace-nowrap">Abrir Invitación</p>
             </div>
         </div>
     </div>
