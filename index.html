@@ -1084,51 +1084,75 @@
                         class="inline-block bg-burgundy text-white font-sans text-sm uppercase tracking-widest py-3 px-8 rounded-full hover:bg-charcoal transition-colors shadow-lg">
                         <i class="fa-solid fa-envelope mr-2"></i> Compartir con los Novios
                     </a>
+                    <!-- PARCHMENT MAP ADDRESS CARD -->
+                    <div
+                        class="relative max-w-md mx-auto mt-12 p-8 bg-[#EAE2D6] rounded-xl shadow-sm border-2 border-dashed border-[#A89F91] transform rotate-1 hover:rotate-0 transition-transform duration-300">
+                        <!-- Paper Texture Overlay -->
+                        <div
+                            class="absolute inset-0 rounded-xl bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-40 pointer-events-none mix-blend-multiply">
+                        </div>
+
+                        <div class="relative z-10 flex flex-col items-center text-center space-y-4">
+                            <!-- Map Pin Icon -->
+                            <div class="text-[#556B2F] text-4xl mb-2 drop-shadow-sm">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+
+                            <!-- Address Text -->
+                            <h3 class="font-serif text-2xl md:text-3xl text-[#2C241E] leading-tight">
+                                Avenida El Valle 147, Casa 10
+                            </h3>
+
+                            <!-- Location Text -->
+                            <p
+                                class="font-sans text-sm md:text-base text-[#556B2F] uppercase tracking-[0.15em] font-medium">
+                                Chicureo, Santiago
+                            </p>
+                        </div>
+                    </div>
+                    <script>
+                        document.getElementById('trivia-submit-btn').addEventListener('click', function () {
+                            let score = 0;
+                            const total = 5;
+                            const form = document.getElementById('trivia-form');
+
+                            // Check answers
+                            for (let i = 1; i <= total; i++) {
+                                const selected = form.querySelector(`input[name="q${i}"]:checked`);
+                                if (selected && selected.dataset.correct === "true") {
+                                    score++;
+                                }
+                            }
+
+                            // Update UI
+                            document.getElementById('trivia-score').innerText = score;
+
+                            let message = "";
+                            if (score === 5) message = "¡Nos conoces mejor que nosotros mismos! 😱❤️";
+                            else if (score >= 3) message = "¡Muy bien! Se nota que eres cercano/a 😉";
+                            else message = "¡Ups! Toca juntarnos más seguido 🍻";
+
+                            document.getElementById('trivia-message').innerText = message;
+
+                            // Update Share Link
+                            const subject = encodeURIComponent("Mi resultado de la Trivia de Felipe y Camila");
+                            const body = encodeURIComponent(`¡Hola chicos!\n\nAcabo de jugar su trivia y obtuve ${score} de 5 puntos.\n\n${message}\n\n¡Nos vemos en el matri!`);
+                            const mailtoLink = `mailto:felipeycamila.v@gmail.com?subject=${subject}&body=${body}`;
+
+                            document.getElementById('trivia-share-btn').href = mailtoLink;
+
+                            // Show Result
+                            document.getElementById('trivia-result').classList.remove('hidden');
+                            document.getElementById('trivia-result').scrollIntoView({ behavior: 'smooth' });
+                        });
+                    </script>
                 </div>
 
-                <script>
-                    document.getElementById('trivia-submit-btn').addEventListener('click', function () {
-                        let score = 0;
-                        const total = 5;
-                        const form = document.getElementById('trivia-form');
-
-                        // Check answers
-                        for (let i = 1; i <= total; i++) {
-                            const selected = form.querySelector(`input[name="q${i}"]:checked`);
-                            if (selected && selected.dataset.correct === "true") {
-                                score++;
-                            }
-                        }
-
-                        // Update UI
-                        document.getElementById('trivia-score').innerText = score;
-
-                        let message = "";
-                        if (score === 5) message = "¡Nos conoces mejor que nosotros mismos! 😱❤️";
-                        else if (score >= 3) message = "¡Muy bien! Se nota que eres cercano/a 😉";
-                        else message = "¡Ups! Toca juntarnos más seguido 🍻";
-
-                        document.getElementById('trivia-message').innerText = message;
-
-                        // Update Share Link
-                        const subject = encodeURIComponent("Mi resultado de la Trivia de Felipe y Camila");
-                        const body = encodeURIComponent(`¡Hola chicos!\n\nAcabo de jugar su trivia y obtuve ${score} de 5 puntos.\n\n${message}\n\n¡Nos vemos en el matri!`);
-                        const mailtoLink = `mailto:felipeycamila.v@gmail.com?subject=${subject}&body=${body}`;
-
-                        document.getElementById('trivia-share-btn').href = mailtoLink;
-
-                        // Show Result
-                        document.getElementById('trivia-result').classList.remove('hidden');
-                        document.getElementById('trivia-result').scrollIntoView({ behavior: 'smooth' });
-                    });
-                </script>
-            </div>
-
-            <!-- Scroll Indicator for RSVP -->
-            <div class="absolute bottom-4 left-0 right-0 text-center animate-bounce z-10 pointer-events-none">
-                <p class="text-xs uppercase tracking-widest text-charcoal/50 mb-1">Confirmar Asistencia abajo</p>
-                <i class="fa-solid fa-chevron-down text-charcoal/50 text-xl"></i>
-            </div>
+                <!-- Scroll Indicator for RSVP -->
+                <div class="absolute bottom-4 left-0 right-0 text-center animate-bounce z-10 pointer-events-none">
+                    <p class="text-xs uppercase tracking-widest text-charcoal/50 mb-1">Confirmar Asistencia abajo</p>
+                    <i class="fa-solid fa-chevron-down text-charcoal/50 text-xl"></i>
+                </div>
         </section>
 
         <!-- NEW INTERACTIVE SECTIONS END -->
