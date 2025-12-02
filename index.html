@@ -608,58 +608,192 @@
                     <p id="upload-status" class="mt-4 text-xs font-bold hidden"></p>
                 </div>
 
-                <!-- Live Gallery Carousel -->
-                <div id="guest-gallery"
-                    class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:justify-center scrollbar-hide h-80">
-                    <!-- Example Photos (Hardcoded for immediate visual) -->
-                    <div
-                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center">
-                        <img src="images/guest_example_1.jpg" class="w-full h-full object-cover">
+                <!-- Live Gallery Carousel Container -->
+                <div class="relative group max-w-6xl mx-auto">
+                    <!-- Navigation Arrows -->
+                    <button
+                        onclick="document.getElementById('guest-gallery').scrollBy({left: -300, behavior: 'smooth'})"
+                        class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 bg-white/80 hover:bg-white text-charcoal w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-0 group-hover:opacity-100">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button onclick="document.getElementById('guest-gallery').scrollBy({left: 300, behavior: 'smooth'})"
+                        class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 bg-white/80 hover:bg-white text-charcoal w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-0 group-hover:opacity-100">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+
+                    <div id="guest-gallery"
+                        class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 px-4 scrollbar-hide h-80 justify-start">
+                        <!-- Example Photos (Hardcoded for immediate visual) -->
                         <div
-                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                            <img src="images/guest_example_1.jpg"
-                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center">
+                            <img src="images/guest_example_1.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
                         </div>
-                    </div>
-                    <div
-                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-1 hover:rotate-0 transition-transform snap-center">
-                        <img src="images/guest_example_2.jpg" class="w-full h-full object-cover">
                         <div
-                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                            <img src="images/guest_example_1.jpg"
-                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-1 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_2.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
                         </div>
-                    </div>
-                    <div
-                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-2 hover:rotate-0 transition-transform snap-center">
-                        <img src="images/guest_example_3.jpg" class="w-full h-full object-cover">
                         <div
-                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                            <img src="images/guest_example_1.jpg"
-                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-2 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_3.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
                         </div>
-                    </div>
-                    <div
-                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-2 hover:rotate-0 transition-transform snap-center">
-                        <img src="images/guest_example_4.jpg" class="w-full h-full object-cover">
                         <div
-                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                            <img src="images/guest_example_1.jpg"
-                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-2 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_4.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
                         </div>
-                    </div>
-                    <div
-                        class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-1 hover:rotate-0 transition-transform snap-center">
-                        <img src="images/guest_example_5.jpg" class="w-full h-full object-cover">
                         <div
-                            class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                            <img src="images/guest_example_1.jpg"
-                                class="w-6 h-6 rounded-full object-cover border border-gray-200">
-                            <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-1 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_5.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 6 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-1 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_6.png" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 7 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-2 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_7.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 8 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-2 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_8.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 9 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-1 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_9.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 10 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-1 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_10.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 11 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-2 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_11.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 12 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-2 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_12.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 13 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-1 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_13.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 14 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-1 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_14.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 15 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform rotate-2 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_15.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
+                        </div>
+                        <!-- New Image 16 -->
+                        <div
+                            class="min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform -rotate-2 hover:rotate-0 transition-transform snap-center">
+                            <img src="images/guest_example_16.jpg" class="w-full h-full object-cover">
+                            <div
+                                class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <img src="images/guest_example_1.jpg"
+                                    class="w-6 h-6 rounded-full object-cover border border-gray-200">
+                                <span class="font-handwriting text-charcoal text-sm">Felipe Valverde</span>
+                            </div>
                         </div>
                     </div>
                 </div>
