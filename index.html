@@ -231,10 +231,6 @@
             class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-40 pointer-events-none mix-blend-multiply">
         </div>
 
-        <!-- Boho Botanical Element (Entering from corner) -->
-        <img src="images/pampas_corner.png" onerror="this.style.display='none'" alt="Ramo Boho"
-            class="absolute top-0 right-0 w-64 md:w-96 z-[101] pointer-events-none opacity-90 mix-blend-multiply transform translate-x-10 -translate-y-10">
-
         <!-- The Envelope Container (CSS Drawn) -->
         <div class="relative w-full max-w-2xl aspect-[1.6/1] bg-[#d6c6b0] flex items-center justify-center transform transition-transform duration-1000 cursor-pointer group z-20"
             id="open-btn" style="box-shadow: 0 20px 40px -10px rgba(62, 50, 40, 0.15);">
@@ -261,8 +257,8 @@
                            0 5px 15px rgba(0,0,0,0.3);">
                 <div class="w-20 h-20 border-2 border-[#3e2b18]/10 rounded-full flex items-center justify-center"
                     style="box-shadow: inset 0 0 10px rgba(0,0,0,0.2);">
-                    <span class="font-serif text-3xl font-bold text-[#3e2b18] opacity-80"
-                        style="text-shadow: 1px 1px 0px rgba(255,255,255,0.3), -1px -1px 0px rgba(0,0,0,0.5);">F&C</span>
+                    <span class="font-serif text-3xl font-bold text-[#8A6E3E] opacity-90"
+                        style="text-shadow: 1px 1px 0px rgba(255,255,255,0.4), -1px -1px 1px rgba(0,0,0,0.5);">F&C</span>
                 </div>
             </div>
 
@@ -306,39 +302,37 @@
 
         <!-- A. HERO (CIVIL WEDDING) -->
         <section id="hero" class="min-h-screen flex items-center justify-center pt-24 pb-20 relative">
+            <div class="text-center z-10 reveal px-4">
+                <p class="font-sans text-xs tracking-[0.3em] text-[#556B2F] uppercase mb-4">Matrimonio Civil</p>
+                <h1 class="font-serif text-7xl md:text-9xl text-[#556B2F] mb-6">Felipe & Camila</h1>
+                <p class="font-hand text-3xl text-[#A68B5B] mb-8">¡Nos casamos!</p>
 
-            <!-- 6. TOP CENTER (Background): Nosotros -->
-            <div
-                class="polaroid absolute left-1/2 top-0 md:top-5 transform -translate-x-1/2 rotate-2 w-40 md:w-48 z-10 hover:scale-110 transition-transform duration-500 hover:z-50 opacity-90">
-                <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
-                    <img src="images/new_story_3.jpg" class="w-full h-full object-cover sepia-[.1]">
+                <div class="flex justify-center items-center space-x-4 mb-12">
+                    <div class="h-[1px] w-12 bg-[#2C241E]"></div>
+                    <p class="font-serif text-xl italic text-[#2C241E]">Sábado 25 de Octubre, 2025</p>
+                    <div class="h-[1px] w-12 bg-[#2C241E]"></div>
                 </div>
-                <p class="font-handwriting text-lg text-center text-charcoal/80">Nosotros</p>
-            </div>
 
-            <!-- 7. FLOATING FILLER: En Casa (Indoor) -->
-            <div
-                class="polaroid absolute left-10 top-[500px] md:left-[25%] md:bottom-10 md:top-auto w-48 md:w-56 transform -rotate-4 z-25 hover:scale-110 transition-transform duration-500 hover:z-50">
-                <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
-                    <img src="images/story_indoor_selfie.jpg" class="w-full h-full object-cover sepia-[.1]">
+                <!-- Address Block -->
+                <div
+                    class="relative inline-block p-8 border-2 border-dashed border-[#2C241E]/30 rounded-lg bg-[#F9F9F7]/50 backdrop-blur-sm transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                    <i class="fa-solid fa-location-dot text-3xl text-[#556B2F] mb-4"></i>
+                    <p class="font-serif text-2xl text-[#2C241E]">Avenida El Valle 147, Casa 10</p>
+                    <p class="font-sans text-sm tracking-widest text-[#556B2F] uppercase mt-2">Chicureo, Santiago</p>
                 </div>
-                <p class="font-handwriting text-lg text-center text-charcoal/80">En Casa</p>
-            </div>
-            </div>
             </div>
         </section>
 
         <!-- C. MUSIC QUOTE -->
         <section id="music" class="py-24 text-center reveal">
-            <div class="max-w-3xl mx-auto px-6">
-                <div class="w-16 h-px bg-sage mx-auto mb-8"></div>
-                <blockquote class="font-script text-4xl md:text-5xl text-charcoal leading-relaxed mb-6">
-                    "We've come so far, my dear. <br>Look how we've grown. <br>And I wanna stay with you <br>until we're
-                    grey and old."
-                </blockquote>
-                <cite class="font-sans text-xs uppercase tracking-[0.2em] text-sage-dark not-italic">— James
-                    Arthur</cite>
-                <div class="w-16 h-px bg-sage mx-auto mt-8"></div>
+            <div class="w-16 h-px bg-sage mx-auto mb-8"></div>
+            <blockquote class="font-script text-4xl md:text-5xl text-charcoal leading-relaxed mb-6">
+                "We've come so far, my dear. <br>Look how we've grown. <br>And I wanna stay with you <br>until we're
+                grey and old."
+            </blockquote>
+            <cite class="font-sans text-xs uppercase tracking-[0.2em] text-sage-dark not-italic">— James
+                Arthur</cite>
+            <div class="w-16 h-px bg-sage mx-auto mt-8"></div>
             </div>
         </section>
 
