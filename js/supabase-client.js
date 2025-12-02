@@ -36,15 +36,14 @@ async function uploadGuestPhoto(file, uploaderName, email, whatsapp) {
             .from('wedding-photos')
             .getPublicUrl(fileName);
 
-        // 3. Save metadata to Database
+        // 3. Save metadata to Database (only url and uploader_name)
         const { data: dbData, error: dbError } = await supabaseClient
             .from('guest_photos')
             .insert([
                 {
                     url: publicUrl,
-                    uploader_name: uploaderName,
-                    email: email,
-                    whatsapp: whatsapp
+                    uploader_name: uploaderName
+                    // Note: email is only used for notification, not stored in DB
                 }
             ]);
 
