@@ -242,7 +242,7 @@
 
             <!-- Envelope Flap (Triangular) -->
             <div class="absolute top-0 left-0 w-full h-full z-30 pointer-events-none"
-                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #e0d0ba; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #e0d0ba; filter: drop-shadow(0 8px 12px rgba(0,0,0,0.15));">
                 <div
                     class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply">
                 </div>
@@ -254,7 +254,7 @@
             <!-- 2. TEXTO "NUESTRA HISTORIA..." (Centered Top) -->
             <div
                 class="absolute top-[18%] left-1/2 transform -translate-x-1/2 z-40 text-center w-full px-4 pointer-events-none">
-                <p class="font-script text-4xl md:text-5xl text-[#3E3228] leading-tight opacity-90"
+                <p class="font-script text-5xl md:text-6xl text-[#3E3228] leading-tight opacity-90"
                     style="text-shadow: 0 1px 0 rgba(255,255,255,0.3); transform: rotate(-2deg);">
                     Nuestra historia<br>comienza aquí
                 </p>
@@ -276,26 +276,25 @@
             </div>
 
             <!-- 4. ESTAMPILLA BOHO ROMÁNTICA (Top Right) -->
-            <div class="absolute top-6 right-6 z-35 transform rotate-6 pointer-events-none">
+            <div class="absolute top-8 right-8 z-35 transform rotate-6 pointer-events-none">
                 <!-- Stamp Container -->
-                <div class="w-24 h-28 bg-white p-1 shadow-sm relative overflow-hidden"
+                <div class="w-24 h-28 bg-[#fdfbf7] p-1 shadow-sm relative overflow-hidden"
                     style="mask-image: radial-gradient(circle at 4px 4px, transparent 4px, black 4.5px); mask-size: 16px 16px; mask-repeat: round; -webkit-mask-image: radial-gradient(circle at 4px 4px, transparent 4px, black 4.5px); -webkit-mask-size: 16px 16px; -webkit-mask-repeat: round;">
                     <!-- Image -->
-                    <img src="images/story_1.jpg" class="w-full h-full object-cover sepia-[.3] contrast-125"
+                    <img src="images/story_1.jpg"
+                        class="w-full h-full object-cover sepia-[.4] contrast-125 brightness-110"
                         alt="Estampilla Couple">
                 </div>
 
-                <!-- Postmark "LOVE" -->
+                <!-- Postmark "HEART" -->
                 <div class="absolute -bottom-2 -left-6 w-20 h-20 border-2 border-coffee-dark/60 rounded-full flex items-center justify-center rotate-[-15deg] mix-blend-multiply opacity-80"
                     style="mask-image: url('https://www.transparenttextures.com/patterns/stardust.png');">
                     <div class="w-16 h-16 border border-coffee-dark/40 rounded-full flex items-center justify-center">
-                        <span class="text-xs font-sans text-coffee-dark font-bold tracking-widest text-center">
-                            LOVE
-                        </span>
+                        <i class="fa-solid fa-heart text-coffee-dark/80 text-xl"></i>
                     </div>
                     <!-- Wavy lines -->
                     <div
-                        class="absolute top-1/2 -right-6 w-10 h-3 border-t-2 border-b-2 border-coffee-dark/50 transform skew-x-12">
+                        class="absolute top-1/2 -right-6 w-10 h-4 border-t-2 border-b-2 border-coffee-dark/50 transform skew-x-12 rounded-full">
                     </div>
                 </div>
             </div>
