@@ -231,69 +231,38 @@
             class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-40 pointer-events-none mix-blend-multiply">
         </div>
 
-        <!-- Rustic Accents (Dried Flowers) -->
-
+        <!-- Boho Botanical Element (Entering from corner) -->
+        <img src="images/pampas_corner.png" onerror="this.style.display='none'" alt="Ramo Boho"
+            class="absolute top-0 right-0 w-64 md:w-96 z-[101] pointer-events-none opacity-90 mix-blend-multiply transform translate-x-10 -translate-y-10">
 
         <!-- The Envelope Container (CSS Drawn) -->
-        <div class="relative w-full max-w-2xl aspect-[1.6/1] bg-[#d6c6b0] shadow-2xl flex items-center justify-center transform transition-transform duration-1000 cursor-pointer group z-20"
-            id="open-btn" style="box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);">
+        <div class="relative w-full max-w-2xl aspect-[1.6/1] bg-[#d6c6b0] flex items-center justify-center transform transition-transform duration-1000 cursor-pointer group z-20"
+            id="open-btn" style="box-shadow: 0 20px 40px -10px rgba(62, 50, 40, 0.15);">
 
             <!-- Envelope Texture -->
             <div
                 class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply pointer-events-none">
             </div>
 
-            <!-- 3. INTEGRACIÓN BOTÁNICA (Behind Flap) -->
-            <img src="images/dried_flowers.png" alt="Flores Secas"
-                class="absolute -top-10 -right-10 w-48 h-auto z-25 transform rotate-12 opacity-90 mix-blend-multiply pointer-events-none"
-                style="filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.1));">
-
             <!-- Envelope Flap (Triangular) -->
             <div class="absolute top-0 left-0 w-full h-full z-30 pointer-events-none"
-                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #e0d0ba; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));">
+                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #e0d0ba; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
                 <div
                     class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply">
                 </div>
             </div>
 
-            <!-- 2. EL SELLO CENTRAL (Wax Seal) -->
-            <div class="absolute top-[55%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-300"
-                style="background: radial-gradient(circle at 30% 30%, #e6cf8b, #c5a059, #8a6e3e); box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.4);">
-                <div class="w-16 h-16 border border-[#3e2b18]/20 rounded-full flex items-center justify-center">
-                    <span class="font-serif text-2xl font-bold text-[#3e2b18] drop-shadow-sm"
-                        style="text-shadow: 0 1px 1px rgba(255,255,255,0.2);">F&C</span>
-                </div>
-            </div>
-
-            <!-- 5. SELLOS POSTALES (Vintage Stamps - CSS Simulation) -->
-            <div class="absolute top-4 right-4 z-35 flex gap-2 transform rotate-2 pointer-events-none">
-                <!-- Stamp 1 -->
-                <div
-                    class="w-16 h-20 bg-[#fdfbf7] border-2 border-dashed border-gray-300 shadow-sm p-1 flex items-center justify-center overflow-hidden relative">
-                    <div class="absolute inset-0 border-[4px] border-white border-dotted"></div>
-                    <img src="images/story_1.jpg" class="w-full h-full object-cover opacity-80 grayscale sepia"
-                        alt="Stamp">
-                </div>
-                <!-- Stamp 2 -->
-                <div
-                    class="w-16 h-20 bg-[#fdfbf7] border-2 border-dashed border-gray-300 shadow-sm p-1 flex items-center justify-center overflow-hidden relative transform -rotate-3 translate-y-2">
-                    <div class="absolute inset-0 border-[4px] border-white border-dotted"></div>
-                    <img src="images/story_2.jpg" class="w-full h-full object-cover opacity-80 grayscale sepia"
-                        alt="Stamp">
-                </div>
-                <!-- Postmark Overlay -->
-                <div
-                    class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-coffee-dark/40 rounded-full flex items-center justify-center rotate-[-15deg] mix-blend-multiply pointer-events-none">
-                    <div class="w-20 h-20 border border-coffee-dark/40 rounded-full flex items-center justify-center">
-                        <span
-                            class="text-[0.6rem] font-sans text-coffee-dark/60 font-bold tracking-widest text-center leading-tight">
-                            CORREOS DE CHILE<br>SANTIAGO<br>2025
-                        </span>
-                    </div>
-                    <!-- Wavy lines -->
-                    <div
-                        class="absolute top-1/2 -right-10 w-16 h-4 border-t-2 border-b-2 border-coffee-dark/30 transform skew-x-12">
-                    </div>
+            <!-- 2. EL SELLO CENTRAL (Wax Seal - 3D Realistic) -->
+            <div class="absolute top-[55%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-24 h-24 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-300"
+                style="background: radial-gradient(circle at 30% 30%, #e6cf8b, #c5a059, #8a6e3e); 
+                       box-shadow: 
+                           inset 2px 2px 5px rgba(255,255,255,0.4),
+                           inset -2px -2px 5px rgba(0,0,0,0.4),
+                           0 5px 15px rgba(0,0,0,0.3);">
+                <div class="w-20 h-20 border-2 border-[#3e2b18]/10 rounded-full flex items-center justify-center"
+                    style="box-shadow: inset 0 0 10px rgba(0,0,0,0.2);">
+                    <span class="font-serif text-3xl font-bold text-[#3e2b18] opacity-80"
+                        style="text-shadow: 1px 1px 0px rgba(255,255,255,0.3), -1px -1px 0px rgba(0,0,0,0.5);">F&C</span>
                 </div>
             </div>
 
@@ -317,17 +286,17 @@
     <!-- NAVIGATION -->
     <nav id="main-nav" class="fixed top-0 left-0 w-full z-50 py-4 transition-all duration-300">
         <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
-            <a href="#hero" class="font-serif text-2xl text-sage-dark font-bold">F&C</a>
+            <a href="#hero" class="font-serif text-2xl text-[#2C241E] font-bold">F&C</a>
             <div class="hidden md:flex space-x-8">
                 <a href="#story"
-                    class="text-xs uppercase tracking-widest text-charcoal hover:text-sage-dark transition-colors">Historia</a>
+                    class="text-xs uppercase tracking-widest text-[#2C241E] hover:text-[#6B7D5C] transition-colors">Historia</a>
                 <a href="#dresscode"
-                    class="text-xs uppercase tracking-widest text-charcoal hover:text-sage-dark transition-colors">Dress
+                    class="text-xs uppercase tracking-widest text-[#2C241E] hover:text-[#6B7D5C] transition-colors">Dress
                     Code</a>
                 <a href="#party"
-                    class="text-xs uppercase tracking-widest text-charcoal hover:text-sage-dark transition-colors font-bold">Fiesta</a>
+                    class="text-xs uppercase tracking-widest text-[#2C241E] hover:text-[#6B7D5C] transition-colors font-bold">Fiesta</a>
                 <a href="#rsvp"
-                    class="text-xs uppercase tracking-widest text-charcoal hover:text-sage-dark transition-colors">RSVP</a>
+                    class="text-xs uppercase tracking-widest text-[#2C241E] hover:text-[#6B7D5C] transition-colors">RSVP</a>
             </div>
         </div>
     </nav>
@@ -337,112 +306,25 @@
 
         <!-- A. HERO (CIVIL WEDDING) -->
         <section id="hero" class="min-h-screen flex items-center justify-center pt-24 pb-20 relative">
-            <div class="max-w-4xl mx-auto text-center px-4 z-10 reveal active">
-                <p class="font-sans text-sm tracking-[0.3em] uppercase text-sage-dark mb-6">Nos Casamos</p>
-                <h1 class="font-serif text-5xl md:text-7xl text-charcoal mb-4 leading-tight">
-                    Matrimonio Civil
-                </h1>
-                <h2 class="font-script text-5xl md:text-7xl text-sage mb-8">Felipe & Camila</h2>
 
-                <div class="flex items-center justify-center gap-6 mb-10">
-                    <div class="h-px w-16 bg-sage"></div>
-                    <div class="text-center">
-                        <p class="font-serif text-3xl text-charcoal">28</p>
-                        <p class="font-sans text-xs uppercase tracking-widest text-slate-500">Marzo 2026</p>
-                    </div>
-                    <div class="h-px w-16 bg-sage"></div>
+            <!-- 6. TOP CENTER (Background): Nosotros -->
+            <div
+                class="polaroid absolute left-1/2 top-0 md:top-5 transform -translate-x-1/2 rotate-2 w-40 md:w-48 z-10 hover:scale-110 transition-transform duration-500 hover:z-50 opacity-90">
+                <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
+                    <img src="images/new_story_3.jpg" class="w-full h-full object-cover sepia-[.1]">
                 </div>
-
-                <div class="inline-block bg-white/50 px-8 py-4 rounded-full border border-sage/20 backdrop-blur-sm">
-                    <p class="font-sans text-xs tracking-widest uppercase text-charcoal">Condominio Las Canteras
-                        Chicureo</p>
-                </div>
+                <p class="font-handwriting text-lg text-center text-charcoal/80">Nosotros</p>
             </div>
-        </section>
 
-        <!-- B. STORY (SERENDIPIA) -->
-        <section id="story" class="py-32 relative bg-white/80 backdrop-blur-sm">
-            <div class="max-w-6xl mx-auto px-4">
-                <div class="text-center mb-20 reveal">
-                    <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-6 leading-tight">Serendipia: <br><span
-                            class="font-script text-5xl md:text-6xl text-sage">De Bocas del Toro a Santiago y de
-                            Santiago al mundo</span></h2>
-                    <p class="font-sans text-slate-600 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-                        Nos conocimos un 4 de Enero de 2019 en las playas de Panamá. Sin nombres, solo un momento
-                        perfecto.
-                        3 meses después, el destino jugó sus cartas: <strong>Nuestros mejores amigos y hoy
-                            padrinos</strong>, nos reencontraron. Lo que Lo que empezó como una coincidencia, hoy es
-                        para siempre.
-                    </p>
+            <!-- 7. FLOATING FILLER: En Casa (Indoor) -->
+            <div
+                class="polaroid absolute left-10 top-[500px] md:left-[25%] md:bottom-10 md:top-auto w-48 md:w-56 transform -rotate-4 z-25 hover:scale-110 transition-transform duration-500 hover:z-50">
+                <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
+                    <img src="images/story_indoor_selfie.jpg" class="w-full h-full object-cover sepia-[.1]">
                 </div>
-
-                <div class="relative h-[1200px] md:h-[700px] w-full reveal mt-12">
-                    <!-- Polaroids Gallery (Curated Collage) -->
-
-                    <!-- 1. CENTER HERO: Para Siempre (B&W) -->
-                    <div
-                        class="polaroid absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-2 w-64 md:w-72 z-40 hover:scale-110 transition-transform duration-500 hover:z-50 shadow-2xl">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
-                            <img src="images/uploaded_image_3_1764298805324.jpg"
-                                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
-                        </div>
-                        <p class="font-handwriting text-2xl text-center text-charcoal">Para Siempre</p>
-                    </div>
-
-                    <!-- 2. TOP LEFT: Nuestras Rutas (Car) -->
-                    <div
-                        class="polaroid absolute left-4 top-10 md:left-10 md:top-10 w-52 md:w-60 transform -rotate-6 z-30 hover:scale-110 transition-transform duration-500 hover:z-50">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
-                            <img src="images/story_car_selfie.jpg" class="w-full h-full object-cover sepia-[.1]">
-                        </div>
-                        <p class="font-handwriting text-xl text-center text-charcoal/80">Nuestras Rutas</p>
-                    </div>
-
-                    <!-- 3. TOP RIGHT: Paseo en Bote (Boat) -->
-                    <div
-                        class="polaroid absolute right-4 top-40 md:right-10 md:top-16 w-56 md:w-64 transform rotate-3 z-30 hover:scale-110 transition-transform duration-500 hover:z-50">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
-                            <img src="images/story_boat_dog.jpg" class="w-full h-full object-cover sepia-[.1]">
-                        </div>
-                        <p class="font-handwriting text-xl text-center text-charcoal/80">Paseo en Bote</p>
-                    </div>
-
-                    <!-- 4. BOTTOM LEFT: Momentos -->
-                    <div
-                        class="polaroid absolute left-8 bottom-60 md:left-20 md:bottom-20 w-44 md:w-52 transform rotate-3 z-20 hover:scale-110 transition-transform duration-500 hover:z-50">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
-                            <img src="images/new_story_1.jpg" class="w-full h-full object-cover sepia-[.1]">
-                        </div>
-                        <p class="font-handwriting text-lg text-center text-charcoal/80">Momentos</p>
-                    </div>
-
-                    <!-- 5. BOTTOM RIGHT: Aventuras -->
-                    <div
-                        class="polaroid absolute right-8 bottom-20 md:right-24 md:bottom-24 w-44 md:w-52 transform -rotate-3 z-20 hover:scale-110 transition-transform duration-500 hover:z-50">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
-                            <img src="images/new_story_2.jpg" class="w-full h-full object-cover sepia-[.1]">
-                        </div>
-                        <p class="font-handwriting text-lg text-center text-charcoal/80">Aventuras</p>
-                    </div>
-
-                    <!-- 6. TOP CENTER (Background): Nosotros -->
-                    <div
-                        class="polaroid absolute left-1/2 top-0 md:top-5 transform -translate-x-1/2 rotate-2 w-40 md:w-48 z-10 hover:scale-110 transition-transform duration-500 hover:z-50 opacity-90">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
-                            <img src="images/new_story_3.jpg" class="w-full h-full object-cover sepia-[.1]">
-                        </div>
-                        <p class="font-handwriting text-lg text-center text-charcoal/80">Nosotros</p>
-                    </div>
-
-                    <!-- 7. FLOATING FILLER: En Casa (Indoor) -->
-                    <div
-                        class="polaroid absolute left-10 top-[500px] md:left-[25%] md:bottom-10 md:top-auto w-48 md:w-56 transform -rotate-4 z-25 hover:scale-110 transition-transform duration-500 hover:z-50">
-                        <div class="aspect-[4/5] overflow-hidden mb-3 bg-gray-100 shadow-inner">
-                            <img src="images/story_indoor_selfie.jpg" class="w-full h-full object-cover sepia-[.1]">
-                        </div>
-                        <p class="font-handwriting text-lg text-center text-charcoal/80">En Casa</p>
-                    </div>
-                </div>
+                <p class="font-handwriting text-lg text-center text-charcoal/80">En Casa</p>
+            </div>
+            </div>
             </div>
         </section>
 
