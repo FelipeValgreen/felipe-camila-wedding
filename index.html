@@ -1327,6 +1327,36 @@
     </script>
 
     <!-- Custom Supabase Client -->
+    <!-- Persistent RSVP CTA -->
+    <a href="#rsvp" id="rsvp-cta"
+        class="fixed bottom-0 left-0 w-full bg-ivory/95 backdrop-blur-sm border-t border-sage/30 py-4 z-40 text-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] transition-transform duration-500">
+        <div class="flex flex-col items-center justify-center gap-1">
+            <span class="font-serif text-sm md:text-base tracking-[0.2em] text-charcoal uppercase">Confirmar Asistencia
+                Abajo</span>
+            <i class="fa-solid fa-chevron-down text-sage-dark animate-bounce"></i>
+        </div>
+    </a>
+
+    <!-- Scroll Handling Script for CTA -->
+    <script>
+        window.addEventListener('scroll', function () {
+            const rsvpSection = document.getElementById('rsvp');
+            const cta = document.getElementById('rsvp-cta');
+
+            if (rsvpSection && cta) {
+                const rect = rsvpSection.getBoundingClientRect();
+                const isVisible = (rect.top <= window.innerHeight) && (rect.bottom >= 0);
+
+                // Hide CTA when RSVP section is visible
+                if (isVisible) {
+                    cta.style.transform = 'translateY(100%)';
+                } else {
+                    cta.style.transform = 'translateY(0)';
+                }
+            }
+        });
+    </script>
+
     <script src="js/supabase-client.js"></script>
     <script>
         // 1. Envelope Intro & Navigation Reveal
