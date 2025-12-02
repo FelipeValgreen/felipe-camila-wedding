@@ -560,7 +560,7 @@
                 <div class="bg-white p-8 rounded-xl shadow-xl max-w-md mx-auto mb-12 relative overflow-hidden">
                     <!-- Auth Overlay (Hidden if logged in) -->
                     <div id="guest-auth-overlay"
-                        class="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center p-6 text-center">
+                        class="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
                         <p class="font-serif text-xl text-charcoal mb-4">Identifícate para subir fotos</p>
 
                         <!-- Google -->
@@ -577,27 +577,12 @@
                             Correo Electrónico
                         </button>
 
-                        <!-- WhatsApp Toggle -->
-                        <button id="toggle-whatsapp-btn"
-                            class="bg-[#25D366] border border-[#25D366] text-white font-bold py-3 px-6 rounded-lg hover:bg-[#128C7E] transition-colors flex items-center gap-3 shadow-sm mb-3 w-full justify-center">
-                            <i class="fa-brands fa-whatsapp text-xl"></i>
-                            WhatsApp
-                        </button>
-
                         <!-- Email Form (Hidden) -->
                         <div id="email-auth-form" class="hidden w-full mt-2">
                             <input type="email" id="auth-email-input" placeholder="tu@correo.com"
                                 class="w-full p-2 border border-gray-300 rounded mb-2">
                             <button id="login-email-btn" class="w-full bg-charcoal text-white py-2 rounded">Enviar Link
                                 Mágico</button>
-                        </div>
-
-                        <!-- WhatsApp Form (Hidden) -->
-                        <div id="whatsapp-auth-form" class="hidden w-full mt-2">
-                            <input type="tel" id="auth-phone-input" placeholder="+569..."
-                                class="w-full p-2 border border-gray-300 rounded mb-2">
-                            <button id="login-whatsapp-btn" class="w-full bg-[#25D366] text-white py-2 rounded">Enviar
-                                Código WhatsApp</button>
                         </div>
 
                         <p class="text-xs text-gray-400 mt-2">Solo usaremos tu nombre y foto.</p>
@@ -1420,11 +1405,8 @@
         // Login Button Logic
         const loginGoogleBtn = document.getElementById('login-google-btn');
         const toggleEmailBtn = document.getElementById('toggle-email-btn');
-        const toggleWhatsAppBtn = document.getElementById('toggle-whatsapp-btn');
         const emailForm = document.getElementById('email-auth-form');
-        const whatsappForm = document.getElementById('whatsapp-auth-form');
         const loginEmailBtn = document.getElementById('login-email-btn');
-        const loginWhatsAppBtn = document.getElementById('login-whatsapp-btn');
 
         if (loginGoogleBtn) {
             loginGoogleBtn.addEventListener('click', async () => {
@@ -1436,14 +1418,6 @@
         if (toggleEmailBtn) {
             toggleEmailBtn.addEventListener('click', () => {
                 emailForm.classList.toggle('hidden');
-                whatsappForm.classList.add('hidden');
-            });
-        }
-
-        if (toggleWhatsAppBtn) {
-            toggleWhatsAppBtn.addEventListener('click', () => {
-                whatsappForm.classList.toggle('hidden');
-                emailForm.classList.add('hidden');
             });
         }
 
@@ -1453,21 +1427,56 @@
                 if (!email) return alert('Ingresa tu correo');
                 loginEmailBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
                 const { error } = await window.signInWithEmail(email);
-                if (error) alert('Error: ' + error.message);
-                else alert('¡Revisa tu correo! Te enviamos un link mágico.');
-                loginEmailBtn.innerHTML = 'Enviar Link Mágico';
+                if (error) {
+                    alert('Error: ' + error.message);
+                    loginEmailBtn.innerText = 'Enviar Link Mágico';
+                } else {
+                    alert('¡Revisa tu correo! Te enviamos un link mágico.');
+                    loginEmailBtn.innerText = 'Link Enviado';
+                }
             });
         }
 
-        if (loginWhatsAppBtn) {
-            loginWhatsAppBtn.addEventListener('click', async () => {
-                const phone = document.getElementById('auth-phone-input').value;
-                if (!phone) return alert('Ingresa tu teléfono (+569...)');
-                loginWhatsAppBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
-                const { error } = await window.signInWithWhatsApp(phone);
-                if (error) alert('Error: ' + error.message);
-                else alert('¡Revisa tu WhatsApp! Te enviamos un código.');
-                loginWhatsAppBtn.innerHTML = 'Enviar Código WhatsApp';
+        // Upload Logic
+        const uploadBtn = document.getElementById('upload-btn');
+        const photoInput = document.getElementById('photo-upload');
+        const uploaderNameInput = document.getElementById('uploader-name');
+        const statusMsg = document.getElementById('upload-status');
+
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', async () => {
+                const file = photoInput.files[0];
+                const name = uploaderNameInput.value;
+                const user = await window.getCurrentUser();
+
+                if (!file) return alert('Selecciona una foto');
+                if (!name) return alert('Ingresa tu nombre');
+
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Subiendo...';
+
+                const { data, error } = await window.uploadGuestPhoto(file, name, user?.email || '', '');
+
+                if (error) {
+                    console.error(error);
+                    alert('Error al subir: ' + error.message);
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
+                } else {
+                    statusMsg.classList.remove('hidden');
+                    statusMsg.innerHTML = `
+                        <span class="text-sage-dark block mb-2">¡Foto subida con éxito! 🎉</span>
+                        <a href="mailto:felipeycamila.v@gmail.com?subject=Nueva Foto de Invitado&body=Hola! Acabo de subir una foto al álbum de invitados. Soy ${name}." 
+                           class="inline-block bg-charcoal text-white text-xs px-4 py-2 rounded-full hover:bg-sage transition-colors">
+                           <i class="fa-solid fa-bell mr-1"></i> Avisar a los novios
+                        </a>
+                    `;
+                    uploadBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Listo';
+
+                    // Refresh gallery logic here if needed
+                    // For now, just clear input
+                    photoInput.value = '';
+                }
             });
         }
 
@@ -1475,8 +1484,8 @@
         setTimeout(checkAuth, 1000);
 
         // A. Guest Cam Logic
-        const uploadBtn = document.getElementById('upload-btn');
-        const uploadStatus = document.getElementById('upload-status');
+        // const uploadBtn = document.getElementById('upload-btn'); // Already defined above
+        // const uploadStatus = document.getElementById('upload-status'); // Already defined above
         const galleryContainer = document.getElementById('guest-gallery');
 
         // Load Gallery on Page Load

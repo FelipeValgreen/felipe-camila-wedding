@@ -94,12 +94,15 @@ async function fetchGuestPhotos() {
 }
 
 // Auth Functions
+// Auth Functions
 async function signInWithGoogle() {
     if (!supabaseClient) return { error: 'Supabase not initialized' };
+    // Use production URL explicitly to avoid localhost issues
+    const redirectUrl = 'https://polar-einstein-epv031j57-filipovalverde-5673s-projects.vercel.app';
     const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.href
+            redirectTo: redirectUrl
         }
     });
     return { data, error };
@@ -107,22 +110,11 @@ async function signInWithGoogle() {
 
 async function signInWithEmail(email) {
     if (!supabaseClient) return { error: 'Supabase not initialized' };
+    const redirectUrl = 'https://polar-einstein-epv031j57-filipovalverde-5673s-projects.vercel.app';
     const { data, error } = await supabaseClient.auth.signInWithOtp({
         email: email,
         options: {
-            emailRedirectTo: window.location.href
-        }
-    });
-    return { data, error };
-}
-
-async function signInWithWhatsApp(phone) {
-    if (!supabaseClient) return { error: 'Supabase not initialized' };
-    // Note: This requires WhatsApp provider configuration in Supabase
-    const { data, error } = await supabaseClient.auth.signInWithOtp({
-        phone: phone,
-        options: {
-            channel: 'whatsapp'
+            emailRedirectTo: redirectUrl
         }
     });
     return { data, error };
