@@ -1474,19 +1474,32 @@
                     uploadBtn.disabled = false;
                     uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
                 } else {
+                    // Send automatic email notification
+                    await window.sendPhotoUploadNotification(name, user?.email || 'email no disponible');
+
+                    // Show thank you popup
                     statusMsg.classList.remove('hidden');
                     statusMsg.innerHTML = `
-                        <span class="text-sage-dark block mb-2">¡Foto subida con éxito! 🎉</span>
-                        <a href="mailto:felipeycamila.v@gmail.com?subject=Nueva Foto de Invitado&body=Hola! Acabo de subir una foto al álbum de invitados. Soy ${name}." 
-                           class="inline-block bg-charcoal text-white text-xs px-4 py-2 rounded-full hover:bg-sage transition-colors">
-                           <i class="fa-solid fa-bell mr-1"></i> Avisar a los novios
-                        </a>
+                        <div class="bg-sage-light/20 border-2 border-sage rounded-lg p-6 text-center">
+                            <i class="fa-solid fa-circle-check text-5xl text-sage-dark mb-4"></i>
+                            <h3 class="text-2xl font-serif text-charcoal mb-2">¡Gracias ${name}!</h3>
+                            <p class="text-sage-dark mb-4">Tu foto se ha subido exitosamente y hemos notificado a los novios.</p>
+                            <button onclick="this.closest('.bg-sage-light\\/20').parentElement.classList.add('hidden')" 
+                                    class="bg-charcoal text-white px-6 py-2 rounded-full hover:bg-sage transition-colors">
+                                Cerrar
+                            </button>
+                        </div>
                     `;
+
                     uploadBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Listo';
 
-                    // Refresh gallery logic here if needed
-                    // For now, just clear input
-                    photoInput.value = '';
+                    // Reset form after 3 seconds
+                    setTimeout(() => {
+                        photoInput.value = '';
+                        uploaderNameInput.value = '';
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
+                    }, 3000);
                 }
             });
         }

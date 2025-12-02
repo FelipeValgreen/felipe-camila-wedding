@@ -94,11 +94,10 @@ async function fetchGuestPhotos() {
 }
 
 // Auth Functions
-// Auth Functions
 async function signInWithGoogle() {
     if (!supabaseClient) return { error: 'Supabase not initialized' };
-    // Use production URL explicitly to avoid localhost issues
-    const redirectUrl = 'https://polar-einstein-epv031j57-filipovalverde-5673s-projects.vercel.app';
+    // Use current origin to avoid localhost issues
+    const redirectUrl = `${window.location.origin}/#guest-paparazzi`;
     const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -110,7 +109,7 @@ async function signInWithGoogle() {
 
 async function signInWithEmail(email) {
     if (!supabaseClient) return { error: 'Supabase not initialized' };
-    const redirectUrl = 'https://polar-einstein-epv031j57-filipovalverde-5673s-projects.vercel.app';
+    const redirectUrl = `${window.location.origin}/#guest-paparazzi`;
     const { data, error } = await supabaseClient.auth.signInWithOtp({
         email: email,
         options: {
@@ -126,12 +125,34 @@ async function getCurrentUser() {
     return user;
 }
 
+// Send email notification when photo is uploaded
+async function sendPhotoUploadNotification(uploaderName, email) {
+    try {
+        // Send email to couple using mailto (client-side)
+        const subject = encodeURIComponent(`Nueva foto subida por ${uploaderName}`);
+        const body = encodeURIComponent(`${uploaderName} (${email}) acaba de subir una foto en la sección "A través de tus ojos".\n\nRevisa las fotos en tu panel de administración.`);
+        const mailtoLink = `mailto:felipevalverde5673@gmail.com?subject=${subject}&body=${body}`;
+
+        // Open mailto in a hidden iframe to avoid navigation
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = mailtoLink;
+        document.body.appendChild(iframe);
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error sending notification:', error);
+        return { error };
+    }
+}
+
 // Expose functions globally
 window.uploadGuestPhoto = uploadGuestPhoto;
 window.saveTriviaResult = saveTriviaResult;
 window.fetchGuestPhotos = fetchGuestPhotos;
 window.signInWithGoogle = signInWithGoogle;
 window.signInWithEmail = signInWithEmail;
-window.signInWithWhatsApp = signInWithWhatsApp;
 window.getCurrentUser = getCurrentUser;
+window.sendPhotoUploadNotification = sendPhotoUploadNotification;
 window.supabaseClient = supabaseClient; // Expose client for direct access if needed
