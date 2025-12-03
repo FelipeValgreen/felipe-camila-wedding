@@ -232,7 +232,7 @@
         </div>
 
         <!-- 1. ESTRUCTURA DEL SOBRE (Envelope Container) -->
-        <div class="relative w-full max-w-2xl aspect-[1.6/1] bg-[#d2b48c] flex items-center justify-center shadow-2xl z-20"
+        <div class="relative w-full max-w-2xl aspect-[5/4] md:aspect-[1.6/1] bg-[#d2b48c] flex items-center justify-center shadow-2xl z-20"
             style="box-shadow: 0 25px 50px -12px rgba(62, 43, 30, 0.4);">
 
             <!-- Texture -->
@@ -240,88 +240,82 @@
                 class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply pointer-events-none">
             </div>
 
-            <!-- Flap (Triangular) -->
+            <!-- Flap (Triangular Clásico) -->
             <div class="absolute top-0 left-0 w-full h-full z-30 pointer-events-none"
                 style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #dcbfa0; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                 <div
                     class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-40 mix-blend-multiply">
                 </div>
-                <!-- Border Line -->
-                <div class="absolute top-0 left-0 w-full h-full border-t border-[#8c735a]/30"
+                <!-- Border Line (V Shape) -->
+                <div class="absolute top-0 left-0 w-full h-full border-t-0 border-l border-r border-b-0 border-[#8c735a]/30"
                     style="clip-path: polygon(0 0, 50% 55%, 100% 0);"></div>
+                <!-- Líneas de borde para resaltar la V -->
+                <svg class="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M0,0 L50,55 L100,0" fill="none" stroke="rgba(92, 75, 58, 0.2)" stroke-width="0.5" />
+                </svg>
             </div>
 
             <!-- 2. POSICIONAMIENTO DE ELEMENTOS -->
 
             <!-- Texto "Nuestra historia comienza aquí" (ARRIBA EN LA SOLAPA) -->
             <div
-                class="absolute top-[8%] left-1/2 transform -translate-x-1/2 z-40 text-center w-full px-4 pointer-events-none">
-                <p class="font-script text-4xl md:text-5xl text-[#3E2B1E] leading-tight opacity-90"
-                    style="text-shadow: 0 1px 0 rgba(255,255,255,0.3); transform: rotate(-1deg);">
+                class="absolute top-[15%] left-1/2 transform -translate-x-1/2 z-40 text-center w-full max-w-[60%] px-4 pointer-events-none">
+                <p class="font-script text-3xl md:text-5xl text-[#3E2B1E] leading-relaxed opacity-90"
+                    style="text-shadow: 0 1px 0 rgba(255,255,255,0.3); transform: rotate(-2deg);">
                     Nuestra historia<br>comienza aquí
                 </p>
             </div>
 
-            <!-- Sello de Cera (Wax Seal) - CENTRO -->
-            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-20 h-20 rounded-full flex items-center justify-center shadow-lg"
+            <!-- Sello de Cera (Wax Seal) - EN LA PUNTA DE LA V -->
+            <div class="absolute top-[55%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-lg"
                 style="background: radial-gradient(circle at 30% 30%, #c5a059, #8a6e3e, #5c4b3a); 
                        box-shadow: inset 2px 2px 4px rgba(255,255,255,0.3), inset -2px -2px 4px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3);">
-                <div class="w-16 h-16 border border-[#3e2b18]/20 rounded-full flex items-center justify-center"
+                <div class="w-12 h-12 md:w-16 md:h-16 border border-[#3e2b18]/20 rounded-full flex items-center justify-center"
                     style="box-shadow: inset 0 0 6px rgba(0,0,0,0.2);">
-                    <i class="fa-solid fa-leaf text-3xl text-[#5c4b3a] opacity-70"
+                    <i class="fa-solid fa-leaf text-2xl md:text-3xl text-[#5c4b3a] opacity-70"
                         style="transform: rotate(-45deg); text-shadow: 1px 1px 0 rgba(255,255,255,0.2);"></i>
                 </div>
             </div>
 
-            <!-- ESTAMPILLA BOHO (Top Right) -->
-            <div class="absolute top-6 right-6 z-35 transform rotate-3 pointer-events-none">
-                <!-- Stamp Container con borde blanco -->
-                <div class="relative w-28 h-32 bg-white p-2 shadow-md rounded-sm">
-                    <!-- Bordes serrados (efecto estampilla) -->
-                    <div class="absolute inset-0 rounded-sm" style="mask-image: radial-gradient(circle at 3px 3px, transparent 2.5px, black 3px); 
-                               mask-size: 10px 10px; 
-                               mask-repeat: round;
-                               -webkit-mask-image: radial-gradient(circle at 3px 3px, transparent 2.5px, black 3px); 
-                               -webkit-mask-size: 10px 10px; 
-                               -webkit-mask-repeat: round;
-                               background: white;">
+            <!-- ESTAMPILLA BOHO (Top Right - Ajustada) -->
+            <div class="absolute top-6 right-4 md:top-8 md:right-8 z-35 transform rotate-6 pointer-events-none">
+                <!-- Stamp Container con borde blanco y sombra -->
+                <div class="relative w-24 h-28 md:w-32 md:h-36 bg-[#fdfbf7] p-1.5 shadow-md">
+                    <!-- Bordes serrados (CSS Mask) -->
+                    <div class="absolute inset-0" style="-webkit-mask-image: radial-gradient(circle at 2px 2px, transparent 2px, black 2.5px);
+                                -webkit-mask-size: 8px 8px;
+                                -webkit-mask-repeat: round;
+                                mask-image: radial-gradient(circle at 2px 2px, transparent 2px, black 2.5px);
+                                mask-size: 8px 8px;
+                                mask-repeat: round;
+                                background-color: #fdfbf7;">
                     </div>
 
-                    <!-- Imagen de la pareja -->
-                    <div class="relative w-full h-full overflow-hidden rounded-sm" style="mask-image: radial-gradient(circle at 3px 3px, transparent 2.5px, black 3px); 
-                               mask-size: 10px 10px; 
-                               mask-repeat: round;
-                               -webkit-mask-image: radial-gradient(circle at 3px 3px, transparent 2.5px, black 3px); 
-                               -webkit-mask-size: 10px 10px; 
-                               -webkit-mask-repeat: round;">
-                        <img src="images/story_1.jpg" class="w-full h-full object-cover brightness-105 contrast-110"
-                            alt="Felipe & Camila">
+                    <!-- Imagen interior -->
+                    <div class="relative w-full h-full overflow-hidden p-1">
+                        <img src="images/envelope_stamp_illustration.png"
+                            class="w-full h-full object-cover contrast-110" alt="Stamp">
                     </div>
                 </div>
 
-                <!-- Timbre Postal (Postmark) -->
-                <div class="absolute -bottom-3 -left-7 w-24 h-24 z-10">
-                    <!-- Círculo exterior -->
-                    <div
-                        class="absolute inset-0 border-[3px] border-[#3E2B1E]/70 rounded-full flex items-center justify-center rotate-[-12deg]">
-                        <!-- Círculo interior -->
+                <!-- Timbre Postal (Postmark) - Superpuesto -->
+                <div
+                    class="absolute top-1/2 -left-6 w-16 h-16 md:w-20 md:h-20 z-40 opacity-70 mix-blend-multiply transform -translate-y-1/2 -rotate-12">
+                    <div class="w-full h-full border-2 border-[#3E2B1E] rounded-full flex items-center justify-center">
                         <div
-                            class="w-20 h-20 border-2 border-[#3E2B1E]/60 rounded-full flex items-center justify-center">
-                            <!-- Corazón central -->
-                            <i class="fa-solid fa-heart text-[#3E2B1E]/75 text-2xl"></i>
+                            class="w-[85%] h-[85%] border border-[#3E2B1E] rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-heart text-[#3E2B1E] text-lg"></i>
                         </div>
                     </div>
-                    <!-- Líneas onduladas del timbre -->
-                    <div class="absolute top-1/2 -right-8 w-12 h-1 border-t-[3px] border-b-[3px] border-[#3E2B1E]/60 transform -translate-y-1/2 rotate-[-12deg]"
-                        style="border-style: double;">
-                    </div>
+                    <!-- Líneas onduladas -->
+                    <div class="absolute top-1/2 left-full w-8 h-4 border-t-2 border-b-2 border-[#3E2B1E] -ml-1"></div>
                 </div>
             </div>
 
             <!-- Botón "ABRIR INVITACIÓN" - Debajo del sello -->
             <button id="open-invite"
-                class="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-50 bg-[#3E2B1E] text-white px-8 py-3 rounded-sm shadow-lg hover:bg-[#2c1e15] transition-colors duration-300 cursor-pointer border border-[#5c4b3e]">
-                <span class="font-sans text-sm tracking-[0.2em] uppercase font-bold whitespace-nowrap">Abrir
+                class="absolute bottom-6 md:bottom-12 left-1/2 transform -translate-x-1/2 z-50 bg-[#3E2B1E] text-white px-6 md:px-8 py-2 md:py-3 rounded-sm shadow-lg hover:bg-[#2c1e15] transition-colors duration-300 cursor-pointer border border-[#5c4b3e]">
+                <span class="font-sans text-xs md:text-sm tracking-[0.2em] uppercase font-bold whitespace-nowrap">Abrir
                     Invitación</span>
             </button>
 
