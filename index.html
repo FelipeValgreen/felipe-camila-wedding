@@ -277,19 +277,31 @@
                 </div>
             </div>
 
-            <!-- ESTAMPILLA BOHO (Top Right - Simplificada Final) -->
-            <div class="absolute top-12 right-6 md:top-16 md:right-12 z-35 transform rotate-3 pointer-events-none"
+            <!-- ESTAMPILLA BOHO (Top Right - Final Up Version Corrected) -->
+            <div class="absolute top-10 right-6 md:top-14 md:right-12 z-35 transform rotate-3 pointer-events-none"
                 style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));">
+                <!-- Stamp Paper (con bordes dentados y centro sólido) -->
+                <div class="relative w-28 h-36 md:w-36 md:h-44 bg-[#fdfbf7] flex items-center justify-center p-1" style="-webkit-mask-image: radial-gradient(circle at 4px 4px, transparent 4px, black 4.5px), linear-gradient(black, black);
+                            -webkit-mask-size: 12px 12px, calc(100% - 12px) calc(100% - 12px);
+                            -webkit-mask-repeat: round, no-repeat;
+                            -webkit-mask-position: -6px -6px, center;
+                            -webkit-mask-composite: source-over;
+                            mask-image: radial-gradient(circle at 4px 4px, transparent 4px, black 4.5px), linear-gradient(black, black);
+                            mask-size: 12px 12px, calc(100% - 12px) calc(100% - 12px);
+                            mask-repeat: round, no-repeat;
+                            mask-position: -6px -6px, center;
+                            mask-composite: add;">
 
-                <!-- Imagen de la estampilla (ya incluye bordes) -->
-                <div class="relative w-24 h-24 md:w-32 md:h-32">
-                    <img src="images/envelope_stamp_final_v3.png" class="w-full h-full object-contain contrast-110"
-                        alt="Stamp">
+                    <!-- Imagen interior -->
+                    <div class="w-full h-full overflow-hidden bg-[#fdfbf7]">
+                        <img src="images/envelope_stamp_final_v4.png" class="w-full h-full object-cover contrast-110"
+                            alt="Stamp">
+                    </div>
                 </div>
 
                 <!-- Timbre Postal (Postmark) - Superpuesto a la estampilla -->
                 <div
-                    class="absolute bottom-[-5px] -left-6 w-20 h-20 md:w-24 md:h-24 z-40 opacity-80 mix-blend-multiply transform -rotate-12">
+                    class="absolute bottom-[-5px] -left-4 w-20 h-20 md:w-24 md:h-24 z-40 opacity-80 mix-blend-multiply transform -rotate-12">
                     <div class="w-full h-full border-2 border-[#5c4b3e] rounded-full flex items-center justify-center">
                         <div
                             class="w-[85%] h-[85%] border border-[#5c4b3e] rounded-full flex items-center justify-center">
