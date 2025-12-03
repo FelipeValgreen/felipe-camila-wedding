@@ -278,20 +278,23 @@
             </div>
 
             <!-- ESTAMPILLA BOHO (Top Right - Up Final Border Method) -->
-            <div class="absolute top-6 right-6 md:top-12 md:right-16 z-40 transform rotate-3 pointer-events-none"
+            <!-- ESTAMPILLA BOHO FINAL (Cache Buster V2) -->
+            <!-- ESTAMPILLA BOHO FINAL (Cache Buster V2 - Responsive Fix) -->
+            <div id="stamp-container-final"
+                class="absolute top-4 right-4 md:top-12 md:right-16 z-40 transform rotate-3 pointer-events-none"
                 style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));">
                 <!-- Stamp Paper (Borde dentado usando dashed border) -->
-                <div class="relative w-24 h-32 md:w-32 md:h-40 bg-[#fdfbf7] flex items-center justify-center p-2"
+                <div class="relative w-20 h-28 md:w-32 md:h-40 bg-[#fdfbf7] flex items-center justify-center p-2"
                     style="border: 6px dashed #fdfbf7; background-clip: padding-box; border-radius: 2px;">
 
-                    <!-- Imagen interior -->
+                    <!-- Imagen interior (Absolute Path) -->
                     <div class="w-full h-full overflow-hidden bg-[#fdfbf7]">
-                        <img src="images/stamp_up_final_absolute.png?v=999"
-                            class="w-full h-full object-cover contrast-110" alt="Stamp">
+                        <img src="images/stamp_up_final_absolute.png?v=cache_buster_final"
+                            class="w-full h-full object-cover contrast-110" alt="Stamp Final">
                     </div>
                 </div>
 
-                <!-- Timbre Postal (Postmark) - Superpuesto a la estampilla -->
+                <!-- Timbre Postal (Postmark) -->
                 <div
                     class="absolute bottom-[-5px] -left-4 w-20 h-20 md:w-24 md:h-24 z-40 opacity-80 mix-blend-multiply transform -rotate-12">
                     <div class="w-full h-full border-2 border-[#5c4b3e] rounded-full flex items-center justify-center">
