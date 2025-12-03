@@ -277,36 +277,12 @@
                 </div>
             </div>
 
-            <!-- ESTAMPILLA BOHO (Top Right - Up Sin Agujeros) -->
-            <div class="absolute top-8 right-8 md:top-12 md:right-16 z-40 transform rotate-3 pointer-events-none"
+            <!-- ESTAMPILLA BOHO (Top Right - Up Final Border Method) -->
+            <div class="absolute top-6 right-6 md:top-12 md:right-16 z-40 transform rotate-3 pointer-events-none"
                 style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));">
-                <!-- Stamp Paper (con bordes dentados SOLO en los extremos) -->
-                <div class="relative w-24 h-32 md:w-32 md:h-40 bg-[#fdfbf7] flex items-center justify-center p-1" style="-webkit-mask-image: 
-                                radial-gradient(circle at 4px 4px, transparent 4px, black 4.5px),
-                                linear-gradient(black, black);
-                            -webkit-mask-size: 
-                                12px 12px, 
-                                calc(100% - 16px) calc(100% - 16px);
-                            -webkit-mask-repeat: 
-                                round, 
-                                no-repeat;
-                            -webkit-mask-position: 
-                                -6px -6px, 
-                                center;
-                            -webkit-mask-composite: destination-in;
-                            mask-image: 
-                                radial-gradient(circle at 4px 4px, transparent 4px, black 4.5px),
-                                linear-gradient(black, black);
-                            mask-size: 
-                                12px 12px, 
-                                calc(100% - 16px) calc(100% - 16px);
-                            mask-repeat: 
-                                round, 
-                                no-repeat;
-                            mask-position: 
-                                -6px -6px, 
-                                center;
-                            mask-composite: intersect;">
+                <!-- Stamp Paper (Borde dentado usando dashed border) -->
+                <div class="relative w-24 h-32 md:w-32 md:h-40 bg-[#fdfbf7] flex items-center justify-center p-2"
+                    style="border: 6px dashed #fdfbf7; background-clip: padding-box; border-radius: 2px;">
 
                     <!-- Imagen interior -->
                     <div class="w-full h-full overflow-hidden bg-[#fdfbf7]">
@@ -367,10 +343,13 @@
                 <h1 class="font-serif text-7xl md:text-9xl text-[#556B2F] mb-6">Felipe & Camila</h1>
                 <p class="font-hand text-3xl text-[#A68B5B] mb-8">¡Nos casamos!</p>
 
-                <div class="flex justify-center items-center space-x-4 mb-12">
-                    <div class="h-[1px] w-12 bg-[#2C241E]"></div>
-                    <p class="font-serif text-xl italic text-[#2C241E]">Sábado 28 de Marzo, 2026</p>
-                    <div class="h-[1px] w-12 bg-[#2C241E]"></div>
+                <div class="flex flex-col items-center space-y-2 mb-12">
+                    <div class="flex justify-center items-center space-x-4">
+                        <div class="h-[1px] w-12 bg-[#2C241E]"></div>
+                        <p class="font-serif text-xl italic text-[#2C241E]">Sábado 28 de Marzo, 2026</p>
+                        <div class="h-[1px] w-12 bg-[#2C241E]"></div>
+                    </div>
+                    <p class="font-serif text-lg italic text-[#2C241E]">Hora de inicio 15:00 horas</p>
                 </div>
 
                 <!-- VINTAGE MAP ADDRESS CARD -->
