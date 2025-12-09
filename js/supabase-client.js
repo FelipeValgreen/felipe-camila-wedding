@@ -74,6 +74,22 @@ async function saveTriviaResult(score, answers, userId = null) {
     return { data };
 }
 
+// Helper function to save RSVP
+async function saveRSVP(rsvpData) {
+    if (!supabaseClient) return { error: 'Supabase not initialized' };
+
+    const { data, error } = await supabaseClient
+        .from('rsvp_guests')
+        .insert([rsvpData]);
+
+    if (error) {
+        console.error('Error saving RSVP:', error);
+        return { error };
+    }
+
+    return { data };
+}
+
 // Helper function to fetch guest photos
 async function fetchGuestPhotos() {
     if (!supabaseClient) return { error: 'Supabase not initialized' };
@@ -158,6 +174,7 @@ async function sendPhotoUploadNotification(uploaderName, email) {
 // Expose functions globally
 window.uploadGuestPhoto = uploadGuestPhoto;
 window.saveTriviaResult = saveTriviaResult;
+window.saveRSVP = saveRSVP;
 window.fetchGuestPhotos = fetchGuestPhotos;
 window.signInWithGoogle = signInWithGoogle;
 window.signInWithEmail = signInWithEmail;
