@@ -356,31 +356,41 @@
                 </div>
 
                 <!-- VINTAGE MAP ADDRESS CARD -->
-                <div
-                    class="relative max-w-2xl mx-auto mt-8 p-10 bg-[#F5F1E8] rounded-3xl shadow-lg border-4 border-dashed border-[#B8A88A] transform hover:scale-[1.02] transition-all duration-300">
+                <!-- VINTAGE MAP ADDRESS CARD -->
+                <a href="https://www.google.com/maps/search/?api=1&query=Avenida+El+Valle+147,+Casa+10,+Chicureo,+Santiago"
+                    target="_blank" rel="noopener noreferrer"
+                    class="block relative max-w-2xl mx-auto mt-8 p-10 bg-[#F5F1E8] rounded-3xl shadow-lg border-4 border-dashed border-[#B8A88A] transform hover:scale-[1.02] transition-all duration-300 cursor-pointer group">
                     <!-- Paper Texture Overlay -->
                     <div
                         class="absolute inset-0 rounded-3xl bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-30 pointer-events-none mix-blend-multiply">
                     </div>
 
+                    <!-- External Link Icon (Top Right) -->
+                    <div
+                        class="absolute top-4 right-4 text-[#B8A88A] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xl"></i>
+                    </div>
+
                     <div class="relative z-10 flex flex-col items-center text-center space-y-6">
                         <!-- Map Pin Icon -->
-                        <div class="text-[#556B2F] text-5xl mb-2 drop-shadow-md">
+                        <div
+                            class="text-[#556B2F] text-5xl mb-2 drop-shadow-md group-hover:text-[#445525] transition-colors">
                             <i class="fa-solid fa-location-dot"></i>
                         </div>
 
                         <!-- Address Text -->
-                        <h3 class="font-serif text-3xl md:text-4xl text-[#2C241E] leading-tight font-normal">
+                        <h3
+                            class="font-serif text-3xl md:text-4xl text-[#2C241E] leading-tight font-normal group-hover:text-black transition-colors">
                             Avenida El Valle 147, Casa 10
                         </h3>
 
                         <!-- Location Text -->
                         <p
-                            class="font-sans text-base md:text-lg text-[#556B2F] uppercase tracking-[0.2em] font-semibold">
+                            class="font-sans text-base md:text-lg text-[#556B2F] uppercase tracking-[0.2em] font-semibold group-hover:text-[#445525] transition-colors">
                             Chicureo, Santiago
                         </p>
                     </div>
-                </div>
+                </a>
             </div>
         </section>
 
