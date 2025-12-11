@@ -905,6 +905,14 @@
                 <!-- Instagram Feed Container (Horizontal Scroll) -->
                 <div id="instagram-feed"
                     class="grid grid-rows-3 grid-flow-col gap-1 overflow-x-auto snap-x snap-mandatory w-full h-[100vw] md:h-[600px] scrollbar-hide">
+                    <!-- Upload Prompt Card (Static First Item) -->
+                    <div onclick="document.getElementById('paparazzi').scrollIntoView({behavior: 'smooth'})"
+                        class="aspect-square w-[33vw] md:w-[200px] snap-center relative group cursor-pointer bg-charcoal border-2 border-dashed border-gold flex flex-col items-center justify-center text-center p-2 text-gold hover:bg-charcoal/90 transition-colors">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 animate-bounce"></i>
+                        <span
+                            class="font-serif text-sm font-bold uppercase tracking-widest leading-none">Subir<br>Foto</span>
+                    </div>
+
                     <!-- Photo 1 -->
                     <div
                         class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
@@ -1992,45 +2000,49 @@
 
         // Handle Upload
         // Guest Cam Upload
-        document.getElementById('guest-photo-input').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            const uploaderName = document.getElementById('uploader-name').value;
-            const uploaderEmail = document.getElementById('uploader-email').value;
-            const uploaderWhatsapp = document.getElementById('uploader-whatsapp').value;
+        // Guest Cam Upload
+        const photoUploadInput = document.getElementById('photo-upload');
+        if (photoUploadInput) {
+            photoUploadInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                const uploaderName = document.getElementById('uploader-name').value;
+                const uploaderEmail = document.getElementById('uploader-email').value;
+                const uploaderWhatsapp = document.getElementById('uploader-whatsapp').value;
 
-            if (!file) return;
-            if (!uploaderName) {
-                alert('Por favor ingresa tu nombre antes de subir una foto.');
-                return;
-            }
-
-            const btn = document.querySelector('button[onclick="document.getElementById(\'guest-photo-input\').click()"]'); // This selector is tricky because the button triggers the input. 
-            // Actually, the input change triggers this. We should probably show a loading state on the upload area or a specific button if there was one.
-            // The current UI has a div acting as a button. Let's just use a simple alert for status for now as per previous implementation style, or better, update the UI.
-
-            // Let's show a simple loading indicator
-            const uploadArea = e.target.parentElement; // The div wrapping the input
-            const originalContent = uploadArea.innerHTML;
-            uploadArea.innerHTML = '<div class="text-white"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Subiendo...</p></div>';
-
-            const { data, error } = await uploadGuestPhoto(file, uploaderName, uploaderEmail, uploaderWhatsapp);
-
-            if (error) {
-                alert('Error al subir la foto. Por favor intenta de nuevo.');
-                uploadArea.innerHTML = originalContent;
-            } else {
-                alert('¡Foto subida con éxito! Gracias por compartir este momento.');
-                uploadArea.innerHTML = originalContent;
-                // Refresh gallery
-                if (typeof loadGallery === 'function') {
-                    loadGallery();
+                if (!file) return;
+                if (!uploaderName) {
+                    alert('Por favor ingresa tu nombre antes de subir una foto.');
+                    return;
                 }
-                // Clear inputs
-                document.getElementById('uploader-name').value = '';
-                document.getElementById('uploader-email').value = '';
-                document.getElementById('uploader-whatsapp').value = '';
-            }
-        });
+
+                const btn = document.querySelector('button[onclick="document.getElementById(\'guest-photo-input\').click()"]'); // This selector is tricky because the button triggers the input. 
+                // Actually, the input change triggers this. We should probably show a loading state on the upload area or a specific button if there was one.
+                // The current UI has a div acting as a button. Let's just use a simple alert for status for now as per previous implementation style, or better, update the UI.
+
+                // Let's show a simple loading indicator
+                const uploadArea = e.target.parentElement; // The div wrapping the input
+                const originalContent = uploadArea.innerHTML;
+                uploadArea.innerHTML = '<div class="text-white"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Subiendo...</p></div>';
+
+                const { data, error } = await uploadGuestPhoto(file, uploaderName, uploaderEmail, uploaderWhatsapp);
+
+                if (error) {
+                    alert('Error al subir la foto. Por favor intenta de nuevo.');
+                    uploadArea.innerHTML = originalContent;
+                } else {
+                    alert('¡Foto subida con éxito! Gracias por compartir este momento.');
+                    uploadArea.innerHTML = originalContent;
+                    // Refresh gallery
+                    if (typeof loadGallery === 'function') {
+                        loadGallery();
+                    }
+                    // Clear inputs
+                    document.getElementById('uploader-name').value = '';
+                    document.getElementById('uploader-email').value = '';
+                    document.getElementById('uploader-whatsapp').value = '';
+                }
+            });
+        }
 
         // Initialize Gallery
         // Wait a bit for Supabase script to load
