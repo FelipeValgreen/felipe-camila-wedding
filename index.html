@@ -1806,7 +1806,7 @@
 
                 // Send email notification using Web3Forms
                 const formData = new FormData();
-                emailData.append('access_key', '138e83f9-894d-4a94-bee4-af9392f8ffb9');
+                formData.append('access_key', '138e83f9-894d-4a94-bee4-af9392f8ffb9');
                 formData.append('subject', `Nueva Confirmación de Asistencia: ${name}`);
                 formData.append('from_name', 'Sitio Web - Felipe y Camila');
                 formData.append('to_email', 'camilayfelipe.v@gmail.com');
