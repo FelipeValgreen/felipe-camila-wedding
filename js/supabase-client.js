@@ -173,6 +173,7 @@ async function sendPhotoUploadNotification(uploaderName, email) {
 
 // Helper function to save Song Request
 async function saveSongRequest(songName, artistName, requesterName) {
+    // Only check client if not simulating (although current codebase doesn't have simulation toggle here)
     if (!supabaseClient) return { error: 'Supabase not initialized' };
 
     const { data, error } = await supabaseClient
@@ -180,13 +181,14 @@ async function saveSongRequest(songName, artistName, requesterName) {
         .insert([
             {
                 song_name: songName,
-                artist: artistName || '', // Optional
+                // Changed from 'artist' to 'artist_name' to be safe/standard
+                artist_name: artistName || '',
                 requester_name: requesterName
             }
         ]);
 
     if (error) {
-        console.error('Error saving song request:', error);
+        console.error('Error saving song request (Supabase):', error);
         return { error };
     }
 
