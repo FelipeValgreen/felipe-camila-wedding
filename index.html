@@ -307,6 +307,19 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
     </style>
 </head>
 
@@ -1488,13 +1501,38 @@
             if (error) console.error("Could not load gallery:", error);
 
             if (data && data.length > 0) {
+                // Smart Deduplication: Filter by "original filename" to catch re-uploads
+                // URL format: .../guest_[timestamp]_[filename]
+                // We extract the [filename] part.
+                const seenFilenames = new Set();
+                const uniqueData = data.filter(item => {
+                    try {
+                        const url = item.url;
+                        // Match everything after the last 'guest_' and timestamp digits
+                        // Example: guest_1765494408231_image.png
+                        const match = url.match(/guest_\d+_(.+)$/);
+                        const originalName = match ? match[1] : url; // Fallback to URL if no match
+
+                        // Also use uploader name to distinguish different users uploading same filename (unlikely but safe)
+                        const key = originalName + '_' + (item.uploader_name || '');
+
+                        if (seenFilenames.has(key)) {
+                            return false; // Duplicate
+                        }
+                        seenFilenames.add(key);
+                        return true;
+                    } catch (e) {
+                        return true; // Keep if error in parsing
+                    }
+                });
+
                 // A. Populate Instagram Feed (Append to end)
                 if (instaFeed) {
                     // Remove existing dynamic photos to prevent duplicates
                     const existingDynamicInsta = instaFeed.querySelectorAll('.dynamic-photo');
                     existingDynamicInsta.forEach(el => el.remove());
 
-                    const instaHtml = data.map(photo => `
+                    const instaHtml = uniqueData.map(photo => `
                         <div class="dynamic-photo aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer border border-gray-100">
                             <img src="${photo.url}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Guest Photo">
                             <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -1513,7 +1551,7 @@
                     const existingDynamicCarousel = guestCarousel.querySelectorAll('.dynamic-photo');
                     existingDynamicCarousel.forEach(el => el.remove());
 
-                    const carouselHtml = data.map(photo => `
+                    const carouselHtml = uniqueData.map(photo => `
                         <div class="dynamic-photo min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center border border-gray-100">
                             <img src="${photo.url}" class="w-full h-full object-cover">
                             <div class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
@@ -1527,14 +1565,6 @@
 
                     // Insert after the static CTA card (which is index 0)
                     if (guestCarousel.children.length > 0) {
-                        // Only insert if not already there? No, we cleared 'dynamic-photo' class items.
-                        // But if CTA is there, it's not dynamic.
-                        // Assuming CTA is child 0.
-                        // We append at the end of the container? Or after child 0?
-                        // If we cleared dynamics, we might just have CTA left.
-                        // So append to end is safer if we just want them in order.
-                        // But we want them AFTER the CTA.
-                        // If we removed all dynamics, and CTA is there, then 'beforeend' works fine.
                         guestCarousel.insertAdjacentHTML('beforeend', carouselHtml);
                     } else {
                         guestCarousel.innerHTML = carouselHtml;
