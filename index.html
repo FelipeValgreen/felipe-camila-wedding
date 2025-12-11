@@ -108,65 +108,124 @@
 
             if (triviaSubmitBtn) {
                 triviaSubmitBtn.addEventListener('click', async (e) => {
-                    e.preventDefault(); // Prevent form submission if in form
+                    e.preventDefault();
                     const formData = new FormData(triviaForm);
                     let score = 0;
-
-                    // Logic based on data-correct attribute (Source of Truth)
-                    // We iterate through questions 1 to 5
-                    for (let i = 1; i <= 5; i++) {
-                        const selected = triviaForm.querySelector(`input[name="q${i}"]:checked`);
-                        if (selected && selected.dataset.correct === "true") {
-                            score++;
-                        }
-                    }
-
-                    // Save to Supabase (if available)
-                    const originalBtnText = triviaSubmitBtn.innerHTML;
-                    triviaSubmitBtn.disabled = true;
-                    triviaSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Calculando...';
-
-                    // Prepare answers object for logging
                     const answers = {};
-                    for (let [name, value] of formData.entries()) {
-                        answers[name] = value;
-                    }
+                    let allAnswered = true;
 
-                    if (typeof window.saveTriviaResult === 'function') {
-                        // Fire and forget or await? Let's await to ensure save
-                        try {
-                            await window.saveTriviaResult(score, answers);
-                        } catch (err) {
-                            console.error("Error saving trivia:", err);
+                    // Calculate Score
+                    for (const [question, correctValue] of Object.entries(key)) {
+                        const userAnswer = formData.get(question);
+                        if (!userAnswer) {
+                            allAnswered = false;
+                            break;
+                        }
+                        answers[question] = userAnswer;
+                        if (userAnswer === correctValue) {
+                            score += 1;
                         }
                     }
 
-                    // Update UI (Modal)
-                    document.getElementById('trivia-score').innerText = score;
+                    if (!allAnswered) {
+                        alert('⚠️ ¡Te falta responder algunas preguntas! Por favor contéstalas todas.');
+                        return;
+                    }
 
+                    // Store for sharing
+                    currentTriviaScore = score;
+                    currentTriviaAnswers = answers;
+
+                    // Update UI
+                    const scoreSpan = document.getElementById('trivia-score');
+                    if (scoreSpan) scoreSpan.innerText = score;
+
+                    // Message based on score
                     let message = "";
-                    if (score === 5) message = "¡Nos conoces mejor que nosotros mismos! 😱❤️";
+                    if (score === 5) message = "¡Increíble! ¿Nos espiabas? 🕵️‍♀️❤️";
                     else if (score >= 3) message = "¡Muy bien! Se nota que eres cercano/a 😉";
                     else message = "¡Ups! Toca juntarnos más seguido 🍻";
 
                     document.getElementById('trivia-message').innerText = message;
-
-                    // Update Share Link
-                    const subject = encodeURIComponent("Mi resultado de la Trivia de Felipe y Camila");
-                    const body = encodeURIComponent(`¡Hola chicos!\n\nAcabo de jugar su trivia y obtuve ${score} de 5 puntos.\n\n${message}\n\n¡Nos vemos en el matri!`);
-                    const mailtoLink = `mailto:felipeycamila.v@gmail.com?subject=${subject}&body=${body}`;
-
-                    const shareBtn = document.getElementById('trivia-share-btn');
-                    if (shareBtn) shareBtn.href = mailtoLink;
 
                     // Show Result Section
                     const resultSection = document.getElementById('trivia-result');
                     resultSection.classList.remove('hidden');
                     resultSection.scrollIntoView({ behavior: 'smooth' });
 
-                    // Reset Button
-                    triviaSubmitBtn.disabled = false;
-                    triviaSubmitBtn.innerHTML = originalBtnText;
+                    // Reset Main Button
+                    triviaSubmitBtn.innerHTML = "¡Jugar de nuevo!";
+
+                    // Save anonymous result initially
+                    if (window.saveTriviaResult) {
+                        window.saveTriviaResult(score, answers);
+                    }
+                });
+            }
+
+            // Handle Share Score Submission
+            const shareSubmitBtn = document.getElementById('trivia-share-submit');
+            if (shareSubmitBtn) {
+                shareSubmitBtn.addEventListener('click', async () => {
+                    const nameInput = document.getElementById('trivia-guest-name');
+                    const name = nameInput.value.trim();
+
+                    if (!name) {
+                        alert('Por favor escribe tu nombre para saber quién eres 😊');
+                        return;
+                    }
+
+                    // UI Loading
+                    const originalText = shareSubmitBtn.innerHTML;
+                    shareSubmitBtn.disabled = true;
+                    shareSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+                    // 1. Prepare Data
+                    const emailData = new FormData();
+                    emailData.append('access_key', 'YOUR_WEB3FORMS_KEY');
+                    emailData.append('subject', `Trivia: ${name} obtuvo ${currentTriviaScore}/5`);
+                    emailData.append('from_name', 'Sitio Web - Trivia');
+                    emailData.append('to_email', 'camilayfelipe.v@gmail.com');
+                    emailData.append('message', `${name} acaba de jugar la trivia.\n\nPuntaje: ${currentTriviaScore} de 5.\n\nRespuestas: ${JSON.stringify(currentTriviaAnswers, null, 2)}`);
+
+                    // 2. Parallel Submission (DB + Email)
+                    try {
+                        const emailPromise = fetch('https://api.web3forms.com/submit', {
+                            method: 'POST',
+                            body: emailData
+                        });
+
+                        // Save named result to DB
+                        const dbPromise = window.saveTriviaResult
+                            ? window.saveTriviaResult(currentTriviaScore, currentTriviaAnswers, null, name)
+                            : Promise.resolve({ error: 'No DB' });
+
+                        await Promise.allSettled([emailPromise, dbPromise]);
+
+                        // Success UI
+                        shareSubmitBtn.innerHTML = originalText;
+                        shareSubmitBtn.disabled = false;
+                        document.getElementById('trivia-share-section').classList.add('hidden');
+                        document.getElementById('trivia-share-success').classList.remove('hidden');
+                        // Show success message inside the form container instead of hiding whole section?
+                        // Better: Hide form inputs, show success message.
+                        const formContainer = document.querySelector('#trivia-share-section .bg-sage\\/10');
+                        if (formContainer) {
+                            formContainer.innerHTML = `
+                                    <div class="text-center py-4">
+                                        <div class="text-4xl text-green-600 mb-2"><i class="fa-solid fa-circle-check"></i></div>
+                                        <h4 class="font-serif text-xl text-charcoal">¡Gracias, ${name}!</h4>
+                                        <p class="text-sm text-slate-600">Le avisamos a los novios.</p>
+                                    </div>
+                                `;
+                        }
+
+                    } catch (error) {
+                        console.error('Error sharing score:', error);
+                        alert('Hubo un pequeño error, pero no te preocupes, ¡tu puntaje es lo que cuenta!');
+                        shareSubmitBtn.disabled = false;
+                        shareSubmitBtn.innerHTML = originalText;
+                    }
                 });
             }
         });
@@ -1085,7 +1144,7 @@
 
         <!-- 3. TRIVIA DEL AMOR ("¿Cuánto nos conoces?") -->
         <!-- 3. TRIVIA DEL AMOR ("¿Cuánto nos conoces?") - CAROUSEL MODE -->
-        <section id="trivia" class="py-24 relative bg-ivory bg-paper-texture overflow-hidden">
+        <section id="trivia" class="py-24 relative bg-ivory bg-paper-texture">
             <div class="max-w-6xl mx-auto px-6">
                 <div class="text-center mb-10">
                     <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-4">¿Cuánto nos conoces?</h2>
@@ -1299,33 +1358,26 @@
                             class="font-bold text-3xl">0</span> de 5 aciertos</p>
                     <p id="trivia-message" class="font-handwriting text-2xl text-slate-600 mb-8">¡Gracias por jugar!</p>
 
-                    <a id="trivia-share-btn" href="#"
-                        class="inline-block bg-burgundy text-white font-sans text-sm uppercase tracking-widest py-3 px-8 rounded-full hover:bg-charcoal transition-colors shadow-lg">
-                        <i class="fa-solid fa-envelope mr-2"></i> Compartir con los Novios
-                    </a>
-                    <!-- PARCHMENT MAP ADDRESS CARD -->
-                    <div
-                        class="relative max-w-md mx-auto mt-12 p-8 bg-[#EAE2D6] rounded-xl shadow-sm border-2 border-dashed border-[#A89F91] transform rotate-1 hover:rotate-0 transition-transform duration-300">
-                        <!-- Paper Texture Overlay -->
-                        <div
-                            class="absolute inset-0 rounded-xl bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-40 pointer-events-none mix-blend-multiply">
-                        </div>
+                    <!-- Share Score Form -->
+                    <div id="trivia-share-section" class="mt-8 max-w-sm mx-auto">
+                        <div class="bg-sage/10 p-6 rounded-xl border border-sage/20">
+                            <h4 class="font-serif text-xl text-charcoal mb-2">¿Quieres contarnos? 💌</h4>
+                            <p class="text-sm text-slate-600 mb-4">Ingresa tu nombre para que sepamos qué tal te fue.
+                            </p>
 
-                        <div class="relative z-10 flex flex-col items-center text-center space-y-4">
-                            <!-- Map Pin Icon -->
-                            <div class="text-[#556B2F] text-4xl mb-2 drop-shadow-sm">
-                                <i class="fa-solid fa-location-dot"></i>
+                            <div class="space-y-3">
+                                <input type="text" id="trivia-guest-name" placeholder="Tu Nombre o Apodo"
+                                    class="w-full p-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage transition-all text-center font-sans text-charcoal">
+
+                                <button id="trivia-share-submit"
+                                    class="w-full bg-sage text-white font-sans text-sm uppercase tracking-widest py-3 rounded-lg hover:bg-sage-dark transition-colors shadow-sm flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-paper-plane"></i> Enviar Resultado
+                                </button>
                             </div>
 
-                            <!-- Address Text -->
-                            <h3 class="font-serif text-2xl md:text-3xl text-[#2C241E] leading-tight">
-                                Avenida El Valle 147, Casa 10
-                            </h3>
-
-                            <!-- Location Text -->
-                            <p
-                                class="font-sans text-sm md:text-base text-[#556B2F] uppercase tracking-[0.15em] font-medium">
-                                Chicureo, Santiago
+                            <p id="trivia-share-success"
+                                class="hidden mt-4 text-green-700 font-bold bg-green-50 p-2 rounded-lg border border-green-100">
+                                <i class="fa-solid fa-check mr-2"></i> ¡Enviado! Gracias por jugar.
                             </p>
                         </div>
                     </div>
@@ -1754,7 +1806,7 @@
 
                 // Send email notification using Web3Forms
                 const formData = new FormData();
-                formData.append('access_key', 'YOUR_WEB3FORMS_KEY');
+                emailData.append('access_key', '138e83f9-894d-4a94-bee4-af9392f8ffb9');
                 formData.append('subject', `Nueva Confirmación de Asistencia: ${name}`);
                 formData.append('from_name', 'Sitio Web - Felipe y Camila');
                 formData.append('to_email', 'camilayfelipe.v@gmail.com');
@@ -1841,7 +1893,7 @@
 
                 // Send email notification
                 const formData = new FormData();
-                formData.append('access_key', 'YOUR_WEB3FORMS_KEY');
+                emailData.append('access_key', '138e83f9-894d-4a94-bee4-af9392f8ffb9');
                 formData.append('subject', 'Nueva Solicitud de Canción - Misión: Pista Llena');
                 formData.append('from_name', 'Sitio Web - Felipe y Camila');
                 formData.append('to_email', 'camilayfelipe.v@gmail.com');

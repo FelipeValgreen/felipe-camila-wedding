@@ -57,13 +57,13 @@ async function uploadGuestPhoto(file, uploaderName, email, whatsapp) {
 }
 
 // Helper function to save trivia results
-async function saveTriviaResult(score, answers, userId = null) {
+async function saveTriviaResult(score, answers, userId = null, guestName = null) {
     if (!supabaseClient) return { error: 'Supabase not initialized' };
 
     const { data, error } = await supabaseClient
         .from('trivia_results')
         .insert([
-            { score, answers, user_id: userId }
+            { score, answers, user_id: userId, guest_name: guestName }
         ]);
 
     if (error) {
@@ -145,7 +145,7 @@ async function sendPhotoUploadNotification(uploaderName, email) {
     try {
         // Use Web3Forms free API for email notifications
         const formData = new FormData();
-        formData.append('access_key', 'YOUR_WEB3FORMS_KEY'); // You'll need to get this from web3forms.com
+        formData.append('access_key', '138e83f9-894d-4a94-bee4-af9392f8ffb9'); // You'll need to get this from web3forms.com
         formData.append('subject', `Nueva foto subida por ${uploaderName}`);
         formData.append('from_name', 'Felipe y Camila - Sitio Web');
         formData.append('to_email', 'felipevalverde5673@gmail.com');
