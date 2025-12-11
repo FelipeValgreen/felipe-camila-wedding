@@ -1526,12 +1526,17 @@
                     }
                 });
 
-                // A. Populate Instagram Feed (Append to end)
+                // A. Populate Instagram Feed
                 if (instaFeed) {
-                    // Remove existing dynamic photos to prevent duplicates
-                    const existingDynamicInsta = instaFeed.querySelectorAll('.dynamic-photo');
-                    existingDynamicInsta.forEach(el => el.remove());
+                    // Define Static Upload Card HTML (Must match design)
+                    const staticUploadCard = `
+                    <div onclick="document.getElementById('paparazzi').scrollIntoView({behavior: 'smooth'})"
+                        class="aspect-square w-[33vw] md:w-[200px] snap-center relative group cursor-pointer bg-charcoal border-2 border-dashed border-gold flex flex-col items-center justify-center text-center p-2 text-gold hover:bg-charcoal/90 transition-colors">
+                        <i class="fa-solid fa-camera text-3xl mb-2 animate-bounce"></i>
+                        <span class="font-serif text-sm font-bold uppercase tracking-widest leading-none">Subir<br>Foto</span>
+                    </div>`;
 
+                    // Generate Dynamic Photos HTML
                     const instaHtml = uniqueData.map(photo => `
                         <div class="dynamic-photo aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer border border-gray-100">
                             <img src="${photo.url}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Guest Photo">
@@ -1542,7 +1547,9 @@
                             </div>
                         </div>
                     `).join('');
-                    instaFeed.insertAdjacentHTML('beforeend', instaHtml);
+
+                    // STRICT RESET: Overwrite entire content to remove any ghost text nodes/garbage
+                    instaFeed.innerHTML = staticUploadCard + instaHtml;
                 }
 
                 // B. Populate Guest Carousel (Insert after CTA card)
