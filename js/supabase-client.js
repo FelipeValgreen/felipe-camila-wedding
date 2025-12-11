@@ -171,11 +171,53 @@ async function sendPhotoUploadNotification(uploaderName, email) {
     }
 }
 
+// Helper function to save Song Request
+async function saveSongRequest(songName, artistName, requesterName) {
+    if (!supabaseClient) return { error: 'Supabase not initialized' };
+
+    const { data, error } = await supabaseClient
+        .from('song_requests')
+        .insert([
+            {
+                song_name: songName,
+                artist: artistName || '', // Optional
+                requester_name: requesterName
+            }
+        ]);
+
+    if (error) {
+        console.error('Error saving song request:', error);
+        return { error };
+    }
+
+    return { data };
+}
+
+// Helper function to fetch song requests
+async function fetchSongRequests() {
+    if (!supabaseClient) return { error: 'Supabase not initialized' };
+
+    const { data, error } = await supabaseClient
+        .from('song_requests')
+        .select('*')
+        .order('created_at', { ascending: false }) // Newest first
+        .limit(50);
+
+    if (error) {
+        console.error('Error fetching song requests:', error);
+        return { error };
+    }
+
+    return { data };
+}
+
 // Expose functions globally
 window.uploadGuestPhoto = uploadGuestPhoto;
 window.saveTriviaResult = saveTriviaResult;
 window.saveRSVP = saveRSVP;
 window.fetchGuestPhotos = fetchGuestPhotos;
+window.saveSongRequest = saveSongRequest;
+window.fetchSongRequests = fetchSongRequests;
 window.signInWithGoogle = signInWithGoogle;
 window.signInWithEmail = signInWithEmail;
 window.getCurrentUser = getCurrentUser;
