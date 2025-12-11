@@ -97,7 +97,7 @@ async function fetchGuestPhotos() {
     const { data, error } = await supabaseClient
         .from('guest_photos')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: true })
         .limit(20);
 
     if (error) {
