@@ -2001,45 +2001,76 @@
         // Handle Upload
         // Guest Cam Upload
         // Guest Cam Upload
+        // Guest Cam Upload Logic (Select -> Then Click Upload)
         const photoUploadInput = document.getElementById('photo-upload');
+        const paparazziUploadBtn = document.getElementById('upload-btn');
+        let selectedFile = null;
+
         if (photoUploadInput) {
-            photoUploadInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
+            // 1. Handle Selection
+            photoUploadInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    selectedFile = e.target.files[0];
+                    // Optional: Update button text or show preview?
+                    // For now just valid.
+                }
+            });
+        }
+
+        if (paparazziUploadBtn) {
+            // 2. Handle Click Submit
+            paparazziUploadBtn.addEventListener('click', async () => {
                 const uploaderName = document.getElementById('uploader-name').value;
                 const uploaderEmail = document.getElementById('uploader-email').value;
                 const uploaderWhatsapp = document.getElementById('uploader-whatsapp').value;
 
-                if (!file) return;
+                if (!selectedFile) {
+                    // If no file selected yet, trigger the input prompt
+                    // But if input is visible (as it is), we should tell them to pick one.
+                    // If they just clicked "Subir Foto" without picking:
+                    if (photoUploadInput.value === '') {
+                        alert('Por favor selecciona una foto primero.');
+                        return;
+                    }
+                    // Fallback if variable is lost but input has value
+                    selectedFile = photoUploadInput.files[0];
+                }
+
                 if (!uploaderName) {
                     alert('Por favor ingresa tu nombre antes de subir una foto.');
+                    document.getElementById('uploader-name').focus();
                     return;
                 }
 
-                const btn = document.querySelector('button[onclick="document.getElementById(\'guest-photo-input\').click()"]'); // This selector is tricky because the button triggers the input. 
-                // Actually, the input change triggers this. We should probably show a loading state on the upload area or a specific button if there was one.
-                // The current UI has a div acting as a button. Let's just use a simple alert for status for now as per previous implementation style, or better, update the UI.
+                // UI Loading State
+                const originalContent = paparazziUploadBtn.innerHTML;
+                paparazziUploadBtn.disabled = true;
+                paparazziUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Subiendo...';
 
-                // Let's show a simple loading indicator
-                const uploadArea = e.target.parentElement; // The div wrapping the input
-                const originalContent = uploadArea.innerHTML;
-                uploadArea.innerHTML = '<div class="text-white"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="mt-2">Subiendo...</p></div>';
-
-                const { data, error } = await uploadGuestPhoto(file, uploaderName, uploaderEmail, uploaderWhatsapp);
+                // Upload
+                const { data, error } = await uploadGuestPhoto(selectedFile, uploaderName, uploaderEmail, uploaderWhatsapp);
 
                 if (error) {
-                    alert('Error al subir la foto. Por favor intenta de nuevo.');
-                    uploadArea.innerHTML = originalContent;
+                    console.error(error);
+                    alert('Error al subir la foto. Intenta de nuevo.');
+                    paparazziUploadBtn.disabled = false;
+                    paparazziUploadBtn.innerHTML = originalContent;
                 } else {
-                    alert('¡Foto subida con éxito! Gracias por compartir este momento.');
-                    uploadArea.innerHTML = originalContent;
-                    // Refresh gallery
-                    if (typeof loadGallery === 'function') {
-                        loadGallery();
-                    }
-                    // Clear inputs
+                    alert('¡Foto subida con éxito! Gracias por compartir.');
+                    paparazziUploadBtn.disabled = false;
+                    paparazziUploadBtn.innerHTML = originalContent;
+
+                    // Cleanup
+                    selectedFile = null;
+                    photoUploadInput.value = '';
                     document.getElementById('uploader-name').value = '';
                     document.getElementById('uploader-email').value = '';
                     document.getElementById('uploader-whatsapp').value = '';
+
+                    // Refresh Gallery
+                    if (typeof loadGallery === 'function') {
+                        loadGallery();
+                    }
                 }
             });
         }
