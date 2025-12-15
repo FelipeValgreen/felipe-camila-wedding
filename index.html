@@ -697,16 +697,23 @@
 
                 <!-- Live Gallery Carousel Container -->
                 <div class="relative group max-w-6xl mx-auto">
-                    <!-- Navigation Arrows -->
+                    <!-- Navigation Arrows (Visible on Mobile, Hover on Desktop) -->
                     <button
                         onclick="document.getElementById('guest-gallery').scrollBy({left: -300, behavior: 'smooth'})"
-                        class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 bg-white/80 hover:bg-white text-charcoal w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-0 group-hover:opacity-100">
+                        class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 bg-sage text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-80 md:opacity-0 md:group-hover:opacity-100 font-bold">
                         <i class="fa-solid fa-chevron-left"></i>
                     </button>
                     <button onclick="document.getElementById('guest-gallery').scrollBy({left: 300, behavior: 'smooth'})"
-                        class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 bg-white/80 hover:bg-white text-charcoal w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-0 group-hover:opacity-100">
+                        class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 bg-sage text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-80 md:opacity-0 md:group-hover:opacity-100 font-bold">
                         <i class="fa-solid fa-chevron-right"></i>
                     </button>
+
+                    <!-- Swipe Hint (Mobile Only) -->
+                    <div
+                        class="md:hidden absolute -bottom-8 left-0 right-0 text-center text-sage text-xs animate-pulse">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Desliza para ver más <i
+                            class="fa-solid fa-arrow-right ml-1"></i>
+                    </div>
 
                     <div id="guest-gallery"
                         class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 px-4 scrollbar-hide h-80 justify-start">
