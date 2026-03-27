@@ -125,19 +125,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now();
             const extension = originalFilename.split('.').pop() || 'jpg';
-            const storagePath = `guest_uploads/${uniqueId}.${extension}`;
+            // Added 'guest_' prefix to match original codebase strictly, in case RLS relies on it.
+            const storagePath = `guest_uploads/guest_${uniqueId}.${extension}`;
 
             // 1. Storage Upload
+            // Using 'wedding-photos' as bucket. Passing contentType explicitly for Blobs.
             const { data: storageData, error: storageError } = await client.storage
-                .from('guest_photos')
-                .upload(storagePath, fileBlob);
+                .from('wedding-photos')
+                .upload(storagePath, fileBlob, {
+                    contentType: fileBlob.type,
+                    upsert: false
+                });
 
             if (storageError) throw storageError;
             progressBar.style.width = '70%';
 
             // 2. Get Public URL
             const { data: { publicUrl } } = client.storage
-                .from('guest_photos')
+                .from('wedding-photos')
                 .getPublicUrl(storagePath);
 
             // 3. Save to new Table: guest_photo_uploads
