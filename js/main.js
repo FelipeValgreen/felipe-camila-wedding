@@ -250,10 +250,41 @@ window.alert = function(msg) {
             // 2. Target Guest Carousel (Top - Paparazzi Section)
             const guestCarousel = document.getElementById('guest-gallery');
 
-            if (typeof window.fetchGuestPhotos !== 'function') return;
+            if (!window.supabaseClient) return;
 
-            const { data, error } = await window.fetchGuestPhotos();
-            if (error) console.error("Could not load gallery:", error);
+            let allPhotos = [];
+
+            // A. Fetch Old Photos (from existing paparazzi)
+            if (typeof window.fetchGuestPhotos === 'function') {
+                const { data: oldData } = await window.fetchGuestPhotos();
+                if (oldData) allPhotos = allPhotos.concat(oldData);
+            }
+
+            // B. Fetch New QR Photos (from guest_photo_uploads)
+            try {
+                const { data: newData, error } = await supabaseClient
+                    .from('guest_photo_uploads')
+                    .select('public_url, guest_name, created_at, original_filename')
+                    .eq('visible_in_gallery', true);
+
+                if (newData) {
+                    const formattedNew = newData.map(item => ({
+                        id: item.public_url,
+                        url: item.public_url,
+                        uploader_name: item.guest_name,
+                        created_at: item.created_at,
+                        // Fallback filename for deduplication logic
+                        filename: item.original_filename || item.public_url
+                    }));
+                    allPhotos = allPhotos.concat(formattedNew);
+                }
+            } catch (err) {
+                console.error("Error loading new QR photos:", err);
+            }
+
+            // Sort newest first
+            allPhotos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const data = allPhotos;
 
             if (data && data.length > 0) {
                 // Smart Deduplication: Filter by "original filename" to catch re-uploads
