@@ -112,10 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const progressBar = document.getElementById(`progress-${itemId}`);
         const statusIcon = document.getElementById(`status-${itemId}`);
 
-        if (!window.supabaseClient) {
+        if (typeof supabaseClient === 'undefined' && !window.supabaseClient) {
             statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i>`;
+            console.error("Supabase client is not loaded or missing.");
             return;
         }
+        
+        const client = typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient;
 
         try {
             progressBar.style.width = '30%';
@@ -125,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const storagePath = `guest_uploads/${uniqueId}.${extension}`;
 
             // 1. Storage Upload
-            const { data: storageData, error: storageError } = await supabaseClient.storage
+            const { data: storageData, error: storageError } = await client.storage
                 .from('wedding-photos')
                 .upload(storagePath, fileBlob);
 
@@ -133,12 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '70%';
 
             // 2. Get Public URL
-            const { data: { publicUrl } } = supabaseClient.storage
+            const { data: { publicUrl } } = client.storage
                 .from('wedding-photos')
                 .getPublicUrl(storagePath);
 
             // 3. Save to new Table: guest_photo_uploads
-            const { error: dbError } = await supabaseClient
+            const { error: dbError } = await client
                 .from('guest_photo_uploads')
                 .insert([{
                     guest_token: guestToken,

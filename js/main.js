@@ -254,10 +254,14 @@ window.alert = function(msg) {
 
             let allPhotos = [];
 
+            let oldData = [];
             // A. Fetch Old Photos (from existing paparazzi)
             if (typeof window.fetchGuestPhotos === 'function') {
-                const { data: oldData } = await window.fetchGuestPhotos();
-                if (oldData) allPhotos = allPhotos.concat(oldData);
+                const response = await window.fetchGuestPhotos();
+                if (response.data) {
+                    oldData = response.data;
+                    allPhotos = allPhotos.concat(oldData);
+                }
             }
 
             // B. Fetch New QR Photos (from guest_photo_uploads)
@@ -284,66 +288,57 @@ window.alert = function(msg) {
 
             // Sort newest first
             allPhotos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            const data = allPhotos;
-
-            if (data && data.length > 0) {
-                // Smart Deduplication: Filter by "original filename" to catch re-uploads
-                // URL format: .../guest_[timestamp]_[filename]
-                // We extract the [filename] part.
+            
+            // Helper for Deduplication
+            const getUniqueData = (arr) => {
                 const seenFilenames = new Set();
-                const uniqueData = data.filter(item => {
+                return arr.filter(item => {
                     try {
                         const url = item.url;
-                        // Match everything after the last 'guest_' and timestamp digits
-                        // Example: guest_1765494408231_image.png
                         const match = url.match(/guest_\d+_(.+)$/);
-                        const originalName = match ? match[1] : url; // Fallback to URL if no match
-
-                        // Also use uploader name to distinguish different users uploading same filename (unlikely but safe)
+                        const originalName = match ? match[1] : url;
                         const key = originalName + '_' + (item.uploader_name || '');
-
-                        if (seenFilenames.has(key)) {
-                            return false; // Duplicate
-                        }
+                        if (seenFilenames.has(key)) return false;
                         seenFilenames.add(key);
                         return true;
                     } catch (e) {
-                        return true; // Keep if error in parsing
+                        return true;
                     }
                 });
+            };
 
-                // A. Populate Instagram Feed
-                if (instaFeed) {
-                    // Remove existing dynamic photos to prevent duplicates
-                    const existingDynamicInsta = instaFeed.querySelectorAll('.dynamic-photo');
-                    existingDynamicInsta.forEach(el => el.remove());
+            const uniqueAllData = getUniqueData(allPhotos);
+            const uniqueOldData = typeof oldData !== 'undefined' && oldData ? getUniqueData(oldData) : [];
 
-                    // Generate Dynamic Photos HTML
-                    const instaHtml = uniqueData.map(photo => `
-                        <div class="dynamic-photo aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer border border-gray-100">
-                            <img src="${photo.url}" 
-                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                                 alt="Guest Photo"
-                                 onerror="this.closest('.dynamic-photo').remove()">
-                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                <span class="text-white text-xs font-handwriting bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
-                                    <i class="fa-solid fa-camera mr-1"></i> ${photo.uploader_name || 'Anónimo'}
-                                </span>
-                            </div>
+            // A. Populate Instagram Feed (Only OLD photos, per user request)
+            if (instaFeed && uniqueOldData.length > 0) {
+                const existingDynamicInsta = instaFeed.querySelectorAll('.dynamic-photo');
+                existingDynamicInsta.forEach(el => el.remove());
+
+                const instaHtml = uniqueOldData.map(photo => `
+                    <div class="dynamic-photo aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer border border-gray-100">
+                        <img src="${photo.url}" 
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                             alt="Guest Photo"
+                             onerror="this.closest('.dynamic-photo').remove()">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-white text-xs font-handwriting bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+                                <i class="fa-solid fa-camera mr-1"></i> ${photo.uploader_name || 'Anónimo'}
+                            </span>
                         </div>
-                    `).join('');
+                    </div>
+                `).join('');
 
-                    // Append to end (Static photos remain)
-                    instaFeed.insertAdjacentHTML('beforeend', instaHtml);
-                }
+                instaFeed.insertAdjacentHTML('beforeend', instaHtml);
+            }
 
-                // B. Populate Guest Carousel (Insert after CTA card)
-                if (guestCarousel) {
+            // B. Populate Guest Carousel (BOTH old and new photos)
+            if (guestCarousel && uniqueAllData.length > 0) {
                     // Remove existing dynamic photos
                     const existingDynamicCarousel = guestCarousel.querySelectorAll('.dynamic-photo');
                     existingDynamicCarousel.forEach(el => el.remove());
 
-                    const carouselHtml = uniqueData.map(photo => `
+                    const carouselHtml = uniqueAllData.map(photo => `
                         <div class="dynamic-photo min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center border border-gray-100">
                             <img src="${photo.url}" 
                                  class="w-full h-full object-cover" 
@@ -364,7 +359,6 @@ window.alert = function(msg) {
                         guestCarousel.innerHTML = carouselHtml;
                     }
                 }
-            }
         }
 
         // RSVP Form Handler
