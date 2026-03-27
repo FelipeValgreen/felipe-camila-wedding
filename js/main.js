@@ -254,36 +254,12 @@ window.alert = function(msg) {
 
             let allPhotos = [];
 
-            let oldData = [];
-            // A. Fetch Old Photos (from existing paparazzi)
+            // A. Fetch All Photos (from unified guest_photos table)
             if (typeof window.fetchGuestPhotos === 'function') {
                 const response = await window.fetchGuestPhotos();
                 if (response.data) {
-                    oldData = response.data;
-                    allPhotos = allPhotos.concat(oldData);
+                    allPhotos = response.data;
                 }
-            }
-
-            // B. Fetch New QR Photos (from guest_photo_uploads)
-            try {
-                const { data: newData, error } = await supabaseClient
-                    .from('guest_photo_uploads')
-                    .select('public_url, guest_name, created_at, original_filename')
-                    .eq('visible_in_gallery', true);
-
-                if (newData) {
-                    const formattedNew = newData.map(item => ({
-                        id: item.public_url,
-                        url: item.public_url,
-                        uploader_name: item.guest_name,
-                        created_at: item.created_at,
-                        // Fallback filename for deduplication logic
-                        filename: item.original_filename || item.public_url
-                    }));
-                    allPhotos = allPhotos.concat(formattedNew);
-                }
-            } catch (err) {
-                console.error("Error loading new QR photos:", err);
             }
 
             // Sort newest first
@@ -308,14 +284,17 @@ window.alert = function(msg) {
             };
 
             const uniqueAllData = getUniqueData(allPhotos);
-            const uniqueOldData = typeof oldData !== 'undefined' && oldData ? getUniqueData(oldData) : [];
+            
+            // Filter out QR uploads for the Instagram feed
+            const instaData = allPhotos.filter(item => !item.url.includes('source=qr'));
+            const uniqueInstaData = getUniqueData(instaData);
 
             // A. Populate Instagram Feed (Only OLD photos, per user request)
-            if (instaFeed && uniqueOldData.length > 0) {
+            if (instaFeed && uniqueInstaData.length > 0) {
                 const existingDynamicInsta = instaFeed.querySelectorAll('.dynamic-photo');
                 existingDynamicInsta.forEach(el => el.remove());
 
-                const instaHtml = uniqueOldData.map(photo => `
+                const instaHtml = uniqueInstaData.map(photo => `
                     <div class="dynamic-photo aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer border border-gray-100">
                         <img src="${photo.url}" 
                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 

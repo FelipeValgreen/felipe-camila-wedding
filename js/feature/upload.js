@@ -145,23 +145,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 .from('wedding-photos')
                 .getPublicUrl(storagePath);
 
-            // 3. Save to new Table: guest_photo_uploads
+            // 3. Save to ORIGINAL Table: guest_photos (guaranteed to work)
+            // We append '?source=qr' to the URL so that the gallery logic can distinguish these from standard uploads
+            const finalUrl = publicUrl.includes('?') ? publicUrl + '&source=qr' : publicUrl + '?source=qr';
+
             const { error: dbError } = await client
-                .from('guest_photo_uploads')
+                .from('guest_photos')
                 .insert([{
-                    guest_token: guestToken,
-                    guest_name: guestName,
-                    session_id: sessionId,
-                    original_filename: originalFilename,
-                    storage_path: storagePath,
-                    public_url: publicUrl,
-                    mime_type: fileBlob.type,
-                    file_size: fileBlob.size,
-                    device_type: metadata.device_type,
-                    browser: metadata.browser,
-                    user_agent: metadata.user_agent,
-                    approved: true, // Default true 
-                    visible_in_gallery: true
+                    url: finalUrl,
+                    uploader_name: guestName
                 }]);
 
             if (dbError) throw dbError;
