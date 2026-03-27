@@ -89,8 +89,12 @@
 
         <!-- Upload Queue Preview -->
         <div id="upload-queue" class="w-full mt-8 hidden">
-            <h3 class="font-bold text-sm uppercase tracking-widest mb-4 border-b pb-2 text-left">Subiendo...</h3>
+            <h3 id="queue-title" class="font-bold text-sm uppercase tracking-widest mb-4 border-b pb-2 text-left">Subiendo...</h3>
             <div id="queue-list" class="flex flex-col gap-3"></div>
+            
+            <a href="/#guest-gallery" id="view-photos-btn" class="hidden mt-6 flex items-center justify-center gap-2 w-full bg-charcoal text-white font-bold py-3 px-6 rounded-xl hover:bg-black transition-all">
+                Ir a ver las fotos <i class="fa-solid fa-arrow-right"></i>
+            </a>
         </div>
 
         <p class="text-[10px] text-slate-400 mt-12 uppercase tracking-widest">

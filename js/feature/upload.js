@@ -57,6 +57,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const queueTitle = document.getElementById('queue-title');
+        if (queueTitle) queueTitle.innerHTML = 'Subiendo...';
+        const viewBtn = document.getElementById('view-photos-btn');
+        if (viewBtn) viewBtn.classList.add('hidden');
+
         queueContainer.classList.remove('hidden');
 
         Array.from(files).forEach((file, index) => {
@@ -163,6 +168,12 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.classList.replace('bg-sage', 'bg-green-500');
             statusIcon.innerHTML = `<i class="fa-solid fa-check-circle text-green-500"></i>`;
             
+            const queueTitle = document.getElementById('queue-title');
+            if (queueTitle) queueTitle.innerHTML = '¡Subida Exitosa! 🎉';
+            
+            const viewBtn = document.getElementById('view-photos-btn');
+            if (viewBtn) viewBtn.classList.remove('hidden');
+
             // Auto hide after 5 seconds to keep queue clean
             setTimeout(() => {
                 const el = document.getElementById(itemId);
