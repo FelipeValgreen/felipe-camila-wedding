@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 1. Storage Upload
             const { data: storageData, error: storageError } = await client.storage
-                .from('wedding-photos')
+                .from('guest_photos')
                 .upload(storagePath, fileBlob);
 
             if (storageError) throw storageError;
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 2. Get Public URL
             const { data: { publicUrl } } = client.storage
-                .from('wedding-photos')
+                .from('guest_photos')
                 .getPublicUrl(storagePath);
 
             // 3. Save to new Table: guest_photo_uploads
