@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin de Fotos | F&C</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['"Montserrat"', 'sans-serif'] } } } }
+    </script>
+</head>
+<body class="bg-gray-50 text-slate-800 font-sans min-h-screen">
+
+    <!-- Auth Overlay -->
+    <div id="auth-overlay" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center">
+            <h2 class="text-2xl font-bold mb-2">Panel Moderador</h2>
+            <p class="text-sm text-gray-500 mb-6">Ingresa la contraseña para revisar las fotos.</p>
+            <input type="password" id="admin-pass" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-center tracking-widest focus:border-blue-500 focus:outline-none mb-4" placeholder="••••••••">
+            <button id="login-btn" class="w-full bg-blue-600 font-bold text-white rounded-lg py-3 hover:bg-blue-700 transition">Entrar</button>
+            <p id="login-err" class="text-red-500 text-xs mt-3 hidden">Contraseña incorrecta</p>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="hidden">
+        <nav class="bg-white border-b border-gray-200 p-4 sticky top-0 z-40 flex justify-between items-center shadow-sm">
+            <h1 class="font-bold text-lg"><i class="fa-solid fa-shield-halved text-blue-600 mr-2"></i>Moderación de Fotos</h1>
+            <div class="text-xs text-gray-500">
+                <a href="/galeria" target="_blank" class="mr-4 hover:text-blue-600"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ver Galería Pública</a>
+                <button onclick="location.reload()" class="bg-gray-100 px-3 py-1 rounded hover:bg-gray-200">Salir</button>
+            </div>
+        </nav>
+
+        <main class="p-6 max-w-7xl mx-auto">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold">Últimas Subidas</h2>
+                    <p class="text-sm text-gray-500">Revisa, oculta o elimina contenido inapropiado.</p>
+                </div>
+                <button id="refresh-btn" class="bg-white border border-gray-300 shadow-sm px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-50"><i class="fa-solid fa-rotate-right mr-2"></i> Refrescar</button>
+            </div>
+
+            <div class="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="p-4 w-24">Miniatura</th>
+                            <th class="p-4">Detalles</th>
+                            <th class="p-4">Metadata</th>
+                            <th class="p-4 text-center">Estado</th>
+                            <th class="p-4 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="photo-table-body" class="divide-y divide-gray-100">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script>
+        // Simple client-side protection for demo purposes. 
+        // For real security, implement Supabase Auth roles + RLS.
+        const APP_PASS = 'bodorrio2026';
+        
+        document.getElementById('login-btn').addEventListener('click', () => {
+            if (document.getElementById('admin-pass').value === APP_PASS) {
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+                loadUploads();
+            } else {
+                document.getElementById('login-err').classList.remove('hidden');
+            }
+        });
+
+        async function loadUploads() {
+            const tbody = document.getElementById('photo-table-body');
+            tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>Cargando...</td></tr>';
+            
+            // Note: Since we use Anon Key, RLS must either allow SELECT to all via unauthenticated, 
+            // or the policy must be dropped during admin review. 
+            // The SQL policy in the plan only allows SELECT where visible=true. 
+            // For this admin panel to work without a Service Key or Auth, we assume you alter RLS to allow SELECT all for now.
+            const { data, error } = await supabaseClient
+                .from('guest_photo_uploads')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-red-500"><i class="fa-solid fa-triangle-exclamation mb-2 text-2xl"></i><br>${error.message}<br><span class="text-xs text-gray-400">¿Revisaste las políticas RLS de Supabase?</span></td></tr>`;
+                return;
+            }
+
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-gray-500">No hay fotos subidas aún.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(photo => `
+                <tr class="hover:bg-gray-50 transition-colors" id="row-${photo.id}">
+                    <td class="p-4">
+                        <a href="${photo.public_url}" target="_blank">
+                            <img src="${photo.public_url}" class="w-16 h-16 object-cover rounded shadow-sm border border-gray-200">
+                        </a>
+                    </td>
+                    <td class="p-4">
+                        <p class="font-bold text-gray-800">${photo.guest_name || 'Anónimo'}</p>
+                        <p class="text-xs text-gray-500 mb-1">Token: <span class="bg-yellow-100 text-yellow-800 px-1 rounded font-mono">${photo.guest_token || 'N/A'}</span></p>
+                        <p class="text-xs text-gray-400 font-mono">${new Date(photo.created_at).toLocaleString()}</p>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <p><span class="font-bold">Original:</span> ${photo.original_filename}</p>
+                            <p><span class="font-bold">Peso:</span> ${(photo.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p><span class="font-bold">Dispositivo:</span> ${photo.device_type} (${photo.browser})</p>
+                        </div>
+                    </td>
+                    <td class="p-4 text-center">
+                        ${photo.visible_in_gallery 
+                            ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full"><i class="fa-solid fa-eye"></i> Visible</span>' 
+                            : '<span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full"><i class="fa-solid fa-eye-slash"></i> Oculta</span>'}
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="toggleVisibility('${photo.id}', ${!photo.visible_in_gallery})" 
+                                class="px-3 py-1 text-sm font-bold rounded-lg border ${photo.visible_in_gallery ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50'}">
+                            ${photo.visible_in_gallery ? 'Ocultar' : 'Aprobar'}
+                        </button>
+                        <a href="${photo.public_url}" download="foto_${photo.guest_name}.jpg" class="px-3 py-1 text-sm font-bold rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50">
+                            Descargar
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function toggleVisibility(id, newStatus) {
+            // Note: Update via Anon Key requires valid RLS Policy allowing update.
+            const { error } = await supabaseClient
+                .from('guest_photo_uploads')
+                .update({ visible_in_gallery: newStatus })
+                .eq('id', id);
+
+            if (error) {
+                alert('Error de base de datos (Probablemente reglas RLS bloqueando UPDATE): ' + error.message);
+                console.error(error);
+                return;
+            }
+            loadUploads();
+        }
+
+        document.getElementById('refresh-btn').addEventListener('click', loadUploads);
+    </script>
+</body>
+</html>

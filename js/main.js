@@ -1,0 +1,636 @@
+// Extracted from index.html
+
+
+// TOAST NOTIFICATION SYSTEM
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    const bgColor = type === 'error' ? 'bg-red-500' : 'bg-sage';
+    toast.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white ${bgColor} shadow-xl z-[9999] opacity-0 transition-opacity duration-300 flex items-center gap-2 text-sm font-sans tracking-wide`;
+    
+    let icon = type === 'error' ? '<i class="fa-solid fa-circle-exclamation"></i>' : '<i class="fa-solid fa-circle-check"></i>';
+    toast.innerHTML = `${icon} <span>${message}</span>`;
+    
+    document.body.appendChild(toast);
+    
+    // Fade in
+    setTimeout(() => toast.style.opacity = '1', 10);
+    
+    // Fade out
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+// Global alert override
+window.alert = function(msg) {
+    showToast(msg, msg.toLowerCase().includes('error') || msg.includes('falta') || msg.includes('favor') ? 'error' : 'success');
+};
+
+
+        const instaScroll = document.getElementById('insta-scroll');
+        const dots = document.querySelectorAll('#instagram .rounded-full'); // Select dots within Instagram section
+
+        if (instaScroll && dots.length === 2) {
+            instaScroll.addEventListener('scroll', () => {
+                const scrollPosition = instaScroll.scrollLeft;
+                const width = instaScroll.clientWidth;
+                const index = Math.round(scrollPosition / width);
+
+                // Update dots
+                if (index === 0) {
+                    dots[0].classList.remove('bg-gray-300');
+                    dots[0].classList.add('bg-charcoal');
+                    dots[1].classList.remove('bg-charcoal');
+                    dots[1].classList.add('bg-gray-300');
+                } else {
+                    dots[0].classList.remove('bg-charcoal');
+                    dots[0].classList.add('bg-gray-300');
+                    dots[1].classList.remove('bg-gray-300');
+                    dots[1].classList.add('bg-charcoal');
+                }
+            });
+        }
+    
+
+
+        window.addEventListener('scroll', function () {
+            const rsvpSection = document.getElementById('rsvp');
+            const cta = document.getElementById('rsvp-cta');
+
+            if (rsvpSection && cta) {
+                const rect = rsvpSection.getBoundingClientRect();
+                const isVisible = (rect.top <= window.innerHeight) && (rect.bottom >= 0);
+
+                // Hide CTA when RSVP section is visible
+                if (isVisible) {
+                    cta.style.transform = 'translateY(100%)';
+                } else {
+                    cta.style.transform = 'translateY(0)';
+                }
+            }
+        });
+    
+
+
+        // 1. Envelope Intro & Navigation Reveal
+        // 1. Envelope Intro & Navigation Reveal
+        const openBtn = document.getElementById('open-invite');
+        const overlay = document.getElementById('envelope-overlay');
+        const body = document.body;
+        const nav = document.getElementById('main-nav');
+
+        if (openBtn) {
+            openBtn.addEventListener('click', () => {
+                overlay.style.transform = 'translateY(-100%)';
+                setTimeout(() => {
+                    body.classList.remove('locked');
+                    nav.classList.add('visible');
+                    checkReveal(); // Trigger reveal for Hero section
+                }, 1000);
+            });
+        }
+
+        // 2. Scroll Reveal & Sticky Nav
+        const reveals = document.querySelectorAll('.reveal');
+        const checkReveal = () => {
+            const triggerBottom = window.innerHeight * 0.85;
+            reveals.forEach(reveal => {
+                const top = reveal.getBoundingClientRect().top;
+                if (top < triggerBottom) reveal.classList.add('active');
+            });
+
+            // Sticky Nav Background
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        };
+        window.addEventListener('scroll', checkReveal);
+
+        // 3. INTERACTIVE SECTIONS LOGIC
+
+        // Check Auth State
+        async function checkAuth() {
+            if (typeof window.getCurrentUser !== 'function') return;
+            const user = await window.getCurrentUser();
+
+            const authOverlay = document.getElementById('guest-auth-overlay');
+            const uploaderName = document.getElementById('uploader-name');
+            const photoUpload = document.getElementById('photo-upload');
+            const uploadBtn = document.getElementById('upload-btn');
+
+            if (user) {
+                // User is logged in
+                if (authOverlay) authOverlay.classList.add('hidden');
+                if (uploaderName) {
+                    uploaderName.value = user.user_metadata.full_name || user.email.split('@')[0];
+                    uploaderName.disabled = false;
+                }
+                if (photoUpload) photoUpload.disabled = false;
+                if (uploadBtn) uploadBtn.disabled = false;
+            } else {
+                // User is logged out (default state is locked)
+            }
+        }
+
+        // Login Button Logic
+        const loginGoogleBtn = document.getElementById('login-google-btn');
+        const toggleEmailBtn = document.getElementById('toggle-email-btn');
+        const emailForm = document.getElementById('email-auth-form');
+        const loginEmailBtn = document.getElementById('login-email-btn');
+
+        if (loginGoogleBtn) {
+            loginGoogleBtn.addEventListener('click', async () => {
+                loginGoogleBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Conectando...';
+                await window.signInWithGoogle();
+            });
+        }
+
+        if (toggleEmailBtn) {
+            toggleEmailBtn.addEventListener('click', () => {
+                emailForm.classList.toggle('hidden');
+            });
+        }
+
+        if (loginEmailBtn) {
+            loginEmailBtn.addEventListener('click', async () => {
+                const email = document.getElementById('auth-email-input').value;
+                if (!email) return alert('Ingresa tu correo');
+                loginEmailBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+                const { error } = await window.signInWithEmail(email);
+                if (error) {
+                    alert('Error: ' + error.message);
+                    loginEmailBtn.innerText = 'Enviar Link Mágico';
+                } else {
+                    alert('¡Revisa tu correo! Te enviamos un link mágico.');
+                    loginEmailBtn.innerText = 'Link Enviado';
+                }
+            });
+        }
+
+        // Upload Logic
+        const uploadBtn = document.getElementById('upload-btn');
+        const photoInput = document.getElementById('photo-upload');
+        const uploaderNameInput = document.getElementById('uploader-name');
+        const statusMsg = document.getElementById('upload-status');
+        const uploaderEmailInput = document.getElementById('uploader-email');
+
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', async () => {
+                const file = photoInput.files[0];
+                const name = uploaderNameInput.value;
+                const email = uploaderEmailInput.value || 'No proporcionado';
+
+                if (!file) return alert('Selecciona una foto');
+                if (!name) return alert('Ingresa tu nombre');
+
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Subiendo...';
+
+                const { data, error } = await window.uploadGuestPhoto(file, name, email, '');
+
+                if (error) {
+                    console.error(error);
+                    alert('Error al subir: ' + error.message);
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
+                } else {
+                    // Reload gallery to show new photo
+                    if (typeof loadGallery === 'function') {
+                        await loadGallery();
+                    }
+
+                    // Send email notification (note: mailto only opens email client, doesn't auto-send)
+                    await window.sendPhotoUploadNotification(name, email);
+
+                    // Show thank you popup
+                    statusMsg.classList.remove('hidden');
+                    statusMsg.innerHTML = `
+                        <div class="bg-sage-light/20 border-2 border-sage rounded-lg p-6 text-center">
+                            <i class="fa-solid fa-circle-check text-5xl text-sage-dark mb-4"></i>
+                            <h3 class="text-2xl font-serif text-charcoal mb-2">¡Gracias ${name}!</h3>
+                            <p class="text-sage-dark mb-4">Tu foto se ha subido exitosamente. Revisa el carrusel abajo para verla.</p>
+                            <p class="text-xs text-gray-500 mb-4">Nota: Para notificar a los novios, envíales un mensaje directamente.</p>
+                            <button onclick="this.closest('.bg-sage-light\\/20').parentElement.classList.add('hidden')" 
+                                    class="bg-charcoal text-white px-6 py-2 rounded-full hover:bg-sage transition-colors">
+                                Cerrar
+                            </button>
+                        </div>
+                    `;
+
+                    uploadBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Listo';
+
+                    // Reset form after 3 seconds
+                    setTimeout(() => {
+                        photoInput.value = '';
+                        uploaderNameInput.value = '';
+                        uploaderEmailInput.value = '';
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto';
+                    }, 3000);
+                }
+            });
+        }
+
+        // Initialize Auth Check
+        setTimeout(checkAuth, 1000);
+
+        // A. Guest Cam Logic
+        // const uploadBtn = document.getElementById('upload-btn'); // Already defined above
+        // const uploadStatus = document.getElementById('upload-status'); // Already defined above
+        const galleryContainer = document.getElementById('guest-gallery');
+
+        // Load Gallery on Page Load
+        // Load Gallery on Page Load (Populate Both Sections)
+        async function loadGallery() {
+            // 1. Target Instagram Feed (Bottom)
+            const instaFeed = document.getElementById('instagram-feed');
+            // 2. Target Guest Carousel (Top - Paparazzi Section)
+            const guestCarousel = document.getElementById('guest-gallery');
+
+            if (typeof window.fetchGuestPhotos !== 'function') return;
+
+            const { data, error } = await window.fetchGuestPhotos();
+            if (error) console.error("Could not load gallery:", error);
+
+            if (data && data.length > 0) {
+                // Smart Deduplication: Filter by "original filename" to catch re-uploads
+                // URL format: .../guest_[timestamp]_[filename]
+                // We extract the [filename] part.
+                const seenFilenames = new Set();
+                const uniqueData = data.filter(item => {
+                    try {
+                        const url = item.url;
+                        // Match everything after the last 'guest_' and timestamp digits
+                        // Example: guest_1765494408231_image.png
+                        const match = url.match(/guest_\d+_(.+)$/);
+                        const originalName = match ? match[1] : url; // Fallback to URL if no match
+
+                        // Also use uploader name to distinguish different users uploading same filename (unlikely but safe)
+                        const key = originalName + '_' + (item.uploader_name || '');
+
+                        if (seenFilenames.has(key)) {
+                            return false; // Duplicate
+                        }
+                        seenFilenames.add(key);
+                        return true;
+                    } catch (e) {
+                        return true; // Keep if error in parsing
+                    }
+                });
+
+                // A. Populate Instagram Feed
+                if (instaFeed) {
+                    // Remove existing dynamic photos to prevent duplicates
+                    const existingDynamicInsta = instaFeed.querySelectorAll('.dynamic-photo');
+                    existingDynamicInsta.forEach(el => el.remove());
+
+                    // Generate Dynamic Photos HTML
+                    const instaHtml = uniqueData.map(photo => `
+                        <div class="dynamic-photo aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer border border-gray-100">
+                            <img src="${photo.url}" 
+                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                 alt="Guest Photo"
+                                 onerror="this.closest('.dynamic-photo').remove()">
+                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <span class="text-white text-xs font-handwriting bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+                                    <i class="fa-solid fa-camera mr-1"></i> ${photo.uploader_name || 'Anónimo'}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    // Append to end (Static photos remain)
+                    instaFeed.insertAdjacentHTML('beforeend', instaHtml);
+                }
+
+                // B. Populate Guest Carousel (Insert after CTA card)
+                if (guestCarousel) {
+                    // Remove existing dynamic photos
+                    const existingDynamicCarousel = guestCarousel.querySelectorAll('.dynamic-photo');
+                    existingDynamicCarousel.forEach(el => el.remove());
+
+                    const carouselHtml = uniqueData.map(photo => `
+                        <div class="dynamic-photo min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center border border-gray-100">
+                            <img src="${photo.url}" 
+                                 class="w-full h-full object-cover" 
+                                 onerror="this.closest('.dynamic-photo').remove()">
+                            <div class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
+                                <div class="w-6 h-6 rounded-full bg-sage text-white flex items-center justify-center text-xs font-bold">
+                                    ${photo.uploader_name ? photo.uploader_name[0].toUpperCase() : 'A'}
+                                </div>
+                                <span class="font-handwriting text-charcoal text-sm truncate">${photo.uploader_name || 'Anónimo'}</span>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    // Insert after the static CTA card (which is index 0)
+                    if (guestCarousel.children.length > 0) {
+                        guestCarousel.insertAdjacentHTML('beforeend', carouselHtml);
+                    } else {
+                        guestCarousel.innerHTML = carouselHtml;
+                    }
+                }
+            }
+        }
+
+        // RSVP Form Handler
+        const rsvpForm = document.getElementById('rsvp-form');
+        const hasPartnerCheckbox = document.getElementById('has-partner');
+        const partnerNameInput = document.getElementById('partner-name');
+        const rsvpSuccess = document.getElementById('rsvp-success');
+
+        // Toggle partner name field
+        if (hasPartnerCheckbox) {
+            hasPartnerCheckbox.addEventListener('change', () => {
+                if (hasPartnerCheckbox.checked) {
+                    partnerNameInput.classList.remove('hidden');
+                } else {
+                    partnerNameInput.classList.add('hidden');
+                    partnerNameInput.value = '';
+                }
+            });
+        }
+
+        // Handle RSVP form submission
+        if (rsvpForm) {
+            rsvpForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const name = document.getElementById('rsvp-name').value;
+                const email = document.getElementById('rsvp-email').value || 'No proporcionado';
+                const whatsapp = document.getElementById('rsvp-whatsapp').value;
+                const hasPartner = hasPartnerCheckbox.checked;
+                const partnerName = hasPartner ? partnerNameInput.value : '';
+
+                const submitBtn = document.getElementById('rsvp-submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+                // Send email notification using Web3Forms
+                const formData = new FormData();
+                formData.append('access_key', '138e83f9-894d-4a94-bee4-af9392f8ffb9');
+                formData.append('subject', `Nueva Confirmación de Asistencia: ${name}`);
+                formData.append('from_name', 'Sitio Web - Felipe y Camila');
+                formData.append('to_email', 'camilayfelipe.v@gmail.com');
+
+                let message = `Nombre: ${name}\nEmail: ${email}\nWhatsApp: ${whatsapp}`;
+                if (hasPartner) {
+                    message += `\n\n¿Viene con pareja?: Sí\nNombre de pareja: ${partnerName}`;
+                } else {
+                    message += `\n\n¿Viene con pareja?: No`;
+                }
+                formData.append('message', message);
+
+                // 1. Prepare Supabase Data
+                const rsvpData = {
+                    name,
+                    email,
+                    whatsapp,
+                    has_partner: hasPartner,
+                    partner_name: partnerName,
+                    created_at: new Date().toISOString()
+                };
+
+                // 2. Execute both actions in parallel
+                try {
+                    const emailPromise = fetch('https://api.web3forms.com/submit', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const dbPromise = window.saveRSVP ? window.saveRSVP(rsvpData) : Promise.resolve({ error: 'Supabase func missing' });
+
+                    const [emailResponse, dbResult] = await Promise.allSettled([emailPromise, dbPromise]);
+
+                    // Check functionality
+                    let emailSuccess = false;
+                    let dbSuccess = false;
+
+                    if (emailResponse.status === 'fulfilled') {
+                        const result = await emailResponse.value.json();
+                        if (result.success) emailSuccess = true;
+                        else console.error('Web3Forms Error:', result);
+                    } else {
+                        console.error('Web3Forms Network Error:', emailResponse.reason);
+                    }
+
+                    if (dbResult.status === 'fulfilled') {
+                        if (!dbResult.value.error) dbSuccess = true;
+                        else console.error('Supabase Error:', dbResult.value.error);
+                    }
+
+                    // Success Condition: At least one worked
+                    if (emailSuccess || dbSuccess) {
+                        rsvpForm.classList.add('hidden');
+                        rsvpSuccess.classList.remove('hidden');
+                    } else {
+                        alert('Hubo un error al enviar tu confirmación. Por favor, intenta de nuevo.');
+                    }
+
+                } catch (error) {
+                    console.error('Critical Error:', error);
+                    alert('Hubo un error inesperado. Por favor, intenta de nuevo.');
+                }
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'De ahí somos!';
+            });
+        }
+
+
+
+        // Handle Upload
+        // Guest Cam Upload
+        // Guest Cam Upload
+        // Guest Cam Upload Logic (Select -> Then Click Upload)
+        const photoUploadInput = document.getElementById('photo-upload');
+        const paparazziUploadBtn = document.getElementById('upload-btn');
+        let selectedFile = null;
+
+        if (photoUploadInput) {
+            // 1. Handle Selection
+            photoUploadInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    selectedFile = e.target.files[0];
+                    // Optional: Update button text or show preview?
+                    // For now just valid.
+                }
+            });
+        }
+
+        if (paparazziUploadBtn) {
+            // 2. Handle Click Submit
+            paparazziUploadBtn.addEventListener('click', async () => {
+                const uploaderName = document.getElementById('uploader-name').value;
+                const uploaderEmail = document.getElementById('uploader-email').value;
+                const uploaderWhatsapp = document.getElementById('uploader-whatsapp').value;
+
+                if (!selectedFile) {
+                    // If no file selected yet, trigger the input prompt
+                    // But if input is visible (as it is), we should tell them to pick one.
+                    // If they just clicked "Subir Foto" without picking:
+                    if (photoUploadInput.value === '') {
+                        alert('Por favor selecciona una foto primero.');
+                        return;
+                    }
+                    // Fallback if variable is lost but input has value
+                    selectedFile = photoUploadInput.files[0];
+                }
+
+                if (!uploaderName) {
+                    alert('Por favor ingresa tu nombre antes de subir una foto.');
+                    document.getElementById('uploader-name').focus();
+                    return;
+                }
+
+                // UI Loading State
+                const originalContent = paparazziUploadBtn.innerHTML;
+                paparazziUploadBtn.disabled = true;
+                paparazziUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Subiendo...';
+
+                // Upload
+                const { data, error } = await uploadGuestPhoto(selectedFile, uploaderName, uploaderEmail, uploaderWhatsapp);
+
+                if (error) {
+                    console.error(error);
+                    alert('Error al subir la foto. Intenta de nuevo.');
+                    paparazziUploadBtn.disabled = false;
+                    paparazziUploadBtn.innerHTML = originalContent;
+                } else {
+                    alert('¡Foto subida con éxito! Gracias por compartir.');
+                    paparazziUploadBtn.disabled = false;
+                    paparazziUploadBtn.innerHTML = originalContent;
+
+                    // Cleanup
+                    selectedFile = null;
+                    photoUploadInput.value = '';
+                    document.getElementById('uploader-name').value = '';
+                    document.getElementById('uploader-email').value = '';
+                    document.getElementById('uploader-whatsapp').value = '';
+
+                    // Refresh Gallery
+                    if (typeof loadGallery === 'function') {
+                        loadGallery();
+                    }
+                }
+            });
+        }
+
+        // Initialize Gallery
+        // Wait a bit for Supabase script to load
+        setTimeout(loadGallery, 1000);
+
+
+        // B. DJ Booth Form Simulation
+        // The original DJ Booth simulation logic is replaced by the new D. DJ Booth Logic below.
+        // Keeping the original form elements and their IDs for the new logic.
+
+        // C. Trivia Logic
+
+
+        // D. DJ Booth Logic
+        async function loadSongRequests() {
+            const listContainer = document.getElementById('song-requests-list');
+            if (!listContainer || typeof window.fetchSongRequests !== 'function') return;
+
+            const { data, error } = await window.fetchSongRequests();
+            if (error) {
+                listContainer.innerHTML = '<div class="text-white/50 text-center text-xs">Error cargando lista</div>';
+                return;
+            }
+
+            if (data && data.length > 0) {
+                listContainer.innerHTML = data.map(req => `
+                    <div class="flex justify-between items-start border-b border-white/10 pb-2 mb-2 last:border-0">
+                        <div>
+                            <p class="text-gold font-bold text-sm leading-tight">${req.song_name}</p>
+                            <p class="text-white/60 text-xs">${req.artist || ''}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-white/40 uppercase tracking-wider block">Pedido por</span>
+                            <span class="text-white/80 text-xs font-handwriting">${req.requester_name}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                listContainer.innerHTML = '<div class="text-white/30 text-center text-xs italic py-4">Sé el primero en pedir una canción...</div>';
+            }
+        }
+
+        async function handleSongRequest(event) {
+            event.preventDefault();
+
+            // IDs in HTML are: dj-song, (no artist input in HTML?), dj-name
+            // Wait, looking at HTML (Line 1125 in previous snippet):
+            // <input type="text" id="dj-song" ... > placeholder="Ej: Dancing Queen - ABBA"
+            // <input type="text" id="dj-name" ... >
+            // So there is NO separate artist input. The placeholder implies "Song - Artist".
+            // My previous script (Step 511 view) tried getting 'song-name', 'artist-name' which don't exist in HTML.
+
+            const songInput = document.getElementById('dj-song');
+            const nameInput = document.getElementById('dj-name');
+
+            const songValue = songInput.value;
+            const nameValue = nameInput.value;
+
+            // Split song/artist if hyphen present? Optional but nice.
+            // For now just save full string as song_name.
+
+            const btn = document.getElementById('dj-submit-btn');
+            const originalBtnContent = btn.innerHTML;
+            const successMsg = document.getElementById('dj-success');
+
+            if (!songValue || !nameValue) {
+                alert('Por favor completa todos los campos.');
+                return;
+            }
+
+            // UI Loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enviando...';
+
+            try {
+                // 1. Save to Supabase (Database)
+                // We pass songValue as songName. Artist empty.
+                const { error } = await window.saveSongRequest(songValue, '', nameValue);
+                if (error) throw error;
+
+                // 2. Refresh List
+                await loadSongRequests();
+
+                // 3. Show Success
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i> ¡Enviado!';
+                successMsg.classList.remove('opacity-0', 'pointer-events-none');
+
+                // Reset Form
+                document.getElementById('dj-form').reset();
+
+                // Reset button and hide success after delay
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnContent;
+                    successMsg.classList.add('opacity-0', 'pointer-events-none');
+                }, 3000);
+
+            } catch (err) {
+                console.error('Error requesting song:', err);
+                const errorDetails = err.message || JSON.stringify(err);
+                alert('Error al enviar la solicitud: ' + errorDetails + '. Intenta de nuevo.');
+                btn.disabled = false;
+                btn.innerHTML = originalBtnContent;
+            }
+        }
+
+        // Initialize DJ Logic
+        const djForm = document.getElementById('dj-form');
+        if (djForm) {
+            djForm.addEventListener('submit', handleSongRequest);
+            // Load initial list
+            setTimeout(loadSongRequests, 1500); // Wait for Supabase init
+        }
+
+    
+

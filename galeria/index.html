@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería Invitados | Felipe & Camila</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Great+Vibes&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { sage: '#8FA382', charcoal: '#2C3E50', ivory: '#F9F9F7' }, fontFamily: { serif: ['Playfair Display', 'serif'], sans: ['"Montserrat"', 'sans-serif'], hand: ['"Amatic SC"', 'cursive'] } } }
+        }
+    </script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="font-sans text-charcoal bg-ivory bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] min-h-screen flex flex-col">
+
+    <nav class="w-full py-4 text-center border-b border-sage/20 bg-white/80 backdrop-blur-md sticky top-0 z-50 flex justify-between px-6 items-center">
+        <a href="/" class="text-sage text-sm uppercase tracking-widest"><i class="fa-solid fa-arrow-left mr-2"></i> Inicio</a>
+        <a href="/" class="font-serif text-2xl text-charcoal font-bold">F&C</a>
+        <a href="/fotos" class="bg-sage text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm hover:scale-105 transition-transform"><i class="fa-solid fa-camera mr-1"></i> Subir</a>
+    </nav>
+
+    <main class="flex-grow p-6 max-w-6xl mx-auto w-full">
+        <div class="text-center mb-12 mt-8">
+            <h1 class="font-serif text-5xl text-charcoal mb-4">Galería de Invitados</h1>
+            <p class="text-slate-500 max-w-lg mx-auto">Momentos capturados por ustedes. ¡Gracias por ser parte de nuestra historia!</p>
+        </div>
+
+        <!-- Filters (Optional JS integration) -->
+        <div class="flex justify-center mb-10 hidden" id="gallery-filters">
+            <input type="text" id="filter-guest" placeholder="Buscar por invitado..." class="px-4 py-2 border rounded-l-full focus:outline-none focus:border-sage text-sm w-64">
+            <button id="btn-filter" class="bg-sage text-white px-6 py-2 rounded-r-full font-bold text-sm"><i class="fa-solid fa-search"></i></button>
+        </div>
+
+        <!-- Masonry Grid -->
+        <div id="masonry-grid" class="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+            <!-- Loading State -->
+            <div id="loading-state" class="col-span-full w-full text-center py-20 text-sage-light">
+                <i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i>
+                <p class="font-bold tracking-widest uppercase">Cargando Recuerdos...</p>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="empty-state" class="col-span-full w-full text-center py-20 hidden">
+                <i class="fa-regular fa-images text-6xl text-gray-300 mb-4"></i>
+                <h3 class="font-serif text-2xl text-charcoal mb-2">Aún no hay fotos</h3>
+                <p class="text-gray-500 mb-6">¡Sé el primero en compartir un recuerdo!</p>
+                <a href="/fotos" class="bg-sage text-white px-8 py-3 rounded-full font-bold uppercase tracking-widest hover:bg-sage-dark transition-colors inline-block">Subir Foto</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const grid = document.getElementById('masonry-grid');
+            const loading = document.getElementById('loading-state');
+            const empty = document.getElementById('empty-state');
+            
+            // Check url params for filters
+            const urlParams = new URLSearchParams(window.location.search);
+            const guestFilter = urlParams.get('guest');
+            
+            if (!window.supabaseClient) {
+                loading.innerHTML = '<p class="text-red-500">Error: Base de datos no conectada.</p>';
+                return;
+            }
+
+            try {
+                let query = supabaseClient
+                    .from('guest_photo_uploads')
+                    .select('public_url, guest_name, created_at')
+                    .order('created_at', { ascending: false });
+                    
+                if (guestFilter) {
+                    query = query.eq('guest_token', guestFilter);
+                }
+
+                const { data, error } = await query;
+
+                loading.classList.add('hidden');
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    empty.classList.remove('hidden');
+                    return;
+                }
+
+                data.forEach(photo => {
+                    const el = document.createElement('div');
+                    el.className = 'break-inside-avoid relative group mb-4 rounded-xl overflow-hidden bg-white shadow-sm border border-gray-100 transform hover:-translate-y-1 transition-transform';
+                    el.innerHTML = `
+                        <img src="${photo.public_url}" alt="Foto de ${photo.guest_name || 'Invitado'}" class="w-full object-cover" loading="lazy" onerror="this.parentElement.style.display='none'">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform">
+                            <span class="text-white font-hand text-xl shadow-sm"><i class="fa-solid fa-camera mr-2"></i>${photo.guest_name || 'Anónimo'}</span>
+                        </div>
+                    `;
+                    grid.appendChild(el);
+                });
+
+            } catch (err) {
+                console.error(err);
+                loading.classList.remove('hidden');
+                loading.innerHTML = '<p class="text-red-500">Error al cargar las fotos. Por favor refresca la página.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

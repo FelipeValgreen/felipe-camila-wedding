@@ -1,0 +1,88 @@
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #8FA382;
+    border-radius: 3px;
+}
+
+/* Transitions */
+body {
+    transition: background-color 1.5s ease, color 1.5s ease;
+}
+
+.reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 1s ease-out;
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Envelope Overlay */
+#envelope-overlay {
+    transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+body.locked {
+    overflow: hidden;
+}
+
+/* Navigation */
+#main-nav {
+    transition: transform 0.5s ease, background-color 0.5s ease;
+    transform: translateY(-100%);
+}
+
+#main-nav.visible {
+    transform: translateY(0);
+}
+
+#main-nav.scrolled {
+    background-color: rgba(249, 249, 247, 0.95);
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Polaroid Effect */
+.polaroid {
+    background: white;
+    padding: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, z-index 0s;
+}
+
+.polaroid:hover {
+    z-index: 50;
+    transform: scale(1.1) rotate(0deg) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Glassmorphism */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}

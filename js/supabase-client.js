@@ -21,8 +21,20 @@ async function uploadGuestPhoto(file, uploaderName, email, whatsapp) {
         return { error: 'Supabase not initialized' };
     }
 
+    // File Validation
+    if (!file.type.startsWith('image/')) {
+        return { error: { message: 'El archivo debe ser una imagen válida (JPG, PNG, etc).' } };
+    }
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+        return { error: { message: 'La foto es muy pesada. El tamaño máximo es 5MB.' } };
+    }
+
     try {
-        const fileName = `guest_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        // Secure file naming using crypto.randomUUID
+        const uniqueId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now();
+        const extension = file.name.split('.').pop() || 'jpg';
+        const fileName = `guest_uploads/guest_${uniqueId}.${extension}`;
 
         // 1. Upload image to Storage
         const { data: storageData, error: storageError } = await supabaseClient.storage
