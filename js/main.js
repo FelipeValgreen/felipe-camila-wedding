@@ -53,7 +53,36 @@ window.alert = function(msg) {
         }
     
 
+// LIGHTBOX LOGIC
+window.openLightbox = function(url, name) {
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxName = document.getElementById('lightbox-name');
+    
+    if (lightbox && lightboxImg) {
+        lightboxImg.src = url;
+        lightboxName.textContent = name;
+        lightbox.classList.remove('hidden');
+        lightbox.classList.add('flex');
+        
+        setTimeout(() => {
+            lightbox.classList.remove('opacity-0');
+        }, 50);
+        document.body.style.overflow = 'hidden'; 
+    }
+};
 
+window.closeLightbox = function() {
+    const lightbox = document.getElementById('lightbox');
+    if (lightbox) {
+        lightbox.classList.add('opacity-0');
+        setTimeout(() => {
+            lightbox.classList.add('hidden');
+            lightbox.classList.remove('flex');
+            document.body.style.overflow = ''; 
+        }, 300);
+    }
+};
         window.addEventListener('scroll', function () {
             const rsvpSection = document.getElementById('rsvp');
             const cta = document.getElementById('rsvp-cta');
@@ -295,7 +324,7 @@ window.alert = function(msg) {
                 existingDynamicInsta.forEach(el => el.remove());
 
                 const instaHtml = uniqueInstaData.map(photo => `
-                    <div class="dynamic-photo aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer border border-gray-100">
+                    <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="dynamic-photo aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer border border-gray-100">
                         <img src="${photo.url}" 
                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                              alt="Guest Photo"
@@ -318,7 +347,7 @@ window.alert = function(msg) {
                     existingDynamicCarousel.forEach(el => el.remove());
 
                     const carouselHtml = uniqueAllData.map(photo => `
-                        <div class="dynamic-photo min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center border border-gray-100">
+                        <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="dynamic-photo min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center border border-gray-100 cursor-pointer">
                             <img src="${photo.url}" 
                                  class="w-full h-full object-cover" 
                                  onerror="this.closest('.dynamic-photo').remove()">
