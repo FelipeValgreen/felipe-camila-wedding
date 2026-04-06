@@ -32,40 +32,29 @@
             theme: {
                 extend: {
                     colors: {
-                        sage: '#8FA382',
-                        'sage-light': '#A9BFA8',
-                        'sage-dark': '#6B7F60',
-                        ivory: '#F9F9F7',
-                        sand: '#D7C9B8', /* Warmer, kraft-paper like */
-                        taupe: '#9A8C7D', /* New accent color */
+                        sage: '#4a5d23', // Olive green
+                        'sage-light': '#7a8e59',
+                        'sage-dark': '#2c3815',
+                        ivory: '#FAF9F6', // Off-white / marble
+                        sand: '#E3DAC9', // Bone
+                        taupe: '#8B8579', 
                         'dusty-pink': '#D8B4A0',
                         'sky-blue': '#B4C5C4',
-                        charcoal: '#2C3E50',
-                        gold: '#C5A059', /* Bronze/Gold */
+                        charcoal: '#1A1C19', // Deep charcoal
+                        gold: '#B89B5E', // Elegant gold
                         night: '#111827',
-                        // Rustic Kraft Palette
-                        'kraft-bg': '#D1BFA7',
-                        'coffee-ink': '#5C4B3A',
-                        'coffee-dark': '#3E3228',
-                        'coffee-ink': '#5C4B3A',
-                        'coffee-dark': '#3E3228',
-                        'paper-white': '#Fdfbf7',
-                        // New Colors
-                        beige: '#E8E0D5',
-                        mustard: '#E1B12C',
+                        beige: '#F5F5F0',
+                        mustard: '#C19A6B',
                     },
                     fontFamily: {
                         serif: ['Playfair Display', 'serif'],
                         sans: ['"Montserrat"', 'sans-serif'],
                         script: ['Great Vibes', 'cursive'],
-                        // New Rustic Fonts
                         hand: ['"Amatic SC"', 'cursive'],
                         typewriter: ['"Lora"', 'serif'],
                     },
                     backgroundImage: {
-                        'kraft-texture': "url('https://www.transparenttextures.com/patterns/natural-paper.png')",
-                        'paper-texture': "url('https://www.transparenttextures.com/patterns/cream-paper.png')",
-                        'sage-texture': "url('https://www.transparenttextures.com/patterns/cubes.png')", /* Subtle texture for envelope */
+                        'marble-texture': "url('https://www.transparenttextures.com/patterns/white-marble.png')",
                     },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
@@ -256,100 +245,64 @@
     <meta name="theme-color" content="#8FA382">
 </head>
 
-<body class="font-typewriter text-coffee-dark bg-kraft-bg antialiased locked bg-kraft-texture">
+<body class="font-sans text-charcoal bg-ivory antialiased locked bg-marble-texture">
 
-    <!-- RUSTIC KRAFT ENVELOPE OVERLAY (STRICT REPLICATION VERIFIED) -->
+    <!-- ITALIAN ELEGANCE ENVELOPE OVERLAY -->
     <div id="envelope-overlay"
-        class="fixed inset-0 z-[100] bg-[#F9F9F7] flex items-center justify-center p-4 overflow-hidden transition-transform duration-1000 ease-in-out">
+        class="fixed inset-0 z-[100] bg-ivory flex items-center justify-center p-4 overflow-hidden transition-transform duration-1000 ease-in-out">
 
         <!-- Global Texture Overlay -->
         <div
-            class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-40 pointer-events-none mix-blend-multiply">
+            class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/white-marble.png')] opacity-40 pointer-events-none mix-blend-multiply">
         </div>
 
         <!-- 1. ESTRUCTURA DEL SOBRE (Envelope Container) -->
-        <div class="relative w-full max-w-2xl aspect-[4/3] md:aspect-[1.6/1] bg-[#d2b48c] flex items-center justify-center shadow-2xl z-20"
-            style="box-shadow: 0 25px 50px -12px rgba(62, 43, 30, 0.4);">
-
-            <!-- Texture -->
-            <div
-                class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-50 mix-blend-multiply pointer-events-none">
-            </div>
+        <div class="relative w-full max-w-2xl aspect-[4/3] md:aspect-[1.6/1] bg-white flex items-center justify-center shadow-2xl z-20 border border-gold/30"
+            style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);">
 
             <!-- Flap (Triangular Clásico) -->
             <div class="absolute top-0 left-0 w-full h-full z-30 pointer-events-none"
-                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #dcbfa0; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-                <div
-                    class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-40 mix-blend-multiply">
-                </div>
+                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #faf9f6; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));">
                 <!-- Border Line (V Shape) -->
-                <div class="absolute top-0 left-0 w-full h-full border-t-0 border-l border-r border-b-0 border-[#8c735a]/30"
+                <div class="absolute top-0 left-0 w-full h-full border-t-0 border-l border-r border-b-0 border-gold/20"
                     style="clip-path: polygon(0 0, 50% 55%, 100% 0);"></div>
-                <!-- Líneas de borde para resaltar la V -->
                 <svg class="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M0,0 L50,55 L100,0" fill="none" stroke="rgba(92, 75, 58, 0.2)" stroke-width="0.5" />
+                    <path d="M0,0 L50,55 L100,0" fill="none" stroke="#B89B5E" stroke-width="0.3" stroke-dasharray="1 1" />
                 </svg>
             </div>
 
-            <!-- 2. POSICIONAMIENTO DE ELEMENTOS -->
-
             <div
-                class="absolute top-[12%] md:top-[15%] left-1/2 transform -translate-x-1/2 z-50 text-center w-full max-w-[90%] md:max-w-[60%] px-4 pointer-events-none">
-                <p class="font-script text-2xl md:text-5xl text-[#3E2B1E] leading-snug md:leading-relaxed opacity-90"
-                    style="text-shadow: 0 1px 0 rgba(255,255,255,0.3); transform: rotate(-2deg);">
-                    Nuestra historia<br>comienza aquí
+                class="absolute top-[18%] left-1/2 transform -translate-x-1/2 z-50 text-center w-full max-w-[90%] px-4 pointer-events-none">
+                <p class="font-serif italic text-2xl md:text-3xl text-sage-dark leading-snug md:leading-relaxed"
+                    style="text-shadow: 0 1px 0 rgba(255,255,255,0.8);">
+                    Están invitados a nuestra<br>Boda Religiosa
                 </p>
             </div>
 
             <!-- Sello de Cera (Wax Seal) - EN LA PUNTA DE LA V -->
-            <div class="absolute top-[55%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-lg"
-                style="background: radial-gradient(circle at 30% 30%, #c5a059, #8a6e3e, #5c4b3a); 
-                       box-shadow: inset 2px 2px 4px rgba(255,255,255,0.3), inset -2px -2px 4px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3);">
-                <div class="w-12 h-12 md:w-16 md:h-16 border border-[#3e2b18]/20 rounded-full flex items-center justify-center"
-                    style="box-shadow: inset 0 0 6px rgba(0,0,0,0.2);">
-                    <i class="fa-solid fa-leaf text-2xl md:text-3xl text-[#5c4b3a] opacity-70"
-                        style="transform: rotate(-45deg); text-shadow: 1px 1px 0 rgba(255,255,255,0.2);"></i>
+            <div class="absolute top-[55%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-md bg-sage-dark"
+                style="box-shadow: inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);">
+                <div class="w-12 h-12 md:w-16 md:h-16 border border-white/20 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-church text-2xl md:text-3xl text-gold opacity-90"></i>
                 </div>
             </div>
 
-            <!-- ESTAMPILLA BOHO (Top Right - Up Final Border Method) -->
-            <!-- ESTAMPILLA BOHO FINAL (Cache Buster V2) -->
-            <!-- ESTAMPILLA BOHO FINAL (Cache Buster V2 - Responsive Fix) -->
+            <!-- Estampilla elegante -->
             <div id="stamp-container-final"
-                class="absolute top-4 right-4 md:top-12 md:right-16 z-40 transform rotate-3 pointer-events-none"
-                style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));">
-                <!-- Stamp Paper (Borde dentado usando dashed border) -->
-                <div class="relative w-20 h-28 md:w-32 md:h-40 bg-[#fdfbf7] flex items-center justify-center p-2"
-                    style="border: 6px dashed #fdfbf7; background-clip: padding-box; border-radius: 2px;">
-
-                    <!-- Imagen interior (Absolute Path) -->
-                    <div class="w-full h-full overflow-hidden bg-[#fdfbf7]">
-                        <img src="images/stamp_up_final_absolute.png?v=cache_buster_final"
-                            class="w-full h-full object-cover contrast-110" alt="Stamp Final">
+                class="absolute top-4 right-4 md:top-8 md:right-10 z-40 pointer-events-none opacity-80"
+                style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));">
+                <div class="w-12 h-16 bg-white flex flex-col items-center justify-center p-1 border border-gray-200">
+                    <div class="w-full h-full border border-gold/40 flex items-center justify-center">
+                        <i class="fa-brands fa-pagelines text-sage-light text-2xl"></i>
                     </div>
-                </div>
-
-                <!-- Timbre Postal (Postmark) -->
-                <div
-                    class="absolute bottom-[-5px] -left-4 w-20 h-20 md:w-24 md:h-24 z-40 opacity-80 mix-blend-multiply transform -rotate-12">
-                    <div class="w-full h-full border-2 border-[#5c4b3e] rounded-full flex items-center justify-center">
-                        <div
-                            class="w-[85%] h-[85%] border border-[#5c4b3e] rounded-full flex items-center justify-center">
-                            <i class="fa-solid fa-heart text-[#5c4b3e] text-xl"></i>
-                        </div>
-                    </div>
-                    <!-- Líneas onduladas -->
-                    <div class="absolute top-1/2 left-full w-10 h-6 border-t-2 border-b-2 border-[#5c4b3e] -ml-2"></div>
                 </div>
             </div>
 
             <!-- Botón "ABRIR INVITACIÓN" - Debajo del sello -->
             <button id="open-invite"
-                class="absolute bottom-6 md:bottom-12 left-1/2 transform -translate-x-1/2 z-50 bg-[#3E2B1E] text-white px-6 md:px-8 py-2 md:py-3 rounded-sm shadow-lg hover:bg-[#2c1e15] transition-colors duration-300 cursor-pointer border border-[#5c4b3e]">
-                <span class="font-sans text-xs md:text-sm tracking-[0.2em] uppercase font-bold whitespace-nowrap">Abrir
-                    Invitación</span>
+                class="absolute bottom-6 md:bottom-10 left-1/2 transform -translate-x-1/2 z-50 bg-sage text-white px-8 md:px-10 py-3 rounded-full shadow-lg hover:bg-sage-dark transition-all duration-300 cursor-pointer font-sans text-xs md:text-sm tracking-[0.2em] uppercase font-bold">
+                Abrir Invitación
             </button>
-
         </div>
     </div>
 
@@ -374,55 +327,50 @@
     <!-- MAIN CONTENT -->
     <main class="relative overflow-hidden">
 
-        <!-- A. HERO (CIVIL WEDDING) -->
+        <!-- A. HERO (RELIGIOUS WEDDING & GALA) -->
         <section id="hero" class="min-h-screen flex items-center justify-center pt-24 pb-20 relative">
             <div class="text-center z-10 reveal px-4">
-                <p class="font-sans text-xs tracking-[0.3em] text-[#556B2F] uppercase mb-4">Matrimonio Civil</p>
-                <h1 class="font-serif text-7xl md:text-9xl text-[#556B2F] mb-6">Felipe & Camila</h1>
-                <p class="font-hand text-3xl text-[#A68B5B] mb-8">¡Nos casamos!</p>
+                <p class="font-sans text-xs tracking-[0.3em] text-sage-dark uppercase mb-4">Matrimonio Religioso & Gala</p>
+                <h1 class="font-serif text-6xl md:text-8xl text-sage mb-6">Felipe & Camila</h1>
+                <p class="font-sans italic text-2xl text-gold mb-8">Nuestra gran celebración</p>
 
                 <div class="flex flex-col items-center space-y-2 mb-12">
                     <div class="flex justify-center items-center space-x-4">
-                        <div class="h-[1px] w-12 bg-[#2C241E]"></div>
-                        <p class="font-serif text-xl italic text-[#2C241E]">Sábado 28 de Marzo, 2026</p>
-                        <div class="h-[1px] w-12 bg-[#2C241E]"></div>
+                        <div class="h-[1px] w-12 bg-charcoal"></div>
+                        <p class="font-serif text-xl italic text-charcoal">Viernes 23 de Octubre, 2026</p>
+                        <div class="h-[1px] w-12 bg-charcoal"></div>
                     </div>
-                    <p class="font-serif text-lg italic text-[#2C241E]">Hora de inicio 15:00 horas</p>
+                    <p class="font-serif text-lg italic text-charcoal">Ceremonia: 18:00 horas</p>
                 </div>
 
-                <!-- VINTAGE MAP ADDRESS CARD -->
-                <!-- VINTAGE MAP ADDRESS CARD -->
-                <a href="https://www.google.com/maps/search/?api=1&query=Avenida+El+Valle+147,+Casa+10,+Chicureo,+Santiago"
+                <!-- ELEGANT MAP ADDRESS CARD -->
+                <a href="https://www.google.com/maps/search/?api=1&query=Iglesia+de+la+Divina+Misericordia,+Chicureo"
                     target="_blank" rel="noopener noreferrer"
-                    class="block relative max-w-2xl mx-auto mt-8 p-10 bg-[#F5F1E8] rounded-3xl shadow-lg border-4 border-dashed border-[#B8A88A] transform hover:scale-[1.02] transition-all duration-300 cursor-pointer group">
-                    <!-- Paper Texture Overlay -->
-                    <div
-                        class="absolute inset-0 rounded-3xl bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-30 pointer-events-none mix-blend-multiply">
-                    </div>
-
+                    class="block relative max-w-2xl mx-auto mt-8 p-10 bg-white rounded-sm shadow-md border border-gold/40 transform hover:scale-[1.02] transition-all duration-300 cursor-pointer group">
+                    
                     <!-- External Link Icon (Top Right) -->
                     <div
-                        class="absolute top-4 right-4 text-[#B8A88A] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        class="absolute top-4 right-4 text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <i class="fa-solid fa-arrow-up-right-from-square text-xl"></i>
                     </div>
 
-                    <div class="relative z-10 flex flex-col items-center text-center space-y-6">
+                    <div class="relative z-10 flex flex-col items-center text-center space-y-4">
                         <!-- Map Pin Icon -->
                         <div
-                            class="text-[#556B2F] text-5xl mb-2 drop-shadow-md group-hover:text-[#445525] transition-colors">
-                            <i class="fa-solid fa-location-dot"></i>
+                            class="text-sage text-4xl mb-2 drop-shadow-sm group-hover:text-sage-dark transition-colors">
+                            <i class="fa-solid fa-church"></i>
                         </div>
 
                         <!-- Address Text -->
                         <h3
-                            class="font-serif text-3xl md:text-4xl text-[#2C241E] leading-tight font-normal group-hover:text-black transition-colors">
-                            Avenida El Valle 147, Casa 10
+                            class="font-serif text-2xl md:text-3xl text-charcoal leading-tight font-normal">
+                            Iglesia de la Divina Misericordia
                         </h3>
 
                         <!-- Location Text -->
                         <p
-                            class="font-sans text-base md:text-lg text-[#556B2F] uppercase tracking-[0.2em] font-semibold group-hover:text-[#445525] transition-colors">
-                            Chicureo, Santiago
+                            class="font-sans text-sm md:text-base text-sage-dark uppercase tracking-[0.1em] font-medium">
+                            Seguido de Recepción en <br><strong>Centro de Eventos Arboledas</strong> (Justo al frente)
                         </p>
                     </div>
                 </a>
@@ -444,44 +392,42 @@
 
         <!-- D. DRESS CODE (MEDITERRANEAN) -->
         <section id="dresscode"
-            class="py-32 bg-gradient-to-b from-ivory to-sky-blue/10 text-center relative overflow-hidden">
+            class="py-32 bg-ivory text-center relative overflow-hidden border-t border-gold/10">
             <div class="max-w-3xl mx-auto px-4 relative z-10 reveal">
                 <h2 class="font-serif text-4xl text-charcoal mb-2">Código de Vestimenta</h2>
-                <p class="font-sans text-sage-dark text-sm uppercase tracking-widest mb-4 font-bold">Casual Mediterráneo
+                <p class="font-sans text-sage-dark text-sm uppercase tracking-widest mb-4 font-bold">Formal con onda
                 </p>
-                <p class="font-sans text-slate-500 text-xs italic mb-12">Les sugerimos telas frescas como lino y
-                    algodón. Esta paleta de colores es solo una inspiración para armonizar con el entorno, ¡siéntanse
-                    libres de usar el tono que más les acomode!</p>
+                <p class="font-sans text-slate-500 text-xs italic mb-12">Esta paleta de colores es solo una inspiración para armonizar con el elegante entorno de la gala, ¡siéntanse libres de usar el tono que más les acomode!</p>
 
                 <div class="flex flex-wrap justify-center gap-8 mb-8">
                     <!-- Sage -->
                     <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-sage shadow-lg ring-4 ring-white"></div>
+                        <div class="w-16 h-16 rounded-full bg-sage shadow-md ring-1 ring-gold/30"></div>
                         <span class="text-[10px] uppercase tracking-wider text-charcoal">Salvia</span>
                     </div>
                     <!-- Dusty Pink -->
                     <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-dusty-pink shadow-lg ring-4 ring-white"></div>
+                        <div class="w-16 h-16 rounded-full bg-dusty-pink shadow-md ring-1 ring-gold/30"></div>
                         <span class="text-[10px] uppercase tracking-wider text-charcoal">Rosa Viejo</span>
                     </div>
                     <!-- Sand -->
                     <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-sand shadow-lg ring-4 ring-white"></div>
+                        <div class="w-16 h-16 rounded-full bg-sand shadow-md ring-1 ring-gold/30"></div>
                         <span class="text-[10px] uppercase tracking-wider text-charcoal">Arena</span>
                     </div>
                     <!-- Sky Blue -->
                     <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-sky-blue shadow-lg ring-4 ring-white"></div>
+                        <div class="w-16 h-16 rounded-full bg-sky-blue shadow-md ring-1 ring-gold/30"></div>
                         <span class="text-[10px] uppercase tracking-wider text-charcoal">Celeste</span>
                     </div>
                     <!-- Beige -->
                     <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-beige shadow-lg ring-4 ring-white"></div>
+                        <div class="w-16 h-16 rounded-full bg-beige shadow-md ring-1 ring-gold/30"></div>
                         <span class="text-[10px] uppercase tracking-wider text-charcoal">Beige</span>
                     </div>
                     <!-- Mustard -->
                     <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-mustard shadow-lg ring-4 ring-white"></div>
+                        <div class="w-16 h-16 rounded-full bg-mustard shadow-md ring-1 ring-gold/30"></div>
                         <span class="text-[10px] uppercase tracking-wider text-charcoal">Mostaza</span>
                     </div>
                 </div>
@@ -573,8 +519,8 @@
                 </div>
                 <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-4">A través de tus ojos</h2>
                 <p class="font-sans text-slate-600 mb-10 max-w-xl mx-auto">
-                    Queremos ver la fiesta desde tu perspectiva. Únete a nuestro álbum compartido y sube tus mejores
-                    fotos (¡y las peores también!). <br><strong class="text-sage-dark">¡Atención! El ganador tendrá un premio que se dará a conocer en el matrimonio de la iglesia.</strong>
+                    Revivan con nosotros los recuerdos increíbles del Matrimonio Civil y luego, ¡prepárense para inundar de fotos esta galería en la Fiesta de Gala! Únete a nuestro álbum compartido y sube tus mejores perspectivas.
+                    <br><strong class="text-sage-dark mt-4 block">¡Atención! La mejor foto tendrá un premio que se dará a conocer en el matrimonio de la iglesia.</strong>
                 </p>
 
                 <!-- Upload Form -->
@@ -668,75 +614,73 @@
 
                 <!-- Timeline with Polaroid Photos -->
                 <div class="grid md:grid-cols-3 gap-12 mb-16">
-                    <!-- Chapter 1: Serendipia -->
+                    <!-- Chapter 1: Creciendo Juntos -->
                     <div class="text-center">
                         <div
                             class="relative inline-block mb-6 transform hover:scale-105 transition-transform duration-300">
                             <!-- Polaroid Frame -->
-                            <div class="bg-white p-4 shadow-2xl transform rotate-2 hover:rotate-0 transition-transform">
+                            <div class="bg-white p-4 shadow-xl border border-gray-100 transform rotate-2 hover:rotate-0 transition-transform">
                                 <div class="aspect-square bg-gray-200 mb-3 overflow-hidden">
-                                    <img src="images/new_story_1.jpg" alt="Serendipia"
+                                    <img src="images/new_story_1.jpg" alt="Creciendo Juntos"
                                         class="w-full h-full object-cover">
                                 </div>
-                                <p class="font-handwriting text-charcoal text-lg">Serendipia ✨</p>
+                                <p class="font-handwriting text-charcoal text-lg">Nuestros Primeros Años ✨</p>
                             </div>
                             <!-- Decorative Pin -->
                             <div
-                                class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-gold rounded-full shadow-lg">
+                                class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gold rounded-full shadow-md">
                             </div>
                         </div>
-                        <h3 class="font-serif text-2xl text-charcoal mb-3">Capítulo 1: Serendipia</h3>
-                        <p class="text-slate-600 leading-relaxed">
-                            El destino nos unió en el momento perfecto. Un encuentro casual que cambió nuestras vidas
-                            para siempre.
+                        <h3 class="font-serif text-2xl text-charcoal mb-3">Capítulo 1: Creciendo Juntos</h3>
+                        <p class="text-slate-600 leading-relaxed text-sm">
+                            7 años siendo incondicionales. Mientras crecíamos personalmente y terminábamos nuestras carreras universitarias, construimos una base de amor y amistad inquebrantable.
                         </p>
                     </div>
 
-                    <!-- Chapter 2: De Bocas del Toro a Santiago -->
+                    <!-- Chapter 2: Ciudadanos del Mundo -->
                     <div class="text-center">
                         <div
                             class="relative inline-block mb-6 transform hover:scale-105 transition-transform duration-300">
                             <!-- Polaroid Frame -->
                             <div
-                                class="bg-white p-4 shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform">
+                                class="bg-white p-4 shadow-xl border border-gray-100 transform -rotate-1 hover:rotate-0 transition-transform">
                                 <div class="aspect-square bg-gray-200 mb-3 overflow-hidden">
-                                    <img src="images/new_story_2.jpg" alt="Bocas a Santiago"
+                                    <img src="images/new_story_2.jpg" alt="Viajes"
                                         class="w-full h-full object-cover">
                                 </div>
-                                <p class="font-handwriting text-charcoal text-lg">Bocas → Santiago 🌴✈️</p>
+                                <p class="font-handwriting text-charcoal text-lg">Al Fin del Mundo 🌍</p>
                             </div>
                             <!-- Decorative Pin -->
                             <div
-                                class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-sage rounded-full shadow-lg">
+                                class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-sage rounded-full shadow-md">
                             </div>
                         </div>
-                        <h3 class="font-serif text-2xl text-charcoal mb-3">Capítulo 2: De Bocas del Toro a Santiago</h3>
-                        <p class="text-slate-600 leading-relaxed">
-                            Desde las playas paradisíacas de Panamá hasta las montañas de Chile, nuestro amor cruzó
-                            fronteras.
+                        <h3 class="font-serif text-2xl text-charcoal mb-3">Capítulo 2: Ciudadanos del Mundo</h3>
+                        <p class="text-slate-600 leading-relaxed text-sm">
+                            Trabajábamos en paralelo con un gran objetivo: viajar. Juntos recorrimos Argentina, Uruguay, Brasil, y vivimos aventuras inolvidables en Miami y Tulum que nos marcaron para siempre.
                         </p>
                     </div>
 
-                    <!-- Chapter 3: De Santiago al Mundo -->
+                    <!-- Chapter 3: Socios de Vida -->
                     <div class="text-center">
                         <div
                             class="relative inline-block mb-6 transform hover:scale-105 transition-transform duration-300">
                             <!-- Polaroid Frame -->
-                            <div class="bg-white p-4 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform">
+                            <div class="bg-white p-4 shadow-xl border border-gray-100 transform rotate-3 hover:rotate-0 transition-transform">
                                 <div class="aspect-square bg-gray-200 mb-3 overflow-hidden">
-                                    <img src="images/new_story_3.jpg" alt="Santiago al Mundo"
+                                    <img src="images/new_story_3.jpg" alt="Emprendedores"
                                         class="w-full h-full object-cover">
                                 </div>
-                                <p class="font-handwriting text-charcoal text-lg">Al Mundo 🌍💕</p>
+                                <p class="font-handwriting text-charcoal text-lg">Mejor Equipo 💻</p>
                             </div>
                             <!-- Decorative Pin -->
                             <div
-                                class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-gold rounded-full shadow-lg">
+                                class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gold rounded-full shadow-md">
                             </div>
                         </div>
-                        <h3 class="font-serif text-2xl text-charcoal mb-3">Capítulo 3: De Santiago al Mundo</h3>
-                        <p class="text-slate-600 leading-relaxed">
-                            Juntos conquistamos el mundo, creando recuerdos inolvidables en cada aventura que vivimos.
+                        <h3 class="font-serif text-2xl text-charcoal mb-3">Capítulo 3: Socios de Vida</h3>
+                        <p class="text-slate-600 leading-relaxed text-sm">
+                            Aprendimos el uno del otro a nivel profesional. Pasamos de apoyarla en la mágica Pastelería Mozart de su abuelo, a fundar y liderar nuestra propia Agencia de Marketing Digital. Un verdadero equipo.
                         </p>
                     </div>
                 </div>
@@ -1271,7 +1215,7 @@
                 <div class="glass p-8 md:p-12 rounded-2xl shadow-2xl border border-white/10 bg-white/5">
                     <div class="text-center mb-10">
                         <h2 class="font-serif text-4xl text-white mb-4">Confirmar Asistencia</h2>
-                        <p class="font-sans text-white/60 text-sm">¡No te quedes fuera de la fiesta!</p>
+                        <p class="font-sans text-white/60 text-sm">Gala y Ceremonia Religiosa - ¡Te esperamos!</p>
                     </div>
 
                     <form id="rsvp-form" class="space-y-6">
@@ -1322,45 +1266,6 @@
                             Tiendas Paris - Código: 21030724
                         </a>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- G. RELIGIOUS WEDDING TEASER ("Coming Soon") -->
-        <section id="religious-wedding" class="relative py-32 overflow-hidden">
-            <!-- Background Image with Overlay -->
-            <div class="absolute inset-0 z-0">
-                <img src="images/religious_wedding.jpg" alt="Centro de Eventos Arboledas"
-                    class="w-full h-full object-cover grayscale opacity-40 hover:grayscale-0 hover:opacity-60 transition-all duration-1000">
-                <div class="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/80 to-transparent"></div>
-            </div>
-
-            <div class="relative z-10 max-w-4xl mx-auto px-6 text-center text-ivory">
-                <div class="mb-6">
-                    <span
-                        class="inline-block px-4 py-1 border border-gold/50 rounded-full text-gold text-xs uppercase tracking-[0.2em] mb-4">Próximamente</span>
-                </div>
-                <h2 class="font-serif text-4xl md:text-6xl text-white mb-6">La Boda Religiosa</h2>
-                <div
-                    class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 text-white/80 font-sans mb-10">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-regular fa-calendar text-gold"></i>
-                        <span>23 de Octubre 2026</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-location-dot text-gold"></i>
-                        <span>Centro de Eventos Arboledas</span>
-                    </div>
-                </div>
-
-                <div class="max-w-xl mx-auto bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-xl">
-                    <p class="font-serif italic text-lg mb-6">"Lo mejor está por venir..."</p>
-                    <button disabled
-                        class="bg-white/10 text-white/50 px-8 py-3 rounded-full uppercase tracking-widest text-sm cursor-not-allowed border border-white/10">
-                        Inscripciones Próximamente
-                    </button>
-                    <p class="text-xs text-white/30 mt-4 uppercase tracking-widest">Enfocados en el Civil por ahora ❤️
-                    </p>
                 </div>
             </div>
         </section>
