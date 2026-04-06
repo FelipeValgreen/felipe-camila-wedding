@@ -429,7 +429,7 @@ window.closeLightbox = function() {
                 }
 
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = 'De ahí somos!';
+                submitBtn.innerHTML = originalText;
             });
         }
 
@@ -459,7 +459,7 @@ window.closeLightbox = function() {
             paparazziUploadBtn.addEventListener('click', async () => {
                 const uploaderName = document.getElementById('uploader-name').value;
                 const uploaderEmail = document.getElementById('uploader-email').value;
-                const uploaderWhatsapp = document.getElementById('uploader-whatsapp').value;
+                const uploaderWhatsapp = ''; // Field not used in paparazzi form
 
                 if (!selectedFile) {
                     // If no file selected yet, trigger the input prompt
@@ -502,7 +502,7 @@ window.closeLightbox = function() {
                     photoUploadInput.value = '';
                     document.getElementById('uploader-name').value = '';
                     document.getElementById('uploader-email').value = '';
-                    document.getElementById('uploader-whatsapp').value = '';
+                    if (document.getElementById('uploader-whatsapp')) document.getElementById('uploader-whatsapp').value = '';
 
                     // Refresh Gallery
                     if (typeof loadGallery === 'function') {
