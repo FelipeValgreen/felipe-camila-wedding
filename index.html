@@ -32,43 +32,44 @@
             theme: {
                 extend: {
                     colors: {
-                        sage: '#4a5d23', // Olive green
-                        'sage-light': '#7a8e59',
-                        'sage-dark': '#2c3815',
-                        ivory: '#FAF9F6', // Off-white / marble
-                        sand: '#E3DAC9', // Bone
-                        taupe: '#8B8579', 
-                        'dusty-pink': '#D8B4A0',
-                        'sky-blue': '#B4C5C4',
-                        charcoal: '#1A1C19', // Deep charcoal
-                        gold: '#B89B5E', // Elegant gold
-                        night: '#111827',
-                        beige: '#F5F5F0',
-                        mustard: '#C19A6B',
+                        white: '#FFFFFF',
+                        ivory: '#FAFAFA', // Slight off-white for sections
+                        charcoal: '#111111', // Deep black
+                        night: '#000000',
+                        gray: {
+                            100: '#F5F5F5',
+                            200: '#EEEEEE',
+                            300: '#E0E0E0',
+                            400: '#BDBDBD',
+                            500: '#9E9E9E',
+                            600: '#757575',
+                            700: '#616161',
+                            800: '#424242',
+                            900: '#212121',
+                        }
                     },
                     fontFamily: {
                         serif: ['Playfair Display', 'serif'],
                         sans: ['"Montserrat"', 'sans-serif'],
                         script: ['Great Vibes', 'cursive'],
-                        hand: ['"Amatic SC"', 'cursive'],
-                        typewriter: ['"Lora"', 'serif'],
+                        hand: ['"Montserrat"', 'sans-serif'], // Removiendo Amatic SC
+                        typewriter: ['"Montserrat"', 'sans-serif'], // Removiendo Lora
                     },
                     backgroundImage: {
-                        'marble-texture': "url('https://www.transparenttextures.com/patterns/white-marble.png')",
+                        // Stripping raw textures, keeping only pure blocks
                     },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'disco': 'disco 2s linear infinite',
+                        'fadeIn': 'fadeIn 2s ease-out forwards',
                     },
                     keyframes: {
                         float: {
                             '0%, 100%': { transform: 'translateY(0)' },
                             '50%': { transform: 'translateY(-10px)' },
                         },
-                        disco: {
-                            '0%': { filter: 'hue-rotate(0deg)' },
-                            '100%': { filter: 'hue-rotate(360deg)' },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
                         }
                     }
                 }
@@ -220,7 +221,7 @@
                         document.getElementById('trivia-share-success').classList.remove('hidden');
                         // Show success message inside the form container instead of hiding whole section?
                         // Better: Hide form inputs, show success message.
-                        const formContainer = document.querySelector('#trivia-share-section .bg-sage\\/10');
+                        const formContainer = document.querySelector('#trivia-share-section .bg-charcoal\\/10');
                         if (formContainer) {
                             formContainer.innerHTML = `
                                     <div class="text-center py-4">
@@ -242,84 +243,25 @@
         });
     </script>
     <link rel="stylesheet" href="css/style.css">
-    <meta name="theme-color" content="#8FA382">
+    <meta name="theme-color" content="#ffffff">
 </head>
 
-<body class="font-sans text-charcoal bg-ivory antialiased locked bg-marble-texture">
+<body class="font-sans text-charcoal bg-white antialiased">
+    <!-- Cinematic Fade-in Overlay -->
+    <div id="cinematic-fade" class="fixed inset-0 z-[100] bg-white transition-opacity duration-[2000ms] ease-in-out pointer-events-none"></div>
 
-    <!-- ITALIAN ELEGANCE ENVELOPE OVERLAY -->
-    <div id="envelope-overlay"
-        class="fixed inset-0 z-[100] bg-ivory flex items-center justify-center p-4 overflow-hidden transition-transform duration-1000 ease-in-out">
-
-        <!-- Global Texture Overlay -->
-        <div
-            class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/white-marble.png')] opacity-40 pointer-events-none mix-blend-multiply">
-        </div>
-
-        <!-- 1. ESTRUCTURA DEL SOBRE (Envelope Container) -->
-        <div class="relative w-full max-w-2xl aspect-[4/3] md:aspect-[1.6/1] bg-white flex items-center justify-center shadow-2xl z-20 border border-gold/30"
-            style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);">
-
-            <!-- Flap (Triangular Clásico) -->
-            <div class="absolute top-0 left-0 w-full h-full z-30 pointer-events-none"
-                style="clip-path: polygon(0 0, 50% 55%, 100% 0); background-color: #faf9f6; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));">
-                <!-- Border Line (V Shape) -->
-                <div class="absolute top-0 left-0 w-full h-full border-t-0 border-l border-r border-b-0 border-gold/20"
-                    style="clip-path: polygon(0 0, 50% 55%, 100% 0);"></div>
-                <svg class="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M0,0 L50,55 L100,0" fill="none" stroke="#B89B5E" stroke-width="0.3" stroke-dasharray="1 1" />
-                </svg>
-            </div>
-
-            <div
-                class="absolute top-[18%] left-1/2 transform -translate-x-1/2 z-50 text-center w-full max-w-[90%] px-4 pointer-events-none">
-                <p class="font-serif italic text-2xl md:text-3xl text-sage-dark leading-snug md:leading-relaxed"
-                    style="text-shadow: 0 1px 0 rgba(255,255,255,0.8);">
-                    Están invitados a nuestra<br>Boda Religiosa
-                </p>
-            </div>
-
-            <!-- Sello de Cera (Wax Seal) - EN LA PUNTA DE LA V -->
-            <div class="absolute top-[55%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-md bg-sage-dark"
-                style="box-shadow: inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);">
-                <div class="w-12 h-12 md:w-16 md:h-16 border border-white/20 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-church text-2xl md:text-3xl text-gold opacity-90"></i>
-                </div>
-            </div>
-
-            <!-- Estampilla elegante -->
-            <div id="stamp-container-final"
-                class="absolute top-4 right-4 md:top-8 md:right-10 z-40 pointer-events-none opacity-80"
-                style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));">
-                <div class="w-12 h-16 bg-white flex flex-col items-center justify-center p-1 border border-gray-200">
-                    <div class="w-full h-full border border-gold/40 flex items-center justify-center">
-                        <i class="fa-brands fa-pagelines text-sage-light text-2xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Botón "ABRIR INVITACIÓN" - Debajo del sello -->
-            <button id="open-invite"
-                class="absolute bottom-6 md:bottom-10 left-1/2 transform -translate-x-1/2 z-50 bg-sage text-white px-8 md:px-10 py-3 rounded-full shadow-lg hover:bg-sage-dark transition-all duration-300 cursor-pointer font-sans text-xs md:text-sm tracking-[0.2em] uppercase font-bold">
-                Abrir Invitación
-            </button>
-        </div>
-    </div>
-
-    <!-- NAVIGATION -->
-    <nav id="main-nav" class="fixed top-0 left-0 w-full z-50 py-4 transition-all duration-300">
-        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
-            <a href="#hero" class="font-serif text-2xl text-[#2C241E] font-bold">F&C</a>
-            <div class="hidden md:flex space-x-8">
-                <a href="#our-story"
-                    class="text-xs uppercase tracking-widest text-[#2C241E] hover:text-[#6B7D5C] transition-colors">Historia</a>
+    <!-- MAIN NAV (Minimalist) -->
+    <nav id="main-nav"
+        class="fixed top-0 w-full z-50 transition-all duration-500 bg-white/90 backdrop-blur-md border-b border-gray-100 py-4 opacity-0 -translate-y-full">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+            <a href="#hero" class="font-serif text-2xl tracking-widest text-charcoal mb-2 md:mb-0 hover:text-gray-500 transition-colors">F&C</a>
+            <div class="flex space-x-6 md:space-x-8">
+                <a href="#hero"
+                    class="text-[10px] uppercase tracking-[0.2em] text-gray-500 hover:text-charcoal transition-colors">La Boda</a>
                 <a href="#dresscode"
-                    class="text-xs uppercase tracking-widest text-[#2C241E] hover:text-[#6B7D5C] transition-colors">Dress
-                    Code</a>
-                <a href="#party"
-                    class="text-xs uppercase tracking-widest text-[#2C241E] hover:text-[#6B7D5C] transition-colors font-bold">Fiesta</a>
+                    class="text-[10px] uppercase tracking-[0.2em] text-gray-500 hover:text-charcoal transition-colors font-bold">Gala</a>
                 <a href="#rsvp"
-                    class="text-xs uppercase tracking-widest text-[#2C241E] hover:text-[#6B7D5C] transition-colors">RSVP</a>
+                    class="text-[10px] uppercase tracking-[0.2em] text-gray-500 hover:text-charcoal transition-colors">Confirmar</a>
             </div>
         </div>
     </nav>
@@ -327,183 +269,188 @@
     <!-- MAIN CONTENT -->
     <main class="relative overflow-hidden">
 
-        <!-- A. HERO (RELIGIOUS WEDDING & GALA) -->
-        <section id="hero" class="min-h-screen flex items-center justify-center pt-24 pb-20 relative">
+        <!-- A. HERO (ULTRA LUXURY B&W) -->
+        <section id="hero" class="min-h-screen flex items-center justify-center pt-24 pb-20 relative bg-white overflow-hidden">
+            <!-- Subtle Image Background (Arboleda Chicureo context via Unsplash B&W architecture / nature) -->
+            <div class="absolute inset-0 z-0">
+                <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop" alt="Arboleda Chicureo" class="w-full h-full object-cover grayscale opacity-20 filter contrast-125">
+            </div>
+
             <div class="text-center z-10 reveal px-4">
-                <p class="font-sans text-xs tracking-[0.3em] text-sage-dark uppercase mb-4">Matrimonio Religioso & Gala</p>
-                <h1 class="font-serif text-6xl md:text-8xl text-sage mb-6">Felipe & Camila</h1>
-                <p class="font-sans italic text-2xl text-gold mb-8">Nuestra gran celebración</p>
+                <p class="font-sans text-[10px] tracking-[0.5em] text-gray-500 uppercase mb-8">El Comienzo</p>
+                <h1 class="font-serif text-6xl md:text-8xl text-charcoal mb-4 tracking-tight leading-none uppercase">Felipe<br>& Camila</h1>
+                <div class="w-16 h-[1px] bg-charcoal/50 mx-auto mb-8 mt-6"></div>
 
-                <div class="flex flex-col items-center space-y-2 mb-12">
-                    <div class="flex justify-center items-center space-x-4">
-                        <div class="h-[1px] w-12 bg-charcoal"></div>
-                        <p class="font-serif text-xl italic text-charcoal">Viernes 23 de Octubre, 2026</p>
-                        <div class="h-[1px] w-12 bg-charcoal"></div>
-                    </div>
-                    <p class="font-serif text-lg italic text-charcoal">Ceremonia: 18:00 horas</p>
+                <div class="flex flex-col items-center space-y-2 mb-16">
+                    <p class="font-sans text-[11px] tracking-[0.3em] uppercase text-charcoal">Viernes veintitrés de Octubre</p>
+                    <p class="font-sans text-[11px] tracking-[0.3em] uppercase text-gray-500">2026</p>
                 </div>
 
-                <!-- ELEGANT MAP ADDRESS CARD -->
-                <a href="https://www.google.com/maps/search/?api=1&query=Iglesia+de+la+Divina+Misericordia,+Chicureo"
-                    target="_blank" rel="noopener noreferrer"
-                    class="block relative max-w-2xl mx-auto mt-8 p-10 bg-white rounded-sm shadow-md border border-gold/40 transform hover:scale-[1.02] transition-all duration-300 cursor-pointer group">
-                    
-                    <!-- External Link Icon (Top Right) -->
-                    <div
-                        class="absolute top-4 right-4 text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <i class="fa-solid fa-arrow-up-right-from-square text-xl"></i>
+                <!-- MINIMAL LOCATION DATA -->
+                <div class="max-w-md mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 text-left border-t border-gray-200 pt-8 mt-12">
+                    <div class="border-l border-charcoal pl-4">
+                        <p class="font-sans text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-2">Ceremonia Religiosa</p>
+                        <h3 class="font-serif text-xl text-charcoal mb-1">Iglesia Divina Misericordia</h3>
+                        <p class="font-sans text-xs text-gray-600">18:00 Horas</p>
                     </div>
-
-                    <div class="relative z-10 flex flex-col items-center text-center space-y-4">
-                        <!-- Map Pin Icon -->
-                        <div
-                            class="text-sage text-4xl mb-2 drop-shadow-sm group-hover:text-sage-dark transition-colors">
-                            <i class="fa-solid fa-church"></i>
-                        </div>
-
-                        <!-- Address Text -->
-                        <h3
-                            class="font-serif text-2xl md:text-3xl text-charcoal leading-tight font-normal">
-                            Iglesia de la Divina Misericordia
-                        </h3>
-
-                        <!-- Location Text -->
-                        <p
-                            class="font-sans text-sm md:text-base text-sage-dark uppercase tracking-[0.1em] font-medium">
-                            Seguido de Recepción en <br><strong>Centro de Eventos Arboledas</strong> (Justo al frente)
-                        </p>
+                    <div class="border-l border-charcoal pl-4">
+                        <p class="font-sans text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-2">Recepción & Gala</p>
+                        <h3 class="font-serif text-xl text-charcoal mb-1">C.E. Arboleda Chicureo</h3>
+                        <p class="font-sans text-xs text-gray-600">Al finalizar la ceremonia</p>
                     </div>
-                </a>
+                </div>
             </div>
         </section>
 
-        <!-- C. MUSIC QUOTE -->
-        <section id="music" class="py-24 text-center reveal">
-            <div class="w-16 h-px bg-sage mx-auto mb-8"></div>
-            <blockquote class="font-script text-4xl md:text-5xl text-charcoal leading-relaxed mb-6">
-                "We've come so far, my dear. <br>Look how we've grown. <br>And I wanna stay with you <br>until we're
-                grey and old."
-            </blockquote>
-            <cite class="font-sans text-xs uppercase tracking-[0.2em] text-sage-dark not-italic">— James
-                Arthur</cite>
-            <div class="w-16 h-px bg-sage mx-auto mt-8"></div>
-            </div>
-        </section>
-
-        <!-- D. DRESS CODE (MEDITERRANEAN) -->
-        <section id="dresscode"
-            class="py-32 bg-ivory text-center relative overflow-hidden border-t border-gold/10">
+        <!-- D. DRESS CODE (STRICT BLACK TIE) -->
+        <section id="dresscode" class="py-32 bg-night text-white text-center relative overflow-hidden">
             <div class="max-w-3xl mx-auto px-4 relative z-10 reveal">
-                <h2 class="font-serif text-4xl text-charcoal mb-2">Código de Vestimenta</h2>
-                <p class="font-sans text-sage-dark text-sm uppercase tracking-widest mb-4 font-bold">Formal con onda
+                <p class="font-sans text-[10px] uppercase tracking-[0.4em] text-gray-400 mb-6">Dress Code</p>
+                <h2 class="font-serif text-4xl md:text-5xl text-white mb-8 tracking-wide">Black Tie</h2>
+                <div class="w-12 h-[1px] bg-white/30 mx-auto mb-8"></div>
+                <p class="font-sans text-gray-300 text-sm italic font-light tracking-wide leading-relaxed">
+                    Les rogamos acompañarnos en etiqueta formal.
                 </p>
-                <p class="font-sans text-slate-500 text-xs italic mb-12">Esta paleta de colores es solo una inspiración para armonizar con el elegante entorno de la gala, ¡siéntanse libres de usar el tono que más les acomode!</p>
-
-                <div class="flex flex-wrap justify-center gap-8 mb-8">
-                    <!-- Sage -->
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-sage shadow-md ring-1 ring-gold/30"></div>
-                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Salvia</span>
-                    </div>
-                    <!-- Dusty Pink -->
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-dusty-pink shadow-md ring-1 ring-gold/30"></div>
-                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Rosa Viejo</span>
-                    </div>
-                    <!-- Sand -->
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-sand shadow-md ring-1 ring-gold/30"></div>
-                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Arena</span>
-                    </div>
-                    <!-- Sky Blue -->
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-sky-blue shadow-md ring-1 ring-gold/30"></div>
-                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Celeste</span>
-                    </div>
-                    <!-- Beige -->
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-beige shadow-md ring-1 ring-gold/30"></div>
-                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Beige</span>
-                    </div>
-                    <!-- Mustard -->
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-mustard shadow-md ring-1 ring-gold/30"></div>
-                        <span class="text-[10px] uppercase tracking-wider text-charcoal">Mostaza</span>
-                    </div>
-                </div>
             </div>
         </section>
 
-        <!-- E. PARTY (NEW SECTION) -->
-        <section id="party" class="py-32 bg-night text-white relative overflow-hidden">
-            <!-- Party Background Effects -->
-            <div class="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-blue-900/20"></div>
-            <div
-                class="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]">
-            </div>
-
-            <div class="max-w-4xl mx-auto px-4 text-center relative z-10 reveal">
-                <p class="font-sans text-sm tracking-[0.5em] uppercase text-gold mb-6 animate-pulse-slow">Let's Party
-                </p>
-                <h2
-                    class="font-serif text-6xl md:text-8xl mb-12 text-transparent bg-clip-text bg-gradient-to-r from-white via-gold to-white animate-disco">
-                    ¡A Celebrar!</h2>
+        <!-- E. PARTY (ELEGANT ITINERARY) -->
+        <section id="party" class="py-32 bg-white text-charcoal border-b border-gray-100">
+            <div class="max-w-4xl mx-auto px-4 text-center reveal">
+                <h2 class="font-serif text-3xl md:text-4xl mb-16 tracking-widest uppercase">Itinerario</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-                    <!-- Ceremonia -->
                     <div class="group flex flex-col items-center">
-                        <div class="w-16 h-16 mb-6 group-hover:scale-110 transition-transform duration-500">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
-                                class="w-full h-full text-gold group-hover:text-sage transition-colors duration-300">
-                                <circle cx="8" cy="12" r="6" />
-                                <circle cx="16" cy="12" r="6" />
-                            </svg>
-                        </div>
-                        <h3
-                            class="font-serif text-2xl mb-2 text-gold group-hover:text-sage transition-colors duration-300">
-                            Ceremonia</h3>
-                        <p class="text-white/60 text-sm">El "Sí" quiero</p>
+                        <span class="font-sans text-xs tracking-widest text-gray-400 mb-4 block">18:00</span>
+                        <div class="w-px h-12 bg-charcoal/20 mb-4"></div>
+                        <h3 class="font-serif text-2xl mb-2 text-charcoal">La Ceremonia</h3>
+                        <p class="text-gray-500 text-xs tracking-wide uppercase">El "Sí" quiero</p>
                     </div>
 
-                    <!-- Cóctel -->
                     <div class="group flex flex-col items-center">
-                        <div class="w-16 h-16 mb-6 group-hover:scale-110 transition-transform duration-500">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
-                                class="w-full h-full text-gold group-hover:text-sage transition-colors duration-300">
-                                <path
-                                    d="M8 21h8m-4-4v4M12 3a6 6 0 0 1 6 6c0 1.66-.67 3.16-1.76 4.24l-4.24 4.24-4.24-4.24A6 6 0 0 1 6 9a6 6 0 0 1 6-6z" />
-                                <line x1="12" y1="10" x2="12" y2="3" />
-                                <line x1="12" y1="10" x2="16" y2="6" />
-                            </svg>
-                        </div>
-                        <h3
-                            class="font-serif text-2xl mb-2 text-gold group-hover:text-sage transition-colors duration-300">
-                            Cóctel</h3>
-                        <p class="text-white/60 text-sm">Para compartir y celebrar</p>
+                        <span class="font-sans text-xs tracking-widest text-gray-400 mb-4 block">19:30</span>
+                        <div class="w-px h-12 bg-charcoal/20 mb-4"></div>
+                        <h3 class="font-serif text-2xl mb-2 text-charcoal">Cóctel en la Laguna</h3>
+                        <p class="text-gray-500 text-xs tracking-wide uppercase">Alta gastronomía & Encuentros</p>
                     </div>
 
-                    <!-- Fiesta -->
                     <div class="group flex flex-col items-center">
-                        <div class="w-16 h-16 mb-6 group-hover:scale-110 transition-transform duration-500">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
-                                class="w-full h-full text-gold group-hover:text-sage transition-colors duration-300">
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93" />
-                            </svg>
-                        </div>
-                        <h3
-                            class="font-serif text-2xl mb-2 text-gold group-hover:text-sage transition-colors duration-300">
-                            Fiesta</h3>
-                        <p class="text-white/60 text-sm">Baile hasta el amanecer</p>
+                        <span class="font-sans text-xs tracking-widest text-gray-400 mb-4 block">21:00</span>
+                        <div class="w-px h-12 bg-charcoal/20 mb-4"></div>
+                        <h3 class="font-serif text-2xl mb-2 text-charcoal">La Gala</h3>
+                        <p class="text-gray-500 text-xs tracking-wide uppercase">Fiesta Exclusiva</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- NEW INTERACTIVE SECTIONS START -->
+        <!-- F. RSVP (QUIET LUXURY) -->
+        <section id="rsvp" class="py-32 bg-gray-50 relative overflow-hidden border-b border-gray-100">
+            <div class="max-w-2xl mx-auto px-6 relative z-10 reveal">
+                <div class="text-center mb-16">
+                    <p class="font-sans text-[10px] uppercase tracking-[0.4em] text-gray-400 mb-4">RSVP</p>
+                    <h2 class="font-serif text-4xl text-charcoal mb-4">Confirmar Asistencia</h2>
+                    <div class="w-12 h-[1px] bg-charcoal/50 mx-auto mb-6"></div>
+                    <p class="font-sans text-gray-500 text-sm font-light">Le rogamos confirmar su presencia antes del 23 de Septiembre.</p>
+                </div>
+
+                <div class="bg-white p-10 md:p-14 shadow-sm border border-gray-100">
+                    <form id="rsvp-form" class="space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-2">
+                                <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">Nombre Completo</label>
+                                <input type="text" id="rsvp-name" required
+                                    class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">WhatsApp</label>
+                                <input type="tel" id="rsvp-whatsapp" required
+                                    class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
+                            </div>
+                        </div>
+
+                        <!-- Dietary Restrictions -->
+                        <div class="space-y-3 pt-4 border-t border-gray-100">
+                            <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">Restricciones Alimentarias</label>
+                            <div class="relative">
+                                <select id="dietary-restrictions" class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm appearance-none cursor-pointer rounded-none pb-1">
+                                    <option value="ninguna">Ninguna</option>
+                                    <option value="vegetariano">Vegetariano</option>
+                                    <option value="vegano">Vegano</option>
+                                    <option value="celiaco">Celíaco / Libre de Gluten</option>
+                                    <option value="otra">Otra alergia severa</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Partner Attendance -->
+                        <div class="space-y-6 pt-4 border-t border-gray-100">
+                            <label class="flex items-center space-x-3 cursor-pointer group">
+                                <div class="relative flex items-center justify-center w-5 h-5 border border-gray-300 transition-colors group-hover:border-charcoal">
+                                    <input type="checkbox" id="has-partner" class="peer opacity-0 absolute w-full h-full cursor-pointer">
+                                    <i class="fa-solid fa-check text-charcoal text-xs opacity-0 peer-checked:opacity-100 transition-opacity"></i>
+                                </div>
+                                <span class="text-charcoal text-sm tracking-wide">Asistiré con acompañante</span>
+                            </label>
+                            
+                            <!-- Partner Name Field (Hidden by default) -->
+                            <div id="partner-section" class="hidden space-y-8 animate-fade-in pl-8 border-l border-gray-200">
+                                <div class="space-y-2">
+                                    <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">Nombre Completo del Acompañante</label>
+                                    <input type="text" id="partner-name" placeholder="Requerido para el protocolo de mesas"
+                                        class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
+                                </div>
+                                <div class="space-y-3">
+                                    <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">Restricciones Alimentarias (Acompañante)</label>
+                                    <div class="relative">
+                                        <select id="partner-dietary" class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm appearance-none cursor-pointer rounded-none pb-1">
+                                            <option value="ninguna">Ninguna</option>
+                                            <option value="vegetariano">Vegetariano</option>
+                                            <option value="vegano">Vegano</option>
+                                            <option value="celiaco">Celíaco / Libre de Gluten</option>
+                                            <option value="otra">Otra alergia severa</option>
+                                        </select>
+                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="rsvp-submit-btn"
+                            class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-8">
+                            Confirmar
+                        </button>
+                    </form>
+
+                    <!-- Success Message (Hidden by default) -->
+                    <div id="rsvp-success" class="hidden text-center py-10 animate-fade-in">
+                        <i class="fa-solid fa-envelope-open-text text-gray-300 text-4xl mb-4"></i>
+                        <h3 class="text-charcoal font-serif text-2xl mb-2">Confirmación Recibida</h3>
+                        <p class="text-gray-500 text-sm font-light mb-8 max-w-sm mx-auto">Gracias por confirmar su presencia. Todo ha sido debidamente registrado en nuestro protocolo.</p>
+                        <button onclick="document.getElementById('rsvp-success').classList.add('hidden'); document.getElementById('rsvp-form').reset(); document.getElementById('rsvp-form').style.display='block';"
+                            class="text-charcoal text-[10px] tracking-[0.3em] uppercase border-b border-charcoal hover:text-gray-500 hover:border-gray-500 transition-colors pb-1">
+                            Hacer otra confirmación
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-16 text-center border-t border-gray-200 pt-8">
+                    <p class="font-serif text-lg text-charcoal mb-4">Lista de Novios</p>
+                    <a href="#"
+                        class="text-gray-500 text-[10px] uppercase tracking-widest hover:text-charcoal transition-colors border-b border-transparent hover:border-charcoal pb-1 inline-block">
+                        Tiendas Paris - Código: 21030724
+                    </a>
+                </div>
+            </div>
+        </section>
 
         <!-- 1. GUEST PAPARAZZI ("A través de tus ojos") -->
-        <section id="paparazzi" class="py-24 relative bg-ivory overflow-hidden">
+        <section id="paparazzi" class="py-24 relative bg-gray-50 overflow-hidden">
             <!-- Decorative Film Strip (CSS/SVG) -->
             <div class="absolute top-0 right-0 h-full w-16 md:w-24 bg-charcoal opacity-10 flex flex-col items-center justify-around py-4 pointer-events-none"
                 style="background-image: linear-gradient(to bottom, transparent 50%, white 50%); background-size: 100% 40px;">
@@ -514,14 +461,12 @@
 
 
             <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
-                <div class="mb-8 text-6xl text-charcoal/80 animate-pulse">
-                    <i class="fa-solid fa-camera-retro"></i>
+                <div class="text-center mb-16">
+                    <p class="font-sans text-[10px] uppercase tracking-[0.4em] text-gray-400 mb-4">La Colección</p>
+                    <h2 class="font-serif text-4xl text-charcoal mb-4">A Través de Tus Ojos</h2>
+                    <div class="w-12 h-[1px] bg-charcoal/50 mx-auto mb-6"></div>
+                    <p class="font-sans text-gray-500 text-sm font-light max-w-lg mx-auto">Nuestro archivo fotográfico en vivo. Comparte aquí los mejores retratos de la Gala. La captura más exquisita será descubierta durante la ceremonia.</p>
                 </div>
-                <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-4">A través de tus ojos</h2>
-                <p class="font-sans text-slate-600 mb-10 max-w-xl mx-auto">
-                    Revivan con nosotros los recuerdos increíbles del Matrimonio Civil y luego, ¡prepárense para inundar de fotos esta galería en la Fiesta de Gala! Únete a nuestro álbum compartido y sube tus mejores perspectivas.
-                    <br><strong class="text-sage-dark mt-4 block">¡Atención! La mejor foto tendrá un premio que se dará a conocer en el matrimonio de la iglesia.</strong>
-                </p>
 
                 <!-- Upload Form -->
                 <div class="bg-white p-8 rounded-xl shadow-xl max-w-md mx-auto mb-12 relative overflow-hidden">
@@ -531,23 +476,23 @@
                         <label class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Tu
                             Nombre</label>
                         <input type="text" id="uploader-name" placeholder="Ej: Tía Coty"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-sage">
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-charcoal">
                     </div>
                     <div class="mb-4">
                         <label class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Tu
                             Email (opcional)</label>
                         <input type="email" id="uploader-email" placeholder="tu@correo.com"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-sage">
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-charcoal">
                     </div>
                     <div class="mb-6">
                         <label
                             class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Sube
                             tu Foto</label>
                         <input type="file" id="photo-upload" accept="image/*"
-                            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sage/10 file:text-sage hover:file:bg-sage/20">
+                            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-charcoal/10 file:text-charcoal hover:file:bg-charcoal/20">
                     </div>
                     <button id="upload-btn"
-                        class="w-full bg-charcoal text-ivory font-bold py-3 rounded-lg hover:bg-sage transition-colors uppercase tracking-widest">
+                        class="w-full bg-charcoal text-white font-bold py-3 rounded-lg hover:bg-charcoal transition-colors uppercase tracking-widest">
                         <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Foto
                     </button>
                     <p id="upload-status" class="mt-4 text-xs font-bold hidden"></p>
@@ -558,17 +503,17 @@
                     <!-- Navigation Arrows (Visible on Mobile, Hover on Desktop) -->
                     <button
                         onclick="document.getElementById('guest-gallery').scrollBy({left: -300, behavior: 'smooth'})"
-                        class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 bg-sage text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-80 md:opacity-0 md:group-hover:opacity-100 font-bold">
+                        class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 bg-charcoal text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-80 md:opacity-0 md:group-hover:opacity-100 font-bold">
                         <i class="fa-solid fa-chevron-left"></i>
                     </button>
                     <button onclick="document.getElementById('guest-gallery').scrollBy({left: 300, behavior: 'smooth'})"
-                        class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 bg-sage text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-80 md:opacity-0 md:group-hover:opacity-100 font-bold">
+                        class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 bg-charcoal text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-80 md:opacity-0 md:group-hover:opacity-100 font-bold">
                         <i class="fa-solid fa-chevron-right"></i>
                     </button>
 
                     <!-- Swipe Hint (Mobile Only) -->
                     <div
-                        class="md:hidden absolute -bottom-8 left-0 right-0 text-center text-sage text-xs animate-pulse">
+                        class="md:hidden absolute -bottom-8 left-0 right-0 text-center text-charcoal text-xs animate-pulse">
                         <i class="fa-solid fa-arrow-left mr-1"></i> Desliza para ver más <i
                             class="fa-solid fa-arrow-right ml-1"></i>
                     </div>
@@ -578,14 +523,14 @@
                         <!-- Photos will be loaded dynamically from Supabase -->
                         <!-- CTA Card -->
                         <div
-                            class="min-w-[80vw] md:min-w-[300px] aspect-[4/5] flex-shrink-0 bg-white p-6 shadow-md border-2 border-dashed border-sage-light flex flex-col items-center justify-center text-center snap-center relative">
-                            <div class="text-sage-dark/80">
-                                <i class="fa-solid fa-camera text-5xl mb-4 text-sage"></i>
+                            class="min-w-[80vw] md:min-w-[300px] aspect-[4/5] flex-shrink-0 bg-white p-6 shadow-md border-2 border-dashed border-charcoal-light flex flex-col items-center justify-center text-center snap-center relative">
+                            <div class="text-charcoal-dark/80">
+                                <i class="fa-solid fa-camera text-5xl mb-4 text-charcoal"></i>
                                 <h3 class="font-serif text-2xl mb-2 text-charcoal">¡Sube tu foto!</h3>
                                 <p class="font-sans text-sm text-slate-500 mb-4">Sé el primero en compartir un momento
                                     especial.</p>
                                 <span
-                                    class="inline-block bg-sage text-white text-xs px-3 py-1 rounded-full uppercase tracking-widest font-bold animate-bounce">
+                                    class="inline-block bg-charcoal text-white text-xs px-3 py-1 rounded-full uppercase tracking-widest font-bold animate-bounce">
                                     ↑ Formulario Arriba ↑
                                 </span>
                             </div>
@@ -595,105 +540,73 @@
                 </div>
         </section>
 
-        <!-- OUR STORY SECTION (Polaroid Collage) -->
-        <section id="our-story"
-            class="py-32 bg-gradient-to-b from-ivory via-sage-light/20 to-ivory relative overflow-hidden">
-            <!-- Decorative Elements -->
-            <div class="absolute top-0 left-0 w-64 h-64 bg-sage/10 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-0 right-0 w-96 h-96 bg-gold/10 rounded-full blur-3xl"></div>
-
-            <div class="max-w-7xl mx-auto px-6 relative z-10">
+        <!-- OUR STORY SECTION (Editorial Layout) -->
+        <section id="our-story" class="py-32 bg-white relative overflow-hidden border-b border-gray-100">
+            <div class="max-w-6xl mx-auto px-6 relative z-10">
                 <!-- Section Title -->
-                <div class="text-center mb-16">
-                    <h2 class="font-serif text-5xl md:text-6xl text-charcoal mb-4">Nuestra Historia</h2>
-                    <div class="w-24 h-1 bg-gold mx-auto mb-6"></div>
-                    <p class="font-sans text-lg text-slate-600 max-w-2xl mx-auto italic">
-                        "Dos almas que se encontraron por casualidad y decidieron escribir juntas su historia de amor"
-                    </p>
+                <div class="text-center mb-24">
+                    <p class="font-sans text-[10px] tracking-[0.4em] text-gray-400 uppercase mb-4">La Historia</p>
+                    <h2 class="font-serif text-4xl md:text-5xl text-charcoal tracking-wide mb-6">Siete Años</h2>
+                    <div class="w-px h-16 bg-charcoal/30 mx-auto"></div>
                 </div>
 
-                <!-- Timeline with Polaroid Photos -->
-                <div class="grid md:grid-cols-3 gap-12 mb-16">
-                    <!-- Chapter 1: Creciendo Juntos -->
-                    <div class="text-center">
-                        <div
-                            class="relative inline-block mb-6 transform hover:scale-105 transition-transform duration-300">
-                            <!-- Polaroid Frame -->
-                            <div class="bg-white p-4 shadow-xl border border-gray-100 transform rotate-2 hover:rotate-0 transition-transform">
-                                <div class="aspect-square bg-gray-200 mb-3 overflow-hidden">
-                                    <img src="images/new_story_1.jpg" alt="Creciendo Juntos"
-                                        class="w-full h-full object-cover">
-                                </div>
-                                <p class="font-handwriting text-charcoal text-lg">Nuestros Primeros Años ✨</p>
-                            </div>
-                            <!-- Decorative Pin -->
-                            <div
-                                class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gold rounded-full shadow-md">
+                <!-- Editorial Chapters -->
+                <div class="space-y-32">
+                    
+                    <!-- Chapter 1 (Image Left, Text Right) -->
+                    <div class="flex flex-col md:flex-row items-center gap-12 md:gap-24">
+                        <div class="w-full md:w-1/2">
+                            <div class="aspect-[3/4] overflow-hidden bg-gray-100">
+                                <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop" alt="Creciendo Juntos" class="w-full h-full object-cover grayscale opacity-90 hover:scale-105 transition-transform duration-1000">
                             </div>
                         </div>
-                        <h3 class="font-serif text-2xl text-charcoal mb-3">Capítulo 1: Creciendo Juntos</h3>
-                        <p class="text-slate-600 leading-relaxed text-sm">
-                            7 años siendo incondicionales. Mientras crecíamos personalmente y terminábamos nuestras carreras universitarias, construimos una base de amor y amistad inquebrantable.
-                        </p>
+                        <div class="w-full md:w-1/2 text-left">
+                            <span class="font-sans text-[9px] uppercase tracking-[0.4em] text-gray-400 block mb-4">Capítulo I</span>
+                            <h3 class="font-serif text-3xl text-charcoal mb-6">Creciendo Juntos</h3>
+                            <p class="text-gray-500 font-sans font-light leading-relaxed text-sm max-w-md">
+                                7 años siendo incondicionales. Mientras forjábamos nuestra juventud y culminábamos nuestras carreras, construimos una base de amor y lealtad que hoy define el núcleo de nuestra relación.
+                            </p>
+                        </div>
                     </div>
 
-                    <!-- Chapter 2: Ciudadanos del Mundo -->
-                    <div class="text-center">
-                        <div
-                            class="relative inline-block mb-6 transform hover:scale-105 transition-transform duration-300">
-                            <!-- Polaroid Frame -->
-                            <div
-                                class="bg-white p-4 shadow-xl border border-gray-100 transform -rotate-1 hover:rotate-0 transition-transform">
-                                <div class="aspect-square bg-gray-200 mb-3 overflow-hidden">
-                                    <img src="images/new_story_2.jpg" alt="Viajes"
-                                        class="w-full h-full object-cover">
-                                </div>
-                                <p class="font-handwriting text-charcoal text-lg">Al Fin del Mundo 🌍</p>
-                            </div>
-                            <!-- Decorative Pin -->
-                            <div
-                                class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-sage rounded-full shadow-md">
+                    <!-- Chapter 2 (Text Left, Image Right) -->
+                    <div class="flex flex-col md:flex-row-reverse items-center gap-12 md:gap-24">
+                        <div class="w-full md:w-1/2">
+                            <div class="aspect-[4/3] md:aspect-[3/4] overflow-hidden bg-gray-100">
+                                <img src="https://images.unsplash.com/photo-1542044896530-05d85be9b11a?q=80&w=1925&auto=format&fit=crop" alt="Ciudadanos del Mundo" class="w-full h-full object-cover grayscale opacity-90 hover:scale-105 transition-transform duration-1000">
                             </div>
                         </div>
-                        <h3 class="font-serif text-2xl text-charcoal mb-3">Capítulo 2: Ciudadanos del Mundo</h3>
-                        <p class="text-slate-600 leading-relaxed text-sm">
-                            Trabajábamos en paralelo con un gran objetivo: viajar. Juntos recorrimos Argentina, Uruguay, Brasil, y vivimos aventuras inolvidables en Miami y Tulum que nos marcaron para siempre.
-                        </p>
+                        <div class="w-full md:w-1/2 text-left md:text-right">
+                            <span class="font-sans text-[9px] uppercase tracking-[0.4em] text-gray-400 block mb-4">Capítulo II</span>
+                            <h3 class="font-serif text-3xl text-charcoal mb-6">Ciudadanos del Mundo</h3>
+                            <p class="text-gray-500 font-sans font-light leading-relaxed text-sm max-w-md ml-auto">
+                                Nuestro mayor proyecto paralelo: descubrir el planeta. Desde Argentina y Uruguay hasta Brasil, Miami y Tulum, cada destino cimentó nuestras memorias y enriqueció nuestra perspectiva compartida.
+                            </p>
+                        </div>
                     </div>
 
-                    <!-- Chapter 3: Socios de Vida -->
-                    <div class="text-center">
-                        <div
-                            class="relative inline-block mb-6 transform hover:scale-105 transition-transform duration-300">
-                            <!-- Polaroid Frame -->
-                            <div class="bg-white p-4 shadow-xl border border-gray-100 transform rotate-3 hover:rotate-0 transition-transform">
-                                <div class="aspect-square bg-gray-200 mb-3 overflow-hidden">
-                                    <img src="images/new_story_3.jpg" alt="Emprendedores"
-                                        class="w-full h-full object-cover">
-                                </div>
-                                <p class="font-handwriting text-charcoal text-lg">Mejor Equipo 💻</p>
-                            </div>
-                            <!-- Decorative Pin -->
-                            <div
-                                class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gold rounded-full shadow-md">
+                    <!-- Chapter 3 (Image Left, Text Right) -->
+                    <div class="flex flex-col md:flex-row items-center gap-12 md:gap-24">
+                        <div class="w-full md:w-1/2">
+                            <div class="aspect-square md:aspect-[3/4] overflow-hidden bg-gray-100">
+                                <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2071&auto=format&fit=crop" alt="Socios de Vida" class="w-full h-full object-cover grayscale opacity-90 hover:scale-105 transition-transform duration-1000">
                             </div>
                         </div>
-                        <h3 class="font-serif text-2xl text-charcoal mb-3">Capítulo 3: Socios de Vida</h3>
-                        <p class="text-slate-600 leading-relaxed text-sm">
-                            Aprendimos el uno del otro a nivel profesional. Pasamos de apoyarla en la mágica Pastelería Mozart de su abuelo, a fundar y liderar nuestra propia Agencia de Marketing Digital. Un verdadero equipo.
-                        </p>
+                        <div class="w-full md:w-1/2 text-left">
+                            <span class="font-sans text-[9px] uppercase tracking-[0.4em] text-gray-400 block mb-4">Capítulo III</span>
+                            <h3 class="font-serif text-3xl text-charcoal mb-6">Socios de Vida</h3>
+                            <p class="text-gray-500 font-sans font-light leading-relaxed text-sm max-w-md">
+                                De apoyarla en los mesones de la histórica Pastelería Mozart de su abuelo, a fundar y dirigir codo a codo nuestra propia Agencia de Marketing Digital; aprendimos que somos invencibles cuando somos equipo.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Quote -->
-                <div
-                    class="text-center max-w-3xl mx-auto bg-white/60 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-sage/20">
-                    <i class="fa-solid fa-quote-left text-3xl text-gold mb-4"></i>
-                    <p class="font-serif text-2xl text-charcoal italic mb-4">
-                        "Y ahora, después de tantas aventuras juntos, estamos listos para el capítulo más hermoso:
-                        <span class="text-sage-dark font-bold">Nuestro Matrimonio</span>"
+                <!-- Quote Minimal -->
+                <div class="text-center mt-32 max-w-2xl mx-auto">
+                    <p class="font-serif text-2xl md:text-3xl text-charcoal italic tracking-wide leading-relaxed">
+                        "Y ahora, el capítulo más sofisticado: <br><span class="font-sans not-italic uppercase text-sm tracking-[0.4em] block mt-8 font-bold">Nuestra Boda</span>"
                     </p>
-                    <i class="fa-solid fa-quote-right text-3xl text-gold"></i>
                 </div>
             </div>
         </section>
@@ -712,7 +625,7 @@
                     class="grid grid-rows-3 grid-flow-col gap-1 overflow-x-auto snap-x snap-mandatory w-full h-[100vw] md:h-[600px] scrollbar-hide">
                     <!-- Upload Prompt Card (Static First Item) -->
                     <div onclick="document.getElementById('paparazzi').scrollIntoView({behavior: 'smooth'})"
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center relative group cursor-pointer bg-charcoal border-2 border-dashed border-gold flex flex-col items-center justify-center text-center p-2 text-gold hover:bg-charcoal/90 transition-colors">
+                        class="aspect-square w-[33vw] md:w-[200px] snap-center relative group cursor-pointer bg-charcoal border-2 border-dashed border-charcoal flex flex-col items-center justify-center text-center p-2 text-charcoal hover:bg-charcoal/90 transition-colors">
                         <i class="fa-solid fa-camera text-3xl mb-2 animate-bounce"></i>
                         <span
                             class="font-serif text-sm font-bold uppercase tracking-widest leading-none">Subir<br>Foto</span>
@@ -906,12 +819,12 @@
         </section>
 
         <!-- 2. DJ BOOTH ("Misión: Pista Llena") -->
-        <section id="dj-booth" class="py-24 relative bg-charcoal text-ivory">
+        <section id="dj-booth" class="py-24 relative bg-charcoal text-white">
             <div class="max-w-3xl mx-auto px-6 text-center">
-                <div class="mb-6 text-5xl text-gold">
+                <div class="mb-6 text-5xl text-charcoal">
                     <i class="fa-solid fa-compact-disc fa-spin" style="animation-duration: 3s;"></i>
                 </div>
-                <h2 class="font-serif text-4xl md:text-5xl text-gold mb-2">Misión: Pista Llena</h2>
+                <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-2">Misión: Pista Llena</h2>
                 <p class="font-sans text-white/70 mb-10">Ayúdanos a armar la playlist definitiva. ¿Qué canción no puede
                     faltar?</p>
 
@@ -920,20 +833,20 @@
                     <form id="dj-form" class="space-y-6 transition-opacity duration-500">
                         <div>
                             <label for="dj-song"
-                                class="block text-left text-xs font-bold uppercase tracking-widest text-gold mb-2">Nombre
+                                class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Nombre
                                 de la Canción / Artista</label>
                             <input type="text" id="dj-song" placeholder="Ej: Dancing Queen - ABBA" required
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors">
+                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-charcoal focus:ring-1 focus:ring-gray-300 transition-colors">
                         </div>
                         <div>
                             <label for="dj-name"
-                                class="block text-left text-xs font-bold uppercase tracking-widest text-gold mb-2">Tu
+                                class="block text-left text-xs font-bold uppercase tracking-widest text-charcoal mb-2">Tu
                                 Nombre</label>
                             <input type="text" id="dj-name" placeholder="Tu nombre" required
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors">
+                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-charcoal focus:ring-1 focus:ring-gray-300 transition-colors">
                         </div>
                         <button type="submit" id="dj-submit-btn"
-                            class="w-full bg-gold text-charcoal font-bold py-3 rounded-lg hover:bg-white transition-colors uppercase tracking-widest flex items-center justify-center gap-2">
+                            class="w-full bg-charcoal text-charcoal font-bold py-3 rounded-lg hover:bg-white transition-colors uppercase tracking-widest flex items-center justify-center gap-2">
                             <span>Solicitar Canción 🎵</span>
                         </button>
                     </form>
@@ -941,13 +854,13 @@
                     <!-- Success Message (Hidden by default) -->
                     <div id="dj-success"
                         class="absolute inset-0 flex flex-col items-center justify-center bg-charcoal/95 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-500">
-                        <div class="text-6xl text-gold mb-4">🎵</div>
-                        <h3 class="font-serif text-3xl text-gold mb-2">¡Gracias por tu canción!</h3>
+                        <div class="text-6xl text-charcoal mb-4">🎵</div>
+                        <h3 class="font-serif text-3xl text-charcoal mb-2">¡Gracias por tu canción!</h3>
                         <p class="text-white/80 text-center px-6">Le diremos al DJ que vea la factibilidad de ponerla.
                             ¡Muchas gracias!</p>
                         <button
                             onclick="document.getElementById('dj-success').classList.add('opacity-0', 'pointer-events-none'); document.getElementById('dj-form').reset();"
-                            class="mt-6 text-gold text-sm uppercase tracking-wider hover:text-white transition-colors">
+                            class="mt-6 text-charcoal text-sm uppercase tracking-wider hover:text-white transition-colors">
                             Cerrar
                         </button>
                     </div>
@@ -958,323 +871,13 @@
             </div>
         </section>
 
-        <!-- 3. TRIVIA DEL AMOR ("¿Cuánto nos conoces?") -->
-        <!-- 3. TRIVIA DEL AMOR ("¿Cuánto nos conoces?") - CAROUSEL MODE -->
-        <section id="trivia" class="py-24 relative bg-ivory bg-paper-texture">
-            <div class="max-w-6xl mx-auto px-6">
-                <div class="text-center mb-10">
-                    <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-4">¿Cuánto nos conoces?</h2>
-                    <p class="font-sans text-slate-600">Desliza para jugar 🎲</p>
-                </div>
 
-                <!-- Carousel Container (Mobile & Desktop) -->
-                <form id="trivia-form"
-                    class="flex overflow-x-auto snap-x snap-mandatory gap-6 py-12 px-[7.5vw] md:px-0 md:justify-center scrollbar-hide max-w-full">
-
-                    <!-- Q1 -->
-                    <div
-                        class="w-[85vw] md:w-[24rem] snap-center bg-white p-6 md:p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow flex flex-col justify-between">
-                        <span
-                            class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">1</span>
-                        <h3 class="font-serif text-xl text-charcoal mb-4 font-bold text-wrap break-words leading-snug">
-                            ¿Dónde fue el flechazo inicial?</h3>
-                        <div class="space-y-3">
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q1" value="bocas" class="peer hidden" data-correct="true">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">A.</span> Bocas del Toro
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q1" value="santiago" class="peer hidden">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">B.</span> Santiago
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q1" value="other" class="peer hidden other-trigger"
-                                    data-target="q1-other">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">C.</span> Otra / Escribir respuesta
-                                </div>
-                            </label>
-                            <input type="text" id="q1-other" placeholder="Escribe tu respuesta..."
-                                class="hidden w-full mt-2 px-4 py-2 border border-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-sage text-charcoal bg-white transition-all">
-                        </div>
-                    </div>
-
-                    <!-- Q2 -->
-                    <div
-                        class="w-[85vw] md:w-[24rem] snap-center bg-white p-6 md:p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow flex flex-col justify-between">
-                        <span
-                            class="absolute -top-4 -right-4 w-10 h-10 bg-burgundy text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">2</span>
-                        <h3 class="font-serif text-xl text-charcoal mb-4 font-bold text-wrap break-words leading-snug">
-                            ¿Quién es más probable que llegue
-                            tarde a la ceremonia?</h3>
-                        <div class="space-y-3">
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q2" value="felipe" class="peer hidden" data-correct="true">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">A.</span> Felipe
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q2" value="camila" class="peer hidden">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">B.</span> Camila
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q2" value="other" class="peer hidden other-trigger"
-                                    data-target="q2-other">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">C.</span> Otra / Escribir respuesta
-                                </div>
-                            </label>
-                            <input type="text" id="q2-other" placeholder="Escribe tu respuesta..."
-                                class="hidden w-full mt-2 px-4 py-2 border border-burgundy rounded-lg focus:outline-none focus:ring-2 focus:ring-burgundy text-charcoal bg-white transition-all">
-                        </div>
-                    </div>
-
-                    <!-- Q3 -->
-                    <div
-                        class="w-[85vw] md:w-[24rem] snap-center bg-white p-6 md:p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow flex flex-col justify-between">
-                        <span
-                            class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">3</span>
-                        <h3 class="font-serif text-xl text-charcoal mb-4 font-bold text-wrap break-words leading-snug">
-                            ¿Cuál es el trago favorito de los
-                            novios?</h3>
-                        <div class="space-y-3">
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q3" value="pisco" class="peer hidden" data-correct="true">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">A.</span> Pisco Sour
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q3" value="gin" class="peer hidden">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">B.</span> Gin Tonic
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q3" value="other" class="peer hidden other-trigger"
-                                    data-target="q3-other">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">C.</span> Otra / Escribir respuesta
-                                </div>
-                            </label>
-                            <input type="text" id="q3-other" placeholder="Escribe tu respuesta..."
-                                class="hidden w-full mt-2 px-4 py-2 border border-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-sage text-charcoal bg-white transition-all">
-                        </div>
-                    </div>
-
-                    <!-- Q4 -->
-                    <div
-                        class="w-[85vw] md:w-[24rem] snap-center bg-white p-6 md:p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow flex flex-col justify-between">
-                        <span
-                            class="absolute -top-4 -right-4 w-10 h-10 bg-burgundy text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">4</span>
-                        <h3 class="font-serif text-xl text-charcoal mb-4 font-bold text-wrap break-words leading-snug">
-                            ¿Quién dijo 'Te Amo' primero?</h3>
-                        <div class="space-y-3">
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q4" value="el" class="peer hidden">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">A.</span> Él
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q4" value="ella" class="peer hidden">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">B.</span> Ella
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q4" value="same" class="peer hidden" data-correct="true">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">C.</span> Fue al mismo tiempo
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q4" value="other" class="peer hidden other-trigger"
-                                    data-target="q4-other">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-burgundy peer-checked:text-white peer-checked:border-burgundy hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">D.</span> Otra / Escribir respuesta
-                                </div>
-                            </label>
-                            <input type="text" id="q4-other" placeholder="Escribe tu respuesta..."
-                                class="hidden w-full mt-2 px-4 py-2 border border-burgundy rounded-lg focus:outline-none focus:ring-2 focus:ring-burgundy text-charcoal bg-white transition-all">
-                        </div>
-                    </div>
-
-                    <!-- Q5 -->
-                    <div
-                        class="w-[85vw] md:w-[24rem] snap-center bg-white p-6 md:p-8 shadow-lg border border-gray-100 rounded-xl relative flex-shrink-0 hover:shadow-xl transition-shadow flex flex-col justify-between">
-                        <span
-                            class="absolute -top-4 -left-4 w-10 h-10 bg-sage text-white flex items-center justify-center rounded-full font-serif font-bold text-xl shadow-md">5</span>
-                        <h3 class="font-serif text-xl text-charcoal mb-4 font-bold text-wrap break-words leading-snug">
-                            ¿A dónde nos iríamos de Luna de Miel
-                            si fuera sorpresa?</h3>
-                        <div class="space-y-3">
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q5" value="playa" class="peer hidden" data-correct="true">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">A.</span> Playa
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q5" value="montana" class="peer hidden">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">B.</span> Montaña
-                                </div>
-                            </label>
-                            <label class="block cursor-pointer group">
-                                <input type="radio" name="q5" value="other" class="peer hidden other-trigger"
-                                    data-target="q5-other">
-                                <div
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage hover:bg-gray-50 transition-all">
-                                    <span class="font-bold mr-2">C.</span> Otra / Escribir respuesta
-                                </div>
-                            </label>
-                            <input type="text" id="q5-other" placeholder="Escribe tu respuesta..."
-                                class="hidden w-full mt-2 px-4 py-2 border border-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-sage text-charcoal bg-white transition-all">
-                        </div>
-                    </div>
-
-                    <!-- Result Button (Last Slide) -->
-                    <div
-                        class="min-w-[85vw] md:min-w-[calc(33.333%-1rem)] snap-center flex items-center justify-center flex-shrink-0 py-8">
-                        <button type="button" id="trivia-submit-btn"
-                            class="bg-charcoal text-ivory px-10 py-4 rounded-full font-serif text-xl hover:bg-sage transition-colors shadow-xl transform hover:-translate-y-1">
-                            Ver Resultado 🎲
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Result Modal/Section (Hidden by default) -->
-                <div id="trivia-result"
-                    class="hidden w-[90vw] md:w-full mt-10 text-center bg-white p-8 rounded-xl shadow-xl border border-gray-100 max-w-2xl mx-auto">
-                    <h3 class="font-serif text-3xl text-charcoal mb-4">¡Tu Resultado!</h3>
-                    <p class="font-sans text-xl text-sage-dark mb-6">Obtuviste <span id="trivia-score"
-                            class="font-bold text-3xl">0</span> de 5 aciertos</p>
-                    <p id="trivia-message" class="font-handwriting text-2xl text-slate-600 mb-8">¡Gracias por jugar!</p>
-
-                    <!-- Share Score Form -->
-                    <div id="trivia-share-section" class="mt-8 max-w-sm mx-auto">
-                        <div class="bg-sage/10 p-6 rounded-xl border border-sage/20">
-                            <h4 class="font-serif text-xl text-charcoal mb-2">¿Quieres contarnos? 💌</h4>
-                            <p class="text-sm text-slate-600 mb-4">Ingresa tu nombre para que sepamos qué tal te fue.
-                            </p>
-
-                            <div class="space-y-3">
-                                <input type="text" id="trivia-guest-name" placeholder="Tu Nombre o Apodo"
-                                    class="w-full p-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage transition-all text-center font-sans text-charcoal">
-
-                                <button id="trivia-share-submit"
-                                    class="w-full bg-sage text-white font-sans text-sm uppercase tracking-widest py-3 rounded-lg hover:bg-sage-dark transition-colors shadow-sm flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-paper-plane"></i> Enviar Resultado
-                                </button>
-                            </div>
-
-                            <p id="trivia-share-success"
-                                class="hidden mt-4 text-green-700 font-bold bg-green-50 p-2 rounded-lg border border-green-100">
-                                <i class="fa-solid fa-check mr-2"></i> ¡Enviado! Gracias por jugar.
-                            </p>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Scroll Indicator for RSVP -->
-                <div class="absolute bottom-4 left-0 right-0 text-center animate-bounce z-10 pointer-events-none">
-                    <p class="text-xs uppercase tracking-widest text-charcoal/50 mb-1">Confirmar Asistencia abajo</p>
-                    <i class="fa-solid fa-chevron-down text-charcoal/50 text-xl"></i>
-                </div>
-        </section>
-
-        <!-- NEW INTERACTIVE SECTIONS END -->
-
-        <!-- F. RSVP (PARTY MODE) -->
-        <section id="rsvp" class="py-32 bg-night relative overflow-hidden">
-            <div class="max-w-xl mx-auto px-4 w-full relative z-10 reveal">
-                <div class="glass p-8 md:p-12 rounded-2xl shadow-2xl border border-white/10 bg-white/5">
-                    <div class="text-center mb-10">
-                        <h2 class="font-serif text-4xl text-white mb-4">Confirmar Asistencia</h2>
-                        <p class="font-sans text-white/60 text-sm">Gala y Ceremonia Religiosa - ¡Te esperamos!</p>
-                    </div>
-
-                    <form id="rsvp-form" class="space-y-6">
-                        <div class="space-y-4">
-                            <input type="text" id="rsvp-name" placeholder="Tu Nombre" required
-                                class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white">
-                            <input type="email" id="rsvp-email" placeholder="Tu Correo (Opcional)"
-                                class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white">
-                            <input type="tel" id="rsvp-whatsapp" placeholder="Tu WhatsApp" required
-                                class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white">
-
-                            <!-- Partner Attendance -->
-                            <div class="space-y-3">
-                                <label class="flex items-center space-x-3 cursor-pointer">
-                                    <input type="checkbox" id="has-partner"
-                                        class="w-5 h-5 rounded border-white/20 bg-white/10 text-gold focus:ring-gold">
-                                    <span class="text-white/80 text-sm">¿Vienes con pareja?</span>
-                                </label>
-                                <input type="text" id="partner-name" placeholder="Nombre de tu pareja"
-                                    class="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-white hidden">
-                            </div>
-
-                            <button type="submit" id="rsvp-submit-btn"
-                                class="w-full bg-gold text-night font-bold py-4 uppercase tracking-widest hover:bg-white transition-colors duration-300 mt-4 shadow-[0_0_20px_rgba(197,160,89,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]">
-                                De ahí somos!
-                            </button>
-                        </div>
-
-                        <!-- Success Message (Hidden by default) -->
-                        <div id="rsvp-success"
-                            class="hidden bg-white/10 border-2 border-gold rounded-lg p-6 text-center">
-                            <i class="fa-solid fa-heart text-gold text-4xl mb-3"></i>
-                            <h3 class="text-white font-serif text-2xl mb-2">¡Confirmación Recibida!</h3>
-                            <p class="text-white/80 text-sm mb-4">Estamos muy contentos de que nos acompañes en este día
-                                tan importante. ¡Muchas gracias y nos vemos en la fiesta!</p>
-                            <button
-                                onclick="document.getElementById('rsvp-success').classList.add('hidden'); document.getElementById('rsvp-form').reset();"
-                                class="text-gold text-sm uppercase tracking-wider hover:text-white transition-colors">
-                                Cerrar
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="mt-12 text-center border-t border-white/10 pt-8">
-                        <p class="font-serif text-lg text-white/80 mb-4">Lista de Novios</p>
-                        <a href="#"
-                            class="text-gold text-sm uppercase tracking-widest hover:text-white transition-colors border-b border-gold hover:border-white pb-1">
-                            Tiendas Paris - Código: 21030724
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
 
     </main>
 
     <!-- Lightbox Modal -->
     <div id="lightbox" class="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300" onclick="if(event.target === this) closeLightbox()">
-        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white hover:text-gold transition-colors p-2 z-50">
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white hover:text-charcoal transition-colors p-2 z-50">
             <i class="fa-solid fa-xmark text-4xl"></i>
         </button>
         <img id="lightbox-img" src="" alt="Ampliada" class="max-w-[95vw] max-h-[85vh] object-contain shadow-2xl rounded-sm">
@@ -1303,11 +906,11 @@
     <!-- Custom Supabase Client -->
     <!-- Persistent RSVP CTA -->
     <a href="#rsvp" id="rsvp-cta"
-        class="fixed bottom-0 left-0 w-full bg-ivory/95 backdrop-blur-sm border-t border-sage/30 py-4 z-40 text-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] transition-transform duration-500">
+        class="fixed bottom-0 left-0 w-full bg-gray-50/95 backdrop-blur-sm border-t border-charcoal/30 py-4 z-40 text-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] transition-transform duration-500">
         <div class="flex flex-col items-center justify-center gap-1">
             <span class="font-serif text-sm md:text-base tracking-[0.2em] text-charcoal uppercase">Confirmar Asistencia
                 Abajo</span>
-            <i class="fa-solid fa-chevron-down text-sage-dark animate-bounce"></i>
+            <i class="fa-solid fa-chevron-down text-charcoal-dark animate-bounce"></i>
         </div>
     </a>
 

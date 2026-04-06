@@ -68,24 +68,6 @@ async function uploadGuestPhoto(file, uploaderName, email, whatsapp) {
     }
 }
 
-// Helper function to save trivia results
-async function saveTriviaResult(score, answers, userId = null, guestName = null) {
-    if (!supabaseClient) return { error: 'Supabase not initialized' };
-
-    const { data, error } = await supabaseClient
-        .from('trivia_results')
-        .insert([
-            { score, answers, user_id: userId, guest_name: guestName }
-        ]);
-
-    if (error) {
-        console.error('Error saving trivia result:', error);
-        return { error };
-    }
-
-    return { data };
-}
-
 // Helper function to save RSVP
 async function saveRSVP(rsvpData) {
     if (!supabaseClient) return { error: 'Supabase not initialized' };
@@ -226,7 +208,6 @@ async function fetchSongRequests() {
 
 // Expose functions globally
 window.uploadGuestPhoto = uploadGuestPhoto;
-window.saveTriviaResult = saveTriviaResult;
 window.saveRSVP = saveRSVP;
 window.fetchGuestPhotos = fetchGuestPhotos;
 window.saveSongRequest = saveSongRequest;

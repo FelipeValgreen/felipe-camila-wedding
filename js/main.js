@@ -4,7 +4,7 @@
 // TOAST NOTIFICATION SYSTEM
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
-    const bgColor = type === 'error' ? 'bg-red-500' : 'bg-sage';
+    const bgColor = type === 'error' ? 'bg-red-500' : 'bg-charcoal';
     toast.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white ${bgColor} shadow-xl z-[9999] opacity-0 transition-opacity duration-300 flex items-center gap-2 text-sm font-sans tracking-wide`;
     
     let icon = type === 'error' ? '<i class="fa-solid fa-circle-exclamation"></i>' : '<i class="fa-solid fa-circle-check"></i>';
@@ -102,23 +102,22 @@ window.closeLightbox = function() {
     
 
 
-        // 1. Envelope Intro & Navigation Reveal
-        // 1. Envelope Intro & Navigation Reveal
-        const openBtn = document.getElementById('open-invite');
-        const overlay = document.getElementById('envelope-overlay');
+        // 1. Cinematic Intro & Navigation Reveal
+        const overlay = document.getElementById('cinematic-fade');
         const body = document.body;
         const nav = document.getElementById('main-nav');
 
-        if (openBtn) {
-            openBtn.addEventListener('click', () => {
-                overlay.style.transform = 'translateY(-100%)';
-                setTimeout(() => {
-                    body.classList.remove('locked');
-                    nav.classList.add('visible');
-                    checkReveal(); // Trigger reveal for Hero section
-                }, 1000);
-            });
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait slightly then fade out full white screen
+            setTimeout(() => {
+                if(overlay) overlay.style.opacity = '0';
+                if(nav) {
+                    nav.classList.remove('-translate-y-full', 'opacity-0');
+                    nav.classList.add('translate-y-0', 'opacity-100');
+                }
+                checkReveal(); // Trigger reveal for Hero section
+            }, 500);
+        });
 
         // 2. Scroll Reveal & Sticky Nav
         const reveals = document.querySelectorAll('.reveal');
@@ -372,17 +371,18 @@ window.closeLightbox = function() {
         // RSVP Form Handler
         const rsvpForm = document.getElementById('rsvp-form');
         const hasPartnerCheckbox = document.getElementById('has-partner');
-        const partnerNameInput = document.getElementById('partner-name');
+        const partnerSection = document.getElementById('partner-section');
         const rsvpSuccess = document.getElementById('rsvp-success');
 
-        // Toggle partner name field
+        // Toggle partner section
         if (hasPartnerCheckbox) {
             hasPartnerCheckbox.addEventListener('change', () => {
                 if (hasPartnerCheckbox.checked) {
-                    partnerNameInput.classList.remove('hidden');
+                    partnerSection.classList.remove('hidden');
                 } else {
-                    partnerNameInput.classList.add('hidden');
-                    partnerNameInput.value = '';
+                    partnerSection.classList.add('hidden');
+                    document.getElementById('partner-name').value = '';
+                    document.getElementById('partner-dietary').value = 'ninguna';
                 }
             });
         }
@@ -393,37 +393,39 @@ window.closeLightbox = function() {
                 e.preventDefault();
 
                 const name = document.getElementById('rsvp-name').value;
-                const email = document.getElementById('rsvp-email').value || 'No proporcionado';
                 const whatsapp = document.getElementById('rsvp-whatsapp').value;
+                const dietary = document.getElementById('dietary-restrictions').value;
                 const hasPartner = hasPartnerCheckbox.checked;
-                const partnerName = hasPartner ? partnerNameInput.value : '';
+                const partnerName = hasPartner ? document.getElementById('partner-name').value : '';
+                const partnerDietary = hasPartner ? document.getElementById('partner-dietary').value : '';
 
                 const submitBtn = document.getElementById('rsvp-submit-btn');
+                const originalText = submitBtn.innerHTML;
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+                submitBtn.innerHTML = 'Enviando...';
 
                 // Send email notification using Web3Forms
                 const formData = new FormData();
                 formData.append('access_key', '138e83f9-894d-4a94-bee4-af9392f8ffb9');
-                formData.append('subject', `Nueva Confirmación de Asistencia: ${name}`);
-                formData.append('from_name', 'Sitio Web - Felipe y Camila');
+                formData.append('subject', `Nueva Confirmación Gala: ${name}`);
+                formData.append('from_name', 'Sitio Oficial Boda');
                 formData.append('to_email', 'camilayfelipe.v@gmail.com');
 
-                let message = `Nombre: ${name}\nEmail: ${email}\nWhatsApp: ${whatsapp}`;
+                let message = `Invitado Principal: ${name}\nWhatsApp: ${whatsapp}\nRestricción: ${dietary}`;
                 if (hasPartner) {
-                    message += `\n\n¿Viene con pareja?: Sí\nNombre de pareja: ${partnerName}`;
-                } else {
-                    message += `\n\n¿Viene con pareja?: No`;
+                    message += `\n\nAcompañante: ${partnerName}\nRestricción Acompañante: ${partnerDietary}`;
                 }
                 formData.append('message', message);
 
                 // 1. Prepare Supabase Data
                 const rsvpData = {
                     name,
-                    email,
+                    email: '', // Deprecated minimal form
                     whatsapp,
                     has_partner: hasPartner,
                     partner_name: partnerName,
+                    dietary_restrictions: dietary,
+                    partner_dietary: partnerDietary,
                     created_at: new Date().toISOString()
                 };
 
