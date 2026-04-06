@@ -570,7 +570,7 @@
                     <div class="flex flex-col md:flex-row items-center gap-12 md:gap-24">
                         <div class="w-full md:w-1/2">
                             <div class="aspect-[3/4] overflow-hidden bg-gray-100">
-                                <img src="images/cami_editorial.png" alt="Cami Editorial" class="w-full h-full object-cover grayscale opacity-90 hover:scale-105 transition-transform duration-1000">
+                                <img src="images/cami_sunglasses.png" alt="Cami Sunglasses" class="w-full h-full object-cover grayscale opacity-90 hover:scale-105 transition-transform duration-1000">
                             </div>
                         </div>
                         <div class="w-full md:w-1/2 text-left">
@@ -633,16 +633,24 @@
                 </div>
                 <p class="font-sans text-slate-500 mb-12">Etiquétanos en tus fotos para que aparezcan aquí.</p>
 
-                <!-- Instagram Feed Container (3x3 Masonry/Grid) -->
-                <div id="instagram-feed" class="grid grid-cols-3 gap-2 md:gap-4 max-w-4xl mx-auto w-full">
-                    <!-- Upload Prompt Card (Static First Item) -->
-                    <div onclick="document.getElementById('paparazzi').scrollIntoView({behavior: 'smooth'})"
-                        class="aspect-square relative group cursor-pointer bg-gray-50 border border-gray-200 flex flex-col items-center justify-center text-center p-2 text-gray-400 hover:text-charcoal hover:border-charcoal transition-colors">
-                        <i class="fa-solid fa-camera text-2xl md:text-3xl mb-2"></i>
-                        <span class="font-sans text-[10px] md:text-xs uppercase tracking-widest text-inherit">Subir<br>Foto</span>
-                    </div>
+                <!-- Instagram Feed Container (Horizontal Carousel) -->
+                <div class="relative max-w-6xl mx-auto group">
+                    <div id="instagram-feed" class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-8 pt-4 px-4 scrollbar-hide items-stretch">
+                        <!-- Upload Prompt Card (Static First Item) -->
+                        <div onclick="document.getElementById('paparazzi').scrollIntoView({behavior: 'smooth'})"
+                            class="w-[280px] flex-shrink-0 snap-start aspect-[4/5] relative group cursor-pointer bg-gray-50 border border-gray-100 flex flex-col items-center justify-center text-center p-6 text-gray-400 hover:text-charcoal hover:bg-gray-100 transition-colors shadow-sm">
+                            <i class="fa-solid fa-camera text-4xl mb-4 text-charcoal/50"></i>
+                            <h3 class="font-serif text-2xl text-charcoal mb-2">Subir Foto</h3>
+                            <span class="font-sans text-[10px] uppercase tracking-widest text-gray-400 mt-2">Comparte tu visión</span>
+                        </div>
 
-                    <!-- Dynamic photos will be appended here via JS -->
+                        <!-- Dynamic photos will be appended here via JS -->
+                    </div>
+                    
+                    <!-- Swipe Hint (Mobile Only) -->
+                    <div class="md:hidden absolute -bottom-2 left-0 right-0 text-center text-gray-400 text-[10px] tracking-widest uppercase animate-pulse">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Desliza <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </div>
                 </div>
             </div>
         </section>

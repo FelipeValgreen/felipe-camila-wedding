@@ -322,23 +322,18 @@ window.closeLightbox = function() {
                 const existingDynamicInsta = instaFeed.querySelectorAll('.dynamic-photo');
                 existingDynamicInsta.forEach(el => el.remove());
 
-                // Limit exactly to 8 dynamic photos (9 total with the static prompt)
-                const slicedInstaData = uniqueInstaData.slice(0, 8);
+                // Limit up to 50 dynamic photos
+                const slicedInstaData = uniqueInstaData.slice(0, 50);
 
                 const instaHtml = slicedInstaData.map((photo, index) => {
-                    // Create an asymmetrical layout natively in CSS Grid
-                    let layoutClass = "aspect-square";
-                    if (index === 0) layoutClass = "col-span-2 row-span-2 aspect-auto border-0";
-                    else if (index === 4) layoutClass = "col-span-2 aspect-[2/1] border-0";
-
                     return `
-                    <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="dynamic-photo ${layoutClass} overflow-hidden relative group cursor-pointer bg-gray-100">
+                    <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="dynamic-photo w-[280px] flex-shrink-0 snap-start aspect-[4/5] overflow-hidden relative group cursor-pointer bg-gray-100 shadow-sm border border-gray-100">
                         <img src="${photo.url}" 
                              class="w-full h-full object-cover grayscale opacity-90 transition-all duration-700 group-hover:scale-105 group-hover:grayscale-0 group-hover:opacity-100" 
                              alt="Guest Photo"
                              onerror="this.closest('.dynamic-photo').remove()">
                         <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white/80 text-xl font-light"></i>
+                            <i class="fa-brands fa-instagram text-white/80 text-3xl font-light drop-shadow-md"></i>
                         </div>
                     </div>
                 `}).join('');
