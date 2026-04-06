@@ -317,24 +317,31 @@ window.closeLightbox = function() {
             const instaData = allPhotos.filter(item => !item.url.includes('source=qr'));
             const uniqueInstaData = getUniqueData(instaData);
 
-            // A. Populate Instagram Feed (Only OLD photos, per user request)
+            // A. Populate Instagram Feed (Masonry Grid - B&W)
             if (instaFeed && uniqueInstaData.length > 0) {
                 const existingDynamicInsta = instaFeed.querySelectorAll('.dynamic-photo');
                 existingDynamicInsta.forEach(el => el.remove());
 
-                const instaHtml = uniqueInstaData.map(photo => `
-                    <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="dynamic-photo aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer border border-gray-100">
+                // Limit exactly to 8 dynamic photos (9 total with the static prompt)
+                const slicedInstaData = uniqueInstaData.slice(0, 8);
+
+                const instaHtml = slicedInstaData.map((photo, index) => {
+                    // Create an asymmetrical layout natively in CSS Grid
+                    let layoutClass = "aspect-square";
+                    if (index === 0) layoutClass = "col-span-2 row-span-2 aspect-auto border-0";
+                    else if (index === 4) layoutClass = "col-span-2 aspect-[2/1] border-0";
+
+                    return `
+                    <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="dynamic-photo ${layoutClass} overflow-hidden relative group cursor-pointer bg-gray-100">
                         <img src="${photo.url}" 
-                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                             class="w-full h-full object-cover grayscale opacity-90 transition-all duration-700 group-hover:scale-105 group-hover:grayscale-0 group-hover:opacity-100" 
                              alt="Guest Photo"
                              onerror="this.closest('.dynamic-photo').remove()">
-                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <span class="text-white text-xs font-handwriting bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
-                                <i class="fa-solid fa-camera mr-1"></i> ${photo.uploader_name || 'Anónimo'}
-                            </span>
+                        <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center">
+                            <i class="fa-brands fa-instagram text-white/80 text-xl font-light"></i>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
 
                 instaFeed.insertAdjacentHTML('beforeend', instaHtml);
             }

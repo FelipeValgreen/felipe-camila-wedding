@@ -277,7 +277,7 @@
             </div>
 
             <div class="text-center z-10 reveal px-4">
-                <p class="font-sans text-[10px] tracking-[0.5em] text-gray-500 uppercase mb-8">El Comienzo</p>
+                <p class="font-handwriting text-3xl md:text-4xl text-charcoal mb-6">¡Nos casamos!</p>
                 <h1 class="font-serif text-6xl md:text-8xl text-charcoal mb-4 tracking-tight leading-none uppercase">Felipe<br>& Camila</h1>
                 <div class="w-16 h-[1px] bg-charcoal/50 mx-auto mb-8 mt-6"></div>
 
@@ -324,21 +324,21 @@
                         <span class="font-sans text-xs tracking-widest text-gray-400 mb-4 block">18:00</span>
                         <div class="w-px h-12 bg-charcoal/20 mb-4"></div>
                         <h3 class="font-serif text-2xl mb-2 text-charcoal">La Ceremonia</h3>
-                        <p class="text-gray-500 text-xs tracking-wide uppercase">El "Sí" quiero</p>
+                        <p class="text-gray-500 text-xs tracking-wide uppercase">Iglesia Divina Misericordia</p>
                     </div>
 
                     <div class="group flex flex-col items-center">
                         <span class="font-sans text-xs tracking-widest text-gray-400 mb-4 block">19:30</span>
                         <div class="w-px h-12 bg-charcoal/20 mb-4"></div>
-                        <h3 class="font-serif text-2xl mb-2 text-charcoal">Cóctel en la Laguna</h3>
-                        <p class="text-gray-500 text-xs tracking-wide uppercase">Alta gastronomía & Encuentros</p>
+                        <h3 class="font-serif text-2xl mb-2 text-charcoal">Cóctel & Música</h3>
+                        <p class="text-gray-500 text-xs tracking-wide uppercase">Grupo Musical en Vivo</p>
                     </div>
 
                     <div class="group flex flex-col items-center">
                         <span class="font-sans text-xs tracking-widest text-gray-400 mb-4 block">21:00</span>
                         <div class="w-px h-12 bg-charcoal/20 mb-4"></div>
-                        <h3 class="font-serif text-2xl mb-2 text-charcoal">La Gala</h3>
-                        <p class="text-gray-500 text-xs tracking-wide uppercase">Fiesta Exclusiva</p>
+                        <h3 class="font-serif text-2xl mb-2 text-charcoal">Comida & Fiesta</h3>
+                        <p class="text-gray-500 text-xs tracking-wide uppercase">A celebrar con todo</p>
                     </div>
                 </div>
             </div>
@@ -620,200 +620,16 @@
                 </div>
                 <p class="font-sans text-slate-500 mb-12">Etiquétanos en tus fotos para que aparezcan aquí.</p>
 
-                <!-- Instagram Feed Container (Horizontal Scroll) -->
-                <div id="instagram-feed"
-                    class="grid grid-rows-3 grid-flow-col gap-1 overflow-x-auto snap-x snap-mandatory w-full h-[100vw] md:h-[600px] scrollbar-hide">
+                <!-- Instagram Feed Container (3x3 Masonry/Grid) -->
+                <div id="instagram-feed" class="grid grid-cols-3 gap-2 md:gap-4 max-w-4xl mx-auto w-full">
                     <!-- Upload Prompt Card (Static First Item) -->
                     <div onclick="document.getElementById('paparazzi').scrollIntoView({behavior: 'smooth'})"
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center relative group cursor-pointer bg-charcoal border-2 border-dashed border-charcoal flex flex-col items-center justify-center text-center p-2 text-charcoal hover:bg-charcoal/90 transition-colors">
-                        <i class="fa-solid fa-camera text-3xl mb-2 animate-bounce"></i>
-                        <span
-                            class="font-serif text-sm font-bold uppercase tracking-widest leading-none">Subir<br>Foto</span>
+                        class="aspect-square relative group cursor-pointer bg-gray-50 border border-gray-200 flex flex-col items-center justify-center text-center p-2 text-gray-400 hover:text-charcoal hover:border-charcoal transition-colors">
+                        <i class="fa-solid fa-camera text-2xl md:text-3xl mb-2"></i>
+                        <span class="font-sans text-[10px] md:text-xs uppercase tracking-widest text-inherit">Subir<br>Foto</span>
                     </div>
 
-                    <!-- Static Photos (Restored) -->
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_bar_group.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_bbq.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_beach_group.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_beach_selfie.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_boat_group.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_car_group.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_family_selfie.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_formal_group.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_formal_selfie.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_hiking.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_hiking_group.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_party_1.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_party_2.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_party_selfie.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_restaurant.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_table_group.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_vineyard.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-                    <div
-                        class="aspect-square w-[33vw] md:w-[200px] snap-center overflow-hidden relative group cursor-pointer">
-                        <img src="images/insta_wedding_selfie.jpg"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            alt="Instagram Photo">
-                        <div
-                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram text-white text-xl"></i>
-                        </div>
-                    </div>
-
-                    <!-- Dynamic photos will be appended here -->
+                    <!-- Dynamic photos will be appended here via JS -->
                 </div>
             </div>
         </section>
