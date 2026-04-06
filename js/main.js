@@ -346,33 +346,7 @@ window.closeLightbox = function() {
                 instaFeed.insertAdjacentHTML('beforeend', instaHtml);
             }
 
-            // B. Populate Guest Carousel (BOTH old and new photos)
-            if (guestCarousel && uniqueAllData.length > 0) {
-                    // Remove existing dynamic photos
-                    const existingDynamicCarousel = guestCarousel.querySelectorAll('.dynamic-photo');
-                    existingDynamicCarousel.forEach(el => el.remove());
-
-                    const carouselHtml = uniqueAllData.map(photo => `
-                        <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="dynamic-photo min-w-[220px] aspect-[4/5] relative flex-shrink-0 bg-white p-2 shadow-md transform hover:rotate-1 transition-transform snap-center border border-gray-100 cursor-pointer">
-                            <img src="${photo.url}" 
-                                 class="w-full h-full object-cover" 
-                                 onerror="this.closest('.dynamic-photo').remove()">
-                            <div class="absolute bottom-4 left-2 right-2 flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm py-1 rounded-full shadow-sm">
-                                <div class="w-6 h-6 rounded-full bg-sage text-white flex items-center justify-center text-xs font-bold">
-                                    ${photo.uploader_name ? photo.uploader_name[0].toUpperCase() : 'A'}
-                                </div>
-                                <span class="font-handwriting text-charcoal text-sm truncate">${photo.uploader_name || 'Anónimo'}</span>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    // Insert after the static CTA card (which is index 0)
-                    if (guestCarousel.children.length > 0) {
-                        guestCarousel.insertAdjacentHTML('beforeend', carouselHtml);
-                    } else {
-                        guestCarousel.innerHTML = carouselHtml;
-                    }
-                }
+            // B. Populate Guest Carousel has been removed.
         }
 
         // RSVP Form Handler

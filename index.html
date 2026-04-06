@@ -269,34 +269,44 @@
     <!-- MAIN CONTENT -->
     <main class="relative overflow-hidden">
 
-        <!-- A. HERO (ULTRA LUXURY B&W) -->
-        <section id="hero" class="min-h-screen flex items-center justify-center pt-24 pb-20 relative bg-white overflow-hidden">
-            <!-- Subtle Image Background (Arboleda Chicureo context via Unsplash B&W architecture / nature) -->
+        <!-- A. HERO (THE FORMAL INVITATION CARD) -->
+        <section id="hero" class="min-h-screen flex items-center justify-center relative bg-gray-100 overflow-hidden py-32 px-4">
+            <!-- Subtle Image Background -->
             <div class="absolute inset-0 z-0">
-                <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop" alt="Arboleda Chicureo" class="w-full h-full object-cover grayscale opacity-20 filter contrast-125">
+                <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop" alt="Arboleda Chicureo" class="w-full h-full object-cover grayscale opacity-30 filter contrast-125">
             </div>
 
-            <div class="text-center z-10 reveal px-4">
-                <p class="font-handwriting text-3xl md:text-4xl text-charcoal mb-6">¡Nos casamos!</p>
-                <h1 class="font-serif text-6xl md:text-8xl text-charcoal mb-4 tracking-tight leading-none uppercase">Felipe<br>& Camila</h1>
-                <div class="w-16 h-[1px] bg-charcoal/50 mx-auto mb-8 mt-6"></div>
+            <!-- The Invitation Card -->
+            <div class="relative z-10 w-full max-w-md mx-auto bg-white/95 backdrop-blur shadow-2xl border flex flex-col items-center border-gray-200 px-10 py-16 text-center reveal">
+                <p class="font-handwriting text-4xl md:text-5xl text-charcoal mb-8 mt-4">¡Nos casamos!</p>
+                
+                <h1 class="font-serif text-5xl md:text-6xl text-charcoal mb-2 tracking-tight leading-none uppercase">Felipe</h1>
+                <div class="font-handwriting text-2xl text-gray-400 my-2">&</div>
+                <h1 class="font-serif text-5xl md:text-6xl text-charcoal mb-8 tracking-tight leading-none uppercase">Camila</h1>
+                
+                <div class="w-12 h-[1px] bg-charcoal/50 mx-auto mb-8 mt-2"></div>
 
-                <div class="flex flex-col items-center space-y-2 mb-16">
-                    <p class="font-sans text-[11px] tracking-[0.3em] uppercase text-charcoal">Viernes veintitrés de Octubre</p>
-                    <p class="font-sans text-[11px] tracking-[0.3em] uppercase text-gray-500">2026</p>
+                <div class="flex flex-col items-center space-y-2 mb-10">
+                    <p class="font-sans text-[10px] tracking-[0.3em] uppercase text-gray-500">Tenemos el honor de invitarte a</p>
+                    <p class="font-serif text-lg text-charcoal mt-2">Nuestra Ceremonia Religiosa y Gala</p>
+                </div>
+
+                <div class="flex flex-col items-center space-y-4 mb-4">
+                    <p class="font-sans text-[11px] tracking-[0.3em] uppercase border-y border-charcoal/30 py-2 w-full text-charcoal">Viernes veintitrés de Octubre</p>
+                    <p class="font-serif text-2xl text-charcoal italic tracking-wide">2026</p>
                 </div>
 
                 <!-- MINIMAL LOCATION DATA -->
-                <div class="max-w-md mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 text-left border-t border-gray-200 pt-8 mt-12">
-                    <div class="border-l border-charcoal pl-4">
-                        <p class="font-sans text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-2">Ceremonia Religiosa</p>
-                        <h3 class="font-serif text-xl text-charcoal mb-1">Iglesia Divina Misericordia</h3>
+                <div class="max-w-full w-full mx-auto grid grid-cols-1 gap-6 text-center pt-8">
+                    <div>
+                        <p class="font-sans text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-1">Ceremonia</p>
+                        <h3 class="font-serif text-lg text-charcoal mb-1">Iglesia Divina Misericordia</h3>
                         <p class="font-sans text-xs text-gray-600">18:00 Horas</p>
                     </div>
-                    <div class="border-l border-charcoal pl-4">
-                        <p class="font-sans text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-2">Recepción & Gala</p>
-                        <h3 class="font-serif text-xl text-charcoal mb-1">C.E. Arboleda Chicureo</h3>
-                        <p class="font-sans text-xs text-gray-600">Al finalizar la ceremonia</p>
+                    <div>
+                        <p class="font-sans text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-1">Gala</p>
+                        <h3 class="font-serif text-lg text-charcoal mb-1">Centro de Eventos Arboleda</h3>
+                        <p class="font-sans text-xs text-gray-600">Chicureo</p>
                     </div>
                 </div>
             </div>
@@ -498,46 +508,6 @@
                     <p id="upload-status" class="mt-4 text-xs font-bold hidden"></p>
                 </div>
 
-                <!-- Live Gallery Carousel Container -->
-                <div class="relative group max-w-6xl mx-auto">
-                    <!-- Navigation Arrows (Visible on Mobile, Hover on Desktop) -->
-                    <button
-                        onclick="document.getElementById('guest-gallery').scrollBy({left: -300, behavior: 'smooth'})"
-                        class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 bg-charcoal text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-80 md:opacity-0 md:group-hover:opacity-100 font-bold">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </button>
-                    <button onclick="document.getElementById('guest-gallery').scrollBy({left: 300, behavior: 'smooth'})"
-                        class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 bg-charcoal text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-20 opacity-80 md:opacity-0 md:group-hover:opacity-100 font-bold">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </button>
-
-                    <!-- Swipe Hint (Mobile Only) -->
-                    <div
-                        class="md:hidden absolute -bottom-8 left-0 right-0 text-center text-charcoal text-xs animate-pulse">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Desliza para ver más <i
-                            class="fa-solid fa-arrow-right ml-1"></i>
-                    </div>
-
-                    <div id="guest-gallery"
-                        class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 px-4 scrollbar-hide h-80 justify-start">
-                        <!-- Photos will be loaded dynamically from Supabase -->
-                        <!-- CTA Card -->
-                        <div
-                            class="min-w-[80vw] md:min-w-[300px] aspect-[4/5] flex-shrink-0 bg-white p-6 shadow-md border-2 border-dashed border-charcoal-light flex flex-col items-center justify-center text-center snap-center relative">
-                            <div class="text-charcoal-dark/80">
-                                <i class="fa-solid fa-camera text-5xl mb-4 text-charcoal"></i>
-                                <h3 class="font-serif text-2xl mb-2 text-charcoal">¡Sube tu foto!</h3>
-                                <p class="font-sans text-sm text-slate-500 mb-4">Sé el primero en compartir un momento
-                                    especial.</p>
-                                <span
-                                    class="inline-block bg-charcoal text-white text-xs px-3 py-1 rounded-full uppercase tracking-widest font-bold animate-bounce">
-                                    ↑ Formulario Arriba ↑
-                                </span>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
         </section>
 
         <!-- OUR STORY SECTION (Editorial Layout) -->
