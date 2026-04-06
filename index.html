@@ -13,8 +13,8 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Matrimonio Civil de Felipe y Camila. Celebración, Fiesta y Amor.">
-    <title>Felipe & Camila | Matrimonio Civil</title>
+    <meta name="description" content="Felipe y Camila se casan el 23 de Octubre de 2026. Ceremonia religiosa en la Iglesia Divina Misericordia y Gala en Centro de Eventos Arboleda Chicureo.">
+    <title>Felipe & Camila | 23 de Octubre 2026</title>
 
     <!-- Google Fonts: Amatic SC, Lora, Cinzel Decorative, Montserrat -->
         <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" as="style">
@@ -251,8 +251,9 @@
                     overlay.style.transform = 'translateY(-100%)';
                     setTimeout(() => {
                         body.classList.remove('locked');
-                        // Ensure layout recalculation if necessary
                         window.dispatchEvent(new Event('resize'));
+                        // Reveal nav after envelope opens
+                        if (window.revealNav) window.revealNav();
                     }, 500);
                 });
             }
@@ -308,11 +309,9 @@
     <main class="relative overflow-hidden">
 
         <!-- A. HERO (THE FORMAL INVITATION CARD) -->
-        <section id="hero" class="min-h-screen flex items-center justify-center relative bg-gray-100 overflow-hidden py-32 px-4">
-            <!-- Subtle Image Background -->
-            <div class="absolute inset-0 z-0">
-                <img src="images/uploaded_image_4_1764298805324.jpg" alt="Arboleda Chicureo" class="w-full h-full object-cover grayscale opacity-30 filter contrast-125">
-            </div>
+        <section id="hero" class="min-h-screen flex items-center justify-center relative bg-white overflow-hidden py-32 px-4">
+            <!-- Pure white editorial background with subtle grain texture -->
+            <div class="absolute inset-0 z-0" style="background-image: radial-gradient(ellipse at 20% 50%, #f5f5f0 0%, #ffffff 60%, #f9f9f7 100%);"></div>
 
             <!-- The Invitation Card -->
             <div class="relative z-10 w-full max-w-md mx-auto bg-white/95 backdrop-blur shadow-2xl border flex flex-col items-center border-gray-200 px-10 py-16 text-center reveal">
@@ -476,7 +475,7 @@
 
                         <button type="submit" id="rsvp-submit-btn"
                             class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-8">
-                            Confirmar
+                            Confirmar Asistencia
                         </button>
                     </form>
 
@@ -585,8 +584,8 @@
                     <!-- Chapter 2 (Text Left, Image Right) -->
                     <div class="flex flex-col md:flex-row-reverse items-center gap-12 md:gap-24">
                         <div class="w-full md:w-1/2">
-                            <div class="aspect-[4/3] md:aspect-[3/4] overflow-hidden bg-gray-100">
-                                <img src="https://images.unsplash.com/photo-1542044896530-05d85be9b11a?q=80&w=1925&auto=format&fit=crop" alt="Ciudadanos del Mundo" class="w-full h-full object-cover grayscale opacity-90 hover:scale-105 transition-transform duration-1000">
+                            <div class="aspect-[3/4] overflow-hidden bg-gray-100">
+                                <img src="images/felipe_editorial.png" alt="Felipe Editorial" class="w-full h-full object-cover grayscale opacity-90 hover:scale-105 transition-transform duration-1000">
                             </div>
                         </div>
                         <div class="w-full md:w-1/2 text-left md:text-right">
@@ -658,10 +657,10 @@
         <!-- 2. DJ BOOTH ("Misión: Pista Llena") -->
         <section id="dj-booth" class="py-24 relative bg-charcoal text-white">
             <div class="max-w-3xl mx-auto px-6 text-center">
-                <div class="mb-6 text-5xl text-charcoal">
+                <div class="mb-6 text-5xl text-white/60">
                     <i class="fa-solid fa-compact-disc fa-spin" style="animation-duration: 3s;"></i>
                 </div>
-                <h2 class="font-serif text-4xl md:text-5xl text-charcoal mb-2">Misión: Pista Llena</h2>
+                <h2 class="font-serif text-4xl md:text-5xl text-white mb-2">Misión: Pista Llena</h2>
                 <p class="font-sans text-white/70 mb-10">Ayúdanos a armar la playlist definitiva. ¿Qué canción no puede
                     faltar?</p>
 
@@ -683,7 +682,7 @@
                                 class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-charcoal focus:ring-1 focus:ring-gray-300 transition-colors">
                         </div>
                         <button type="submit" id="dj-submit-btn"
-                            class="w-full bg-charcoal text-charcoal font-bold py-3 rounded-lg hover:bg-white transition-colors uppercase tracking-widest flex items-center justify-center gap-2">
+                            class="w-full bg-white/10 border border-white/30 text-white font-bold py-3 rounded-lg hover:bg-white hover:text-charcoal transition-colors uppercase tracking-widest flex items-center justify-center gap-2">
                             <span>Solicitar Canción 🎵</span>
                         </button>
                     </form>

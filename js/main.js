@@ -28,30 +28,7 @@ window.alert = function(msg) {
 };
 
 
-        const instaScroll = document.getElementById('insta-scroll');
-        const dots = document.querySelectorAll('#instagram .rounded-full'); // Select dots within Instagram section
-
-        if (instaScroll && dots.length === 2) {
-            instaScroll.addEventListener('scroll', () => {
-                const scrollPosition = instaScroll.scrollLeft;
-                const width = instaScroll.clientWidth;
-                const index = Math.round(scrollPosition / width);
-
-                // Update dots
-                if (index === 0) {
-                    dots[0].classList.remove('bg-gray-300');
-                    dots[0].classList.add('bg-charcoal');
-                    dots[1].classList.remove('bg-charcoal');
-                    dots[1].classList.add('bg-gray-300');
-                } else {
-                    dots[0].classList.remove('bg-charcoal');
-                    dots[0].classList.add('bg-gray-300');
-                    dots[1].classList.remove('bg-gray-300');
-                    dots[1].classList.add('bg-charcoal');
-                }
-            });
-        }
-    
+// Note: insta-scroll carousel dots removed — feed is now a horizontal flex carousel
 
 // LIGHTBOX LOGIC
 window.openLightbox = function(url, name) {
@@ -102,22 +79,27 @@ window.closeLightbox = function() {
     
 
 
-        // 1. Cinematic Intro & Navigation Reveal
-        const overlay = document.getElementById('cinematic-fade');
-        const body = document.body;
+        // 1. Navigation Reveal (triggered when envelope is opened)
         const nav = document.getElementById('main-nav');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Wait slightly then fade out full white screen
-            setTimeout(() => {
-                if(overlay) overlay.style.opacity = '0';
-                if(nav) {
-                    nav.classList.remove('-translate-y-full', 'opacity-0');
-                    nav.classList.add('translate-y-0', 'opacity-100');
-                }
-                checkReveal(); // Trigger reveal for Hero section
-            }, 500);
-        });
+        // Nav is revealed after envelope interaction
+        // The envelope button in index.html calls this via DOMContentLoaded
+        // We expose a helper for it
+        window.revealNav = function() {
+            if (nav) {
+                nav.classList.remove('-translate-y-full', 'opacity-0');
+                nav.classList.add('translate-y-0', 'opacity-100');
+            }
+            checkReveal();
+        };
+
+        // Also reveal after short delay for cases where DOMContentLoaded has passed
+        setTimeout(() => {
+            const overlay = document.getElementById('envelope-overlay');
+            if (!overlay || overlay.style.transform === 'translateY(-100%)') {
+                window.revealNav();
+            }
+        }, 600);
 
         // 2. Scroll Reveal & Sticky Nav
         const reveals = document.querySelectorAll('.reveal');
