@@ -109,8 +109,8 @@ async function fetchGuestPhotos() {
     const { data, error } = await supabaseClient
         .from('guest_photos')
         .select('*')
-        .order('created_at', { ascending: true })
-        .limit(20);
+        .order('created_at', { ascending: false })
+        .limit(50);
 
     if (error) {
         console.error('Error fetching photos:', error);

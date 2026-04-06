@@ -88,7 +88,7 @@
             // The SQL policy in the plan only allows SELECT where visible=true. 
             // For this admin panel to work without a Service Key or Auth, we assume you alter RLS to allow SELECT all for now.
             const { data, error } = await supabaseClient
-                .from('guest_photo_uploads')
+                .from('guest_photos')
                 .select('*')
                 .order('created_at', { ascending: false });
 
@@ -105,33 +105,28 @@
             tbody.innerHTML = data.map(photo => `
                 <tr class="hover:bg-gray-50 transition-colors" id="row-${photo.id}">
                     <td class="p-4">
-                        <a href="${photo.public_url}" target="_blank">
-                            <img src="${photo.public_url}" class="w-16 h-16 object-cover rounded shadow-sm border border-gray-200">
+                        <a href="${photo.url}" target="_blank">
+                            <img src="${photo.url}" class="w-16 h-16 object-cover rounded shadow-sm border border-gray-200">
                         </a>
                     </td>
                     <td class="p-4">
-                        <p class="font-bold text-gray-800">${photo.guest_name || 'Anónimo'}</p>
-                        <p class="text-xs text-gray-500 mb-1">Token: <span class="bg-yellow-100 text-yellow-800 px-1 rounded font-mono">${photo.guest_token || 'N/A'}</span></p>
+                        <p class="font-bold text-gray-800">${photo.uploader_name || 'Anónimo'}</p>
                         <p class="text-xs text-gray-400 font-mono">${new Date(photo.created_at).toLocaleString()}</p>
                     </td>
                     <td class="p-4">
                         <div class="text-xs text-gray-500 space-y-1">
-                            <p><span class="font-bold">Original:</span> ${photo.original_filename}</p>
-                            <p><span class="font-bold">Peso:</span> ${(photo.file_size / 1024 / 1024).toFixed(2)} MB</p>
-                            <p><span class="font-bold">Dispositivo:</span> ${photo.device_type} (${photo.browser})</p>
+                            <p><span class="font-bold">Metadata:</span> N/A para la tabla de fallback</p>
                         </div>
                     </td>
                     <td class="p-4 text-center">
-                        ${photo.visible_in_gallery 
-                            ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full"><i class="fa-solid fa-eye"></i> Visible</span>' 
-                            : '<span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full"><i class="fa-solid fa-eye-slash"></i> Oculta</span>'}
+                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full"><i class="fa-solid fa-eye"></i> Visible</span>
                     </td>
                     <td class="p-4 text-right space-x-2">
-                        <button onclick="toggleVisibility('${photo.id}', ${!photo.visible_in_gallery})" 
-                                class="px-3 py-1 text-sm font-bold rounded-lg border ${photo.visible_in_gallery ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50'}">
-                            ${photo.visible_in_gallery ? 'Ocultar' : 'Aprobar'}
+                        <button onclick="deletePhoto('${photo.id}')" 
+                                class="px-3 py-1 text-sm font-bold rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
+                            Eliminar
                         </button>
-                        <a href="${photo.public_url}" download="foto_${photo.guest_name}.jpg" class="px-3 py-1 text-sm font-bold rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50">
+                        <a href="${photo.url}" download="foto_${photo.uploader_name}.jpg" class="px-3 py-1 text-sm font-bold rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50">
                             Descargar
                         </a>
                     </td>
@@ -139,15 +134,15 @@
             `).join('');
         }
 
-        async function toggleVisibility(id, newStatus) {
-            // Note: Update via Anon Key requires valid RLS Policy allowing update.
+        async function deletePhoto(id) {
+            if (!confirm('¿Estás seguro que deseas eliminar esta foto de la galería?')) return;
             const { error } = await supabaseClient
-                .from('guest_photo_uploads')
-                .update({ visible_in_gallery: newStatus })
+                .from('guest_photos')
+                .delete()
                 .eq('id', id);
 
             if (error) {
-                alert('Error de base de datos (Probablemente reglas RLS bloqueando UPDATE): ' + error.message);
+                alert('Error al eliminar: ' + error.message);
                 console.error(error);
                 return;
             }

@@ -73,12 +73,12 @@
 
             try {
                 let query = supabaseClient
-                    .from('guest_photo_uploads')
-                    .select('public_url, guest_name, created_at')
+                    .from('guest_photos')
+                    .select('url, uploader_name, created_at')
                     .order('created_at', { ascending: false });
                     
                 if (guestFilter) {
-                    query = query.eq('guest_token', guestFilter);
+                    query = query.eq('uploader_name', guestFilter);
                 }
 
                 const { data, error } = await query;
@@ -96,9 +96,9 @@
                     const el = document.createElement('div');
                     el.className = 'break-inside-avoid relative group mb-4 rounded-xl overflow-hidden bg-white shadow-sm border border-gray-100 transform hover:-translate-y-1 transition-transform';
                     el.innerHTML = `
-                        <img src="${photo.public_url}" alt="Foto de ${photo.guest_name || 'Invitado'}" class="w-full object-cover" loading="lazy" onerror="this.parentElement.style.display='none'">
+                        <img src="${photo.url}" alt="Foto de ${photo.uploader_name || 'Invitado'}" class="w-full object-cover" loading="lazy" onerror="this.parentElement.style.display='none'">
                         <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform">
-                            <span class="text-white font-hand text-xl shadow-sm"><i class="fa-solid fa-camera mr-2"></i>${photo.guest_name || 'Anónimo'}</span>
+                            <span class="text-white font-hand text-xl shadow-sm"><i class="fa-solid fa-camera mr-2"></i>${photo.uploader_name || 'Anónimo'}</span>
                         </div>
                     `;
                     grid.appendChild(el);
