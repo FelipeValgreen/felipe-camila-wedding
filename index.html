@@ -315,7 +315,16 @@
 
             <!-- The Invitation Card -->
             <div class="relative z-10 w-full max-w-md mx-auto bg-white/95 backdrop-blur shadow-2xl border flex flex-col items-center border-gray-200 px-10 py-16 text-center reveal">
-                <p class="font-handwriting text-4xl md:text-5xl text-charcoal mb-8 mt-4">¡Nos casamos!</p>
+                <!-- "¡Nos casamos!" + POR LA IGLESIA badge — layout matching sketch -->
+                <div class="w-full mb-8 mt-2 text-left relative">
+                    <p class="font-handwriting text-4xl md:text-5xl text-charcoal leading-tight mb-1 text-center">¡Nos casamos!</p>
+                    <!-- Badge + underline: aligned to end of text like sketch -->
+                    <div class="flex items-center gap-0 justify-end pr-0">
+                        <div class="flex-1 h-[1px] bg-charcoal/20"></div>
+                        <span class="font-sans text-[8px] font-bold tracking-[0.25em] uppercase bg-charcoal text-red-400 px-3 py-[5px] shrink-0 ml-2">Por la iglesia</span>
+                        <div class="w-6 h-[1px] bg-charcoal/20"></div>
+                    </div>
+                </div>
                 
                 <h1 class="font-serif text-5xl md:text-6xl text-charcoal mb-2 tracking-tight leading-none uppercase">Felipe</h1>
                 <div class="font-handwriting text-2xl text-gray-400 my-2">&</div>
@@ -346,10 +355,6 @@
                         <p class="font-sans text-xs text-gray-600">Chicureo</p>
                     </div>
                 </div>
-
-                <!-- Subtitle overlaying the corner -->
-                <div class="absolute bottom-6 right-8">
-                    <span class="font-sans text-[10px] uppercase tracking-[0.2em] italic text-charcoal/60 border-b border-charcoal/40 pb-1">Por la iglesia</span>
                 </div>
             </div>
         </section>
