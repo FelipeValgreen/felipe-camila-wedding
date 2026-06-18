@@ -323,7 +323,32 @@ window.closeLightbox = function() {
                 instaFeed.insertAdjacentHTML('beforeend', instaHtml);
             }
 
-            // B. Populate Guest Carousel has been removed.
+            // B. Populate Masonry Gallery (Paparazzi Grid)
+            const masonryFeed = document.getElementById('masonry-gallery');
+            const galleryEmpty = document.getElementById('gallery-empty');
+            if (masonryFeed) {
+                masonryFeed.innerHTML = '';
+                if (uniqueAllData.length > 0) {
+                    const masonryHtml = uniqueAllData.map(photo => {
+                        return `
+                        <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="break-inside-avoid mb-4 group relative overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer shadow-sm rounded-sm">
+                            <img src="${photo.url}" 
+                                 class="w-full object-cover grayscale opacity-95 group-hover:scale-[1.02] group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" 
+                                 alt="Foto de Invitado"
+                                 onerror="this.closest('.break-inside-avoid').remove()">
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between">
+                                <span class="text-white text-[10px] font-sans truncate">${photo.uploader_name || 'Invitado'}</span>
+                                <i class="fa-solid fa-magnifying-glass-plus text-white/80 text-[10px]"></i>
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
+                    masonryFeed.innerHTML = masonryHtml;
+                    if (galleryEmpty) galleryEmpty.classList.add('hidden');
+                } else {
+                    if (galleryEmpty) galleryEmpty.classList.remove('hidden');
+                }
+            }
         }
 
         // RSVP Form Handler
@@ -419,6 +444,13 @@ window.closeLightbox = function() {
                     if (emailSuccess || dbSuccess) {
                         rsvpForm.classList.add('hidden');
                         rsvpSuccess.classList.remove('hidden');
+                        if (typeof confetti === 'function') {
+                            confetti({
+                                particleCount: 120,
+                                spread: 70,
+                                origin: { y: 0.6 }
+                            });
+                        }
                     } else {
                         alert('Hubo un error al enviar tu confirmación. Por favor, intenta de nuevo.');
                     }
@@ -623,6 +655,99 @@ window.closeLightbox = function() {
             djForm.addEventListener('submit', handleSongRequest);
             // Load initial list
             setTimeout(loadSongRequests, 1500); // Wait for Supabase init
+        }
+
+        // -----------------------------------------------------------------
+        // WEDDING COUNTDOWN TIMER LOGIC
+        // -----------------------------------------------------------------
+        function initializeCountdown() {
+            // Target date: October 23, 2026, at 17:30
+            const targetDate = new Date('2026-10-23T17:30:00').getTime();
+
+            const daysSpan = document.getElementById('countdown-days');
+            const hoursSpan = document.getElementById('countdown-hours');
+            const minsSpan = document.getElementById('countdown-mins');
+            const secsSpan = document.getElementById('countdown-secs');
+
+            if (!daysSpan) return; // Countdown not present on this page
+
+            function updateTimer() {
+                const now = new Date().getTime();
+                const difference = targetDate - now;
+
+                if (difference <= 0) {
+                    // Wedding has started/passed
+                    daysSpan.innerText = '00';
+                    hoursSpan.innerText = '00';
+                    minsSpan.innerText = '00';
+                    secsSpan.innerText = '00';
+                    clearInterval(intervalId);
+                    return;
+                }
+
+                // Time calculations
+                const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+                // Format leading zero
+                daysSpan.innerText = days < 10 ? '0' + days : days;
+                hoursSpan.innerText = hours < 10 ? '0' + hours : hours;
+                minsSpan.innerText = minutes < 10 ? '0' + minutes : minutes;
+                secsSpan.innerText = seconds < 10 ? '0' + seconds : seconds;
+            }
+
+            // Initial call and run interval
+            updateTimer();
+            const intervalId = setInterval(updateTimer, 1000);
+        }
+
+        // Initialize countdown
+        initializeCountdown();
+
+
+        // -----------------------------------------------------------------
+        // ADD TO CALENDAR (ICS FILE GENERATION)
+        // -----------------------------------------------------------------
+        const addToCalendarBtn = document.getElementById('add-to-calendar-btn');
+        if (addToCalendarBtn) {
+            addToCalendarBtn.addEventListener('click', () => {
+                const title = "Boda Felipe & Camila";
+                const description = "Ceremonia Religiosa en Capilla Divina Misericordia y Gala en Centro de Eventos Arboleda Chicureo.";
+                const location = "Pudahuel y Chicureo, Santiago, Chile";
+                
+                // ICS file format
+                // Start: Oct 23, 2026, 17:30. End: Oct 24, 2026, 05:00
+                const icsContent = [
+                    "BEGIN:VCALENDAR",
+                    "VERSION:2.0",
+                    "PRODID:-//felipeycami.cl//NONSGML Wedding Invite//ES",
+                    "BEGIN:VEVENT",
+                    "UID:wedding-felipe-camila-2026@felipeycami.cl",
+                    "DTSTAMP:20261023T173000Z",
+                    "DTSTART:20261023T203000Z", // UTC translation (assuming CLST UTC-3)
+                    "DTEND:20261024T080000Z",
+                    `SUMMARY:${title}`,
+                    `DESCRIPTION:${description}`,
+                    `LOCATION:${location}`,
+                    "END:VEVENT",
+                    "END:VCALENDAR"
+                ].join("\r\n");
+
+                const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+                const link = document.createElement('a');
+                
+                if (navigator.msSaveBlob) { // IE 10+
+                    navigator.msSaveBlob(blob, "boda_felipe_y_camila.ics");
+                } else {
+                    link.href = URL.createObjectURL(blob);
+                    link.setAttribute("download", "boda_felipe_y_camila.ics");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
         }
 
     
