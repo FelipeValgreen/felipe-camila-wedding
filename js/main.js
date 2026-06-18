@@ -558,7 +558,7 @@ window.closeLightbox = function() {
 
         // D. DJ Booth Logic
         async function loadSongRequests() {
-            const listContainer = document.getElementById('song-requests-list');
+            const listContainer = document.getElementById('dj-suggestions-list');
             if (!listContainer || typeof window.fetchSongRequests !== 'function') return;
 
             const { data, error } = await window.fetchSongRequests();
@@ -572,7 +572,7 @@ window.closeLightbox = function() {
                     <div class="flex justify-between items-start border-b border-white/10 pb-2 mb-2 last:border-0">
                         <div>
                             <p class="text-gold font-bold text-sm leading-tight">${req.song_name}</p>
-                            <p class="text-white/60 text-xs">${req.artist || ''}</p>
+                            <p class="text-white/60 text-xs">${req.artist_name || ''}</p>
                         </div>
                         <div class="text-right">
                             <span class="text-[10px] text-white/40 uppercase tracking-wider block">Pedido por</span>
@@ -588,21 +588,12 @@ window.closeLightbox = function() {
         async function handleSongRequest(event) {
             event.preventDefault();
 
-            // IDs in HTML are: dj-song, (no artist input in HTML?), dj-name
-            // Wait, looking at HTML (Line 1125 in previous snippet):
-            // <input type="text" id="dj-song" ... > placeholder="Ej: Dancing Queen - ABBA"
-            // <input type="text" id="dj-name" ... >
-            // So there is NO separate artist input. The placeholder implies "Song - Artist".
-            // My previous script (Step 511 view) tried getting 'song-name', 'artist-name' which don't exist in HTML.
-
+            // IDs in HTML are: dj-song, dj-name
             const songInput = document.getElementById('dj-song');
             const nameInput = document.getElementById('dj-name');
 
-            const songValue = songInput.value;
-            const nameValue = nameInput.value;
-
-            // Split song/artist if hyphen present? Optional but nice.
-            // For now just save full string as song_name.
+            const songValue = songInput.value.trim();
+            const nameValue = nameInput.value.trim();
 
             const btn = document.getElementById('dj-submit-btn');
             const originalBtnContent = btn.innerHTML;
@@ -613,14 +604,26 @@ window.closeLightbox = function() {
                 return;
             }
 
+            // Split song/artist if hyphen present
+            let songName = songValue;
+            let artistName = '';
+            if (songValue.includes(' - ')) {
+                const parts = songValue.split(' - ');
+                songName = parts[0].trim();
+                artistName = parts[1].trim();
+            } else if (songValue.includes('-')) {
+                const parts = songValue.split('-');
+                songName = parts[0].trim();
+                artistName = parts[1].trim();
+            }
+
             // UI Loading
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enviando...';
 
             try {
                 // 1. Save to Supabase (Database)
-                // We pass songValue as songName. Artist empty.
-                const { error } = await window.saveSongRequest(songValue, '', nameValue);
+                const { error } = await window.saveSongRequest(songName, artistName, nameValue);
                 if (error) throw error;
 
                 // 2. Refresh List
