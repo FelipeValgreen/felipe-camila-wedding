@@ -724,13 +724,30 @@
                             class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-8">
                             Confirmar Asistencia
                         </button>
+
+                        <div class="text-center mt-6">
+                            <p class="text-[9px] text-gray-400 font-sans tracking-wide">o si prefieres</p>
+                            <a id="rsvp-whatsapp-quick-btn" href="#" target="_blank" 
+                                class="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] text-gray-500 hover:text-charcoal border-b border-gray-300 hover:border-charcoal transition-all mt-2 pb-0.5 font-semibold">
+                                <i class="fa-brands fa-whatsapp text-xs text-green-600"></i> Confirmación rápida por WhatsApp
+                            </a>
+                        </div>
                     </form>
 
                     <!-- Success Message (Hidden by default) -->
                     <div id="rsvp-success" class="hidden text-center py-10 animate-fade-in">
                         <i class="fa-solid fa-envelope-open-text text-gray-300 text-4xl mb-4"></i>
                         <h3 class="text-charcoal font-serif text-2xl mb-2">Confirmación Recibida</h3>
-                        <p class="text-gray-500 text-sm font-light mb-8 max-w-sm mx-auto">Gracias por confirmar su presencia. Todo ha sido debidamente registrado en nuestro protocolo.</p>
+                        <p class="text-gray-500 text-sm font-light mb-6 max-w-sm mx-auto">Gracias por confirmar su presencia. Todo ha sido debidamente registrado en nuestro protocolo.</p>
+                        
+                        <!-- WhatsApp share notice -->
+                        <div class="mb-8">
+                            <a id="rsvp-whatsapp-share-btn" href="#" target="_blank"
+                                class="inline-flex items-center gap-2 bg-[#25D366] text-white font-sans text-[10px] uppercase tracking-[0.2em] px-6 py-4 hover:bg-[#20ba5a] transition-all duration-300 font-bold rounded-sm shadow-md">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> Notificar a los Novios
+                            </a>
+                        </div>
+
                         <button onclick="document.getElementById('rsvp-success').classList.add('hidden'); document.getElementById('rsvp-form').reset(); document.getElementById('rsvp-form').style.display='block';"
                             class="text-charcoal text-[10px] tracking-[0.3em] uppercase border-b border-charcoal hover:text-gray-500 hover:border-gray-500 transition-colors pb-1">
                             Hacer otra confirmación

@@ -451,6 +451,20 @@ window.closeLightbox = function() {
                                 origin: { y: 0.6 }
                             });
                         }
+
+                        // Update WhatsApp share notice button
+                        const whatsappShareBtn = document.getElementById('rsvp-whatsapp-share-btn');
+                        if (whatsappShareBtn) {
+                            let whatsappMsg = `¡Hola! Acabo de confirmar mi asistencia en la web.\n\n`;
+                            whatsappMsg += `Invitado: ${name}\n`;
+                            whatsappMsg += `WhatsApp: ${whatsapp}\n`;
+                            whatsappMsg += `Restricción alimentaria: ${dietary}\n`;
+                            if (hasPartner) {
+                                whatsappMsg += `Acompañante: ${partnerName}\n`;
+                                whatsappMsg += `Restricción acompañante: ${partnerDietary}\n`;
+                            }
+                            whatsappShareBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappMsg)}`;
+                        }
                     } else {
                         alert('Hubo un error al enviar tu confirmación. Por favor, intenta de nuevo.');
                     }
@@ -462,6 +476,34 @@ window.closeLightbox = function() {
 
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
+            });
+        }
+
+        // Quick WhatsApp RSVP click handler (grabs current form values)
+        const whatsappQuickBtn = document.getElementById('rsvp-whatsapp-quick-btn');
+        if (whatsappQuickBtn) {
+            whatsappQuickBtn.addEventListener('click', (e) => {
+                const name = document.getElementById('rsvp-name').value.trim();
+                const whatsapp = document.getElementById('rsvp-whatsapp').value.trim();
+                const dietary = document.getElementById('dietary-restrictions').value;
+                const hasPartner = hasPartnerCheckbox && hasPartnerCheckbox.checked;
+                const partnerName = hasPartner ? document.getElementById('partner-name').value.trim() : '';
+                const partnerDietary = hasPartner ? document.getElementById('partner-dietary').value : '';
+
+                let whatsappMsg = `¡Hola! Confirmo mi asistencia para la boda.\n\n`;
+                if (name) {
+                    whatsappMsg += `Invitado: ${name}\n`;
+                    if (whatsapp) whatsappMsg += `WhatsApp: ${whatsapp}\n`;
+                    whatsappMsg += `Restricción alimentaria: ${dietary}\n`;
+                    if (hasPartner) {
+                        whatsappMsg += `Acompañante: ${partnerName || 'Acompañante'}\n`;
+                        whatsappMsg += `Restricción acompañante: ${partnerDietary}\n`;
+                    }
+                } else {
+                    whatsappMsg += `Quiero confirmar mi asistencia.`;
+                }
+
+                whatsappQuickBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappMsg)}`;
             });
         }
 
