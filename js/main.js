@@ -70,7 +70,7 @@ window.closeLightbox = function() {
 
                 // Hide CTA when RSVP section is visible
                 if (isVisible) {
-                    cta.style.transform = 'translateY(100%)';
+                    cta.style.transform = 'translateY(200%)';
                 } else {
                     cta.style.transform = 'translateY(0)';
                 }
@@ -209,7 +209,7 @@ window.closeLightbox = function() {
                 } else {
                     // Reload gallery to show new photo
                     if (typeof loadGallery === 'function') {
-                        await loadGallery();
+                        await loadGallery(true);
                     }
 
                     // Send email notification (note: mailto only opens email client, doesn't auto-send)
@@ -254,95 +254,118 @@ window.closeLightbox = function() {
 
         // Load Gallery on Page Load
         // Load Gallery on Page Load (Populate Both Sections)
-        async function loadGallery() {
-            // 1. Target Instagram Feed (Bottom)
+        let galleryPhotosCache = null; 
+        let currentActiveFilter = 'civil';
+
+        const DEFAULT_PHOTOS = [
+            { url: 'images/uploaded_image_3_1764298805324.jpg', uploader_name: 'Felipe & Camila', event_type: 'civil', album: 'Nuestro civil', created_at: '2025-05-10T12:00:00Z' },
+            { url: 'images/uploaded_image_4_1764298805324.jpg', uploader_name: 'Felipe & Camila', event_type: 'civil', album: 'Nuestro civil', created_at: '2025-05-10T12:05:00Z' },
+            { url: 'images/insta_wedding_selfie.jpg', uploader_name: 'Felipe & Camila', event_type: 'civil', album: 'Nuestro civil', created_at: '2025-05-10T12:10:00Z' },
+            { url: 'images/insta_formal_selfie.jpg', uploader_name: 'Felipe & Camila', event_type: 'civil', album: 'Nuestro civil', created_at: '2025-05-10T12:15:00Z' },
+            { url: 'images/insta_formal_group.jpg', uploader_name: 'Felipe & Camila', event_type: 'civil', album: 'Nuestro civil', created_at: '2025-05-10T12:20:00Z' },
+            { url: 'images/new_story_1.jpg', uploader_name: 'Felipe & Camila', event_type: 'preparativos', album: 'Preparativos', created_at: '2026-01-15T15:00:00Z' },
+            { url: 'images/new_story_2.jpg', uploader_name: 'Felipe & Camila', event_type: 'preparativos', album: 'Preparativos', created_at: '2026-02-20T16:00:00Z' },
+            { url: 'images/new_story_3.jpg', uploader_name: 'Felipe & Camila', event_type: 'preparativos', album: 'Preparativos', created_at: '2026-03-10T17:00:00Z' },
+            { url: 'images/iglesia_bw.jpg', uploader_name: 'Felipe & Camila', event_type: 'iglesia', album: 'Iglesia 2026', created_at: '2026-07-01T10:00:00Z' },
+            { url: 'images/guest_example_1.jpg', uploader_name: 'Familia', event_type: 'general', album: 'Invitados', created_at: '2026-07-20T14:00:00Z' },
+            { url: 'images/guest_example_2.jpg', uploader_name: 'Amigos', event_type: 'general', album: 'Invitados', created_at: '2026-07-20T14:10:00Z' },
+            { url: 'images/guest_example_3.jpg', uploader_name: 'Colegas', event_type: 'general', album: 'Invitados', created_at: '2026-07-20T14:20:00Z' }
+        ];
+
+        async function loadGallery(forceRefresh = false) {
             const instaFeed = document.getElementById('instagram-feed');
-            // 2. Target Guest Carousel (Top - Paparazzi Section)
-            const guestCarousel = document.getElementById('guest-gallery');
+            const masonryFeed = document.getElementById('masonry-gallery');
+            const galleryEmpty = document.getElementById('gallery-empty');
 
-            if (!window.supabaseClient) return;
-
-            let allPhotos = [];
-
-            // A. Fetch All Photos (from unified guest_photos table)
-            if (typeof window.fetchGuestPhotos === 'function') {
-                const response = await window.fetchGuestPhotos();
-                if (response.data) {
-                    allPhotos = response.data;
+            // 1. Fetch from Supabase if not cached or forceRefresh is true
+            if (forceRefresh || !galleryPhotosCache) {
+                let dbPhotos = [];
+                if (window.supabaseClient && typeof window.fetchGuestPhotos === 'function') {
+                    try {
+                        const response = await window.fetchGuestPhotos();
+                        if (response.data) {
+                            dbPhotos = response.data.map(p => ({
+                                url: p.url,
+                                uploader_name: p.uploader_name || 'Invitado',
+                                event_type: p.event_type || 'general',
+                                album: p.album || 'Invitados',
+                                created_at: p.created_at || new Date().toISOString()
+                            }));
+                        }
+                    } catch (err) {
+                        console.error('Error loading photos from Supabase:', err);
+                    }
                 }
+
+                // Merge and deduplicate
+                const allMerged = [...dbPhotos, ...DEFAULT_PHOTOS];
+                const seenUrls = new Set();
+                const uniquePhotos = allMerged.filter(photo => {
+                    if (seenUrls.has(photo.url)) return false;
+                    seenUrls.add(photo.url);
+                    return true;
+                });
+
+                // Sort newest first
+                uniquePhotos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                galleryPhotosCache = uniquePhotos;
             }
 
-            // Sort newest first
-            allPhotos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            
-            // Helper for Deduplication
-            const getUniqueData = (arr) => {
-                const seenFilenames = new Set();
-                return arr.filter(item => {
-                    try {
-                        const url = item.url;
-                        const match = url.match(/guest_\d+_(.+)$/);
-                        const originalName = match ? match[1] : url;
-                        const key = originalName + '_' + (item.uploader_name || '');
-                        if (seenFilenames.has(key)) return false;
-                        seenFilenames.add(key);
-                        return true;
-                    } catch (e) {
-                        return true;
+            const photos = galleryPhotosCache;
+
+            // 2. Filter photos for Masonry Grid
+            let filteredPhotos = photos;
+            if (currentActiveFilter !== 'all') {
+                filteredPhotos = photos.filter(p => {
+                    if (currentActiveFilter === 'civil') return p.event_type === 'civil';
+                    if (currentActiveFilter === 'preparativos') return p.event_type === 'preparativos';
+                    if (currentActiveFilter === 'iglesia') return p.event_type === 'iglesia';
+                    if (currentActiveFilter === 'invitados') {
+                        return p.event_type === 'general' || p.event_type === 'invitados' || p.album === 'Invitados';
                     }
+                    return true;
                 });
-            };
+            }
 
-            const uniqueAllData = getUniqueData(allPhotos);
-            
-            // Filter out QR uploads for the Instagram feed
-            const instaData = allPhotos.filter(item => !item.url.includes('source=qr'));
-            const uniqueInstaData = getUniqueData(instaData);
-
-            // A. Populate Instagram Feed (Masonry Grid - B&W)
-            if (instaFeed && uniqueInstaData.length > 0) {
+            // 3. Populate Instagram Feed (Show Civil + Guest photos in bottom slider)
+            if (instaFeed) {
                 const existingDynamicInsta = instaFeed.querySelectorAll('.dynamic-photo');
                 existingDynamicInsta.forEach(el => el.remove());
 
-                // Limit up to 50 dynamic photos
-                const slicedInstaData = uniqueInstaData.slice(0, 50);
-
-                const instaHtml = slicedInstaData.map((photo, index) => {
-                    return `
+                // Show up to 24 photos
+                const slicedInsta = photos.filter(p => p.event_type === 'civil' || p.event_type === 'general').slice(0, 24);
+                const instaHtml = slicedInsta.map(photo => `
                     <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="dynamic-photo w-[280px] flex-shrink-0 snap-start aspect-[4/5] overflow-hidden relative group cursor-pointer bg-gray-100 shadow-sm border border-gray-100">
                         <img src="${photo.url}" 
                              class="w-full h-full object-cover grayscale opacity-90 transition-all duration-700 group-hover:scale-105 group-hover:grayscale-0 group-hover:opacity-100" 
-                             alt="Guest Photo"
+                             alt="Foto de Boda"
+                             loading="lazy"
                              onerror="this.closest('.dynamic-photo').remove()">
                         <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center">
                             <i class="fa-brands fa-instagram text-white/80 text-3xl font-light drop-shadow-md"></i>
                         </div>
                     </div>
-                `}).join('');
-
+                `).join('');
                 instaFeed.insertAdjacentHTML('beforeend', instaHtml);
             }
 
-            // B. Populate Masonry Gallery (Paparazzi Grid)
-            const masonryFeed = document.getElementById('masonry-gallery');
-            const galleryEmpty = document.getElementById('gallery-empty');
+            // 4. Populate Masonry Grid (Main Gallery)
             if (masonryFeed) {
                 masonryFeed.innerHTML = '';
-                if (uniqueAllData.length > 0) {
-                    const masonryHtml = uniqueAllData.map(photo => {
-                        return `
+                if (filteredPhotos.length > 0) {
+                    const masonryHtml = filteredPhotos.map(photo => `
                         <div onclick="if(window.openLightbox) window.openLightbox('${photo.url}', '${(photo.uploader_name || 'Anónimo').replace(/'/g, "\\'")}')" class="break-inside-avoid mb-4 group relative overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer shadow-sm rounded-sm">
                             <img src="${photo.url}" 
                                  class="w-full object-cover grayscale opacity-95 group-hover:scale-[1.02] group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" 
-                                 alt="Foto de Invitado"
+                                 alt="Foto de Boda"
+                                 loading="lazy"
                                  onerror="this.closest('.break-inside-avoid').remove()">
                             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between">
                                 <span class="text-white text-[10px] font-sans truncate">${photo.uploader_name || 'Invitado'}</span>
                                 <i class="fa-solid fa-magnifying-glass-plus text-white/80 text-[10px]"></i>
                             </div>
                         </div>
-                        `;
-                    }).join('');
+                    `).join('');
                     masonryFeed.innerHTML = masonryHtml;
                     if (galleryEmpty) galleryEmpty.classList.add('hidden');
                 } else {
@@ -350,6 +373,26 @@ window.closeLightbox = function() {
                 }
             }
         }
+
+        // Setup Filter Click Handlers
+        const filterBtns = document.querySelectorAll('.gallery-filter-btn');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const filterValue = btn.dataset.filter;
+                currentActiveFilter = filterValue;
+
+                // Update active buttons styling
+                filterBtns.forEach(b => {
+                    b.classList.remove('bg-charcoal', 'text-white');
+                    b.classList.add('text-gray-500');
+                });
+                btn.classList.add('bg-charcoal', 'text-white');
+                btn.classList.remove('text-gray-500');
+
+                // Reload without network request
+                loadGallery(false);
+            });
+        });
 
         // -----------------------------------------------------------------
         // RSVP SYSTEM (CODES & PERSONAL AUTOFILL FLOW)
@@ -655,7 +698,7 @@ window.closeLightbox = function() {
 
                     // Refresh Gallery
                     if (typeof loadGallery === 'function') {
-                        loadGallery();
+                        loadGallery(true);
                     }
                 }
             });

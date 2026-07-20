@@ -1,0 +1,21 @@
+{
+    "name": "Felipe & Camila | 23 de Octubre 2026",
+    "short_name": "Felipe & Camila",
+    "description": "Invitación oficial al matrimonio religioso de Felipe y Camila.",
+    "icons": [
+        {
+            "src": "images/envelope_stamp.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "images/envelope_stamp.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#ffffff",
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "start_url": "/"
+}
