@@ -809,15 +809,15 @@ window.closeLightbox = function() {
                 const location = "Santuario de la Divina Misericordia (Colina) y Centro de Eventos Arboleda (Chicureo), Chile";
                 
                 // ICS file format
-                // Start: Oct 23, 2026, 17:30. End: Oct 24, 2026, 05:00
+                // Start: Oct 23, 2026, 17:50. End: Oct 24, 2026, 05:00
                 const icsContent = [
                     "BEGIN:VCALENDAR",
                     "VERSION:2.0",
                     "PRODID:-//felipeycami.cl//NONSGML Wedding Invite//ES",
                     "BEGIN:VEVENT",
                     "UID:wedding-felipe-camila-2026@felipeycami.cl",
-                    "DTSTAMP:20261023T173000Z",
-                    "DTSTART:20261023T203000Z", // UTC translation (assuming CLST UTC-3)
+                    "DTSTAMP:20261023T175000Z",
+                    "DTSTART:20261023T205000Z", // UTC translation (assuming CLST UTC-3)
                     "DTEND:20261024T080000Z",
                     `SUMMARY:${title}`,
                     `DESCRIPTION:${description}`,
