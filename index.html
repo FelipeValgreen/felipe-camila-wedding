@@ -14,7 +14,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Felipe y Camila se casan el 23 de Octubre de 2026. Ceremonia religiosa en el Santuario de la Divina Misericordia, Colina y Gala en Centro de Eventos Arboleda, Chicureo.">
-    <title>Felipe & Camila | 23 de Octubre 2026</title>
+    <title>Felipe & Camila — 23 de octubre 2026</title>
+    <link rel="canonical" href="https://felipeycami.cl/">
 
     <!-- Favicon & PWA -->
     <link rel="icon" type="image/png" href="images/envelope_stamp.png">
@@ -24,16 +25,59 @@
     <!-- OpenGraph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://felipeycami.cl/">
-    <meta property="og:title" content="Felipe & Camila | 23 de Octubre 2026">
+    <meta property="og:title" content="Felipe & Camila — 23 de octubre 2026">
     <meta property="og:description" content="Te invitamos a celebrar nuestro matrimonio el 23 de Octubre de 2026 en el Santuario de la Divina Misericordia, Colina y Gala en Centro de Eventos Arboleda, Chicureo.">
     <meta property="og:image" content="images/uploaded_image_4_1764298805324.jpg">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://felipeycami.cl/">
-    <meta property="twitter:title" content="Felipe & Camila | 23 de Octubre 2026">
+    <meta property="twitter:title" content="Felipe & Camila — 23 de octubre 2026">
     <meta property="twitter:description" content="Te invitamos a celebrar nuestro matrimonio el 23 de Octubre de 2026 en el Santuario de la Divina Misericordia, Colina y Gala en Centro de Eventos Arboleda, Chicureo.">
     <meta property="twitter:image" content="images/uploaded_image_4_1764298805324.jpg">
+
+    <!-- Schema.org Event Metadata -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      "name": "Matrimonio de Felipe & Camila",
+      "startDate": "2026-10-23T17:50:00-03:00",
+      "endDate": "2026-10-24T05:00:00-03:00",
+      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+      "eventStatus": "https://schema.org/EventScheduled",
+      "location": [
+        {
+          "@type": "Place",
+          "name": "Santuario de la Divina Misericordia",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Chicureo, Colina",
+            "addressRegion": "Metropolitana",
+            "addressCountry": "CL"
+          }
+        },
+        {
+          "@type": "Place",
+          "name": "Centro de Eventos Arboleda",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Chicureo",
+            "addressRegion": "Metropolitana",
+            "addressCountry": "CL"
+          }
+        }
+      ],
+      "image": [
+        "https://felipeycami.cl/images/uploaded_image_4_1764298805324.jpg"
+      ],
+      "description": "Ceremonia religiosa en el Santuario de la Divina Misericordia, Colina y Gala en Centro de Eventos Arboleda, Chicureo.",
+      "organizer": {
+        "@type": "Person",
+        "name": "Felipe & Camila"
+      }
+    }
+    </script>
 
     <!-- Google Fonts: Amatic SC, Lora, Cinzel Decorative, Montserrat -->
         <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" as="style">
@@ -100,6 +144,10 @@
             // Audio & Music Widget Setup
             const audio = document.getElementById('wedding-song');
             const musicBtn = document.getElementById('music-btn');
+
+            if (audio) {
+                audio.volume = 0.3; // Volumen inicial bajo
+            }
 
             function playMusic() {
                 if (audio) {
