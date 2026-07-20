@@ -647,72 +647,116 @@
                         </a>
                     </div>
 
-                    <form id="rsvp-form" class="space-y-8">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <!-- Name -->
+                    <!-- STEP 1: INGRESO DE CÓDIGO -->
+                    <div id="rsvp-code-step" class="space-y-6">
+                        <div class="text-center max-w-sm mx-auto mb-8">
+                            <p class="font-sans text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Pases e Invitaciones</p>
+                            <p class="font-sans text-xs text-gray-500 font-light">Para confirmar tus pases, ingresa el código personal que aparece en tu invitación física o digital.</p>
+                        </div>
+                        <div class="max-w-md mx-auto space-y-4">
                             <div class="space-y-2">
-                                <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">Nombre y Apellidos</label>
-                                <input type="text" id="rsvp-name" required placeholder="Escribe tu nombre y apellido"
+                                <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold text-center">Código de Invitación</label>
+                                <input type="text" id="rsvp-code-input" placeholder="Ej: FAM2026"
+                                    class="w-full bg-transparent border-b border-gray-300 py-3 text-center text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-lg tracking-widest uppercase">
+                            </div>
+                            <button type="button" id="rsvp-validate-code-btn"
+                                class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-4">
+                                Validar Código
+                            </button>
+                            <p id="rsvp-code-error" class="hidden text-red-500 text-xs font-sans text-center mt-2">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Código no encontrado. Revisa e intenta de nuevo.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: FORMULARIO DE CONFIRMACIÓN (AUTOPREVIO) -->
+                    <div id="rsvp-form-step" class="hidden space-y-8 animate-fade-in">
+                        <div class="text-center max-w-sm mx-auto mb-6">
+                            <p id="rsvp-greeting" class="font-serif text-lg text-charcoal font-semibold mb-1">¡Hola!</p>
+                            <p class="font-sans text-xs text-gray-400 font-light">Hemos encontrado tus datos. Confirma tu asistencia a continuación.</p>
+                        </div>
+
+                        <form id="rsvp-form" class="space-y-8">
+                            <!-- Pre-filled and read-only data -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="space-y-2">
+                                    <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Nombre</label>
+                                    <input type="text" id="rsvp-firstname" readonly required
+                                        class="w-full bg-gray-50/50 border-b border-gray-200 py-2 text-charcoal/70 focus:outline-none font-sans text-sm pb-1 cursor-not-allowed">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Apellido</label>
+                                    <input type="text" id="rsvp-lastname" readonly required
+                                        class="w-full bg-gray-50/50 border-b border-gray-200 py-2 text-charcoal/70 focus:outline-none font-sans text-sm pb-1 cursor-not-allowed">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Pases Asignados</label>
+                                    <input type="text" id="rsvp-passes" readonly required
+                                        class="w-full bg-gray-50/50 border-b border-gray-200 py-2 text-charcoal/70 focus:outline-none font-sans text-sm pb-1 text-center cursor-not-allowed">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-gray-100">
+                                <!-- WhatsApp contact -->
+                                <div class="space-y-2">
+                                    <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">WhatsApp de Contacto</label>
+                                    <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56912345678"
+                                        class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
+                                </div>
+
+                                <!-- Attendance Selection (Si / No) -->
+                                <div class="space-y-3">
+                                    <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">¿Confirmas tu asistencia?</label>
+                                    <div class="flex gap-8 py-2">
+                                        <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
+                                            <input type="radio" name="rsvp-attendance" value="yes" checked class="w-4 h-4 accent-charcoal">
+                                            <span>Sí, asistiré</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
+                                            <input type="radio" name="rsvp-attendance" value="no" class="w-4 h-4 accent-charcoal">
+                                            <span>No podré asistir</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dietary Restrictions Selection (Vegano, Celiaco, Alergias, Ninguna) -->
+                            <div id="rsvp-dietary-flag-group" class="space-y-3 pt-4 border-t border-gray-100">
+                                <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">Restricción Alimentaria</label>
+                                <div class="relative">
+                                    <select id="rsvp-dietary-select" class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm appearance-none cursor-pointer rounded-none pb-1">
+                                        <option value="Ninguna">Ninguna</option>
+                                        <option value="Vegano">Vegano</option>
+                                        <option value="Celíaco">Celíaco / Libre de Gluten</option>
+                                        <option value="Alergias">Alergias (especificar a continuación)</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dietary Details Input (Hidden by default, shown if dietary-select is Alergias) -->
+                            <div id="rsvp-dietary-details-section" class="hidden space-y-2 pt-2 animate-fade-in">
+                                <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Especifica tu restricción o alergias</label>
+                                <input type="text" id="rsvp-dietary-detail" placeholder="Ej: Maní, mariscos, etc."
                                     class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
                             </div>
-                            <!-- WhatsApp -->
-                            <div class="space-y-2">
-                                <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">WhatsApp</label>
-                                <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56912345678"
-                                    class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
+
+                            <!-- Main Action Button -->
+                            <button type="submit" id="rsvp-submit-btn"
+                                class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-8 font-semibold">
+                                Enviar y confirmar por WhatsApp
+                            </button>
+
+                            <div class="text-center mt-4">
+                                <button type="button" id="rsvp-back-to-code-btn"
+                                    class="text-[10px] tracking-[0.2em] uppercase text-gray-400 hover:text-charcoal border-b border-gray-200 hover:border-charcoal transition-all pb-0.5">
+                                    <i class="fa-solid fa-arrow-left"></i> Volver a cambiar de código
+                                </button>
                             </div>
-                        </div>
-
-                        <!-- Attendance Selection (Si / No) -->
-                        <div class="space-y-3 pt-4 border-t border-gray-100">
-                            <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">¿Confirmas tu asistencia?</label>
-                            <div class="flex gap-8">
-                                <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
-                                    <input type="radio" name="rsvp-attendance" value="yes" checked class="w-4 h-4 accent-charcoal">
-                                    <span>Sí, asistiré</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
-                                    <input type="radio" name="rsvp-attendance" value="no" class="w-4 h-4 accent-charcoal">
-                                    <span>No podré asistir</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Dietary Restrictions Flag (Si / No) -->
-                        <div id="rsvp-dietary-flag-group" class="space-y-3 pt-4 border-t border-gray-100">
-                            <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">¿Tienes alguna restricción alimenticia?</label>
-                            <div class="flex gap-8">
-                                <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
-                                    <input type="radio" name="rsvp-dietary-flag" value="no" checked class="w-4 h-4 accent-charcoal">
-                                    <span>No</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
-                                    <input type="radio" name="rsvp-dietary-flag" value="yes" class="w-4 h-4 accent-charcoal">
-                                    <span>Sí</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Dietary Details Input (Hidden by default, shown if dietary-flag is yes) -->
-                        <div id="rsvp-dietary-details-section" class="hidden space-y-2 pt-2 animate-fade-in">
-                            <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Especifica tu restricción (Celíaco, Vegano, Alergia, etc.)</label>
-                            <input type="text" id="rsvp-dietary" placeholder="Escribe aquí tu restricción"
-                                class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
-                        </div>
-
-                        <button type="submit" id="rsvp-submit-btn"
-                            class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-8">
-                            Confirmar Asistencia
-                        </button>
-
-                        <div class="text-center mt-6">
-                            <p class="text-[9px] text-gray-400 font-sans tracking-wide">o si prefieres</p>
-                            <a id="rsvp-whatsapp-quick-btn" href="#" target="_blank" 
-                                class="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] text-gray-500 hover:text-charcoal border-b border-gray-300 hover:border-charcoal transition-all mt-2 pb-0.5 font-semibold">
-                                <i class="fa-brands fa-whatsapp text-xs text-green-600"></i> Confirmación rápida por WhatsApp
-                            </a>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
 
                     <!-- Success Message (Hidden by default) -->
                     <div id="rsvp-success" class="hidden text-center py-10 animate-fade-in">
@@ -728,7 +772,7 @@
                             </a>
                         </div>
 
-                        <button onclick="document.getElementById('rsvp-success').classList.add('hidden'); document.getElementById('rsvp-form').reset(); document.getElementById('rsvp-form').style.display='block';"
+                        <button type="button" onclick="document.getElementById('rsvp-success').classList.add('hidden'); document.getElementById('rsvp-code-step').classList.remove('hidden'); document.getElementById('rsvp-form-step').classList.add('hidden'); document.getElementById('rsvp-code-input').value='';"
                             class="text-charcoal text-[10px] tracking-[0.3em] uppercase border-b border-charcoal hover:text-gray-500 hover:border-gray-500 transition-colors pb-1">
                             Hacer otra confirmación
                         </button>

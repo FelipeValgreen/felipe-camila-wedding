@@ -84,6 +84,24 @@ async function saveRSVP(rsvpData) {
     return { data };
 }
 
+// Helper function to look up guest by invitation code
+async function getGuestByCode(code) {
+    if (!supabaseClient) return { error: 'Supabase not initialized' };
+
+    const { data, error } = await supabaseClient
+        .from('guest_list')
+        .select('*')
+        .eq('code', code.toUpperCase().trim())
+        .single();
+
+    if (error) {
+        console.error('Error fetching guest by code:', error);
+        return { error };
+    }
+
+    return { data };
+}
+
 // Helper function to fetch guest photos
 async function fetchGuestPhotos() {
     if (!supabaseClient) return { error: 'Supabase not initialized' };
@@ -209,6 +227,7 @@ async function fetchSongRequests() {
 // Expose functions globally
 window.uploadGuestPhoto = uploadGuestPhoto;
 window.saveRSVP = saveRSVP;
+window.getGuestByCode = getGuestByCode;
 window.fetchGuestPhotos = fetchGuestPhotos;
 window.saveSongRequest = saveSongRequest;
 window.fetchSongRequests = fetchSongRequests;
