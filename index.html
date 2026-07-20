@@ -13,8 +13,25 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Felipe y Camila se casan el 23 de Octubre de 2026. Ceremonia religiosa en la Iglesia Divina Misericordia y Gala en Centro de Eventos Arboleda Chicureo.">
+    <meta name="description" content="Felipe y Camila se casan el 23 de Octubre de 2026. Ceremonia religiosa en el Santuario de la Divina Misericordia, Colina y Gala en Centro de Eventos Arboleda, Chicureo.">
     <title>Felipe & Camila | 23 de Octubre 2026</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/envelope_stamp.png">
+
+    <!-- OpenGraph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://felipeycami.cl/">
+    <meta property="og:title" content="Felipe & Camila | 23 de Octubre 2026">
+    <meta property="og:description" content="Te invitamos a celebrar nuestro matrimonio el 23 de Octubre de 2026 en el Santuario de la Divina Misericordia, Colina y Gala en Centro de Eventos Arboleda, Chicureo.">
+    <meta property="og:image" content="images/uploaded_image_4_1764298805324.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://felipeycami.cl/">
+    <meta property="twitter:title" content="Felipe & Camila | 23 de Octubre 2026">
+    <meta property="twitter:description" content="Te invitamos a celebrar nuestro matrimonio el 23 de Octubre de 2026 en el Santuario de la Divina Misericordia, Colina y Gala en Centro de Eventos Arboleda, Chicureo.">
+    <meta property="twitter:image" content="images/uploaded_image_4_1764298805324.jpg">
 
     <!-- Google Fonts: Amatic SC, Lora, Cinzel Decorative, Montserrat -->
         <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" as="style">
@@ -450,34 +467,42 @@
                 <div id="wedding-countdown" class="grid grid-cols-4 gap-3 max-w-xs mx-auto mb-10 mt-6 select-none">
                     <div class="flex flex-col items-center p-2 bg-charcoal/[0.03] border border-charcoal/5 rounded-sm min-w-[56px] md:min-w-[64px]">
                         <span id="countdown-days" class="font-serif text-xl md:text-2xl text-charcoal font-light">00</span>
-                        <span class="font-sans text-[6px] md:text-[7px] uppercase tracking-widest text-gray-400 mt-1">Días</span>
+                        <span class="font-sans text-[9px] md:text-[10px] uppercase tracking-widest text-gray-400 mt-1">Días</span>
                     </div>
                     <div class="flex flex-col items-center p-2 bg-charcoal/[0.03] border border-charcoal/5 rounded-sm min-w-[56px] md:min-w-[64px]">
                         <span id="countdown-hours" class="font-serif text-xl md:text-2xl text-charcoal font-light">00</span>
-                        <span class="font-sans text-[6px] md:text-[7px] uppercase tracking-widest text-gray-400 mt-1">Horas</span>
+                        <span class="font-sans text-[9px] md:text-[10px] uppercase tracking-widest text-gray-400 mt-1">Horas</span>
                     </div>
                     <div class="flex flex-col items-center p-2 bg-charcoal/[0.03] border border-charcoal/5 rounded-sm min-w-[56px] md:min-w-[64px]">
                         <span id="countdown-mins" class="font-serif text-xl md:text-2xl text-charcoal font-light">00</span>
-                        <span class="font-sans text-[6px] md:text-[7px] uppercase tracking-widest text-gray-400 mt-1">Minutos</span>
+                        <span class="font-sans text-[9px] md:text-[10px] uppercase tracking-widest text-gray-400 mt-1">Minutos</span>
                     </div>
                     <div class="flex flex-col items-center p-2 bg-charcoal/[0.03] border border-charcoal/5 rounded-sm min-w-[56px] md:min-w-[64px]">
                         <span id="countdown-secs" class="font-serif text-xl md:text-2xl text-charcoal font-medium text-[#8FA382]">00</span>
-                        <span class="font-sans text-[6px] md:text-[7px] uppercase tracking-widest text-gray-400 mt-1">Segundos</span>
+                        <span class="font-sans text-[9px] md:text-[10px] uppercase tracking-widest text-gray-400 mt-1">Segundos</span>
                     </div>
                 </div>
 
                 <!-- MINIMAL LOCATION DATA -->
                 <div class="max-w-full w-full mx-auto grid grid-cols-1 gap-6 text-center pt-8 border-t border-gray-100">
                     <div>
-                        <p class="font-sans text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-1">Ceremonia</p>
-                        <h3 class="font-serif text-lg text-charcoal mb-1">Capilla Divina Misericordia</h3>
+                        <p class="font-sans text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">Ceremonia</p>
+                        <h3 class="font-serif text-lg text-charcoal mb-1">Santuario de la Divina Misericordia</h3>
                         <p class="font-sans text-xs text-gray-600">17:30 Horas</p>
                     </div>
                     <div>
-                        <p class="font-sans text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-1">Gala</p>
+                        <p class="font-sans text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">Gala</p>
                         <h3 class="font-serif text-lg text-charcoal mb-1">Centro de Eventos Arboleda</h3>
                         <p class="font-sans text-xs text-gray-600">Chicureo</p>
                     </div>
+                </div>
+
+                <!-- Add to Calendar Button -->
+                <div class="mt-8 pt-6 border-t border-gray-100 w-full text-center">
+                    <button id="add-to-calendar-btn"
+                        class="inline-flex items-center gap-2 border border-charcoal/30 text-charcoal text-[10px] uppercase tracking-[0.25em] px-6 py-3.5 hover:bg-charcoal hover:text-white transition-all duration-300 font-medium">
+                        <i class="fa-regular fa-calendar-plus"></i> Añadir a mi Calendario
+                    </button>
                 </div>
                 </div>
             </div>
@@ -494,16 +519,16 @@
                 </div>
                 <!-- Text Right -->
                 <div class="w-full md:w-1/2 flex flex-col justify-center px-12 md:px-20 py-20 bg-charcoal">
-                    <span class="font-sans text-[9px] uppercase tracking-[0.5em] text-white/40 block mb-6">La Ceremonia</span>
+                    <span class="font-sans text-xs uppercase tracking-[0.3em] text-white/40 block mb-6">La Ceremonia</span>
                     <div class="w-8 h-[1px] bg-white/20 mb-8"></div>
-                    <h2 class="font-serif text-4xl md:text-5xl text-white mb-6 leading-tight tracking-wide">Capilla Divina<br>Misericordia</h2>
+                    <h2 class="font-serif text-4xl md:text-5xl text-white mb-6 leading-tight tracking-wide">Santuario de la<br>Divina Misericordia</h2>
                     <p class="font-sans text-white/60 text-sm font-light leading-relaxed mb-10 max-w-sm">
-                        Nos uniremos ante Dios en la capilla del Santuario. Un momento sagrado e íntimo que marcará el inicio de nuestra vida juntos.
+                        Nos uniremos ante Dios en el Santuario de la Divina Misericordia en Chicureo. Un momento sagrado e íntimo que marcará el inicio de nuestra vida juntos.
                     </p>
                     <div class="flex items-center gap-6">
                         <div class="text-center">
                             <p class="font-serif text-3xl text-white">17:30</p>
-                            <p class="font-sans text-[9px] text-white/40 uppercase tracking-widest mt-1">Horas</p>
+                            <p class="font-sans text-[10px] text-white/40 uppercase tracking-widest mt-1">Horas</p>
                         </div>
                         <div class="w-px h-12 bg-white/20"></div>
                         <div class="text-center">
@@ -514,18 +539,18 @@
                     
                     <!-- Map Buttons -->
                     <div class="mt-8 flex flex-wrap gap-3">
-                        <a href="https://maps.google.com/?q=Santuario+Divina+Misericordia+Pudahuel" target="_blank"
-                            class="inline-flex items-center gap-2 border border-white/30 text-white text-[9px] uppercase tracking-[0.2em] px-4 py-3 hover:bg-white hover:text-charcoal transition-all duration-300">
+                        <a href="https://maps.google.com/?q=Santuario+de+la+Divina+Misericordia+Colina" target="_blank"
+                            class="inline-flex items-center gap-2 border border-white/30 text-white text-xs uppercase tracking-[0.2em] px-4 py-3 hover:bg-white hover:text-charcoal transition-all duration-300">
                             <i class="fa-solid fa-map-location-dot"></i> Google Maps
                         </a>
-                        <a href="https://waze.com/ul?q=Santuario%20Divina%20Misericordia%20Pudahuel" target="_blank"
-                            class="inline-flex items-center gap-2 border border-white/30 text-white text-[9px] uppercase tracking-[0.2em] px-4 py-3 hover:bg-white hover:text-charcoal transition-all duration-300">
+                        <a href="https://waze.com/ul?q=Santuario%20de%20la%20Divina%20Misericordia%20Colina" target="_blank"
+                            class="inline-flex items-center gap-2 border border-white/30 text-white text-xs uppercase tracking-[0.2em] px-4 py-3 hover:bg-white hover:text-charcoal transition-all duration-300">
                             <i class="fa-solid fa-waze"></i> Waze
                         </a>
                     </div>
 
                     <div class="mt-12 pt-8 border-t border-white/10">
-                        <p class="font-sans text-[9px] uppercase tracking-[0.3em] text-white/30">Pudahuel — Santiago, Chile</p>
+                        <p class="font-sans text-[10px] uppercase tracking-[0.3em] text-white/30">Chicureo, Colina — Santiago, Chile</p>
                     </div>
                 </div>
             </div>
@@ -596,52 +621,7 @@
             </div>
         </section>
 
-        <!-- E. PARTY (ELEGANT ITINERARY) -->
-        <section id="party" class="py-32 bg-white text-charcoal border-b border-gray-100">
-            <div class="max-w-4xl mx-auto px-4 text-center reveal">
-                <h2 class="font-serif text-3xl md:text-4xl mb-16 tracking-widest uppercase">Itinerario</h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center relative">
-                    <!-- Connector line behind on desktop -->
-                    <div class="hidden md:block absolute top-[24px] left-[16%] right-[16%] h-[1px] bg-charcoal/10 z-0"></div>
-
-                    <div class="group flex flex-col items-center relative z-10">
-                        <div class="w-12 h-12 rounded-full border border-charcoal/20 bg-white flex items-center justify-center text-charcoal text-base mb-4 group-hover:bg-charcoal group-hover:text-white group-hover:border-charcoal transition-all duration-500">
-                            <i class="fa-solid fa-church"></i>
-                        </div>
-                        <span class="font-sans text-xs tracking-widest text-gray-400 mb-2 block">17:30 Horas</span>
-                        <h3 class="font-serif text-xl mb-1 text-charcoal">La Ceremonia</h3>
-                        <p class="text-gray-500 text-[10px] tracking-wide uppercase">Capilla Divina Misericordia</p>
-                    </div>
-
-                    <div class="group flex flex-col items-center relative z-10">
-                        <div class="w-12 h-12 rounded-full border border-charcoal/20 bg-white flex items-center justify-center text-charcoal text-base mb-4 group-hover:bg-charcoal group-hover:text-white group-hover:border-charcoal transition-all duration-500">
-                            <i class="fa-solid fa-champagne-glasses"></i>
-                        </div>
-                        <span class="font-sans text-xs tracking-widest text-gray-400 mb-2 block">19:30 Horas</span>
-                        <h3 class="font-serif text-xl mb-1 text-charcoal">Cóctel & Música</h3>
-                        <p class="text-gray-500 text-[10px] tracking-wide uppercase">Grupo Musical en Vivo</p>
-                    </div>
-
-                    <div class="group flex flex-col items-center relative z-10">
-                        <div class="w-12 h-12 rounded-full border border-charcoal/20 bg-white flex items-center justify-center text-charcoal text-base mb-4 group-hover:bg-charcoal group-hover:text-white group-hover:border-charcoal transition-all duration-500">
-                            <i class="fa-solid fa-compact-disc animate-spin" style="animation-duration: 4s;"></i>
-                        </div>
-                        <span class="font-sans text-xs tracking-widest text-gray-400 mb-2 block">21:00 Horas</span>
-                        <h3 class="font-serif text-xl mb-1 text-charcoal">Comida & Fiesta</h3>
-                        <p class="text-gray-500 text-[10px] tracking-wide uppercase">A celebrar con todo</p>
-                    </div>
-                </div>
-
-                <!-- Add to Calendar Button -->
-                <div class="mt-20">
-                    <button id="add-to-calendar-btn"
-                        class="inline-flex items-center gap-2 border border-charcoal/30 text-charcoal text-[9px] uppercase tracking-[0.25em] px-6 py-4 hover:bg-charcoal hover:text-white transition-all duration-500">
-                        <i class="fa-regular fa-calendar-plus"></i> Añadir a mi Calendario
-                    </button>
-                </div>
-            </div>
-        </section>
 
         <!-- F. RSVP (QUIET LUXURY) -->
         <section id="rsvp" class="py-32 bg-gray-50 relative overflow-hidden border-b border-gray-100">
@@ -654,70 +634,70 @@
                 </div>
 
                 <div class="bg-white p-10 md:p-14 shadow-sm border border-gray-100">
+                    <!-- LISTA DE NOVIOS - Elegant Gift Registry -->
+                    <div class="text-center max-w-sm mx-auto mb-12 pb-10 border-b border-gray-100">
+                        <p class="font-sans text-xs uppercase tracking-[0.3em] text-gray-400 mb-3">Un gesto de amor</p>
+                        <p class="font-serif text-xl text-charcoal mb-3">Lista de Novios</p>
+                        <p class="font-sans text-xs text-gray-400 font-light mb-6 leading-relaxed">Si deseas hacernos un regalo, puedes acceder directamente a nuestro catálogo de novios en Paris.</p>
+                        <a href="https://club.noviosparis.cl/home/couple-catalog/21030724" target="_blank"
+                            class="inline-flex items-center gap-3 border border-charcoal/30 text-charcoal text-xs uppercase tracking-[0.25em] px-8 py-4 hover:bg-charcoal hover:text-white transition-all duration-500 group font-semibold">
+                            <span>Ver Catálogo de Novios</span>
+                            <span class="text-gray-400 group-hover:text-white/60 transition-colors">·</span>
+                            <span class="font-light">Código 21030724</span>
+                        </a>
+                    </div>
+
                     <form id="rsvp-form" class="space-y-8">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Name -->
                             <div class="space-y-2">
-                                <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">Nombre Completo</label>
-                                <input type="text" id="rsvp-name" required
+                                <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">Nombre y Apellidos</label>
+                                <input type="text" id="rsvp-name" required placeholder="Escribe tu nombre y apellido"
                                     class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
                             </div>
+                            <!-- WhatsApp -->
                             <div class="space-y-2">
-                                <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">WhatsApp</label>
-                                <input type="tel" id="rsvp-whatsapp" required
+                                <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">WhatsApp</label>
+                                <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56912345678"
                                     class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
                             </div>
                         </div>
 
-                        <!-- Dietary Restrictions -->
+                        <!-- Attendance Selection (Si / No) -->
                         <div class="space-y-3 pt-4 border-t border-gray-100">
-                            <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">Restricciones Alimentarias</label>
-                            <div class="relative">
-                                <select id="dietary-restrictions" class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm appearance-none cursor-pointer rounded-none pb-1">
-                                    <option value="ninguna">Ninguna</option>
-                                    <option value="vegetariano">Vegetariano</option>
-                                    <option value="vegano">Vegano</option>
-                                    <option value="celiaco">Celíaco / Libre de Gluten</option>
-                                    <option value="otra">Otra alergia severa</option>
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                                    <i class="fa-solid fa-chevron-down text-xs"></i>
-                                </div>
+                            <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">¿Confirmas tu asistencia?</label>
+                            <div class="flex gap-8">
+                                <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
+                                    <input type="radio" name="rsvp-attendance" value="yes" checked class="w-4 h-4 accent-charcoal">
+                                    <span>Sí, asistiré</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
+                                    <input type="radio" name="rsvp-attendance" value="no" class="w-4 h-4 accent-charcoal">
+                                    <span>No podré asistir</span>
+                                </label>
                             </div>
                         </div>
 
-                        <!-- Partner Attendance -->
-                        <div class="space-y-6 pt-4 border-t border-gray-100">
-                            <label class="flex items-center space-x-3 cursor-pointer group">
-                                <div class="relative flex items-center justify-center w-5 h-5 border border-gray-300 transition-colors group-hover:border-charcoal">
-                                    <input type="checkbox" id="has-partner" class="peer opacity-0 absolute w-full h-full cursor-pointer">
-                                    <i class="fa-solid fa-check text-charcoal text-xs opacity-0 peer-checked:opacity-100 transition-opacity"></i>
-                                </div>
-                                <span class="text-charcoal text-sm tracking-wide">Asistiré con acompañante</span>
-                            </label>
-                            
-                            <!-- Partner Name Field (Hidden by default) -->
-                            <div id="partner-section" class="hidden space-y-8 animate-fade-in pl-8 border-l border-gray-200">
-                                <div class="space-y-2">
-                                    <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">Nombre Completo del Acompañante</label>
-                                    <input type="text" id="partner-name" placeholder="Requerido para el protocolo de mesas"
-                                        class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
-                                </div>
-                                <div class="space-y-3">
-                                    <label class="block text-[10px] uppercase tracking-[0.3em] text-gray-500">Restricciones Alimentarias (Acompañante)</label>
-                                    <div class="relative">
-                                        <select id="partner-dietary" class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm appearance-none cursor-pointer rounded-none pb-1">
-                                            <option value="ninguna">Ninguna</option>
-                                            <option value="vegetariano">Vegetariano</option>
-                                            <option value="vegano">Vegano</option>
-                                            <option value="celiaco">Celíaco / Libre de Gluten</option>
-                                            <option value="otra">Otra alergia severa</option>
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                                            <i class="fa-solid fa-chevron-down text-xs"></i>
-                                        </div>
-                                    </div>
-                                </div>
+                        <!-- Dietary Restrictions Flag (Si / No) -->
+                        <div id="rsvp-dietary-flag-group" class="space-y-3 pt-4 border-t border-gray-100">
+                            <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">¿Tienes alguna restricción alimenticia?</label>
+                            <div class="flex gap-8">
+                                <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
+                                    <input type="radio" name="rsvp-dietary-flag" value="no" checked class="w-4 h-4 accent-charcoal">
+                                    <span>No</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer text-sm text-charcoal">
+                                    <input type="radio" name="rsvp-dietary-flag" value="yes" class="w-4 h-4 accent-charcoal">
+                                    <span>Sí</span>
+                                </label>
                             </div>
+                        </div>
+
+                        <!-- Dietary Details Input (Hidden by default, shown if dietary-flag is yes) -->
+                        <div id="rsvp-dietary-details-section" class="hidden space-y-2 pt-2 animate-fade-in">
+                            <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Especifica tu restricción (Celíaco, Vegano, Alergia, etc.)</label>
+                            <input type="text" id="rsvp-dietary" placeholder="Escribe aquí tu restricción"
+                                class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
                         </div>
 
                         <button type="submit" id="rsvp-submit-btn"
@@ -752,21 +732,6 @@
                             class="text-charcoal text-[10px] tracking-[0.3em] uppercase border-b border-charcoal hover:text-gray-500 hover:border-gray-500 transition-colors pb-1">
                             Hacer otra confirmación
                         </button>
-                    </div>
-                </div>
-
-                <!-- LISTA DE NOVIOS - Elegant Gift Registry -->
-                <div class="mt-16 border-t border-gray-100 pt-12">
-                    <div class="text-center max-w-sm mx-auto">
-                        <p class="font-sans text-[9px] uppercase tracking-[0.4em] text-gray-400 mb-3">Un gesto de amor</p>
-                        <p class="font-serif text-xl text-charcoal mb-3">Lista de Novios</p>
-                        <p class="font-sans text-xs text-gray-400 font-light mb-6 leading-relaxed">Si deseas hacernos un regalo, lo recibiremos con mucho cariño.</p>
-                        <a href="https://www.paris.cl/lista-de-novios" target="_blank"
-                            class="inline-flex items-center gap-3 border border-charcoal/30 text-charcoal text-[10px] uppercase tracking-[0.3em] px-8 py-4 hover:bg-charcoal hover:text-white transition-all duration-500 group">
-                            <span>Tiendas Paris</span>
-                            <span class="text-gray-400 group-hover:text-white/60 transition-colors">·</span>
-                            <span class="font-light">Código 21030724</span>
-                        </a>
                     </div>
                 </div>
             </div>

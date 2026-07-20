@@ -353,21 +353,51 @@ window.closeLightbox = function() {
 
         // RSVP Form Handler
         const rsvpForm = document.getElementById('rsvp-form');
-        const hasPartnerCheckbox = document.getElementById('has-partner');
-        const partnerSection = document.getElementById('partner-section');
         const rsvpSuccess = document.getElementById('rsvp-success');
 
-        // Toggle partner section
-        if (hasPartnerCheckbox) {
-            hasPartnerCheckbox.addEventListener('change', () => {
-                if (hasPartnerCheckbox.checked) {
-                    partnerSection.classList.remove('hidden');
-                } else {
-                    partnerSection.classList.add('hidden');
-                    document.getElementById('partner-name').value = '';
-                    document.getElementById('partner-dietary').value = 'ninguna';
+        // Toggle dietary restrictions based on attendance and dietary flag
+        const attendanceRadios = document.getElementsByName('rsvp-attendance');
+        const dietaryFlagRadios = document.getElementsByName('rsvp-dietary-flag');
+        const dietaryFlagGroup = document.getElementById('rsvp-dietary-flag-group');
+        const dietaryDetailsSection = document.getElementById('rsvp-dietary-details-section');
+        const dietaryInput = document.getElementById('rsvp-dietary');
+
+        function updateRsvpFormVisibility() {
+            let isAttending = true;
+            for (const radio of attendanceRadios) {
+                if (radio.checked && radio.value === 'no') {
+                    isAttending = false;
                 }
-            });
+            }
+
+            if (!isAttending) {
+                if (dietaryFlagGroup) dietaryFlagGroup.classList.add('hidden');
+                if (dietaryDetailsSection) dietaryDetailsSection.classList.add('hidden');
+                if (dietaryInput) dietaryInput.value = '';
+            } else {
+                if (dietaryFlagGroup) dietaryFlagGroup.classList.remove('hidden');
+                
+                let hasDietary = false;
+                for (const radio of dietaryFlagRadios) {
+                    if (radio.checked && radio.value === 'yes') {
+                        hasDietary = true;
+                    }
+                }
+                
+                if (hasDietary) {
+                    if (dietaryDetailsSection) dietaryDetailsSection.classList.remove('hidden');
+                } else {
+                    if (dietaryDetailsSection) dietaryDetailsSection.classList.add('hidden');
+                    if (dietaryInput) dietaryInput.value = '';
+                }
+            }
+        }
+
+        for (const radio of attendanceRadios) {
+            radio.addEventListener('change', updateRsvpFormVisibility);
+        }
+        for (const radio of dietaryFlagRadios) {
+            radio.addEventListener('change', updateRsvpFormVisibility);
         }
 
         // Handle RSVP form submission
@@ -375,12 +405,24 @@ window.closeLightbox = function() {
             rsvpForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                const name = document.getElementById('rsvp-name').value;
-                const whatsapp = document.getElementById('rsvp-whatsapp').value;
-                const dietary = document.getElementById('dietary-restrictions').value;
-                const hasPartner = hasPartnerCheckbox.checked;
-                const partnerName = hasPartner ? document.getElementById('partner-name').value : '';
-                const partnerDietary = hasPartner ? document.getElementById('partner-dietary').value : '';
+                const name = document.getElementById('rsvp-name').value.trim();
+                const whatsapp = document.getElementById('rsvp-whatsapp').value.trim();
+                
+                let isAttending = true;
+                for (const radio of attendanceRadios) {
+                    if (radio.checked && radio.value === 'no') {
+                        isAttending = false;
+                    }
+                }
+                
+                let hasDietary = false;
+                for (const radio of dietaryFlagRadios) {
+                    if (radio.checked && radio.value === 'yes') {
+                        hasDietary = true;
+                    }
+                }
+                
+                const dietary = isAttending ? (hasDietary ? (dietaryInput.value.trim() || 'Sí') : 'Ninguna') : 'NO ASISTIRÁ';
 
                 const submitBtn = document.getElementById('rsvp-submit-btn');
                 const originalText = submitBtn.innerHTML;
@@ -390,29 +432,27 @@ window.closeLightbox = function() {
                 // Send email notification using Web3Forms
                 const formData = new FormData();
                 formData.append('access_key', '138e83f9-894d-4a94-bee4-af9392f8ffb9');
-                formData.append('subject', `Nueva Confirmación Gala: ${name}`);
+                formData.append('subject', `Nueva Confirmación Boda: ${name}`);
                 formData.append('from_name', 'Sitio Oficial Boda');
                 formData.append('to_email', 'camilayfelipe.v@gmail.com');
 
-                let message = `Invitado Principal: ${name}\nWhatsApp: ${whatsapp}\nRestricción: ${dietary}`;
-                if (hasPartner) {
-                    message += `\n\nAcompañante: ${partnerName}\nRestricción Acompañante: ${partnerDietary}`;
-                }
+                let message = `Nombre completo: ${name}\n`;
+                message += `Asistencia: ${isAttending ? 'SÍ, asistirá' : 'NO asistirá'}\n`;
+                message += `Restricción Alimentaria: ${isAttending ? (hasDietary ? 'SÍ (' + dietary + ')' : 'NO') : 'N/A'}\n`;
+                message += `WhatsApp: ${whatsapp}`;
                 formData.append('message', message);
 
-                // 1. Prepare Supabase Data
                 const rsvpData = {
                     name,
-                    email: '', // Deprecated minimal form
+                    email: '',
                     whatsapp,
-                    has_partner: hasPartner,
-                    partner_name: partnerName,
+                    has_partner: false,
+                    partner_name: '',
                     dietary_restrictions: dietary,
-                    partner_dietary: partnerDietary,
+                    partner_dietary: '',
                     created_at: new Date().toISOString()
                 };
 
-                // 2. Execute both actions in parallel
                 try {
                     const emailPromise = fetch('https://api.web3forms.com/submit', {
                         method: 'POST',
@@ -423,7 +463,6 @@ window.closeLightbox = function() {
 
                     const [emailResponse, dbResult] = await Promise.allSettled([emailPromise, dbPromise]);
 
-                    // Check functionality
                     let emailSuccess = false;
                     let dbSuccess = false;
 
@@ -440,7 +479,6 @@ window.closeLightbox = function() {
                         else console.error('Supabase Error:', dbResult.value.error);
                     }
 
-                    // Success Condition: At least one worked
                     if (emailSuccess || dbSuccess) {
                         rsvpForm.classList.add('hidden');
                         rsvpSuccess.classList.remove('hidden');
@@ -452,16 +490,14 @@ window.closeLightbox = function() {
                             });
                         }
 
-                        // Update WhatsApp share notice button
                         const whatsappShareBtn = document.getElementById('rsvp-whatsapp-share-btn');
                         if (whatsappShareBtn) {
                             let whatsappMsg = `¡Hola! Acabo de confirmar mi asistencia en la web.\n\n`;
-                            whatsappMsg += `Invitado: ${name}\n`;
+                            whatsappMsg += `Nombre: ${name}\n`;
                             whatsappMsg += `WhatsApp: ${whatsapp}\n`;
-                            whatsappMsg += `Restricción alimentaria: ${dietary}\n`;
-                            if (hasPartner) {
-                                whatsappMsg += `Acompañante: ${partnerName}\n`;
-                                whatsappMsg += `Restricción acompañante: ${partnerDietary}\n`;
+                            whatsappMsg += `Asistencia: ${isAttending ? 'SÍ, asistiré' : 'NO podré asistir'}\n`;
+                            if (isAttending && hasDietary) {
+                                whatsappMsg += `Restricción alimentaria: ${dietary}\n`;
                             }
                             whatsappShareBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappMsg)}`;
                         }
@@ -479,25 +515,35 @@ window.closeLightbox = function() {
             });
         }
 
-        // Quick WhatsApp RSVP click handler (grabs current form values)
+        // Quick WhatsApp RSVP click handler
         const whatsappQuickBtn = document.getElementById('rsvp-whatsapp-quick-btn');
         if (whatsappQuickBtn) {
             whatsappQuickBtn.addEventListener('click', (e) => {
                 const name = document.getElementById('rsvp-name').value.trim();
                 const whatsapp = document.getElementById('rsvp-whatsapp').value.trim();
-                const dietary = document.getElementById('dietary-restrictions').value;
-                const hasPartner = hasPartnerCheckbox && hasPartnerCheckbox.checked;
-                const partnerName = hasPartner ? document.getElementById('partner-name').value.trim() : '';
-                const partnerDietary = hasPartner ? document.getElementById('partner-dietary').value : '';
+                
+                let isAttending = true;
+                for (const radio of attendanceRadios) {
+                    if (radio.checked && radio.value === 'no') {
+                        isAttending = false;
+                    }
+                }
+                
+                let hasDietary = false;
+                for (const radio of dietaryFlagRadios) {
+                    if (radio.checked && radio.value === 'yes') {
+                        hasDietary = true;
+                    }
+                }
+                const dietaryDetails = hasDietary ? (dietaryInput.value.trim() || 'Sí, por especificar') : 'Ninguna';
 
                 let whatsappMsg = `¡Hola! Confirmo mi asistencia para la boda.\n\n`;
                 if (name) {
                     whatsappMsg += `Invitado: ${name}\n`;
                     if (whatsapp) whatsappMsg += `WhatsApp: ${whatsapp}\n`;
-                    whatsappMsg += `Restricción alimentaria: ${dietary}\n`;
-                    if (hasPartner) {
-                        whatsappMsg += `Acompañante: ${partnerName || 'Acompañante'}\n`;
-                        whatsappMsg += `Restricción acompañante: ${partnerDietary}\n`;
+                    whatsappMsg += `Asistencia: ${isAttending ? 'SÍ, asistiré' : 'NO podré asistir'}\n`;
+                    if (isAttending && hasDietary) {
+                        whatsappMsg += `Restricción alimenticia: ${dietaryDetails}\n`;
                     }
                 } else {
                     whatsappMsg += `Quiero confirmar mi asistencia.`;
@@ -759,8 +805,8 @@ window.closeLightbox = function() {
         if (addToCalendarBtn) {
             addToCalendarBtn.addEventListener('click', () => {
                 const title = "Boda Felipe & Camila";
-                const description = "Ceremonia Religiosa en Capilla Divina Misericordia y Gala en Centro de Eventos Arboleda Chicureo.";
-                const location = "Pudahuel y Chicureo, Santiago, Chile";
+                const description = "Ceremonia Religiosa en el Santuario de la Divina Misericordia y Gala en Centro de Eventos Arboleda Chicureo.";
+                const location = "Santuario de la Divina Misericordia (Colina) y Centro de Eventos Arboleda (Chicureo), Chile";
                 
                 // ICS file format
                 // Start: Oct 23, 2026, 17:30. End: Oct 24, 2026, 05:00
