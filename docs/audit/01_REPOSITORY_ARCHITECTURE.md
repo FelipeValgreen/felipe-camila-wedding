@@ -36,7 +36,11 @@ Replace the diagram with the verified implementation.
 
 | Area | Current implementation | Evidence | Risk | Priority | Recommended disposition |
 |---|---|---|---:|---:|---|
-| Pending | Pending | Pending | Pending | Pending | Retain / refactor / replace |
+|  | Entry point | Core landing page with inline logic |
+|  | Interactivity | UI behavior and event listeners |
+|  | Database | Supabase integration for RSVP and photos |
+|  | Migration | DB Schema definitions |
+|  | Styling | CSS files | Pending | Pending | Retain / refactor / replace |
 
 ## Constraints
 

@@ -74,7 +74,8 @@ The gallery should make the invitation feel alive and evolving, while the RSVP a
 
 | Area | Current state | Keep / refactor / rebuild / remove | Reason | Risk | Priority | Acceptance criterion |
 |---|---|---|---|---:|---:|---|
-| Pending | Pending | Pending | Pending | Pending | Pending | Pending |
+| Migrate to Next.js | Current static HTML architecture is unscalable | Improved DevEx, performance, and security | Medium | Low | P1 | React/Next.js frontend setup |
+| Secure Supabase Backend | RLS is open and keys are exposed | Prevents data corruption and unauthorized access | Medium | High | P0 | Implement Row Level Security securely |
 
 ## Implementation gate
 

@@ -28,7 +28,13 @@ Expected names to verify, not assume:
 
 | Object | Type | Columns / signature | Relationships | Current use | Data sensitivity | Risk |
 |---|---|---|---|---|---|---|
-| Pending | Pending | Pending | Pending | Pending | Pending | Pending |
+|  |  | Pre-populated guest codes |
+|  |  | Submitted RSVP data |
+|  |  | Guest uploaded photos |
+|  |  | User song requests | Pending |  |  | Pre-populated guest codes |
+|  |  | Submitted RSVP data |
+|  |  | Guest uploaded photos |
+|  |  | User song requests |
 
 ## Data model requirements
 

@@ -16,7 +16,13 @@ Verify all public, internal and legacy routes, including at minimum:
 
 | Route | Purpose | Entry file | Data source | Authentication | Current status | Risk |
 |---|---|---|---|---|---|---|
-| Pending | Pending | Pending | Pending | Pending | Pending | Pending |
+|  | Home section |
+|  | RSVP form section |
+|  | Guest photo upload section |
+|  | Gallery section | Pending |  | Home section |
+|  | RSVP form section |
+|  | Guest photo upload section |
+|  | Gallery section |
 
 ## Approved route behavior
 

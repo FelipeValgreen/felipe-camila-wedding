@@ -74,7 +74,8 @@ Confirmed guests
 
 | Flow | Failure | Current behavior | Data-loss risk | User message | Required correction | Priority |
 |---|---|---|---:|---|---|---:|
-| Pending | Pending | Pending | Pending | Pending | Pending | Pending |
+| RSVP Submission | index.html UI form triggers JS event -> js/supabase-client.js saves to rsvp_guests -> Success message | Data integrity risk due to open RLS | Medium | High | P0 | Secure with user auth or token verification |
+| Photo Upload | Upload via UI -> js/supabase-client.js uploads to storage -> Inserts into guest_photos -> Sends email via Web3Forms | Unauthorized uploads and open storage bucket | High | High | P0 | Limit file types, size securely, enforce RLS on storage bucket |
 
 ## Audit logging
 

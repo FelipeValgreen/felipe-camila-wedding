@@ -1,6 +1,6 @@
 # 00 — Executive Summary
 
-Status: **Pending Antigravity audit**
+Status: **Completed**
 
 ## Objective
 
@@ -32,7 +32,8 @@ Summarize:
 
 | Finding | Evidence | Impact | Complexity | Risk | Priority | Acceptance criterion |
 |---|---|---:|---:|---:|---:|---|
-| Pending | Pending | Pending | Pending | Pending | Pending | Pending |
+| Current architecture is a single massive index.html | index.html size is 87KB, containing multiple JS scripts | Hard to maintain and scale | Medium | Medium | P1 | Migrate to modular Next.js or React architecture |
+| Database lacks robust RLS | supabase_migration.sql shows RLS is enabled but using true for public inserts/selects | Any user can insert or read RSVP/Photos | Low | High | P0 | Implement strict RLS policies using Supabase Auth or specific tokens |
 
 ## Explicit exclusions
 

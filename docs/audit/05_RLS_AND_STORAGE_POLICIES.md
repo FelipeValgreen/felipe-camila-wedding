@@ -18,7 +18,15 @@ Audit all Row Level Security policies and Storage policies that affect:
 
 | Resource | Operation | Role | Policy condition | Publicly reachable? | Intended? | Risk | Priority |
 |---|---|---|---|---:|---:|---:|---:|
-| Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
+|  | SELECT |  (Public) |
+|  | INSERT |  (Public) |
+|  | SELECT |  (Public) |
+|  | INSERT |  (Public) |
+|  | SELECT |  (Public) | Pending |  | SELECT |  (Public) |
+|  | INSERT |  (Public) |
+|  | SELECT |  (Public) |
+|  | INSERT |  (Public) |
+|  | SELECT |  (Public) | Pending |
 
 ## Mandatory tests
 

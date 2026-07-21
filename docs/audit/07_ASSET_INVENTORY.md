@@ -8,7 +8,7 @@ Catalog every image, audio file, icon, font and generated visual asset.
 
 | Path | Type | Size | Used where | Origin | License / permission | Real / AI / unknown | Approval status | Action |
 |---|---|---:|---|---|---|---|---|---|
-| Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
+|  | Multiple images and assets for gallery/UI | Images | Pending |  | Multiple images and assets for gallery/UI | Images | Pending | Pending |
 
 ## Mandatory classifications
 
