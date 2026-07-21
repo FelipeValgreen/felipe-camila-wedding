@@ -1,0 +1,31 @@
+{
+  "name": "RSVP to Google Sheets sync workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "supabase-rsvp-trigger",
+        "options": {}
+      },
+      "name": "Webhook Trigger (Supabase RSVP event)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "operation": "lookup",
+        "sheetId": "PENDING_SHEET_ID_CONFIG",
+        "range": "RSVP_WEB_RAW!A:Z",
+        "lookupColumn": "guest_id",
+        "lookupValue": "={{$node["Webhook Trigger"].json["guest_id"]}}"
+      },
+      "name": "Google Sheets Lookup",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [300, 300]
+    }
+  ],
+  "connections": {},
+  "active": false,
+  "settings": {}
+}

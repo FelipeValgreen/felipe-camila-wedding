@@ -5,12 +5,15 @@ class AIProviderInterface {
   }
 
   async createTurn(input) {
-    // Check kill switch
     if (this.mode === 'human_only') {
       return { type: 'handoff', reason: 'AI concierge is in human_only override mode.' };
     }
     
-    // Abstract interface resolver
+    // Simulate provider timeout if triggered by tests
+    if (process.env.TEST_AI_TIMEOUT === 'true') {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+
     return this._processTurn(input);
   }
 
@@ -19,26 +22,22 @@ class AIProviderInterface {
   }
 }
 
-// 1. OpenAI Adapter Mock
-class OpenAIWeddingProvider extends AIProviderInterface {
+// 1. Mock OpenAI Adapter
+class MockOpenAIWeddingProvider extends AIProviderInterface {
   async _processTurn(input) {
     const text = input.recentMessages[input.recentMessages.length - 1]?.text_content || '';
     
-    // Simulate latency and token usage
     const metadata = {
-      provider: 'openai',
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-      latencyMs: 120,
-      usage: { prompt_tokens: 150, completion_tokens: 45 }
+      provider: 'openai_mock',
+      model: 'gpt-4o-mini-mock',
+      latencyMs: 50
     };
 
-    // Factual answers from knowledge base
     if (text.toLowerCase().includes('hora') || text.toLowerCase().includes('ceremonia')) {
       const fact = input.approvedKnowledge.find(k => k.topic === 'ceremony');
       return { type: 'message', text: fact.content, confidence: 0.98, metadata };
     }
 
-    // Tool trigger tests: Confirm attendance
     if (text.toLowerCase().includes('confirmo') || text.toLowerCase().includes('asistiré')) {
       return {
         type: 'tool_call',
@@ -49,35 +48,32 @@ class OpenAIWeddingProvider extends AIProviderInterface {
       };
     }
 
-    // Handoff tests
-    if (text.toLowerCase().includes('humano') || text.toLowerCase().includes('operador') || text.toLowerCase().includes('hijo')) {
+    if (text.toLowerCase().includes('humano') || text.toLowerCase().includes('operador')) {
       return {
         type: 'handoff',
-        reason: 'Guest explicitly requested human operator support or asked an exception.',
+        reason: 'Guest requested operator support.',
         metadata
       };
     }
 
-    // Fallback uncertainty response
     return {
       type: 'uncertain',
-      text: 'Lo siento, no tengo confirmada esa información todavía en mi base. Prefiero dejar tu consulta al equipo del matrimonio para que te respondan.',
-      reason: 'No matching verified knowledge found in system context.',
+      text: 'Lo siento, no tengo confirmada esa información todavía en mi base.',
+      reason: 'No knowledge matched.',
       metadata
     };
   }
 }
 
-// 2. Gemini Adapter Mock
-class GeminiWeddingProvider extends AIProviderInterface {
+// 2. Mock Gemini Adapter
+class MockGeminiWeddingProvider extends AIProviderInterface {
   async _processTurn(input) {
     const text = input.recentMessages[input.recentMessages.length - 1]?.text_content || '';
 
     const metadata = {
-      provider: 'gemini',
-      model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
-      latencyMs: 145,
-      usage: { prompt_tokens: 180, completion_tokens: 50 }
+      provider: 'gemini_mock',
+      model: 'gemini-1.5-flash-mock',
+      latencyMs: 60
     };
 
     if (text.toLowerCase().includes('hora') || text.toLowerCase().includes('ceremonia')) {
@@ -95,33 +91,32 @@ class GeminiWeddingProvider extends AIProviderInterface {
       };
     }
 
-    if (text.toLowerCase().includes('humano') || text.toLowerCase().includes('operador') || text.toLowerCase().includes('hijo')) {
+    if (text.toLowerCase().includes('humano') || text.toLowerCase().includes('operador')) {
       return {
         type: 'handoff',
-        reason: 'Guest explicitly requested human operator support or asked an exception.',
+        reason: 'Guest requested operator.',
         metadata
       };
     }
 
     return {
       type: 'uncertain',
-      text: 'Disculpa, esa información no está en mis registros. Dejaré tu pregunta con los novios para que te escriban.',
-      reason: 'Unresolved query mapping outside knowledge boundary.',
+      text: 'Disculpa, esa información no está en mis registros.',
+      reason: 'No knowledge matched.',
       metadata
     };
   }
 }
 
-// Factory to resolve adapter based on environment variable
 function getAIProvider(providerName, mode, maxToolCalls) {
   if (providerName === 'gemini') {
-    return new GeminiWeddingProvider(mode, maxToolCalls);
+    return new MockGeminiWeddingProvider(mode, maxToolCalls);
   }
-  return new OpenAIWeddingProvider(mode, maxToolCalls);
+  return new MockOpenAIWeddingProvider(mode, maxToolCalls);
 }
 
 module.exports = {
   getAIProvider,
-  OpenAIWeddingProvider,
-  GeminiWeddingProvider
+  MockOpenAIWeddingProvider,
+  MockGeminiWeddingProvider
 };

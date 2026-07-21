@@ -7,7 +7,6 @@ class WebhookHandler {
     this.db = db;
   }
 
-  // GET: Webhook verification
   verifySubscription(query) {
     const mode = query['hub.mode'];
     const token = query['hub.verify_token'];
@@ -19,7 +18,6 @@ class WebhookHandler {
     return { ok: false, errorCode: 'forbidden' };
   }
 
-  // Signature validation (HMAC SHA-256)
   validateSignature(rawBody, signatureHeader) {
     if (!signatureHeader || !this.appSecret) return false;
     
@@ -42,7 +40,6 @@ class WebhookHandler {
     }
   }
 
-  // Normalizer: Meta payload conversion
   normalizeEvent(payload) {
     try {
       const entry = payload.entry?.[0];
@@ -51,19 +48,17 @@ class WebhookHandler {
       
       if (!value) return null;
 
-      // Status updates (sent, delivered, read, failed)
       if (value.statuses) {
         const status = value.statuses[0];
         return {
           type: 'status_update',
           messageId: status.id,
           recipientId: status.recipient_id,
-          status: status.status, // 'sent', 'delivered', 'read', 'failed'
+          status: status.status,
           timestamp: status.timestamp
         };
       }
 
-      // Inbound Messages
       if (value.messages) {
         const msg = value.messages[0];
         const contact = value.contacts?.[0] || {};
@@ -74,12 +69,6 @@ class WebhookHandler {
         if (msg.type === 'text') {
           type = 'text';
           content = { text: msg.text?.body };
-        } else if (msg.type === 'image') {
-          type = 'image';
-          content = { mediaId: msg.image?.id, mimeType: msg.image?.mime_type };
-        } else if (msg.type === 'audio') {
-          type = 'audio';
-          content = { mediaId: msg.audio?.id, mimeType: msg.audio?.mime_type };
         }
 
         return {
@@ -95,30 +84,29 @@ class WebhookHandler {
 
       return null;
     } catch (error) {
-      console.error('Failed to normalize event:', error.message);
       return null;
     }
   }
 
-  // Ingest handler with deduplication
   async ingest(rawBody, signatureHeader, payload) {
-    // 1. Verify authenticity
     if (!this.validateSignature(rawBody, signatureHeader)) {
       return { ok: false, status: 401, error: 'Unauthorized signature' };
     }
 
-    // 2. Normalize Meta payload
     const event = this.normalizeEvent(payload);
     if (!event) {
       return { ok: true, status: 200, message: 'Unprocessed event type' };
     }
 
-    // 3. Deduplicate messages
     if (event.type === 'message') {
-      const isDuplicate = await this.db.checkIdempotency(event.messageId);
-      if (isDuplicate) {
-        return { ok: true, status: 200, message: 'Duplicate message ignored', duplicate: true };
+      // Check idempotency status: complete/processing blocks; failed allows retry
+      const status = await this.db.getIdempotencyStatus(event.messageId);
+      if (status === 'processing' || status === 'completed') {
+        return { ok: true, status: 200, message: 'Message already processing or processed', duplicate: true };
       }
+      
+      // Update state to processing atomically before executing turn
+      await this.db.setIdempotencyStatus(event.messageId, 'processing');
     }
 
     return { ok: true, status: 200, event };

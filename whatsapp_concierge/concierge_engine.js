@@ -16,133 +16,178 @@ class ConciergeEngine {
     const messageText = event.content.text || '';
     const messageId = event.messageId;
 
-    // 1. Resolve guest identity (by phone number matching)
     const guest = await this.db.getGuestByPhone(senderPhone);
     const guestId = guest ? guest.id : null;
     const guestName = guest ? `${guest.first_name} ${guest.last_name}` : 'Unknown';
 
-    // 2. Fetch or create conversation thread
     const thread = await this.db.getOrCreateThread(senderPhone, guestId);
 
-    // Save inbound message to history
+    // Save message history
     await this.db.saveMessage({
       thread_id: thread.id,
       meta_message_id: messageId,
       direction: 'inbound',
-      sender_type: guest ? 'guest' : 'unknown',
+      sender_type: guest ? 'guest' : 'unknown', // Save unknown for unidentified senders
       text_content: messageText
     });
 
-    // 3. CRITICAL SECURITY CHECK: If thread is paused for a human, do NOT reply!
+    // Check human lock status
     if (thread.ai_paused) {
-      console.log(`[AI PAUSED] Thread ${thread.id} is locked by human operator. Discarding automated reply.`);
+      await this.db.setIdempotencyStatus(messageId, 'completed');
       return { ok: true, status: 'paused_by_human', text: '' };
     }
 
-    // 4. Load approved knowledge
-    const approvedKnowledge = this.db.knowledge;
-
-    // Load recent message history for context
-    const recentMessages = this.db.messages.filter(m => m.thread_id === thread.id).slice(-10);
-
-    // 5. Initialize active AI Provider based on configuration
-    const providerName = process.env.AI_PROVIDER || 'openai';
-    const aiMode = process.env.AI_MODE || 'active';
-    const aiMaxToolCalls = parseInt(process.env.AI_MAX_TOOL_CALLS || '5', 10);
-    const aiProvider = getAIProvider(providerName, aiMode, aiMaxToolCalls);
-
-    const inputContext = {
-      threadId: thread.id,
-      language: 'es-CL',
-      approvedInstructions: 'Eres el asistente oficial del matrimonio de Felipe y Camila. Ayuda con preguntas prácticas.',
-      approvedKnowledge,
-      recentMessages,
-      identityState: {
-        guestId,
-        guestName,
-        phone: senderPhone,
-        isAuthenticated: !!guest
-      },
-      allowedTools: Array.from(this.toolRouter.allowedTools)
-    };
-
-    // 6. Call the AI Provider Turn
-    let turnResult;
-    try {
-      turnResult = await aiProvider.createTurn(inputContext);
-    } catch (err) {
-      console.error('AI Turn creation failed:', err.message);
-      // Fallback response on timeout or crash
-      turnResult = {
-        type: 'handoff',
-        reason: `AI model invocation error: ${err.message}`
-      };
-    }
-
     let finalResponseText = '';
+    let success = false;
 
-    // 7. Handle different turn outcomes
-    if (turnResult.type === 'message') {
-      finalResponseText = turnResult.text;
-    } else if (turnResult.type === 'tool_call') {
-      // Execute the tool
-      const toolContext = {
-        threadId: thread.id,
-        messageId,
-        identityState: { guestId },
-        actor: 'ai',
-        idempotencyKey: `idem_t_${messageId}`,
-        correlationId: `corr_${messageId}`
-      };
+    try {
+      // 1. STATE-MACHINE CHECK: Check if guest is replying to a pending action confirmation
+      if (thread.pending_action && thread.pending_action.expiresAt > Date.now()) {
+        const isAffirmative = ['sí', 'si', 'confirmar', 'correcto', 'confirmo'].includes(messageText.toLowerCase().trim());
+        
+        if (isAffirmative) {
+          const action = thread.pending_action;
+          
+          // Clear pending state immediately before executing
+          await this.db.savePendingAction(thread.id, null);
 
-      const toolResult = await this.toolRouter.execute(turnResult.tool, turnResult.arguments, toolContext);
-      
-      if (toolResult.ok) {
-        // If tool executed successfully, AI normally responds with confirmation copy
-        finalResponseText = toolResult.data.message;
+          // Execute the write tool
+          const toolContext = {
+            threadId: thread.id,
+            messageId,
+            identityState: { guestId },
+            actor: 'guest',
+            idempotencyKey: `idem_t_${messageId}`,
+            correlationId: `corr_${messageId}`
+          };
+
+          const toolResult = await this.toolRouter.execute(action.tool, action.arguments, toolContext);
+          
+          if (toolResult.ok) {
+            finalResponseText = toolResult.data.message;
+            success = true;
+          } else {
+            finalResponseText = toolResult.safeMessage;
+          }
+        } else {
+          // Cancel/discard pending state on negative or unrelated message
+          await this.db.savePendingAction(thread.id, null);
+          finalResponseText = 'Entendido. He cancelado el cambio solicitado. ¿En qué más puedo ayudarte?';
+          success = true;
+        }
       } else {
-        // Safe user-facing error message
-        finalResponseText = toolResult.safeMessage;
+        // Clear expired pending action
+        if (thread.pending_action) {
+          await this.db.savePendingAction(thread.id, null);
+        }
+
+        // 2. Standard AI Turn processing
+        const approvedKnowledge = this.db.knowledge;
+        const recentMessages = this.db.messages.filter(m => m.thread_id === thread.id).slice(-10);
+
+        const providerName = process.env.AI_PROVIDER || 'openai';
+        const aiMode = process.env.AI_MODE || 'active';
+        const aiMaxToolCalls = parseInt(process.env.AI_MAX_TOOL_CALLS || '5', 10);
+        const aiProvider = getAIProvider(providerName, aiMode, aiMaxToolCalls);
+
+        const inputContext = {
+          threadId: thread.id,
+          language: 'es-CL',
+          approvedInstructions: 'Eres el asistente oficial.',
+          approvedKnowledge,
+          recentMessages,
+          identityState: { guestId, guestName, phone: senderPhone, isAuthenticated: !!guest },
+          allowedTools: Array.from(this.toolRouter.allowedTools)
+        };
+
+        // Implement a promise-race timeout check to guarantee fast responses
+        const timeoutMs = parseInt(process.env.AI_TIMEOUT_MS || '8000', 10);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('AI provider request timeout')), timeoutMs)
+        );
+        const turnResult = await Promise.race([
+          aiProvider.createTurn(inputContext),
+          timeoutPromise
+        ]);
+
+        if (turnResult.type === 'message') {
+          finalResponseText = turnResult.text;
+          success = true;
+        } else if (turnResult.type === 'tool_call') {
+          // WA-P0-001: Do NOT execute tool. Save pending action state and ask for confirmation
+          if (turnResult.confirmationRequired) {
+            const pendingAction = {
+              tool: turnResult.tool,
+              arguments: turnResult.arguments
+            };
+            await this.db.savePendingAction(thread.id, pendingAction);
+            finalResponseText = 'Entiendo que quieres confirmar tu asistencia. ¿Me confirmas que es correcto? (Responde SÍ para confirmar o NO para cancelar)';
+            success = true;
+          } else {
+            // Direct execution for non-confirmation tools
+            const toolContext = { threadId: thread.id, messageId, identityState: { guestId }, actor: 'ai', idempotencyKey: `idem_t_${messageId}`, correlationId: `corr_${messageId}` };
+            const toolResult = await this.toolRouter.execute(turnResult.tool, turnResult.arguments, toolContext);
+            if (toolResult.ok) {
+              finalResponseText = toolResult.data.message;
+              success = true;
+            } else {
+              finalResponseText = toolResult.safeMessage;
+            }
+          }
+        } else if (turnResult.type === 'handoff' || turnResult.type === 'uncertain') {
+          // Trigger handoff
+          const toolContext = { threadId: thread.id, messageId, identityState: { guestId }, actor: 'system', idempotencyKey: `idem_h_${messageId}`, correlationId: `corr_${messageId}` };
+          const toolResult = await this.toolRouter.execute('create_human_handoff', { reasonCode: turnResult.type === 'handoff' ? 'human_requested' : 'low_confidence', guestSummary: turnResult.reason || '' }, toolContext);
+          
+          // WA-P0-002: Never confirm handoff if the tool call failed
+          if (toolResult.ok) {
+            finalResponseText = turnResult.type === 'handoff' 
+              ? 'Claro. Dejé tu consulta al equipo del matrimonio para que continúe conversando contigo por este mismo WhatsApp.'
+              : turnResult.text;
+            success = true;
+          } else {
+            finalResponseText = 'Disculpa, tuvimos un problema al transferirte con un operador. Por favor, reintenta en unos momentos.';
+          }
+        }
       }
-    } else if (turnResult.type === 'handoff') {
-      // Trigger human handoff tool explicitly
-      const toolContext = {
-        threadId: thread.id,
-        messageId,
-        identityState: { guestId },
-        actor: 'system',
-        idempotencyKey: `idem_h_${messageId}`,
-        correlationId: `corr_${messageId}`
+
+      // Mark processing as completed successfully
+      if (success) {
+        await this.db.setIdempotencyStatus(messageId, 'completed');
+      } else {
+        await this.db.setIdempotencyStatus(messageId, 'failed');
+      }
+    } catch (error) {
+      // Mark processing as failed on exceptions, enabling retries to recover
+      await this.db.setIdempotencyStatus(messageId, 'failed');
+      console.error('System execution error caught:', error.message);
+      
+      // Trigger a human handoff to notify the team of the system issue
+      const toolContext = { 
+        threadId: thread.id, 
+        messageId, 
+        identityState: { guestId }, 
+        actor: 'system', 
+        idempotencyKey: `idem_err_${messageId}`, 
+        correlationId: `corr_err_${messageId}` 
       };
       
-      const handoffResult = await this.toolRouter.execute('create_human_handoff', {
-        reasonCode: 'unsupported_change',
-        guestSummary: turnResult.reason || 'Guest requested human assistance.',
-        urgency: 'normal'
-      }, toolContext);
+      try {
+        await this.toolRouter.execute('create_human_handoff', { 
+          reasonCode: 'tool_failure', 
+          guestSummary: `System execution exception: ${error.message}` 
+        }, toolContext);
+      } catch (e) {
+        // Ignored to avoid nested crashes
+      }
 
-      finalResponseText = 'Claro. Dejé tu consulta al equipo del matrimonio para que continúe conversando contigo por este mismo WhatsApp.';
-    } else if (turnResult.type === 'uncertain') {
-      // Unresolved answer fallback (trigger handoff automatically)
-      const toolContext = {
-        threadId: thread.id,
-        messageId,
-        identityState: { guestId },
-        actor: 'system',
-        idempotencyKey: `idem_u_${messageId}`,
-        correlationId: `corr_${messageId}`
+      return {
+        ok: true,
+        status: 'replied',
+        text: 'Lo sentimos, tuvimos un problema al conectar con el servidor. Tu consulta ha sido transferida a los novios para que te ayuden.'
       };
-      
-      await this.toolRouter.execute('create_human_handoff', {
-        reasonCode: 'low_confidence',
-        guestSummary: turnResult.reason,
-        urgency: 'normal'
-      }, toolContext);
-
-      finalResponseText = turnResult.text;
     }
 
-    // 8. Save outgoing AI message in database history
     if (finalResponseText) {
       await this.db.saveMessage({
         thread_id: thread.id,
@@ -152,12 +197,7 @@ class ConciergeEngine {
       });
     }
 
-    return {
-      ok: true,
-      status: 'replied',
-      text: finalResponseText,
-      metadata: turnResult.metadata
-    };
+    return { ok: true, status: 'replied', text: finalResponseText };
   }
 }
 

@@ -5,26 +5,27 @@
 -- Enable UUID extension if not already present
 create extension if not exists "uuid-ossp";
 
--- 1. Conversation Threads (One active thread per guest phone number)
+-- 1. Conversation Threads (guest_id uuid has no foreign key constraint since guest_list schema is unapproved)
 create table if not exists public.conversation_threads (
     id uuid default gen_random_uuid() primary key,
-    guest_id uuid references public.guest_list(id) on delete set null,
+    guest_id uuid, -- No FK constraint to avoid guest_list dependency
     phone_number text not null unique,
     ai_paused boolean not null default false,
     paused_until timestamp with time zone,
+    pending_action jsonb, -- Stores pending confirmation state
     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 create index if not exists idx_threads_phone on public.conversation_threads(phone_number);
 
--- 2. Conversation Messages (Ingests raw metadata & messages history)
+-- 2. Conversation Messages
 create table if not exists public.conversation_messages (
     id uuid default gen_random_uuid() primary key,
     thread_id uuid references public.conversation_threads(id) on delete cascade not null,
     meta_message_id text unique,
     direction text not null check (direction in ('inbound', 'outbound')),
-    sender_type text not null check (sender_type in ('guest', 'ai', 'operator', 'system')),
+    sender_type text not null check (sender_type in ('guest', 'ai', 'operator', 'system', 'unknown')), -- Added unknown sender_type
     message_type text not null default 'text',
     text_content text,
     media_url text,
@@ -33,7 +34,7 @@ create table if not exists public.conversation_messages (
 
 create index if not exists idx_messages_thread_chrono on public.conversation_messages(thread_id, created_at);
 
--- 3. Human Handoffs (Operator queues for takeover)
+-- 3. Human Handoffs
 create table if not exists public.human_handoffs (
     id uuid default gen_random_uuid() primary key,
     thread_id uuid references public.conversation_threads(id) on delete cascade not null,
@@ -58,22 +59,16 @@ create table if not exists public.approved_knowledge (
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 5. Idempotency Records (Deduplicates Meta webhooks)
+-- 5. Idempotency Records (Deduplicates Meta webhooks with processing state check)
 create table if not exists public.idempotency_records (
     meta_message_id text primary key,
+    status text not null check (status in ('received', 'processing', 'completed', 'failed')),
     processed_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Enable Row Level Security (RLS) policies
+-- Enable Row Level Security (RLS) policies - Keep tables fully closed to public anon/authenticated roles
 alter table public.conversation_threads enable row level security;
 alter table public.conversation_messages enable row level security;
 alter table public.human_handoffs enable row level security;
 alter table public.approved_knowledge enable row level security;
 alter table public.idempotency_records enable row level security;
-
--- Establish RLS Rules (Deny public reads/writes, only permit service-role/admin actions)
-create policy "Service role full access" on public.conversation_threads for all using (true);
-create policy "Service role full access" on public.conversation_messages for all using (true);
-create policy "Service role full access" on public.human_handoffs for all using (true);
-create policy "Service role full access" on public.approved_knowledge for all using (true);
-create policy "Service role full access" on public.idempotency_records for all using (true);
