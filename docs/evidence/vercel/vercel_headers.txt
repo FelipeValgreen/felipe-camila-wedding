@@ -1,0 +1,19 @@
+[VERIFIED LIVE] HTTP RESPONSE HEADERS FOR FELIPEYCAMI.CL
+Tested via curl -I -s https://felipeycami.cl/
+Date: 2026-07-20
+
+HTTP/1.1 200 OK
+accept-ranges: bytes
+access-control-allow-origin: *
+age: 13337
+cache-control: public, max-age=0, must-revalidate
+content-disposition: inline
+content-type: text/html; charset=utf-8
+date: Tue, 21 Jul 2026 03:21:48 GMT
+etag: "5596f39625fbdf5084e7524dff6e3a9b"
+last-modified: Mon, 20 Jul 2026 23:39:30 GMT
+server: Vercel
+strict-transport-security: max-age=63072000
+x-vercel-cache: HIT
+x-vercel-id: gru1::8j2tg-1784604108076-fd6e393dad10
+content-length: 87804

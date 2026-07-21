@@ -1,0 +1,11 @@
+[VERIFIED LIVE] HTTP RESPONSE TIMINGS FOR FELIPEYCAMI.CL
+Tested via curl -o /dev/null -s -w ...
+Date: 2026-07-20
+
+HTTP Status: 200
+DNS Lookup: 0.100999s
+TCP Connection: 0.137199s
+SSL Handshake (AppConnect): 0.264854s
+Time to First Byte (TTFB): 0.351039s
+Total Request Time: 0.553893s
+Page HTML Payload Size: 87804 bytes (87.8 KB)

@@ -1,0 +1,21 @@
+[VERIFIED LIVE] SUPABASE DATABASE SCHEMAS AND COLUMNS
+Tested via direct PostgREST calls with Anon credentials on mwumnywbvjxekskfrlms.supabase.co
+Date: 2026-07-20
+
+--- Table: guest_list ---
+Status: NOT PRESENT in schema cache
+Error: Could not find the table 'public.guest_list' in the schema cache
+
+--- Table: rsvp_guests ---
+Status: PRESENT
+Verified Columns (HTTP select output): id, created_at, name, email, whatsapp, has_partner, partner_name
+Missing Columns (Defined in repository SQL but missing in live table): dietary_restrictions, partner_dietary
+
+--- Table: guest_photos ---
+Status: PRESENT
+Verified Columns (HTTP select output): id, url, uploader_name, created_at
+Missing Columns (Defined in repository SQL but missing in live table): event_type, album, approved, visible_in_gallery, notes
+
+--- Table: song_requests ---
+Status: PRESENT
+Verified Columns (HTTP select output): id, created_at, song_name, artist_name, requester_name

@@ -1,0 +1,23 @@
+[VERIFIED REPOSITORY] VISUAL CONCEPTS MANIFEST
+This file documents the source and paths of all visual mockups.
+Date: 2026-07-20
+
+- Path: design/concepts/a-el-umbral-vivo/desktop_opening.jpg
+  Source: Externally generated concept render via Antigravity AI Image Generator.
+  Resolution: 16:9 widescreen layout mockup.
+
+- Path: design/concepts/b-archivo-en-movimiento/desktop_opening.jpg
+  Source: Externally generated concept render via Antigravity AI Image Generator.
+  Resolution: 16:9 widescreen layout mockup.
+
+- Path: design/concepts/c-la-fecha-como-edificio/desktop_opening.jpg
+  Source: Externally generated concept render via Antigravity AI Image Generator.
+  Resolution: 16:9 widescreen layout mockup.
+
+- Path: design/concepts/hybrid-el-umbral-vivo/desktop_opening.jpg
+  Source: Externally generated concept render via Antigravity AI Image Generator.
+  Resolution: 16:9 widescreen layout mockup.
+
+- Path: design/concepts/hybrid-el-umbral-vivo/mobile_opening.jpg
+  Source: Externally generated concept render via Antigravity AI Image Generator.
+  Resolution: 9:16 portrait mobile layout mockup.
