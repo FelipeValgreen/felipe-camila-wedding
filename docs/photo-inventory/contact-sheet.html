@@ -1,194 +1,78 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Contact Sheet — Supabase Storage Inventory</title>
+<title>Photo Inventory Contact Sheet</title>
 <style>
-body { font-family: sans-serif; background: #FAF8F3; padding: 20px; color: #11110F; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
-.card { background: white; border: 1px solid #ccc; padding: 10px; border-radius: 6px; }
-.card img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
-.id { font-weight: bold; color: #B99B71; margin-top: 6px; }
-.meta { font-size: 11px; color: #666; margin-top: 4px; word-break: break-all; }
-.badge { background: #D97706; color: white; font-size: 10px; padding: 2px 6px; border-radius: 3px; display: inline-block; margin-top: 6px; }
+body {font-family: Arial, sans-serif; margin: 20px;}
+table {border-collapse: collapse; width: 100%;}
+th, td {border: 1px solid #ddd; padding: 8px; text-align: left;}
+th {background-color: #f2f2f2;}
+img {max-width: 120px; height: auto;}
+.filter {margin-bottom: 15px;}
 </style>
 </head>
 <body>
-<h1>Inventario de Fotografías en Supabase Storage (wedding-photos)</h1>
-<p>Total objetos indexados: 19</p>
-<div class="grid">
-
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1764651969303_IMG_0475.jpeg" alt="PHOTO-001" loading="lazy">
-        <div class="id">PHOTO-001</div>
-        <div class="meta"><strong>File:</strong> guest_1764651969303_IMG_0475.jpeg</div>
-        <div class="meta"><strong>Date:</strong> 2025-12-02T05:06:13.421Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1764852196538_IMG_4168.jpeg" alt="PHOTO-002" loading="lazy">
-        <div class="id">PHOTO-002</div>
-        <div class="meta"><strong>File:</strong> guest_1764852196538_IMG_4168.jpeg</div>
-        <div class="meta"><strong>Date:</strong> 2025-12-04T12:43:18.572Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765423098101_IMG_2787.jpeg" alt="PHOTO-003" loading="lazy">
-        <div class="id">PHOTO-003</div>
-        <div class="meta"><strong>File:</strong> guest_1765423098101_IMG_2787.jpeg</div>
-        <div class="meta"><strong>Date:</strong> 2025-12-11T03:18:21.214Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765837504689_CD20FBA5_0F4E_4F2C_9525_9AEDFEFBAC6B.jpeg" alt="PHOTO-004" loading="lazy">
-        <div class="id">PHOTO-004</div>
-        <div class="meta"><strong>File:</strong> guest_1765837504689_CD20FBA5_0F4E_4F2C_9525_9AEDFEFBAC6B.jpeg</div>
-        <div class="meta"><strong>Date:</strong> 2025-12-15T22:25:08.403Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765840539848_67bf1334_3d31_4563_ab3f_a793dd83d30b.jpeg" alt="PHOTO-005" loading="lazy">
-        <div class="id">PHOTO-005</div>
-        <div class="meta"><strong>File:</strong> guest_1765840539848_67bf1334_3d31_4563_ab3f_a793dd83d30b.jpeg</div>
-        <div class="meta"><strong>Date:</strong> 2025-12-15T23:15:41.191Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765847118452_IMG_1010.jpeg" alt="PHOTO-006" loading="lazy">
-        <div class="id">PHOTO-006</div>
-        <div class="meta"><strong>File:</strong> guest_1765847118452_IMG_1010.jpeg</div>
-        <div class="meta"><strong>Date:</strong> 2025-12-16T01:05:20.332Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765854243354_1000123675.jpg" alt="PHOTO-007" loading="lazy">
-        <div class="id">PHOTO-007</div>
-        <div class="meta"><strong>File:</strong> guest_1765854243354_1000123675.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2025-12-16T03:04:04.184Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765854308218_1000123675.jpg" alt="PHOTO-008" loading="lazy">
-        <div class="id">PHOTO-008</div>
-        <div class="meta"><strong>File:</strong> guest_1765854308218_1000123675.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2025-12-16T03:05:08.988Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765854395934_1000123674.jpg" alt="PHOTO-009" loading="lazy">
-        <div class="id">PHOTO-009</div>
-        <div class="meta"><strong>File:</strong> guest_1765854395934_1000123674.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2025-12-16T03:06:36.713Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1769425221161_1000152665.jpg" alt="PHOTO-010" loading="lazy">
-        <div class="id">PHOTO-010</div>
-        <div class="meta"><strong>File:</strong> guest_1769425221161_1000152665.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2026-01-26T11:00:24.573Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1769434198304_1000152664.jpg" alt="PHOTO-011" loading="lazy">
-        <div class="id">PHOTO-011</div>
-        <div class="meta"><strong>File:</strong> guest_1769434198304_1000152664.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2026-01-26T13:29:59.797Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1769464493376_image.jpg" alt="PHOTO-012" loading="lazy">
-        <div class="id">PHOTO-012</div>
-        <div class="meta"><strong>File:</strong> guest_1769464493376_image.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2026-01-26T21:54:56.095Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1770139297266_image.jpg" alt="PHOTO-013" loading="lazy">
-        <div class="id">PHOTO-013</div>
-        <div class="meta"><strong>File:</strong> guest_1770139297266_image.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2026-02-03T17:21:38.566Z</div>
-        <div class="meta"><strong>Cat:</strong> PRE_EVENT</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773227705175_1000462782.jpg" alt="PHOTO-014" loading="lazy">
-        <div class="id">PHOTO-014</div>
-        <div class="meta"><strong>File:</strong> guest_1773227705175_1000462782.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2026-03-11T11:15:07.746Z</div>
-        <div class="meta"><strong>Cat:</strong> CIVIL_WEEKEND</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773491521242_1000114787.jpg" alt="PHOTO-015" loading="lazy">
-        <div class="id">PHOTO-015</div>
-        <div class="meta"><strong>File:</strong> guest_1773491521242_1000114787.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2026-03-14T12:32:02.375Z</div>
-        <div class="meta"><strong>Cat:</strong> CIVIL_WEEKEND</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773514195833_1000114847.jpg" alt="PHOTO-016" loading="lazy">
-        <div class="id">PHOTO-016</div>
-        <div class="meta"><strong>File:</strong> guest_1773514195833_1000114847.jpg</div>
-        <div class="meta"><strong>Date:</strong> 2026-03-14T18:49:57.263Z</div>
-        <div class="meta"><strong>Cat:</strong> CIVIL_WEEKEND</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773682017069_WhatsApp_Image_2026_03_15_at_10.44.32.jpeg" alt="PHOTO-017" loading="lazy">
-        <div class="id">PHOTO-017</div>
-        <div class="meta"><strong>File:</strong> guest_1773682017069_WhatsApp_Image_2026_03_15_at_10.44.32.jpeg</div>
-        <div class="meta"><strong>Date:</strong> 2026-03-16T17:29:14.027Z</div>
-        <div class="meta"><strong>Cat:</strong> CIVIL_WEEKEND</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773784468851_IMG_6969.jpeg" alt="PHOTO-018" loading="lazy">
-        <div class="id">PHOTO-018</div>
-        <div class="meta"><strong>File:</strong> guest_1773784468851_IMG_6969.jpeg</div>
-        <div class="meta"><strong>Date:</strong> 2026-03-17T21:54:31.584Z</div>
-        <div class="meta"><strong>Cat:</strong> CIVIL_WEEKEND</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
-    <div class="card">
-        <img src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads" alt="PHOTO-019" loading="lazy">
-        <div class="id">PHOTO-019</div>
-        <div class="meta"><strong>File:</strong> guest_uploads</div>
-        <div class="meta"><strong>Date:</strong> </div>
-        <div class="meta"><strong>Cat:</strong> CIVIL_WEEKEND</div>
-        <div class="badge">PENDING_HUMAN_APPROVAL</div>
-    </div>
-    
+<h1>Photo Inventory Contact Sheet</h1>
+<div class="filter">
+  <label>Batch: <select id="batchFilter"><option value="">All</option></select></label>
+  <label>Uploader: <select id="uploaderFilter"><option value="">All</option></select></label>
 </div>
+<table id="photoTable">
+  <thead>
+    <tr><th>Thumbnail</th><th>ID</th><th>Uploader</th><th>Created At</th><th>Batch</th><th>Object Path</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script>
+fetch('photo-inventory.json')
+  .then(r => r.json())
+  .then(data => {
+    const tbody = document.querySelector('#photoTable tbody');
+    const batchSet = new Set();
+    const uploaderSet = new Set();
+    data.forEach(rec => {
+      const tr = document.createElement('tr');
+      tr.dataset.batch = rec.batch || '';
+      tr.dataset.uploader = rec.uploader_name || '';
+      const tdImg = document.createElement('td');
+      const a = document.createElement('a');
+      a.href = rec.url;
+      a.target = '_blank';
+      const img = document.createElement('img');
+      img.src = rec.url;
+      a.appendChild(img);
+      tdImg.appendChild(a);
+      tr.appendChild(tdImg);
+      const tdId = document.createElement('td'); tdId.textContent = rec.id; tr.appendChild(tdId);
+      const tdUploader = document.createElement('td'); tdUploader.textContent = rec.uploader_name || '';
+      tr.appendChild(tdUploader);
+      const tdCreated = document.createElement('td'); tdCreated.textContent = rec.created_at; tr.appendChild(tdCreated);
+      const tdBatch = document.createElement('td'); tdBatch.textContent = rec.batch || '';
+      tr.appendChild(tdBatch);
+      const tdPath = document.createElement('td'); tdPath.textContent = rec.object_path || '';
+      tr.appendChild(tdPath);
+      tbody.appendChild(tr);
+      batchSet.add(rec.batch);
+      uploaderSet.add(rec.uploader_name);
+    });
+    const batchFilter = document.getElementById('batchFilter');
+    batchSet.forEach(b => { if(b){ const opt=document.createElement('option'); opt.value=b; opt.textContent=b; batchFilter.appendChild(opt);} });
+    const uploaderFilter = document.getElementById('uploaderFilter');
+    uploaderSet.forEach(u => { if(u){ const opt=document.createElement('option'); opt.value=u; opt.textContent=u; uploaderFilter.appendChild(opt);} });
+    function filterRows(){
+      const batch = batchFilter.value;
+      const uploader = uploaderFilter.value;
+      document.querySelectorAll('#photoTable tbody tr').forEach(row=>{
+        const matchBatch = !batch || row.dataset.batch===batch;
+        const matchUploader = !uploader || row.dataset.uploader===uploader;
+        row.style.display = (matchBatch && matchUploader) ? '' : 'none';
+      });
+    }
+    batchFilter.addEventListener('change', filterRows);
+    uploaderFilter.addEventListener('change', filterRows);
+  })
+  .catch(err => console.error('Failed to load inventory', err));
+</script>
 </body>
 </html>
