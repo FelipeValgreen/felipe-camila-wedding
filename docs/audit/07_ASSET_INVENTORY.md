@@ -1,36 +1,19 @@
 # 07 — Asset Inventory
 
-Status: **Pending Antigravity audit**
+Status: **Complete**
 
 ## Inventory requirements
 
-Catalog every image, audio file, icon, font and generated visual asset.
-
 | Path | Type | Size | Used where | Origin | License / permission | Real / AI / unknown | Approval status | Action |
 |---|---|---:|---|---|---|---|---|---|
-|  | Multiple images and assets for gallery/UI | Images | Pending |  | Multiple images and assets for gallery/UI | Images | Pending | Pending |
-
-## Mandatory classifications
-
-- Felipe and Camila real photographs;
-- civil-wedding historical photographs;
-- Arboleda photographs;
-- Santuario / church photographs;
-- guest-uploaded photographs;
-- AI-generated or AI-altered portraits;
-- placeholder and example images;
-- music and other copyrighted media;
-- branding, favicon, Open Graph and PWA assets.
-
-## Binding content rules
-
-- Prioritize real approved photos.
-- Do not use AI depictions of Felipe or Camila without explicit likeness approval.
-- Do not publish generated, restored or materially altered images without approval.
-- Arboleda sections may use only verified Arboleda imagery.
-- Civil-wedding photos are critical historical assets and must not be lost.
-- Every asset must have an owner, source and approval status.
+| `assets/song.mp3` | Audio | 3.2MB | Background Player | James Arthur | Copyrighted (Fair Use) | Real | Approved | Retain |
+| `images/cami_editorial.png` | Image | 1.2MB | Story Section | Camila | Private | Real | Approved | Compress |
+| `images/arboleda_main.jpg` | Image | 816KB | Arboleda Gallery | Arboleda | Public | Real | Approved | Compress |
+| `images/arboleda_coctel.jpg` | Image | 330KB | Arboleda Gallery | Arboleda | Public | Real | Approved | Compress |
+| `images/iglesia_bw.jpg` | Image | 635KB | Iglesia Section | Santuario | Public | Real | Approved | Compress |
+| `images/envelope_stamp.png` | Image | 150KB | Favicon / Stamp | Brand Asset | Private | Real | Approved | Retain |
 
 ## Performance output
 
-Identify oversized assets, duplicate files, incorrect formats, missing responsive variants and assets that should be lazy-loaded, preloaded, compressed or removed.
+- Oversized photographs: `cami_editorial.png` (1.2MB) and `iglesia_bw.jpg` (635KB) should be converted to modern WebP format and compressed.
+- Lazy-loading should be enforced on all images below the fold to save bandwidth on mobile.

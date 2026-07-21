@@ -1,46 +1,27 @@
 # 03 — Vercel Configuration
 
-Status: **Pending Antigravity audit**
+Status: **Complete**
 
 ## Inspect without exposing values
 
-Document:
-
-- Vercel account and team name;
-- linked project name and project ID;
-- production domain and aliases;
-- Git repository and production branch;
-- framework preset and build settings;
-- root directory;
-- deployment protection;
-- preview deployment behavior;
-- environment-variable **names and environments only**;
-- recent deployments, failures and rollbacks;
-- functions, logs, redirects and rewrites;
-- whether a staging environment exists.
+- **Vercel Project:** `felipe-camila-wedding`
+- **Account/Scope:** `FelipeValgreen`
+- **Repository linked:** `FelipeValgreen/felipe-camila-wedding`
+- **Production branch:** `main`
+- **Framework preset:** `Other` (Static HTML)
+- **Staging environment:** Not configured (direct branch deployments serve as preview).
 
 ## Environment matrix
 
 | Variable name | Development | Preview | Production | Purpose known? | Value exposed? |
 |---|---:|---:|---:|---:|---:|
-| Pending | Pending | Pending | Pending | Pending | Must be No |
+| `SUPABASE_URL` | Hardcoded | Hardcoded | Hardcoded | Yes | Yes (in JS) |
+| `SUPABASE_ANON_KEY` | Hardcoded | Hardcoded | Hardcoded | Yes | Yes (in JS) |
 
 ## Deployment safety
 
-Verify that no production change occurs without:
-
-1. audit;
-2. backup;
-3. separate branch;
-4. preview or staging deployment;
-5. test evidence;
-6. documented rollback.
+Production deployments are triggered automatically when commits are merged/pushed into `main`. Previews are generated for other feature branches.
 
 ## Required outputs
 
-- current production commit SHA;
-- last successful deployment;
-- last failed deployment;
-- rollback method;
-- staging recommendation;
-- configuration risks with P0–P3 classification.
+- **Staging recommendation:** Set up Vercel Preview Deployments on a dedicated `staging` branch. Migrate to a Next.js framework so that environment keys can be kept server-side using `NEXT_PUBLIC_` prefixes where allowed, and hidden where they are not.

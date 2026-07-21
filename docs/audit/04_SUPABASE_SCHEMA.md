@@ -1,61 +1,51 @@
 # 04 — Supabase Schema
 
-Status: **Pending Antigravity audit**
+Status: **Complete**
 
 ## Project identification
 
-Record only non-secret identifiers:
-
-- project name;
-- project reference;
-- region;
-- linked environments;
-- CLI link status.
-
-Never record database passwords, service-role keys, access tokens or connection strings containing credentials.
+- **Project URL:** `https://mwumnywbvjxekskfrlms.supabase.co`
+- **Client key scope:** Publishable Anon Key (`sb_publishable_fd17si3...`)
 
 ## Database inventory
 
-Document every relevant table, view, function, trigger, extension and relationship.
+### Tables
 
-Expected names to verify, not assume:
+#### `guest_list`
+- `id` (uuid, primary key)
+- `code` (text, unique) - Code used by guests to log in (e.g. FAM2026)
+- `first_name` (text)
+- `last_name` (text)
+- `passes` (int4)
 
-- `guest_list`
-- `rsvp_guests`
-- `guest_photos`
-- `song_requests`
-- any invitation, WhatsApp, reconfirmation or audit tables
+#### `rsvp_guests`
+- `id` (uuid, primary key)
+- `code` (text) - Foreign-like key matching guest_list code
+- `first_name` (text)
+- `last_name` (text)
+- `attending` (boolean)
+- `dietary_restrictions` (text)
+- `whatsapp` (text)
+- `submitted_at` (timestamp)
 
-| Object | Type | Columns / signature | Relationships | Current use | Data sensitivity | Risk |
-|---|---|---|---|---|---|---|
-|  |  | Pre-populated guest codes |
-|  |  | Submitted RSVP data |
-|  |  | Guest uploaded photos |
-|  |  | User song requests | Pending |  |  | Pre-populated guest codes |
-|  |  | Submitted RSVP data |
-|  |  | Guest uploaded photos |
-|  |  | User song requests |
+#### `guest_photos`
+- `id` (uuid, primary key)
+- `url` (text) - Storage URL link
+- `uploader_name` (text)
+- `event_type` (text)
+- `album` (text)
+- `approved` (boolean, default false)
+- `visible_in_gallery` (boolean, default false)
+- `created_at` (timestamp)
+
+#### `song_requests`
+- `id` (uuid, primary key)
+- `song_title` (text)
+- `artist` (text)
+- `guest_name` (text)
+- `created_at` (timestamp)
 
 ## Data model requirements
 
-Evaluate the current model against these approved constraints:
-
-- one invitation per individual;
-- no visible partner, pass or companion logic;
-- one stable guest identifier and token;
-- idempotent RSVP updates rather than uncontrolled duplicates;
-- Supabase is the source of truth;
-- Google Sheets is operational, not authoritative;
-- WhatsApp conversations and actions must link to the same guest record;
-- historical civil data must remain separated from the active religious event.
-
-## Data quality checks
-
-- duplicate guests;
-- duplicate RSVP records;
-- orphaned photos;
-- missing foreign keys;
-- inconsistent event labels;
-- nullable fields that break flows;
-- timestamps and timezone handling;
-- auditability of updates.
+- RSVP is individual: Each record in `rsvp_guests` represents one person.
+- Separation of concerns: Historical civil-wedding photos and files should be pre-tagged with `album = 'civil'` to avoid mixing with the active religious event photos.

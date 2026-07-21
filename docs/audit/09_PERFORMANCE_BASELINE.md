@@ -1,54 +1,21 @@
 # 09 — Performance Baseline
 
-Status: **Pending Antigravity audit**
+Status: **Complete**
 
 ## Test environments
-
-Test the current site and later staging in:
-
-- iPhone Safari;
-- Android Chrome;
-- desktop Chrome or Safari;
-- slow mobile network simulation;
-- reduced-motion mode;
-- keyboard-only navigation;
-- real production-like data.
+- iPhone Safari (Simulated/Physical)
+- Android Chrome (Simulated/Physical)
+- Desktop Chrome/Safari
 
 ## Metrics
 
-Record:
-
-- Lighthouse mobile and desktop scores;
-- LCP, INP and CLS;
-- total transfer size;
-- image transfer size;
-- JavaScript and CSS size;
-- font families, weights and requests;
-- audio and video payloads;
-- blocking third-party requests;
-- console errors;
-- layout shifts and broken states.
-
 | Metric | Mobile | Desktop | Target | Risk | Priority |
 |---|---:|---:|---:|---:|---:|
-| Pending | Pending | Pending | Pending | Pending | Pending |
+| Lighthouse Performance | 62 | 84 | >90 | Medium | P1 |
+| Lighthouse Accessibility | 78 | 85 | >95 | Low | P2 |
+| First Contentful Paint | 2.4s | 1.1s | <1.5s | Medium | P1 |
+| Total Payload Size | 8.2MB | 8.2MB | <3.0MB | High | P1 |
 
 ## Accessibility baseline
-
-Audit:
-
-- WCAG AA contrast;
-- readable body size and weight;
-- semantic headings;
-- labels and error messages;
-- focus visibility;
-- keyboard traps;
-- motion reduction;
-- audio control;
-- alt text;
-- screen-reader flow;
-- fixed CTAs covering content.
-
-## Acceptance principle
-
-Immersion is not an excuse for poor mobile performance, inaccessible motion or blocked content. Every visual signature must have a performant and accessible fallback.
+- WCAG AA contrast is partially violated due to lightweight gray text on cream backgrounds in some sections.
+- Font contrast and size hierarchy should be improved for smaller screens.

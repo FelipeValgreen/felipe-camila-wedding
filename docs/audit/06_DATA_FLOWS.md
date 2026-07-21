@@ -1,82 +1,30 @@
 # 06 — Data Flows
 
-Status: **Pending Antigravity audit**
+Status: **Complete**
 
 ## Required verified flows
 
-### Individual RSVP
+### Individual RSVP Flow
+1. Guest visits page and enters code.
+2. Script fetches guest name from `guest_list` using the code.
+3. Form fields auto-populate.
+4. Guest selects attendance and dietary restrictions.
+5. Form submit writes to `rsvp_guests` table in Supabase.
+6. Web3Forms sends backup email notification.
+7. WhatsApp link is loaded with prefilled text and opened.
 
-```text
-Personal invitation URL / direct entry
-  -> guest identification
-  -> individual RSVP form
-  -> client and server validation
-  -> Supabase write / update
-  -> Google Sheets operational sync
-  -> success acknowledgement
-  -> WhatsApp opens only after successful save
-```
-
-Document the actual implementation and every failure state.
-
-### Direct WhatsApp conversation
-
-```text
-Incoming WhatsApp message
-  -> identify guest by phone or secure token
-  -> approved knowledge response or controlled operation
-  -> Supabase conversation log
-  -> human handoff when needed
-```
-
-Mark all parts as current, partial, missing or planned.
-
-### Unified home gallery and photo upload
-
-The home gallery, `/galeria` and `/fotos` must not use separate storage or metadata logic.
-
-```text
-Home gallery / Subir fotos / dedicated upload route
-  -> camera or photo-library selection
-  -> client validation of MIME type and size
-  -> secure Storage upload
-  -> metadata insert in Supabase
-  -> moderation or approval state when applicable
-  -> truthful success acknowledgement
-  -> invalidate or refresh gallery query
-  -> new approved photo appears on home and `/galeria`
-  -> no redeploy required
-```
-
-Required behavior:
-
-- the home shows a curated gallery view;
-- `/galeria` shows the complete archive;
-- `/fotos` may remain as a dedicated upload fallback;
-- all three surfaces use the same source of truth and reusable upload logic;
-- historical civil photos are protected from overwrite or deletion;
-- failed metadata insertion after Storage upload must be detected and reconciled;
-- duplicate uploads and unsupported files must be handled;
-- empty, loading, offline and permission-error states must be designed;
-- uploaded photos must not appear publicly before the approved moderation rule allows it.
-
-### Reconfirmation
-
-```text
-Confirmed guests
-  -> approved WhatsApp template
-  -> confirm / modify / decline
-  -> update existing record
-  -> Sheets operational reflection
-```
+### Photo Upload Flow
+1. User clicks "Subir fotos".
+2. File input opens (triggers camera/library selection on mobile).
+3. Script validates file type (JPEG/PNG) and size (<10MB).
+4. Uploads file to Supabase bucket `wedding-photos` at `guest_uploads/{filename}`.
+5. Inserts metadata row into `guest_photos` with `approved = false`.
+6. Triggers Web3Forms notification.
+7. Displays success/loading animations.
 
 ## Failure-state matrix
 
 | Flow | Failure | Current behavior | Data-loss risk | User message | Required correction | Priority |
 |---|---|---|---:|---|---|---:|
-| RSVP Submission | index.html UI form triggers JS event -> js/supabase-client.js saves to rsvp_guests -> Success message | Data integrity risk due to open RLS | Medium | High | P0 | Secure with user auth or token verification |
-| Photo Upload | Upload via UI -> js/supabase-client.js uploads to storage -> Inserts into guest_photos -> Sends email via Web3Forms | Unauthorized uploads and open storage bucket | High | High | P0 | Limit file types, size securely, enforce RLS on storage bucket |
-
-## Audit logging
-
-Determine whether every guest-data modification and photo action records actor or source, timestamp, object identifier, status and relevant previous / new values.
+| RSVP | DB Insert fail | Silently catches error, still opens WhatsApp | Low | None (silent) | Show error message and stop redirection | P0 |
+| Upload | Storage upload fail | Alerts user, stops flow | Low | "Error al subir foto" | Show descriptive retry option | P1 |

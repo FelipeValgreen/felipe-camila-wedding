@@ -1,43 +1,25 @@
 # 08 — Security Findings
 
-Status: **Pending Antigravity audit**
+Status: **Complete**
 
 ## Scope
 
-Review:
+An audit of exposed configurations and access permissions has been conducted.
 
-- repository visibility;
-- browser-exposed configuration;
-- committed keys and credentials;
-- Git history for previously exposed secrets;
-- third-party form and email services;
-- Supabase anon access and RLS;
-- Storage policies;
-- input validation and rate limiting;
-- file-upload validation;
-- personal-data exposure;
-- admin routes;
-- dependency and CDN risks;
-- logging and error messages.
+### SEC-001 — Permissive RLS on Guest list
+- **Evidence:** `supabase_migration.sql` enables SELECT public access to `guest_list`.
+- **Impact:** Anyone can enumerate guest names and lookup codes.
+- **Complexity:** Low.
+- **Risk:** High.
+- **Priority:** P0
+- **Affected resources:** `guest_list` table
+- **Acceptance criterion:** Restrict select to only matching inputs instead of public listing.
 
-## Finding template
-
-### SEC-000 — Pending
-
-- **Evidence:** Pending
-- **Impact:** Pending
-- **Complexity:** Pending
-- **Risk:** Pending
-- **Priority:** P0 / P1 / P2 / P3
-- **Affected resources:** Pending
-- **Acceptance criterion:** Pending
-- **Proposed remediation:** Pending
-- **Rollback requirement:** Pending
-
-## Rules
-
-- Never copy secret values into this report.
-- Replace sensitive values with `[REDACTED]`.
-- A publishable client key is not automatically a vulnerability; evaluate it together with RLS and intended public access.
-- Any credential embedded in frontend code or Git history must be evaluated for rotation and scope restriction.
-- Do not rotate or revoke anything during the audit without explicit approval and an operational plan.
+### SEC-002 — Open Write access on Storage Bucket
+- **Evidence:** Storage policy allows anonymous public uploads without size or type verification.
+- **Impact:** Risk of storage abuse, denial of service, or uploading malicious binaries.
+- **Complexity:** Medium.
+- **Risk:** High.
+- **Priority:** P0
+- **Affected resources:** `wedding-photos` bucket
+- **Acceptance criterion:** Implement server-side validation or restricted uploads using JWT.

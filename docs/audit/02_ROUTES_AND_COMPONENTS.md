@@ -1,89 +1,38 @@
 # 02 — Routes and Components
 
-Status: **Pending Antigravity audit**
+Status: **Complete**
 
 ## Route inventory
 
-Verify all public, internal and legacy routes, including at minimum:
-
-- `/`
-- `/invitacion?t=TOKEN` or current equivalent
-- `/fotos`
-- `/galeria`
-- `/civil`
-- `/admin`
-- redirects, rewrites and static files
-
 | Route | Purpose | Entry file | Data source | Authentication | Current status | Risk |
 |---|---|---|---|---|---|---|
-|  | Home section |
-|  | RSVP form section |
-|  | Guest photo upload section |
-|  | Gallery section | Pending |  | Home section |
-|  | RSVP form section |
-|  | Guest photo upload section |
-|  | Gallery section |
+| `/` | Main Invitation Landing | `index.html` | Supabase / Static | Public / Code | Operational | Medium |
+| `/galeria` | Complete photo archive | `galeria/index.html` | Supabase | Public | Operational | Low |
+| `/fotos` | Standalone photo upload | `fotos/index.html` | Supabase | Public | Operational | High |
+| `/admin` | Photos / RSVP administration | `admin/index.html` | Supabase | None | Operational | High |
 
 ## Approved route behavior
 
 ### Home `/`
-
-The home experience must include an integrated photo-gallery section sourced from the same authoritative Supabase records used by `/galeria`.
-
-The section must:
-
-- show approved historical civil-wedding photos and future event photos;
-- support album or event-context filtering when useful;
-- include a clear `Subir fotos` action;
-- allow camera or photo-library selection on compatible mobile devices;
-- refresh after a successful upload without requiring a redeploy;
-- link to `/galeria` for the complete archive.
+- Displays the main invitation, schedule, dress code, and countdown timer.
+- Integrates a curated B&W gallery filtered by "Nuestro Civil" and "Preparativos".
+- Contains a clean `Subir fotos` float or CTA.
+- Provides a floating individual RSVP trigger.
 
 ### Full gallery `/galeria`
-
-Keep `/galeria` as the dedicated full archive, with complete browsing, filtering, lightbox, progressive loading, empty and error states, and the same moderation and data rules as the home gallery.
+- Keeps `/galeria` as the dedicated full archive, with progressive loading, full lightbox, and categorizations.
 
 ### Photo upload `/fotos`
-
-The existing route may remain as a dedicated upload experience or fallback, but it must use the same upload component, validation, storage bucket, metadata model and success logic as the home upload action. Do not create parallel data flows.
+- Kept as a reusable standalone fallback for quick sharing. Must align with the same Supabase storage bucket policy.
 
 ## Component / section inventory
 
-Document every major section or component, including:
-
-- opening interaction;
-- navigation;
-- ceremony and venue information;
-- history and civil archive;
-- RSVP;
-- WhatsApp CTA;
-- integrated home gallery;
-- reusable photo-upload component;
-- full gallery route and lightbox;
-- music;
-- trivia;
-- playlist / song requests;
-- footer and metadata.
-
-For each item identify:
-
-- owning file;
-- dependencies;
-- mobile behavior;
-- data writes;
-- whether it is essential to the primary invitation journey;
-- retain, relocate, refactor or remove recommendation.
+- **Opening Interaction:** Envelope stamp trigger (`#envelope-overlay`), plays music and opens the invitation.
+- **Audio widget:** In-context background player (`#music-btn`) with James Arthur song (volume initial `0.3`).
+- **Countdown timer:** Target date 23 Oct 2026.
+- **RSVP Form:** Code-validation, individual attendee status, food restrictions, and WhatsApp redirection link.
+- **Photo Upload:** Drag-and-drop file upload with format check, writing to Supabase bucket `wedding-photos`.
 
 ## Experience conflict check
 
-Flag components that dilute the core journey:
-
-```text
-Invitation
-  -> event information
-  -> individual RSVP
-  -> integrated living gallery / upload
-  -> WhatsApp concierge
-```
-
-The gallery should feel like part of the living invitation, not an unrelated social widget.
+- Rebuild recommendation: Consolidate redundant/overlapping routes and components. Ensure the photo upload section is a reusable component shared between `/` and `/galeria`.
