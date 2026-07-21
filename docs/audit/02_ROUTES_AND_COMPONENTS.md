@@ -6,33 +6,33 @@ Status: **Complete**
 
 | Route | Purpose | Entry file | Data source | Authentication | Current status | Risk |
 |---|---|---|---|---|---|---|
-| `/` | Main Invitation Landing | `index.html` | Supabase / Static | Public / Code | Operational | Medium |
-| `/galeria` | Complete photo archive | `galeria/index.html` | Supabase | Public | Operational | Low |
-| `/fotos` | Standalone photo upload | `fotos/index.html` | Supabase | Public | Operational | High |
-| `/admin` | Photos / RSVP administration | `admin/index.html` | Supabase | None | Operational | High |
+| `/` | Main Landing Page | `index.html` [VERIFIED REPOSITORY] | Supabase / Static | Public / Code | Operational [VERIFIED LIVE] | Medium |
+| `/galeria` | Complete photo archive | `galeria/index.html` [VERIFIED REPOSITORY] | Supabase | Public | Operational [VERIFIED LIVE] | Low |
+| `/fotos` | Dedicated photo upload | `fotos/index.html` [VERIFIED REPOSITORY] | Supabase | Public | Operational [VERIFIED LIVE] | High |
+| `/admin` | Photos / RSVP moderation | `admin/index.html` [VERIFIED REPOSITORY] | Supabase | None | Operational [VERIFIED LIVE] | High |
 
 ## Approved route behavior
 
 ### Home `/`
-- Displays the main invitation, schedule, dress code, and countdown timer.
-- Integrates a curated B&W gallery filtered by "Nuestro Civil" and "Preparativos".
-- Contains a clean `Subir fotos` float or CTA.
-- Provides a floating individual RSVP trigger.
+- Shows main invitation, schedule, maps, countdown, and background music.
+- Integrates a curated living gallery section displaying approved civil photos.
+- Contains an inline `Subir fotos` float button.
+- Includes a floating individual RSVP trigger.
 
 ### Full gallery `/galeria`
-- Keeps `/galeria` as the dedicated full archive, with progressive loading, full lightbox, and categorizations.
+- Retained as the complete browsing archive with lightboxes and filter categories.
 
 ### Photo upload `/fotos`
-- Kept as a reusable standalone fallback for quick sharing. Must align with the same Supabase storage bucket policy.
+- Kept as a reusable fallback uploading page, using the same upload validation component.
 
 ## Component / section inventory
 
-- **Opening Interaction:** Envelope stamp trigger (`#envelope-overlay`), plays music and opens the invitation.
-- **Audio widget:** In-context background player (`#music-btn`) with James Arthur song (volume initial `0.3`).
-- **Countdown timer:** Target date 23 Oct 2026.
-- **RSVP Form:** Code-validation, individual attendee status, food restrictions, and WhatsApp redirection link.
-- **Photo Upload:** Drag-and-drop file upload with format check, writing to Supabase bucket `wedding-photos`.
+- **Opening Interaction:** Envelope seal trigger (`#envelope-overlay`) [VERIFIED REPOSITORY].
+- **Audio player:** Background widget (`#music-btn`) with James Arthur song, initial volume `0.3` [VERIFIED REPOSITORY].
+- **RSVP Modal:** Code-validation, food restrictions, and WhatsApp redirection [VERIFIED REPOSITORY].
+- **Gallery Grid:** Responsive Masonry grid rendering images [VERIFIED REPOSITORY].
+- **Photo Upload Widget:** File size validation and bucket upload [VERIFIED REPOSITORY].
 
 ## Experience conflict check
 
-- Rebuild recommendation: Consolidate redundant/overlapping routes and components. Ensure the photo upload section is a reusable component shared between `/` and `/galeria`.
+- Rebuild recommendation: Re-implement the monolithic layout into unified React routes. Consolidate the duplicate gallery logic between `/` and `/galeria` to use the same component.

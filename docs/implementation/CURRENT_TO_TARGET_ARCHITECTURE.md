@@ -67,10 +67,12 @@ graph TD
 2. **`components/AudioPlayer.tsx` (Music Widget):**
    - Implements custom play/pause buttons, progressive load indicators, and controls.
    - Enforces an initial volume of `0.3` and respects user interaction triggers (e.g. envelope open).
+   - Enforces license unverified fallback warnings.
 
 3. **`components/RSVPModal.tsx` (RSVP Component):**
    - Handles guest code lookups via server action (preventing raw public SELECT queries on the client side).
    - Validates attendance inputs, food restrictions, and phone numbers.
+   - **Important:** No guest-facing `passes` or group-limit logic is exposed in this modal. RSVP is strictly individual.
    - Saves record to Supabase first, and opens WhatsApp on success.
 
 4. **`components/GalleryGrid.tsx` & `PhotoUpload.tsx` (Living Gallery):**

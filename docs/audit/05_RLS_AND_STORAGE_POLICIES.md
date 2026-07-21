@@ -12,14 +12,15 @@ Row Level Security (RLS) policies currently configured on Supabase:
 | `rsvp_guests` | INSERT | public | `WITH CHECK (true)` | Yes | Yes | Medium | P0 |
 | `rsvp_guests` | SELECT | public | `USING (true)` | Yes | No | High | P0 |
 | `guest_photos` | INSERT | public | `WITH CHECK (true)` | Yes | Yes | Medium | P0 |
-| `guest_photos` | SELECT | public | `USING (approved = true)` | Yes | Yes | Low | P2 |
+| `guest_photos` | SELECT | public | `USING (true)` (since approved is missing) | Yes | No | High | P0 |
 
-## Mandatory tests
+## Mandatory tests [VERIFIED LIVE via direct API checks]
 
-- **Can an anonymous visitor enumerate the guest list?** Yes, because SELECT is public (`USING (true)`).
-- **Can an anonymous visitor read another guest's RSVP?** Yes, because SELECT on `rsvp_guests` is public.
-- **Can an anonymous visitor upload arbitrary files?** Yes, because the public bucket policy allows write access.
-- **Can public URLs expose unmoderated photos?** No, because the SELECT policy restricts to `approved = true`.
+- **Can an anonymous visitor enumerate the guest list?** No, because the table `guest_list` does not exist on the live database.
+- **Can an anonymous visitor read another guest's RSVP?** Yes, because SELECT on `rsvp_guests` is public [VERIFIED LIVE].
+- **Can an anonymous visitor insert unlimited RSVP records?** Yes, because public INSERT is open [VERIFIED LIVE].
+- **Can an anonymous visitor upload arbitrary files?** Yes, because the public bucket policy allows write access [VERIFIED LIVE].
+- **Can public URLs expose unmoderated photos?** Yes, because the live table `guest_photos` lacks the `approved` column and is entirely public [VERIFIED LIVE].
 
 ## Historical-photo protection
 

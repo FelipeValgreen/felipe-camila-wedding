@@ -17,7 +17,7 @@ Every feature must pass visual and functional QA in:
 ## 2. Functional Test Matrix
 
 ### A. Individual RSVP Form
-- **Test Case RSVP-01 (Happy Path):** Enter valid code (`FAM2026`). Verify name auto-populates. Submit RSVP with attending `true`. Verify record is saved in Supabase database and WhatsApp opens with prefilled Chilean Spanish copy.
+- **Test Case RSVP-01 (Happy Path):** Enter valid code (`FAM2026`). Verify name auto-populates. Submit RSVP with attending `true`. Verify record is saved in Supabase database and WhatsApp opens with prefilled Chilean Spanish copy. **Verify no passes text or counts are rendered.**
 - **Test Case RSVP-02 (Offline/Failure):** Disable internet connection and submit form. Verify that:
   - Redirection to WhatsApp is blocked.
   - A friendly error message is displayed: *"Lo sentimos, no pudimos conectar con el servidor. Tu confirmación no ha sido guardada. Por favor, reintenta."*

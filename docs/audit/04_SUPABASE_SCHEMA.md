@@ -4,46 +4,33 @@ Status: **Complete**
 
 ## Project identification
 
-- **Project URL:** `https://mwumnywbvjxekskfrlms.supabase.co`
-- **Client key scope:** Publishable Anon Key (`sb_publishable_fd17si3...`)
+- **Project URL:** `https://mwumnywbvjxekskfrlms.supabase.co` [VERIFIED LIVE]
+- **Client key scope:** Publishable Anon Key (`sb_publishable_fd17si3...`) [VERIFIED REPOSITORY]
+- **CLI link status:** Unlinked [UNVERIFIED]
 
-## Database inventory
+## Database inventory [VERIFIED LIVE via direct API schema inspection]
 
 ### Tables
 
 #### `guest_list`
-- `id` (uuid, primary key)
-- `code` (text, unique) - Code used by guests to log in (e.g. FAM2026)
-- `first_name` (text)
-- `last_name` (text)
-- `passes` (int4)
+- **Status:** **NOT PRESENT** in live schema database cache (triggers table not found error on query) [VERIFIED LIVE].
+- **Expected Columns in SQL:** `id` (uuid), `created_at` (timestamptz), `code` (text, unique), `first_name` (text), `last_name` (text), `passes` (int4) [VERIFIED REPOSITORY].
+- **Note:** Passes column is **REMOVED** from the target guest-facing model.
 
 #### `rsvp_guests`
-- `id` (uuid, primary key)
-- `code` (text) - Foreign-like key matching guest_list code
-- `first_name` (text)
-- `last_name` (text)
-- `attending` (boolean)
-- `dietary_restrictions` (text)
-- `whatsapp` (text)
-- `submitted_at` (timestamp)
+- **Status:** **PRESENT** in live schema [VERIFIED LIVE].
+- **Verified Columns on Live DB:** `id`, `created_at`, `name`, `email`, `whatsapp`, `has_partner`, `partner_name` [VERIFIED LIVE].
+- **Missing Columns in Live DB (Expected in SQL):** `dietary_restrictions`, `partner_dietary` [VERIFIED LIVE - NOT PRESENT].
+- **Note:** `passes` is not present in this table.
 
 #### `guest_photos`
-- `id` (uuid, primary key)
-- `url` (text) - Storage URL link
-- `uploader_name` (text)
-- `event_type` (text)
-- `album` (text)
-- `approved` (boolean, default false)
-- `visible_in_gallery` (boolean, default false)
-- `created_at` (timestamp)
+- **Status:** **PRESENT** in live schema [VERIFIED LIVE].
+- **Verified Columns on Live DB:** `id`, `url`, `uploader_name`, `created_at` [VERIFIED LIVE].
+- **Missing Columns in Live DB (Expected in SQL):** `event_type`, `album`, `approved`, `visible_in_gallery`, `notes` [VERIFIED LIVE - NOT PRESENT].
 
 #### `song_requests`
-- `id` (uuid, primary key)
-- `song_title` (text)
-- `artist` (text)
-- `guest_name` (text)
-- `created_at` (timestamp)
+- **Status:** **PRESENT** in live schema [VERIFIED LIVE].
+- **Verified Columns on Live DB:** `id`, `created_at`, `song_name`, `artist_name`, `requester_name` [VERIFIED LIVE].
 
 ## Data model requirements
 
