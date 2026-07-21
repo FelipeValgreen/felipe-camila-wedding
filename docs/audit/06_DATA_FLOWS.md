@@ -31,17 +31,34 @@ Incoming WhatsApp message
 
 Mark all parts as current, partial, missing or planned.
 
-### Photo upload and gallery
+### Unified home gallery and photo upload
+
+The home gallery, `/galeria` and `/fotos` must not use separate storage or metadata logic.
 
 ```text
-Photo selection / camera
-  -> validation
-  -> Storage upload
-  -> metadata insert
-  -> optional moderation
-  -> gallery query
-  -> public rendering without redeploy
+Home gallery / Subir fotos / dedicated upload route
+  -> camera or photo-library selection
+  -> client validation of MIME type and size
+  -> secure Storage upload
+  -> metadata insert in Supabase
+  -> moderation or approval state when applicable
+  -> truthful success acknowledgement
+  -> invalidate or refresh gallery query
+  -> new approved photo appears on home and `/galeria`
+  -> no redeploy required
 ```
+
+Required behavior:
+
+- the home shows a curated gallery view;
+- `/galeria` shows the complete archive;
+- `/fotos` may remain as a dedicated upload fallback;
+- all three surfaces use the same source of truth and reusable upload logic;
+- historical civil photos are protected from overwrite or deletion;
+- failed metadata insertion after Storage upload must be detected and reconciled;
+- duplicate uploads and unsupported files must be handled;
+- empty, loading, offline and permission-error states must be designed;
+- uploaded photos must not appear publicly before the approved moderation rule allows it.
 
 ### Reconfirmation
 
@@ -61,4 +78,4 @@ Confirmed guests
 
 ## Audit logging
 
-Determine whether every guest-data modification records actor, source, timestamp, previous value and new value.
+Determine whether every guest-data modification and photo action records actor or source, timestamp, object identifier, status and relevant previous / new values.
