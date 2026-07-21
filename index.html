@@ -693,52 +693,27 @@
                         </a>
                     </div>
 
-                    <!-- STEP 1: INGRESO DE CÓDIGO -->
-                    <div id="rsvp-code-step" class="space-y-6">
-                        <div class="text-center max-w-sm mx-auto mb-8">
-                            <p class="font-sans text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Pases e Invitaciones</p>
-                            <p class="font-sans text-xs text-gray-500 font-light">Para confirmar tus pases, ingresa el código personal que aparece en tu invitación física o digital.</p>
-                        </div>
-                        <div class="max-w-md mx-auto space-y-4">
-                            <div class="space-y-2">
-                                <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold text-center">Código de Invitación</label>
-                                <input type="text" id="rsvp-code-input" placeholder="Ej: FAM2026"
-                                    class="w-full bg-transparent border-b border-gray-300 py-3 text-center text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-lg tracking-widest uppercase">
-                            </div>
-                            <button type="button" id="rsvp-validate-code-btn"
-                                class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-4">
-                                Validar Código
-                            </button>
-                            <p id="rsvp-code-error" class="hidden text-red-500 text-xs font-sans text-center mt-2">
-                                <i class="fa-solid fa-triangle-exclamation"></i> Código no encontrado. Revisa e intenta de nuevo.
-                            </p>
-                        </div>
-                    </div>
 
-                    <!-- STEP 2: FORMULARIO DE CONFIRMACIÓN (AUTOPREVIO) -->
-                    <div id="rsvp-form-step" class="hidden space-y-8 animate-fade-in">
+
+                    <!-- STEP 2: FORMULARIO DE CONFIRMACIÓN (VISIBLE BY DEFAULT) -->
+                    <div id="rsvp-form-step" class="space-y-8 animate-fade-in">
                         <div class="text-center max-w-sm mx-auto mb-6">
-                            <p id="rsvp-greeting" class="font-serif text-lg text-charcoal font-semibold mb-1">¡Hola!</p>
-                            <p class="font-sans text-xs text-gray-400 font-light">Hemos encontrado tus datos. Confirma tu asistencia a continuación.</p>
+                            <p id="rsvp-greeting" class="font-serif text-lg text-charcoal font-semibold mb-1">Confirmar tu asistencia</p>
+                            <p class="font-sans text-xs text-gray-400 font-light">Por favor completa tus datos para generar el mensaje de confirmación.</p>
                         </div>
 
                         <form id="rsvp-form" class="space-y-8">
-                            <!-- Pre-filled and read-only data -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Name and Surname Inputs (No read-only, no passes) -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
                                     <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Nombre</label>
-                                    <input type="text" id="rsvp-firstname" readonly required
-                                        class="w-full bg-gray-50/50 border-b border-gray-200 py-2 text-charcoal/70 focus:outline-none font-sans text-sm pb-1 cursor-not-allowed">
+                                    <input type="text" id="rsvp-firstname" required
+                                        class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
                                 </div>
                                 <div class="space-y-2">
                                     <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Apellido</label>
-                                    <input type="text" id="rsvp-lastname" readonly required
-                                        class="w-full bg-gray-50/50 border-b border-gray-200 py-2 text-charcoal/70 focus:outline-none font-sans text-sm pb-1 cursor-not-allowed">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Pases Asignados</label>
-                                    <input type="text" id="rsvp-passes" readonly required
-                                        class="w-full bg-gray-50/50 border-b border-gray-200 py-2 text-charcoal/70 focus:outline-none font-sans text-sm pb-1 text-center cursor-not-allowed">
+                                    <input type="text" id="rsvp-lastname" required
+                                        class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
                                 </div>
                             </div>
 
@@ -746,7 +721,7 @@
                                 <!-- WhatsApp contact -->
                                 <div class="space-y-2">
                                     <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">WhatsApp de Contacto</label>
-                                    <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56912345678"
+                                    <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56 9 0000 0000"
                                         class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
                                 </div>
 
@@ -792,33 +767,51 @@
                             <!-- Main Action Button -->
                             <button type="submit" id="rsvp-submit-btn"
                                 class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-8 font-semibold">
-                                Enviar y confirmar por WhatsApp
+                                Preparar respuesta
                             </button>
-
-                            <div class="text-center mt-4">
-                                <button type="button" id="rsvp-back-to-code-btn"
-                                    class="text-[10px] tracking-[0.2em] uppercase text-gray-400 hover:text-charcoal border-b border-gray-200 hover:border-charcoal transition-all pb-0.5">
-                                    <i class="fa-solid fa-arrow-left"></i> Volver a cambiar de código
-                                </button>
-                            </div>
                         </form>
                     </div>
 
-                    <!-- Success Message (Hidden by default) -->
-                    <div id="rsvp-success" class="hidden text-center py-10 animate-fade-in">
+                    <!-- Success Message / WhatsApp Step (Hidden by default) -->
+                    <div id="rsvp-success" class="hidden text-center py-6 animate-fade-in">
                         <i class="fa-solid fa-envelope-open-text text-gray-300 text-4xl mb-4"></i>
-                        <h3 class="text-charcoal font-serif text-2xl mb-2">Confirmación Recibida</h3>
-                        <p class="text-gray-500 text-sm font-light mb-6 max-w-sm mx-auto">Gracias por confirmar su presencia. Todo ha sido debidamente registrado en nuestro protocolo.</p>
+                        <h3 class="text-charcoal font-serif text-2xl mb-2">Tu respuesta está lista</h3>
+                        <p class="text-gray-500 text-sm font-light mb-8 max-w-sm mx-auto">Para completar la confirmación, envía el mensaje por WhatsApp usando el botón siguiente.</p>
                         
-                        <!-- WhatsApp share notice -->
-                        <div class="mb-8">
+                        <!-- Response Summary -->
+                        <div class="bg-gray-50 p-6 rounded-lg text-left max-w-sm mx-auto mb-8 space-y-3 border border-gray-100 font-sans text-xs text-charcoal">
+                            <p class="uppercase tracking-wider text-gray-400 font-bold border-b border-gray-200 pb-2 mb-2">Resumen de tu respuesta</p>
+                            <p><strong>Invitado:</strong> <span id="summary-name" class="text-charcoal/80">-</span></p>
+                            <p><strong>WhatsApp:</strong> <span id="summary-whatsapp" class="text-charcoal/80">-</span></p>
+                            <p><strong>Asistencia:</strong> <span id="summary-attendance" class="text-charcoal/80">-</span></p>
+                            <p id="summary-dietary-row"><strong>Restricción:</strong> <span id="summary-dietary" class="text-charcoal/80">-</span></p>
+                        </div>
+
+                        <!-- WhatsApp Action Button -->
+                        <div class="mb-4 max-w-sm mx-auto">
                             <a id="rsvp-whatsapp-share-btn" href="#" target="_blank"
-                                class="inline-flex items-center gap-2 bg-[#25D366] text-white font-sans text-[10px] uppercase tracking-[0.2em] px-6 py-4 hover:bg-[#20ba5a] transition-all duration-300 font-bold rounded-sm shadow-md">
-                                <i class="fa-brands fa-whatsapp text-sm"></i> Notificar a los Novios
+                                class="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white font-sans text-xs uppercase tracking-[0.2em] py-4.5 hover:bg-[#20ba5a] transition-all duration-300 font-bold rounded-sm shadow-md">
+                                <i class="fa-brands fa-whatsapp text-base"></i> Enviar confirmación por WhatsApp
                             </a>
                         </div>
 
-                        <button type="button" onclick="document.getElementById('rsvp-success').classList.add('hidden'); document.getElementById('rsvp-code-step').classList.remove('hidden'); document.getElementById('rsvp-form-step').classList.add('hidden'); document.getElementById('rsvp-code-input').value='';"
+                        <!-- Copy and Edit Buttons -->
+                        <div class="mb-8 flex gap-3 justify-center max-w-sm mx-auto">
+                            <button type="button" id="rsvp-copy-msg-btn"
+                                class="flex-1 inline-flex items-center justify-center gap-2 border border-charcoal/30 text-charcoal text-[10px] uppercase tracking-[0.25em] py-3.5 hover:bg-charcoal hover:text-white transition-all font-semibold bg-white">
+                                <i class="fa-regular fa-copy"></i> Copiar Mensaje
+                            </button>
+                            <button type="button" id="rsvp-edit-btn"
+                                class="flex-1 inline-flex items-center justify-center gap-2 border border-charcoal/30 text-charcoal text-[10px] uppercase tracking-[0.25em] py-3.5 hover:bg-charcoal hover:text-white transition-all font-semibold bg-white">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar Respuesta
+                            </button>
+                        </div>
+
+                        <p class="text-gray-400 text-[10px] font-sans max-w-xs mx-auto leading-relaxed border-t border-gray-100 pt-6">
+                            La confirmación se completa cuando envías el mensaje por WhatsApp.
+                        </p>
+
+                        <button type="button" id="rsvp-another-btn"
                             class="text-charcoal text-[10px] tracking-[0.3em] uppercase border-b border-charcoal hover:text-gray-500 hover:border-gray-500 transition-colors pb-1">
                             Hacer otra confirmación
                         </button>
@@ -1311,8 +1304,6 @@
     
 
     <script src="js/supabase-client.js" defer></script>
-    
-<script src="js/main.js" defer></script>
+    <script src="js/main.js" defer></script>
 </body>
-
 </html>
