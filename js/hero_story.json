@@ -1,0 +1,31 @@
+{
+  "hero": [
+    {
+      "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_8fbfeb8c-7473-43a0-86f4-de866d1518cd.jpeg?source=qr",
+      "alt": "Fotograf\u00eda Hero 058",
+      "objectPosition": "center center"
+    }
+  ],
+  "historia": [
+    {
+      "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1764651969303_IMG_0475.jpeg",
+      "alt": "Fotograf\u00eda Historia 002",
+      "objectPosition": "center center"
+    },
+    {
+      "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1764852196538_IMG_4168.jpeg",
+      "alt": "Fotograf\u00eda Historia 003",
+      "objectPosition": "center center"
+    },
+    {
+      "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765423098101_IMG_2787.jpeg",
+      "alt": "Fotograf\u00eda Historia 004",
+      "objectPosition": "center center"
+    },
+    {
+      "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765837504689_CD20FBA5_0F4E_4F2C_9525_9AEDFEFBAC6B.jpeg",
+      "alt": "Fotograf\u00eda Historia 005",
+      "objectPosition": "center center"
+    }
+  ]
+}

@@ -3,113 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galería Invitados | Felipe & Camila</title>
+    <title>Galería de Fotos — Felipe & Camila</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Great+Vibes&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            theme: { extend: { colors: { sage: '#8FA382', charcoal: '#2C3E50', ivory: '#F9F9F7' }, fontFamily: { serif: ['Playfair Display', 'serif'], sans: ['"Montserrat"', 'sans-serif'], hand: ['"Amatic SC"', 'cursive'] } } }
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#11110F',
+                        cream: '#F3EFE7',
+                        light: '#FAF8F3',
+                        muted: '#918D85',
+                        wine: '#4A222A',
+                        gold: '#B99B71',
+                    },
+                    fontFamily: {
+                        serif: ['Newsreader', 'Georgia', 'serif'],
+                        sans: ['Inter', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
         }
     </script>
-    <link rel="stylesheet" href="../css/style.css">
 </head>
+<body class="font-sans text-dark bg-light antialiased min-h-screen flex flex-col">
 
-<body class="font-sans text-charcoal bg-ivory bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] min-h-screen flex flex-col">
-
-    <nav class="w-full py-4 text-center border-b border-sage/20 bg-white/80 backdrop-blur-md sticky top-0 z-50 flex justify-between px-6 items-center">
-        <a href="/" class="text-sage text-sm uppercase tracking-widest"><i class="fa-solid fa-arrow-left mr-2"></i> Inicio</a>
-        <a href="/" class="font-serif text-2xl text-charcoal font-bold">F&C</a>
-        <a href="/fotos" class="bg-sage text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm hover:scale-105 transition-transform"><i class="fa-solid fa-camera mr-1"></i> Subir</a>
+    <!-- Navigation -->
+    <nav class="w-full py-5 bg-light/95 border-b border-dark/10 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+            <a href="/" class="text-xs uppercase tracking-[0.25em] text-muted hover:text-dark transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left text-[10px]"></i> Volver a la invitación
+            </a>
+            <a href="/" class="font-serif text-2xl tracking-widest text-dark font-normal">F&C</a>
+            <div class="w-24"></div>
+        </div>
     </nav>
 
-    <main class="flex-grow p-6 max-w-6xl mx-auto w-full">
-        <div class="text-center mb-12 mt-8">
-            <h1 class="font-serif text-5xl text-charcoal mb-4">Galería de Invitados</h1>
-            <p class="text-slate-500 max-w-lg mx-auto">Momentos capturados por ustedes. ¡Gracias por ser parte de nuestra historia!</p>
+    <!-- Header -->
+    <main class="flex-grow max-w-6xl mx-auto px-6 py-12 w-full">
+        <div class="text-center space-y-4 max-w-xl mx-auto mb-12">
+            <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Fotografía Curada</span>
+            <h1 class="font-serif text-4xl md:text-5xl text-dark font-normal">Galería de Recuerdos</h1>
+            <div class="w-12 h-[1px] bg-dark/20 mx-auto"></div>
+            <p class="font-sans text-base text-muted font-light leading-relaxed">
+                Una selección especial de nuestro civil y de los momentos compartidos por nuestros invitados.
+            </p>
         </div>
 
-        <!-- Filters (Optional JS integration) -->
-        <div class="flex justify-center mb-10 hidden" id="gallery-filters">
-            <input type="text" id="filter-guest" placeholder="Buscar por invitado..." class="px-4 py-2 border rounded-l-full focus:outline-none focus:border-sage text-sm w-64">
-            <button id="btn-filter" class="bg-sage text-white px-6 py-2 rounded-r-full font-bold text-sm"><i class="fa-solid fa-search"></i></button>
+        <!-- Filter Buttons -->
+        <div class="flex justify-center flex-wrap gap-3 mb-12">
+            <button id="filter-all" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark bg-dark text-light transition-all">
+                Todas (16)
+            </button>
+            <button id="filter-civil" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all">
+                Nuestro civil (8)
+            </button>
+            <button id="filter-shared" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all">
+                Compartidas por ustedes (8)
+            </button>
         </div>
 
-        <!-- Masonry Grid -->
-        <div id="masonry-grid" class="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-            <!-- Loading State -->
-            <div id="loading-state" class="col-span-full w-full text-center py-20 text-sage-light">
-                <i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i>
-                <p class="font-bold tracking-widest uppercase">Cargando Recuerdos...</p>
-            </div>
-            
-            <!-- Empty State -->
-            <div id="empty-state" class="col-span-full w-full text-center py-20 hidden">
-                <i class="fa-regular fa-images text-6xl text-gray-300 mb-4"></i>
-                <h3 class="font-serif text-2xl text-charcoal mb-2">Aún no hay fotos</h3>
-                <p class="text-gray-500 mb-6">¡Sé el primero en compartir un recuerdo!</p>
-                <a href="/fotos" class="bg-sage text-white px-8 py-3 rounded-full font-bold uppercase tracking-widest hover:bg-sage-dark transition-colors inline-block">Subir Foto</a>
-            </div>
+        <!-- Gallery Grid -->
+        <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Dynamic Image Cards Loaded via JS -->
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../js/supabase-client.js"></script>
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 z-50 bg-dark/95 hidden flex flex-col items-center justify-center p-4">
+        <button id="lightbox-close" aria-label="Cerrar ventana" class="absolute top-6 right-6 text-cream hover:text-gold text-2xl p-2 transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button id="lightbox-prev" aria-label="Fotografía anterior" class="absolute left-4 top-1/2 -translate-y-1/2 text-cream hover:text-gold text-2xl p-3 transition-colors">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button id="lightbox-next" aria-label="Fotografía siguiente" class="absolute right-4 top-1/2 -translate-y-1/2 text-cream hover:text-gold text-2xl p-3 transition-colors">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <div class="max-w-4xl max-h-[85vh] flex items-center justify-center p-2">
+            <img id="lightbox-img" src="" alt="" class="max-w-full max-h-[80vh] object-contain rounded-sm shadow-2xl">
+        </div>
+        <p id="lightbox-caption" class="font-sans text-xs text-cream/70 tracking-widest uppercase mt-4"></p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 bg-cream border-t border-dark/5 text-center font-sans text-xs text-muted">
+        <p>Felipe & Camila — 23 · 10 · 26</p>
+    </footer>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const grid = document.getElementById('masonry-grid');
-            const loading = document.getElementById('loading-state');
-            const empty = document.getElementById('empty-state');
-            
-            // Check url params for filters
-            const urlParams = new URLSearchParams(window.location.search);
-            const guestFilter = urlParams.get('guest');
-            
-            if (!window.supabaseClient) {
-                loading.innerHTML = '<p class="text-red-500">Error: Base de datos no conectada.</p>';
-                return;
-            }
+            const grid = document.getElementById('gallery-grid');
+            const btnAll = document.getElementById('filter-all');
+            const btnCivil = document.getElementById('filter-civil');
+            const btnShared = document.getElementById('filter-shared');
+
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const lightboxCaption = document.getElementById('lightbox-caption');
+            const lightboxClose = document.getElementById('lightbox-close');
+            const lightboxPrev = document.getElementById('lightbox-prev');
+            const lightboxNext = document.getElementById('lightbox-next');
+
+            let allPhotos = [];
+            let currentFilter = 'all';
+            let activePhotos = [];
+            let currentIndex = 0;
 
             try {
-                let query = supabaseClient
-                    .from('guest_photos')
-                    .select('url, uploader_name, created_at')
-                    .order('created_at', { ascending: false });
-                    
-                if (guestFilter) {
-                    query = query.eq('uploader_name', guestFilter);
+                const [resCivil, resShared] = await Promise.all([
+                    fetch('../js/civil_featured.json').then(r => r.json()),
+                    fetch('../js/guest_shared.json').then(r => r.json())
+                ]);
+
+                const civilPhotos = (resCivil || []).map(p => ({ ...p, category: 'civil', label: 'Nuestro civil' }));
+                const sharedPhotos = (resShared || []).map(p => ({ ...p, category: 'shared', label: 'Compartida por invitados' }));
+
+                allPhotos = [...civilPhotos, ...sharedPhotos];
+                renderGallery();
+            } catch (err) {
+                console.error('Error loading gallery photos:', err);
+                grid.innerHTML = '<p class="col-span-full text-center text-muted text-sm py-12">No se pudieron cargar las fotografías.</p>';
+            }
+
+            function renderGallery() {
+                grid.innerHTML = '';
+                if (currentFilter === 'civil') {
+                    activePhotos = allPhotos.filter(p => p.category === 'civil');
+                } else if (currentFilter === 'shared') {
+                    activePhotos = allPhotos.filter(p => p.category === 'shared');
+                } else {
+                    activePhotos = [...allPhotos];
                 }
 
-                const { data, error } = await query;
-
-                loading.classList.add('hidden');
-
-                if (error) throw error;
-
-                if (!data || data.length === 0) {
-                    empty.classList.remove('hidden');
-                    return;
-                }
-
-                data.forEach(photo => {
-                    const el = document.createElement('div');
-                    el.className = 'break-inside-avoid relative group mb-4 rounded-xl overflow-hidden bg-white shadow-sm border border-gray-100 transform hover:-translate-y-1 transition-transform';
-                    el.innerHTML = `
-                        <img src="${photo.url}" alt="Foto de ${photo.uploader_name || 'Invitado'}" class="w-full object-cover" loading="lazy" onerror="this.parentElement.style.display='none'">
-                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform">
-                            <span class="text-white font-hand text-xl shadow-sm"><i class="fa-solid fa-camera mr-2"></i>${photo.uploader_name || 'Anónimo'}</span>
+                activePhotos.forEach((photo, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'aspect-[4/3] bg-cream border border-dark/10 overflow-hidden cursor-pointer group relative rounded-sm';
+                    card.innerHTML = `
+                        <img src="${photo.src}" alt="${photo.alt || 'Fotografía de matrimonio'}" loading="lazy" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-dark/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="font-sans text-[10px] uppercase tracking-widest text-light bg-dark/80 px-2.5 py-1 rounded-sm">${photo.label}</span>
                         </div>
                     `;
-                    grid.appendChild(el);
+                    card.addEventListener('click', () => openLightbox(idx));
+                    grid.appendChild(card);
                 });
-
-            } catch (err) {
-                console.error(err);
-                loading.classList.remove('hidden');
-                loading.innerHTML = '<p class="text-red-500">Error al cargar las fotos. Por favor refresca la página.</p>';
             }
+
+            function setActiveButton(activeBtn) {
+                [btnAll, btnCivil, btnShared].forEach(btn => {
+                    btn.className = 'px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all';
+                });
+                activeBtn.className = 'px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark bg-dark text-light transition-all';
+            }
+
+            btnAll.addEventListener('click', () => { currentFilter = 'all'; setActiveButton(btnAll); renderGallery(); });
+            btnCivil.addEventListener('click', () => { currentFilter = 'civil'; setActiveButton(btnCivil); renderGallery(); });
+            btnShared.addEventListener('click', () => { currentFilter = 'shared'; setActiveButton(btnShared); renderGallery(); });
+
+            function openLightbox(index) {
+                currentIndex = index;
+                updateLightbox();
+                lightbox.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeLightbox() {
+                lightbox.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            function updateLightbox() {
+                const photo = activePhotos[currentIndex];
+                if (!photo) return;
+                lightboxImg.src = photo.src;
+                lightboxImg.alt = photo.alt || '';
+                lightboxCaption.textContent = `${photo.label} (${currentIndex + 1} de ${activePhotos.length})`;
+            }
+
+            function nextPhoto() {
+                currentIndex = (currentIndex + 1) % activePhotos.length;
+                updateLightbox();
+            }
+
+            function prevPhoto() {
+                currentIndex = (currentIndex - 1 + activePhotos.length) % activePhotos.length;
+                updateLightbox();
+            }
+
+            lightboxClose.addEventListener('click', closeLightbox);
+            lightboxNext.addEventListener('click', nextPhoto);
+            lightboxPrev.addEventListener('click', prevPhoto);
+
+            window.addEventListener('keydown', (e) => {
+                if (lightbox.classList.contains('hidden')) return;
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowRight') nextPhoto();
+                if (e.key === 'ArrowLeft') prevPhoto();
+            });
         });
     </script>
 </body>
 </html>
+
