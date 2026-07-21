@@ -399,105 +399,17 @@ window.closeLightbox = function() {
         // -----------------------------------------------------------------
         const rsvpForm = document.getElementById('rsvp-form');
         const rsvpSuccess = document.getElementById('rsvp-success');
-        const rsvpCodeStep = document.getElementById('rsvp-code-step');
         const rsvpFormStep = document.getElementById('rsvp-form-step');
         
-        const rsvpCodeInput = document.getElementById('rsvp-code-input');
-        const rsvpValidateBtn = document.getElementById('rsvp-validate-code-btn');
-        const rsvpCodeError = document.getElementById('rsvp-code-error');
-        
-        const rsvpGreeting = document.getElementById('rsvp-greeting');
         const rsvpFirstnameInput = document.getElementById('rsvp-firstname');
         const rsvpLastnameInput = document.getElementById('rsvp-lastname');
-        const rsvpPassesInput = document.getElementById('rsvp-passes');
         const rsvpWhatsappInput = document.getElementById('rsvp-whatsapp');
         const rsvpDietarySelect = document.getElementById('rsvp-dietary-select');
         const rsvpDietaryDetailInput = document.getElementById('rsvp-dietary-detail');
         const rsvpDietaryDetailSection = document.getElementById('rsvp-dietary-details-section');
-        const rsvpBackToCodeBtn = document.getElementById('rsvp-back-to-code-btn');
 
-        // Configurable Phone Number of the Bride and Groom (replace with real number, e.g. 56912345678)
-        const NOVIOS_PHONE = '56912345678'; 
-
-        // Local Fallback Guest Codes for testing or demo purposes
-        const GUEST_CODES_FALLBACK = {
-            "FAM2026": { first_name: "Juan", last_name: "Valverde", passes: 4 },
-            "AMI2026": { first_name: "Camila", last_name: "Andrade", passes: 2 },
-            "VIP2026": { first_name: "Felipe", last_name: "Mendoza", passes: 1 },
-            "COLE2026": { first_name: "Sofía", last_name: "Castro", passes: 3 }
-        };
-
-        // Code Validation Handler
-        async function validateInvitationCode() {
-            if (!rsvpCodeInput) return;
-            const code = rsvpCodeInput.value.toUpperCase().trim();
-            if (!code) return;
-
-            rsvpValidateBtn.disabled = true;
-            rsvpValidateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Validando...';
-
-            let guestData = null;
-
-            // 1. Try querying Supabase
-            if (typeof window.getGuestByCode === 'function') {
-                try {
-                    const { data, error } = await window.getGuestByCode(code);
-                    if (data && !error) {
-                        guestData = {
-                            first_name: data.first_name || data.nombre || '',
-                            last_name: data.last_name || data.apellido || '',
-                            passes: data.passes !== undefined ? data.passes : (data.pases !== undefined ? data.pases : 1)
-                        };
-                    }
-                } catch (err) {
-                    console.error('Supabase fetch failed, trying local fallback:', err);
-                }
-            }
-
-            // 2. Try local fallback dictionary if not found in database
-            if (!guestData) {
-                if (GUEST_CODES_FALLBACK[code]) {
-                    guestData = GUEST_CODES_FALLBACK[code];
-                }
-            }
-
-            rsvpValidateBtn.disabled = false;
-            rsvpValidateBtn.innerHTML = 'Validar Código';
-
-            if (guestData) {
-                // Populate fields
-                rsvpFirstnameInput.value = guestData.first_name;
-                rsvpLastnameInput.value = guestData.last_name;
-                rsvpPassesInput.value = guestData.passes;
-                rsvpGreeting.innerHTML = `¡Hola ${guestData.first_name} ${guestData.last_name}!`;
-                
-                // Show form and hide code screen
-                if (rsvpCodeError) rsvpCodeError.classList.add('hidden');
-                if (rsvpCodeStep) rsvpCodeStep.classList.add('hidden');
-                if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
-            } else {
-                if (rsvpCodeError) rsvpCodeError.classList.remove('hidden');
-            }
-        }
-
-        if (rsvpValidateBtn) {
-            rsvpValidateBtn.addEventListener('click', validateInvitationCode);
-        }
-        if (rsvpCodeInput) {
-            rsvpCodeInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') validateInvitationCode();
-            });
-        }
-
-        // Back to Code Screen Button
-        if (rsvpBackToCodeBtn) {
-            rsvpBackToCodeBtn.addEventListener('click', () => {
-                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
-                if (rsvpCodeStep) rsvpCodeStep.classList.remove('hidden');
-                if (rsvpCodeInput) rsvpCodeInput.value = '';
-                if (rsvpCodeError) rsvpCodeError.classList.add('hidden');
-            });
-        }
+        // Official WhatsApp Number
+        const NOVIOS_PHONE = '56981393436'; 
 
         // Toggle dietary specification input visibility
         if (rsvpDietarySelect) {
@@ -513,12 +425,11 @@ window.closeLightbox = function() {
 
         // Handle Form Submit
         if (rsvpForm) {
-            rsvpForm.addEventListener('submit', async (e) => {
+            rsvpForm.addEventListener('submit', (e) => {
                 e.preventDefault();
 
-                const firstName = rsvpFirstnameInput.value;
-                const lastName = rsvpLastnameInput.value;
-                const passes = rsvpPassesInput.value;
+                const firstName = rsvpFirstnameInput.value.trim();
+                const lastName = rsvpLastnameInput.value.trim();
                 const whatsapp = rsvpWhatsappInput.value.trim();
                 
                 let isAttending = true;
@@ -541,87 +452,65 @@ window.closeLightbox = function() {
                     dietary = 'NO ASISTIRÁ';
                 }
 
-                const submitBtn = document.getElementById('rsvp-submit-btn');
-                const originalText = submitBtn.innerHTML;
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Procesando...';
-
-                // WhatsApp message generation
+                // WhatsApp message templates matching client requirements exactly
                 let whatsappMsg = '';
                 if (isAttending) {
-                    whatsappMsg = `¡Hola! Confirmo mi asistencia a la boda. Soy ${firstName} ${lastName}. Mi restricción alimentaria es: ${dietary}.`;
+                    whatsappMsg = `Hola, soy ${firstName} ${lastName}. Confirmo mi asistencia al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi restricción alimentaria es: ${dietary}.`;
                 } else {
-                    whatsappMsg = `¡Hola! Lamentablemente no podré asistir a la boda. Soy ${firstName} ${lastName}.`;
+                    whatsappMsg = `Hola, soy ${firstName} ${lastName}. Lamentablemente no podré asistir al matrimonio de Felipe y Camila el 23 de octubre de 2026.`;
                 }
                 const whatsappUrl = `https://wa.me/${NOVIOS_PHONE}?text=${encodeURIComponent(whatsappMsg)}`;
 
-                // Send email notification using Web3Forms
-                const formData = new FormData();
-                formData.append('access_key', '138e83f9-894d-4a94-bee4-af9392f8ffb9');
-                formData.append('subject', `Confirmación Boda (${isAttending ? 'SÍ' : 'NO'}): ${firstName} ${lastName}`);
-                formData.append('from_name', 'Sitio Oficial Boda');
-                formData.append('to_email', 'camilayfelipe.v@gmail.com');
+                // Update Success Screen summary fields
+                const summaryName = document.getElementById('summary-name');
+                const summaryWhatsapp = document.getElementById('summary-whatsapp');
+                const summaryAttendance = document.getElementById('summary-attendance');
+                const summaryDietary = document.getElementById('summary-dietary');
 
-                let message = `Nombre: ${firstName} ${lastName}\n`;
-                message += `Pases Asignados: ${passes}\n`;
-                message += `Asistencia: ${isAttending ? 'SÍ, asistirá' : 'NO asistirá'}\n`;
-                message += `Restricción Alimentaria: ${dietary}\n`;
-                message += `WhatsApp: ${whatsapp}`;
-                formData.append('message', message);
+                if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
+                if (summaryWhatsapp) summaryWhatsapp.textContent = whatsapp;
+                if (summaryAttendance) summaryAttendance.textContent = isAttending ? 'Sí, asistiré' : 'No podré asistir';
+                if (summaryDietary) summaryDietary.textContent = dietary;
 
-                const rsvpData = {
-                    name: `${firstName} ${lastName}`,
-                    email: '',
-                    whatsapp,
-                    has_partner: false,
-                    partner_name: '',
-                    dietary_restrictions: dietary,
-                    partner_dietary: '',
-                    created_at: new Date().toISOString()
-                };
-
-                try {
-                    // Send notification email
-                    const emailPromise = fetch('https://api.web3forms.com/submit', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    // Save confirmation to Supabase
-                    const dbPromise = window.saveRSVP ? window.saveRSVP(rsvpData) : Promise.resolve({ error: 'Supabase func missing' });
-
-                    // Execute both in parallel
-                    await Promise.allSettled([emailPromise, dbPromise]);
-
-                    // Fire Confetti on success
-                    if (typeof confetti === 'function') {
-                        confetti({
-                            particleCount: 120,
-                            spread: 70,
-                            origin: { y: 0.6 }
-                        });
-                    }
-
-                    // Show success screen and configure whatsapp button
-                    if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
-                    if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
-
-                    const whatsappShareBtn = document.getElementById('rsvp-whatsapp-share-btn');
-                    if (whatsappShareBtn) {
-                        whatsappShareBtn.href = whatsappUrl;
-                    }
-
-                    // Open WhatsApp automatically
-                    window.open(whatsappUrl, '_blank');
-
-                } catch (error) {
-                    console.error('RSVP submission error:', error);
-                    // Fallback to open WhatsApp anyway
-                    window.open(whatsappUrl, '_blank');
+                // Configure WhatsApp share button link
+                const whatsappShareBtn = document.getElementById('rsvp-whatsapp-share-btn');
+                if (whatsappShareBtn) {
+                    whatsappShareBtn.href = whatsappUrl;
                 }
 
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
+                // Configure Copy Button
+                const copyBtn = document.getElementById('rsvp-copy-msg-btn');
+                if (copyBtn) {
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(whatsappMsg).then(() => {
+                            showToast('Mensaje copiado al portapapeles', 'success');
+                        }).catch(() => {
+                            showToast('Error al copiar el mensaje', 'error');
+                        });
+                    };
+                }
+
+                // Configure Edit Button
+                const editBtn = document.getElementById('rsvp-edit-btn');
+                if (editBtn) {
+                    editBtn.onclick = () => {
+                        if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
+                        if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
+                    };
+                }
+
+                // Fire Confetti on success
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 120,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                }
+
+                // Transition to success state (No automatic popup windows opened)
+                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
+                if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
             });
         }
 
