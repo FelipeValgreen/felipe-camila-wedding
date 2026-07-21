@@ -1,0 +1,192 @@
+[
+  {
+    "id": "PHOTO-001",
+    "object_name": "guest_1764651969303_IMG_0475.jpeg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1764651969303_IMG_0475.jpeg",
+    "uploader": "Guest Upload",
+    "created_at": "2025-12-02T05:06:13.421Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-002",
+    "object_name": "guest_1764852196538_IMG_4168.jpeg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1764852196538_IMG_4168.jpeg",
+    "uploader": "Guest Upload",
+    "created_at": "2025-12-04T12:43:18.572Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-003",
+    "object_name": "guest_1765423098101_IMG_2787.jpeg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765423098101_IMG_2787.jpeg",
+    "uploader": "Guest Upload",
+    "created_at": "2025-12-11T03:18:21.214Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-004",
+    "object_name": "guest_1765837504689_CD20FBA5_0F4E_4F2C_9525_9AEDFEFBAC6B.jpeg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765837504689_CD20FBA5_0F4E_4F2C_9525_9AEDFEFBAC6B.jpeg",
+    "uploader": "Guest Upload",
+    "created_at": "2025-12-15T22:25:08.403Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-005",
+    "object_name": "guest_1765840539848_67bf1334_3d31_4563_ab3f_a793dd83d30b.jpeg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765840539848_67bf1334_3d31_4563_ab3f_a793dd83d30b.jpeg",
+    "uploader": "Guest Upload",
+    "created_at": "2025-12-15T23:15:41.191Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-006",
+    "object_name": "guest_1765847118452_IMG_1010.jpeg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765847118452_IMG_1010.jpeg",
+    "uploader": "Guest Upload",
+    "created_at": "2025-12-16T01:05:20.332Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-007",
+    "object_name": "guest_1765854243354_1000123675.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765854243354_1000123675.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2025-12-16T03:04:04.184Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-008",
+    "object_name": "guest_1765854308218_1000123675.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765854308218_1000123675.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2025-12-16T03:05:08.988Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-009",
+    "object_name": "guest_1765854395934_1000123674.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765854395934_1000123674.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2025-12-16T03:06:36.713Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-010",
+    "object_name": "guest_1769425221161_1000152665.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1769425221161_1000152665.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2026-01-26T11:00:24.573Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-011",
+    "object_name": "guest_1769434198304_1000152664.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1769434198304_1000152664.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2026-01-26T13:29:59.797Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-012",
+    "object_name": "guest_1769464493376_image.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1769464493376_image.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2026-01-26T21:54:56.095Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-013",
+    "object_name": "guest_1770139297266_image.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1770139297266_image.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2026-02-03T17:21:38.566Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "PRE_EVENT",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-014",
+    "object_name": "guest_1773227705175_1000462782.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773227705175_1000462782.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2026-03-11T11:15:07.746Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "CIVIL_WEEKEND",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-015",
+    "object_name": "guest_1773491521242_1000114787.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773491521242_1000114787.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2026-03-14T12:32:02.375Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "CIVIL_WEEKEND",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-016",
+    "object_name": "guest_1773514195833_1000114847.jpg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773514195833_1000114847.jpg",
+    "uploader": "Guest Upload",
+    "created_at": "2026-03-14T18:49:57.263Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "CIVIL_WEEKEND",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-017",
+    "object_name": "guest_1773682017069_WhatsApp_Image_2026_03_15_at_10.44.32.jpeg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773682017069_WhatsApp_Image_2026_03_15_at_10.44.32.jpeg",
+    "uploader": "Guest Upload",
+    "created_at": "2026-03-16T17:29:14.027Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "CIVIL_WEEKEND",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-018",
+    "object_name": "guest_1773784468851_IMG_6969.jpeg",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1773784468851_IMG_6969.jpeg",
+    "uploader": "Guest Upload",
+    "created_at": "2026-03-17T21:54:31.584Z",
+    "batch": "SUPABASE_BUCKET",
+    "category": "CIVIL_WEEKEND",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  },
+  {
+    "id": "PHOTO-019",
+    "object_name": "guest_uploads",
+    "public_url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads",
+    "uploader": "Guest Upload",
+    "created_at": "",
+    "batch": "SUPABASE_BUCKET",
+    "category": "CIVIL_WEEKEND",
+    "approval_status": "PENDING_HUMAN_APPROVAL"
+  }
+]
