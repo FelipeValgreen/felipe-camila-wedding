@@ -693,27 +693,7 @@
                         </a>
                     </div>
 
-                    <!-- STEP 1: INGRESO DE CÓDIGO (HIDDEN FOR DIRECT WA RSVP) -->
-                    <div id="rsvp-code-step" class="hidden space-y-6">
-                        <div class="text-center max-w-sm mx-auto mb-8">
-                            <p class="font-sans text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">Pases e Invitaciones</p>
-                            <p class="font-sans text-xs text-gray-500 font-light">Para confirmar tus pases, ingresa el código personal que aparece en tu invitación física o digital.</p>
-                        </div>
-                        <div class="max-w-md mx-auto space-y-4">
-                            <div class="space-y-2">
-                                <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold text-center">Código de Invitación</label>
-                                <input type="text" id="rsvp-code-input" placeholder="Ej: FAM2026"
-                                    class="w-full bg-transparent border-b border-gray-300 py-3 text-center text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-lg tracking-widest uppercase">
-                            </div>
-                            <button type="button" id="rsvp-validate-code-btn"
-                                class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-4">
-                                Validar Código
-                            </button>
-                            <p id="rsvp-code-error" class="hidden text-red-500 text-xs font-sans text-center mt-2">
-                                <i class="fa-solid fa-triangle-exclamation"></i> Código no encontrado. Revisa e intenta de nuevo.
-                            </p>
-                        </div>
-                    </div>
+
 
                     <!-- STEP 2: FORMULARIO DE CONFIRMACIÓN (VISIBLE BY DEFAULT) -->
                     <div id="rsvp-form-step" class="space-y-8 animate-fade-in">
@@ -741,7 +721,7 @@
                                 <!-- WhatsApp contact -->
                                 <div class="space-y-2">
                                     <label class="block text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">WhatsApp de Contacto</label>
-                                    <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56912345678"
+                                    <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56 9 0000 0000"
                                         class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
                                 </div>
 
@@ -781,10 +761,13 @@
                             <div id="rsvp-dietary-details-section" class="hidden space-y-2 pt-2 animate-fade-in">
                                 <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold">Especifica tu restricción o alergias</label>
                                 <input type="text" id="rsvp-dietary-detail" placeholder="Ej: Maní, mariscos, etc."
-                                    class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:bo                            <!-- Main Action Button -->
+                                    class="w-full bg-transparent border-b border-gray-300 py-2 text-charcoal focus:outline-none focus:border-charcoal transition-colors font-sans text-sm pb-1">
+                            </div>
+
+                            <!-- Main Action Button -->
                             <button type="submit" id="rsvp-submit-btn"
                                 class="w-full bg-charcoal text-white font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors duration-500 mt-8 font-semibold">
-                                Confirmar asistencia
+                                Preparar respuesta
                             </button>
                         </form>
                     </div>
@@ -801,7 +784,7 @@
                             <p><strong>Invitado:</strong> <span id="summary-name" class="text-charcoal/80">-</span></p>
                             <p><strong>WhatsApp:</strong> <span id="summary-whatsapp" class="text-charcoal/80">-</span></p>
                             <p><strong>Asistencia:</strong> <span id="summary-attendance" class="text-charcoal/80">-</span></p>
-                            <p><strong>Restricción:</strong> <span id="summary-dietary" class="text-charcoal/80">-</span></p>
+                            <p id="summary-dietary-row"><strong>Restricción:</strong> <span id="summary-dietary" class="text-charcoal/80">-</span></p>
                         </div>
 
                         <!-- WhatsApp Action Button -->

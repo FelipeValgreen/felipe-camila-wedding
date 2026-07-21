@@ -411,16 +411,50 @@ window.closeLightbox = function() {
         // Official WhatsApp Number
         const NOVIOS_PHONE = '56981393436'; 
 
-        // Toggle dietary specification input visibility
+        // Toggle dietary specification input visibility and set required attribute
         if (rsvpDietarySelect) {
             rsvpDietarySelect.addEventListener('change', () => {
                 if (rsvpDietarySelect.value === 'Alergias') {
                     if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.remove('hidden');
+                    if (rsvpDietaryDetailInput) {
+                        rsvpDietaryDetailInput.required = true;
+                        rsvpDietaryDetailInput.placeholder = "Especifica tu restricción (Ej: Maní, mariscos)";
+                    }
                 } else {
                     if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.add('hidden');
-                    if (rsvpDietaryDetailInput) rsvpDietaryDetailInput.value = '';
+                    if (rsvpDietaryDetailInput) {
+                        rsvpDietaryDetailInput.required = false;
+                        rsvpDietaryDetailInput.value = '';
+                    }
                 }
             });
+        }
+
+        // Copy message to clipboard helper with robust legacy fallback
+        function copyTextToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text);
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                try {
+                    const successful = document.execCommand('copy');
+                    textarea.remove();
+                    if (successful) {
+                        return Promise.resolve();
+                    } else {
+                        return Promise.reject(new Error('Fallback copy command failed'));
+                    }
+                } catch (err) {
+                    textarea.remove();
+                    return Promise.reject(err);
+                }
+            }
         }
 
         // Handle Form Submit
@@ -440,11 +474,17 @@ window.closeLightbox = function() {
                     }
                 }
 
-                // Determine dietary restriction string
+                // Determine dietary restriction string and validate allergies specificity
                 let dietary = 'Ninguna';
                 if (isAttending) {
                     if (rsvpDietarySelect.value === 'Alergias') {
-                        dietary = rsvpDietaryDetailInput.value.trim() || 'Alergias';
+                        const detail = rsvpDietaryDetailInput.value.trim();
+                        if (!detail || detail.toLowerCase() === 'alergias') {
+                            alert('Por favor especifica tu alergia o restricción alimentaria.');
+                            rsvpDietaryDetailInput.focus();
+                            return;
+                        }
+                        dietary = detail;
                     } else {
                         dietary = rsvpDietarySelect.value;
                     }
@@ -466,11 +506,18 @@ window.closeLightbox = function() {
                 const summaryWhatsapp = document.getElementById('summary-whatsapp');
                 const summaryAttendance = document.getElementById('summary-attendance');
                 const summaryDietary = document.getElementById('summary-dietary');
+                const summaryDietaryRow = document.getElementById('summary-dietary-row');
 
                 if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
                 if (summaryWhatsapp) summaryWhatsapp.textContent = whatsapp;
                 if (summaryAttendance) summaryAttendance.textContent = isAttending ? 'Sí, asistiré' : 'No podré asistir';
-                if (summaryDietary) summaryDietary.textContent = dietary;
+                
+                if (isAttending) {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.remove('hidden');
+                    if (summaryDietary) summaryDietary.textContent = dietary;
+                } else {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.add('hidden');
+                }
 
                 // Configure WhatsApp share button link
                 const whatsappShareBtn = document.getElementById('rsvp-whatsapp-share-btn');
@@ -482,9 +529,10 @@ window.closeLightbox = function() {
                 const copyBtn = document.getElementById('rsvp-copy-msg-btn');
                 if (copyBtn) {
                     copyBtn.onclick = () => {
-                        navigator.clipboard.writeText(whatsappMsg).then(() => {
+                        copyTextToClipboard(whatsappMsg).then(() => {
                             showToast('Mensaje copiado al portapapeles', 'success');
-                        }).catch(() => {
+                        }).catch((err) => {
+                            console.error('Copy failed:', err);
                             showToast('Error al copiar el mensaje', 'error');
                         });
                     };
@@ -499,16 +547,7 @@ window.closeLightbox = function() {
                     };
                 }
 
-                // Fire Confetti on success
-                if (typeof confetti === 'function') {
-                    confetti({
-                        particleCount: 120,
-                        spread: 70,
-                        origin: { y: 0.6 }
-                    });
-                }
-
-                // Transition to success state (No automatic popup windows opened)
+                // Transition to success state (No automatic popup windows opened, no confetti)
                 if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
                 if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
             });

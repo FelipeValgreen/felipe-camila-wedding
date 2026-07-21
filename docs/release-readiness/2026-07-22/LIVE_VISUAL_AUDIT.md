@@ -1,6 +1,6 @@
 # Live Visual Audit — 2026-07-22
 
-Visual analysis of the live deployment at `https://felipeycami.cl/` across viewports.
+Visual analysis of the live deployment at `https://felipeycami.cl/` and the hotfix branch.
 
 ---
 
@@ -15,9 +15,9 @@ Visual analysis of the live deployment at `https://felipeycami.cl/` across viewp
 | **Ceremonia Religiosa** | Tarjeta de información del Santuario de la Divina Misericordia (17:50 Hrs). | Ninguno. Contiene enlaces directos a Google Maps y Waze. | Leve | No | N/A |
 | **Gala (Arboleda)** | Información del Centro de Eventos Arboleda con fotos y Waze. | Ninguno. La foto incorrecta de la iglesia fue eliminada de la sección en `main`. | Leve | No | N/A |
 | **Dress Code** | Sección "Black Tie / Etiqueta". | Ninguno. Contraste óptimo y tipografía legible. | Leve | No | N/A |
-| **RSVP** | Formulario interactivo por código y datos personales. | **Crítico backend silencioso.** El formulario aparenta éxito pero falla silenciosamente. | **Crítica (P0)** | **Sí** | Requiere habilitar inserción anónima (RLS) y crear las columnas correspondientes en la base. |
+| **RSVP (Hotfix)** | Formulario interactivo directo individual y pantalla de éxito intermedia. | Ninguno. Validaciones locales y directivas de copia y envío por WhatsApp operativas. | Leve | No | N/A |
 | **Lista de Novios** | Sección con enlace a Novios Paris (Código `21030724`). | Ninguno. El enlace redirige correctamente al catálogo oficial. | Leve | No | N/A |
-| **Galería / Paparazzi** | Mosaico de fotos y botón para subir archivos. | **Error RLS de Storage.** La subida falla en vivo debido a políticas restrictivas de Storage. | **Crítica (P0)** | **Sí** | Corregir las políticas de inserción en el bucket `wedding-photos`. |
+| **Galería / Paparazzi** | Mosaico de fotos y botón para subir archivos. | **Error RLS de Storage.** La subida en vivo falla por políticas restrictivas de Storage. | **Media** | No | Se puede posponer la subida para después del lanzamiento inicial. |
 | **Música** | Reproductor y control de volumen flotante. | Ninguno. Reproduce la balada de James Arthur correctamente en `main`. | Leve | No | N/A |
 | **Navegación / Footer** | Barra de pestañas y pie de página editorial. | Ninguno. | Leve | No | N/A |
 
@@ -26,9 +26,9 @@ Visual analysis of the live deployment at `https://felipeycami.cl/` across viewp
 ## 2. Guest Journey Under 20 Seconds
 
 A normal guest loading the site will immediately understand:
-1. **Quiénes se casan:** Felipe & Camila (visible in the Hero and Title).
+1. **Quiénes se casan:** Felipe & Camila.
 2. **Cuándo:** Viernes 23 de Octubre de 2026 a las 17:50 Hrs.
-3. **Dónde:** Santuario de la Divina Misericordia (Ceremonia) y Centro de Eventos Arboleda (Gala).
-4. **Cómo confirmar:** Mediante la sección de RSVP ingresando su código.
-5. **Cómo saber si quedó confirmado:** El sistema muestra una pantalla de confirmación exitosa y abre WhatsApp (aunque en realidad la persistencia en base de datos falla).
-6. **Cómo pedir ayuda:** El botón de WhatsApp redirige al teléfono oficial configurado.
+3. **Dónde:** Santuario de la Divina Misericordia y Centro de Eventos Arboleda.
+4. **Cómo confirmar:** Mediante la sección de RSVP completando sus datos básicos en el formulario.
+5. **Cómo saber si quedó confirmado:** El sistema muestra el resumen y el botón verde "Enviar confirmación por WhatsApp" para enviar el mensaje directamente a los novios.
+6. **Cómo pedir ayuda:** Mediante el WhatsApp oficial habilitado.

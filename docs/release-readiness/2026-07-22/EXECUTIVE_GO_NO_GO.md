@@ -5,25 +5,27 @@ Recommendation on the readiness of the wedding invitation platform for tomorrow'
 ---
 
 ```text
-RECOMMENDATION: NO-GO
+RECOMMENDATION: CONDITIONAL GO
 ```
 
 ---
 
 ## 1. Justificación Operativa
 
-El estado actual del despliegue en producción (`https://felipeycami.cl`) **no es apto** para ser enviado a los invitados reales debido a fallos estructurales graves e insalvables en el backend de Supabase:
+El estado actual del despliegue en producción (`https://felipeycami.cl`) **no es apto** para ser enviado a los invitados debido a fallos estructurales en el backend de Supabase:
 
-1. **RSVP Inoperativo para Invitados Reales:** La tabla `guest_list` no existe en la base de datos de producción (404). El sistema rechaza cualquier código de validación, imposibilitando que un invitado real acceda al formulario.
-2. **Pérdida de Datos en Base de Datos:** La tabla `rsvp_guests` carece de la columna `dietary_restrictions`, lo que provoca que todas las inserciones del formulario RSVP fallen con un error 400. Adicionalmente, las políticas RLS bloquean la escritura pública (401). Ninguna confirmación queda registrada en base de datos.
-3. **Redirección de WhatsApp a un Placeholder:** Al completar el RSVP, el sistema abre WhatsApp apuntando al número de prueba `56912345678`. Los invitados intentarán enviar su confirmación a un número inexistente.
+1. **Inexistencia de `guest_list` (404):** Impide que invitados reales puedan validar códigos.
+2. **Incompatibilidad en `rsvp_guests` (400/401):** La tabla carece de las columnas de restricciones alimentarias requeridas por el frontend, y el RLS bloquea escrituras públicas.
+3. **WhatsApp de prueba:** El enlace final de WhatsApp apunta al número de prueba `56912345678`.
 
 ---
 
-## 2. Recomendación Operativa
+## 2. Recomendación Operativa (Hotfix Directo)
 
-Proponemos la aplicación de un **Hotfix Mínimo y Seguro** en el frontend (sin alterar base de datos, políticas ni estructura del servidor) que permita realizar el envío de la invitación con garantías mañana utilizando un **Vercel Preview**:
+Para garantizar un envío seguro mañana, implementamos una solución minimalista y 100% cliente en la rama `release/safe-rsvp-whatsapp-2026-07-22`:
 
-*   **Estrategia del Hotfix:**
-    1.  **Bypass del validador de códigos:** Si la base de datos no encuentra el código (404/Error), en lugar de bloquear al invitado, se despliega el formulario RSVP permitiéndole ingresar sus datos manualmente.
-    2.  **Redirección de WhatsApp y Web3Forms:** Se canalizan todas las confirmaciones mediante correo electrónico (Web3Forms, que sí funciona) y la redirección automática a WhatsApp (se debe configurar el número oficial en lugar de `56912345678`).
+*   **Flujo del RSVP Seguro:**
+    *   Se eliminó por completo el paso de códigos de invitación y referencias a pases/acompañantes de la experiencia pública.
+    *   El formulario de RSVP ahora es **individual y directo**. Solicita: Nombre, Apellido, WhatsApp de contacto, Selección de asistencia y restricción alimentaria.
+    *   **Bypass de Base de Datos y Web3Forms:** No se realizan llamadas a Supabase ni Web3Forms.
+    *   **Confirmación transparente:** Al presionar "Preparar respuesta", se presenta una pantalla intermedia con el resumen del RSVP y dos botones claros: **"Enviar confirmación por WhatsApp"** (redirige al WhatsApp oficial `56981393436` con el texto codificado) y **"Copiar Mensaje"** (con fallback robusto). Esto evita popups automáticos molestos y le aclara al invitado que el proceso finaliza al enviar el mensaje de chat.
