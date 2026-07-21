@@ -1,78 +1,825 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Photo Inventory Contact Sheet</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curaduría de Fotos — Felipe & Camila</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
 <style>
-body {font-family: Arial, sans-serif; margin: 20px;}
-table {border-collapse: collapse; width: 100%;}
-th, td {border: 1px solid #ddd; padding: 8px; text-align: left;}
-th {background-color: #f2f2f2;}
-img {max-width: 120px; height: auto;}
-.filter {margin-bottom: 15px;}
+  :root {
+    --bg-color: #FAF8F3;
+    --card-bg: #FFFFFF;
+    --text-primary: #11110F;
+    --text-muted: #918D85;
+    --burgundy: #4A222A;
+    --gold: #B99B71;
+    --border-color: #E6E2D8;
+    --font-heading: 'Newsreader', serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    padding: 24px 16px 80px 16px;
+    line-height: 1.5;
+  }
+
+  .header-container {
+    max-width: 1400px;
+    margin: 0 auto 24px auto;
+  }
+
+  h1 {
+    font-family: var(--font-heading);
+    font-size: 2.25rem;
+    font-weight: 600;
+    color: var(--burgundy);
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+  }
+
+  .notice-banner {
+    background-color: #F3EFE7;
+    border-left: 4px solid var(--gold);
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    border-radius: 4px;
+    margin-bottom: 24px;
+  }
+
+  /* Sticky Top Bar for Counters & Controls */
+  .sticky-panel {
+    position: sticky;
+    top: 12px;
+    z-index: 100;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+  }
+
+  .counters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+
+  .counter-badge {
+    background: #FAF8F3;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .counter-badge.limit-reached {
+    border-color: var(--gold);
+    background: #FDFBF7;
+    color: var(--burgundy);
+  }
+
+  .counter-value {
+    color: var(--burgundy);
+    font-weight: 700;
+  }
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .filter-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  select, input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: #FFF;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--text-primary);
+  }
+
+  select:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+
+  .actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn:hover {
+    background-color: #F3EFE7;
+    border-color: var(--gold);
+  }
+
+  .btn-primary {
+    background-color: var(--burgundy);
+    color: #FFF;
+    border-color: var(--burgundy);
+  }
+
+  .btn-primary:hover {
+    background-color: #36181E;
+    border-color: #36181E;
+  }
+
+  .btn-danger {
+    color: #A30000;
+    border-color: #FCC;
+    background: #FFF5F5;
+  }
+
+  .btn-danger:hover {
+    background: #FEE;
+  }
+
+  #fileInput { display: none; }
+
+  /* Photo Cards Grid */
+  .grid-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .photo-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .photo-card:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+  }
+
+  .photo-card.selected-hero { border: 2px solid var(--gold); }
+  .photo-card.selected-historia { border: 2px solid var(--burgundy); }
+  .photo-card.selected-civil { border: 2px solid #2B543A; }
+  .photo-card.selected-guest { border: 2px solid #1D4ED8; }
+  .photo-card.selected-exclude { opacity: 0.55; background: #F5F5F5; }
+
+  .thumbnail-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background-color: #E6E2D8;
+    overflow: hidden;
+  }
+
+  .thumbnail-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .visual-id-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(17, 17, 15, 0.85);
+    color: #FFF;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .batch-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(250, 248, 243, 0.9);
+    color: var(--burgundy);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+  }
+
+  .card-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1;
+  }
+
+  .meta-row {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .meta-row strong {
+    color: var(--text-primary);
+  }
+
+  .object-path {
+    font-family: monospace;
+    font-size: 0.72rem;
+    word-break: break-all;
+    background: #FAF8F3;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #EFECE6;
+    color: #444;
+  }
+
+  .selection-control {
+    margin-top: auto;
+    padding-top: 8px;
+  }
+
+  .selection-control label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  .selection-select {
+    font-weight: 600;
+  }
+
+  .status-message {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: none;
+  }
+
+  .status-message.error {
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FCA5A5;
+    display: block;
+  }
+
+  .status-message.success {
+    background-color: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #6EE7B7;
+    display: block;
+  }
 </style>
 </head>
 <body>
-<h1>Photo Inventory Contact Sheet</h1>
-<div class="filter">
-  <label>Batch: <select id="batchFilter"><option value="">All</option></select></label>
-  <label>Uploader: <select id="uploaderFilter"><option value="">All</option></select></label>
+
+<div class="header-container">
+  <h1>Curaduría de Fotografías — Matrimonio</h1>
+  <p class="subtitle">Herramienta interna de selección y organización visual de imágenes para Felipe & Camila</p>
+  <div class="notice-banner">
+    📌 Tus selecciones se guardan únicamente en este navegador hasta que exportes el archivo.
+  </div>
 </div>
-<table id="photoTable">
-  <thead>
-    <tr><th>Thumbnail</th><th>ID</th><th>Uploader</th><th>Created At</th><th>Batch</th><th>Object Path</th></tr>
-  </thead>
-  <tbody></tbody>
-</table>
+
+<div class="header-container sticky-panel">
+  <!-- Counters Bar -->
+  <div class="counters-bar">
+    <div class="counter-badge" id="badge-hero">HERO: <span class="counter-value" id="cnt-hero">0 / 1</span></div>
+    <div class="counter-badge" id="badge-historia">HISTORIA: <span class="counter-value" id="cnt-historia">0 / 4</span></div>
+    <div class="counter-badge" id="badge-civil">CIVIL_FEATURED: <span class="counter-value" id="cnt-civil">0 / 8</span></div>
+    <div class="counter-badge" id="badge-guest">GUEST_SHARED: <span class="counter-value" id="cnt-guest">0 / 8</span></div>
+    <div class="counter-badge">EXCLUDED: <span class="counter-value" id="cnt-exclude">0</span></div>
+  </div>
+
+  <!-- Filters Grid -->
+  <div class="filters-grid">
+    <div class="filter-group">
+      <label for="filterBatch">Batch / Grupo</label>
+      <select id="filterBatch"><option value="">Todos</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="filterUploader">Subido por</label>
+      <select id="filterUploader"><option value="">Todos</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="filterCategory">Categoría Seleccionada</label>
+      <select id="filterCategory">
+        <option value="">Todas</option>
+        <option value="NONE">NONE (Sin categoría)</option>
+        <option value="HERO">HERO</option>
+        <option value="HISTORIA">HISTORIA</option>
+        <option value="CIVIL_FEATURED">CIVIL_FEATURED</option>
+        <option value="GUEST_SHARED">GUEST_SHARED</option>
+        <option value="EXCLUDE">EXCLUDE</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterState">Estado Selección</label>
+      <select id="filterState">
+        <option value="">Todos</option>
+        <option value="SELECTED">Solo Seleccionadas</option>
+        <option value="UNSELECTED">Solo Sin Selección (NONE)</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterSearch">Buscar por ID (Visual / Foto)</label>
+      <input type="text" id="filterSearch" placeholder="ej. 001, photo-id..." />
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+    <button class="btn" id="btnShowSelected">Mostrar solo seleccionadas</button>
+    <button class="btn" id="btnShowUnselected">Mostrar solo sin selección</button>
+    <button class="btn" id="btnShowAll">Mostrar todas</button>
+    <button class="btn btn-danger" id="btnReset">Restablecer selecciones</button>
+    <button class="btn btn-primary" id="btnExport">Exportar Selección JSON</button>
+    <button class="btn" id="btnImport">Importar Selección JSON</button>
+    <input type="file" id="fileInput" accept=".json" />
+  </div>
+
+  <div id="statusMessage" class="status-message"></div>
+</div>
+
+<!-- Main Photo Cards Grid -->
+<div class="grid-container" id="photoGrid"></div>
+
 <script>
+const STORAGE_KEY = 'wedding_photo_curation_v1';
+const LIMITS = {
+  HERO: 1,
+  HISTORIA: 4,
+  CIVIL_FEATURED: 8,
+  GUEST_SHARED: 8
+};
+
+let inventoryData = [];
+let selections = {}; // map guest_photo_id -> category string
+
+// Element refs
+const photoGrid = document.getElementById('photoGrid');
+const filterBatch = document.getElementById('filterBatch');
+const filterUploader = document.getElementById('filterUploader');
+const filterCategory = document.getElementById('filterCategory');
+const filterState = document.getElementById('filterState');
+const filterSearch = document.getElementById('filterSearch');
+const btnShowSelected = document.getElementById('btnShowSelected');
+const btnShowUnselected = document.getElementById('btnShowUnselected');
+const btnShowAll = document.getElementById('btnShowAll');
+const btnReset = document.getElementById('btnReset');
+const btnExport = document.getElementById('btnExport');
+const btnImport = document.getElementById('btnImport');
+const fileInput = document.getElementById('fileInput');
+const statusMessage = document.getElementById('statusMessage');
+
+// Load saved local selections
+function loadLocalSelections() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      selections = JSON.parse(raw);
+    }
+  } catch(e) {
+    console.error('Error loading localStorage selections', e);
+  }
+}
+
+function saveLocalSelections() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(selections));
+  } catch(e) {
+    console.error('Error saving to localStorage', e);
+  }
+}
+
+function showStatus(msg, type = 'error') {
+  statusMessage.textContent = msg;
+  statusMessage.className = `status-message ${type}`;
+  if (type === 'success') {
+    setTimeout(() => {
+      statusMessage.style.display = 'none';
+    }, 4000);
+  }
+}
+
+function hideStatus() {
+  statusMessage.style.display = 'none';
+}
+
+// Compute counts
+function getCategoryCounts() {
+  const counts = { HERO: 0, HISTORIA: 0, CIVIL_FEATURED: 0, GUEST_SHARED: 0, EXCLUDE: 0, NONE: 0 };
+  inventoryData.forEach(item => {
+    const cat = selections[item.guest_photo_id] || 'NONE';
+    if (counts[cat] !== undefined) {
+      counts[cat]++;
+    } else {
+      counts.NONE++;
+    }
+  });
+  return counts;
+}
+
+function updateCountersUI() {
+  const counts = getCategoryCounts();
+  document.getElementById('cnt-hero').textContent = `${counts.HERO} / ${LIMITS.HERO}`;
+  document.getElementById('cnt-historia').textContent = `${counts.HISTORIA} / ${LIMITS.HISTORIA}`;
+  document.getElementById('cnt-civil').textContent = `${counts.CIVIL_FEATURED} / ${LIMITS.CIVIL_FEATURED}`;
+  document.getElementById('cnt-guest').textContent = `${counts.GUEST_SHARED} / ${LIMITS.GUEST_SHARED}`;
+  document.getElementById('cnt-exclude').textContent = `${counts.EXCLUDE}`;
+
+  document.getElementById('badge-hero').classList.toggle('limit-reached', counts.HERO === LIMITS.HERO);
+  document.getElementById('badge-historia').classList.toggle('limit-reached', counts.HISTORIA === LIMITS.HISTORIA);
+  document.getElementById('badge-civil').classList.toggle('limit-reached', counts.CIVIL_FEATURED === LIMITS.CIVIL_FEATURED);
+  document.getElementById('badge-guest').classList.toggle('limit-reached', counts.GUEST_SHARED === LIMITS.GUEST_SHARED);
+}
+
+// Render cards
+function renderGrid() {
+  photoGrid.innerHTML = '';
+  const batchVal = filterBatch.value;
+  const uploaderVal = filterUploader.value;
+  const categoryVal = filterCategory.value;
+  const stateVal = filterState.value;
+  const searchVal = filterSearch.value.trim().toLowerCase();
+
+  inventoryData.forEach((item, index) => {
+    const visualId = String(index + 1).padStart(3, '0');
+    const curCat = selections[item.guest_photo_id] || 'NONE';
+
+    // Apply Filters
+    if (batchVal && item.batch !== batchVal) return;
+    if (uploaderVal && item.uploader_name !== uploaderVal) return;
+    if (categoryVal && curCat !== categoryVal) return;
+    if (stateVal === 'SELECTED' && curCat === 'NONE') return;
+    if (stateVal === 'UNSELECTED' && curCat !== 'NONE') return;
+    if (searchVal) {
+      const matchVisual = visualId.includes(searchVal);
+      const matchGuestId = (item.guest_photo_id || '').toLowerCase().includes(searchVal);
+      const matchUploader = (item.uploader_name || '').toLowerCase().includes(searchVal);
+      if (!matchVisual && !matchGuestId && !matchUploader) return;
+    }
+
+    const card = document.createElement('div');
+    card.className = `photo-card ${getCardClass(curCat)}`;
+    card.id = `card-${item.guest_photo_id}`;
+
+    card.innerHTML = `
+      <div class="thumbnail-container">
+        <img src="${item.url}" alt="Foto ${visualId}" loading="lazy" />
+        <span class="visual-id-badge">#${visualId}</span>
+        <span class="batch-badge">${item.batch || 'N/A'}</span>
+      </div>
+      <div class="card-body">
+        <div class="meta-row">
+          <span>ID: <strong>${item.guest_photo_id || 'N/A'}</strong></span>
+          <span>${item.created_at ? item.created_at.substring(0, 10) : ''}</span>
+        </div>
+        <div class="meta-row">
+          <span>Subida por: <strong>${item.uploader_name || 'Anónimo'}</strong></span>
+        </div>
+        <div class="object-path" title="${item.object_path || ''}">${item.object_path || ''}</div>
+        <div class="meta-row" style="font-size:0.7rem; color:#777;">
+          <span>Duplicado: ${item.duplicate_content_status || 'Única'}</span>
+        </div>
+        <div class="selection-control">
+          <label>Asignar Categoría</label>
+          <select class="selection-select" data-guest-id="${item.guest_photo_id}">
+            <option value="NONE" ${curCat === 'NONE' ? 'selected' : ''}>NONE (Sin opción)</option>
+            <option value="HERO" ${curCat === 'HERO' ? 'selected' : ''}>HERO (Máx 1)</option>
+            <option value="HISTORIA" ${curCat === 'HISTORIA' ? 'selected' : ''}>HISTORIA (Máx 4)</option>
+            <option value="CIVIL_FEATURED" ${curCat === 'CIVIL_FEATURED' ? 'selected' : ''}>CIVIL_FEATURED (Máx 8)</option>
+            <option value="GUEST_SHARED" ${curCat === 'GUEST_SHARED' ? 'selected' : ''}>GUEST_SHARED (Máx 8)</option>
+            <option value="EXCLUDE" ${curCat === 'EXCLUDE' ? 'selected' : ''}>EXCLUDE (Ilimitado)</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    photoGrid.appendChild(card);
+  });
+
+  // Attach select listeners
+  document.querySelectorAll('.selection-select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      const guestId = e.target.dataset.guestId;
+      const newCat = e.target.value;
+      handleSelectionChange(guestId, newCat, e.target);
+    });
+  });
+
+  updateCountersUI();
+}
+
+function getCardClass(cat) {
+  switch (cat) {
+    case 'HERO': return 'selected-hero';
+    case 'HISTORIA': return 'selected-historia';
+    case 'CIVIL_FEATURED': return 'selected-civil';
+    case 'GUEST_SHARED': return 'selected-guest';
+    case 'EXCLUDE': return 'selected-exclude';
+    default: return '';
+  }
+}
+
+function handleSelectionChange(guestId, newCat, selectElem) {
+  hideStatus();
+  const currentCounts = getCategoryCounts();
+  const oldCat = selections[guestId] || 'NONE';
+
+  if (newCat !== 'NONE' && newCat !== 'EXCLUDE') {
+    const limit = LIMITS[newCat];
+    const effectiveCount = (oldCat === newCat) ? currentCounts[newCat] : currentCounts[newCat] + 1;
+
+    if (effectiveCount > limit) {
+      showStatus(`⚠️ No se puede asignar "${newCat}". Se ha alcanzado el límite máximo de ${limit} foto(s).`, 'error');
+      selectElem.value = oldCat;
+      return;
+    }
+  }
+
+  if (newCat === 'NONE') {
+    delete selections[guestId];
+  } else {
+    selections[guestId] = newCat;
+  }
+
+  saveLocalSelections();
+  updateCountersUI();
+
+  // Update card border class dynamically without full rerender
+  const card = document.getElementById(`card-${guestId}`);
+  if (card) {
+    card.className = `photo-card ${getCardClass(newCat)}`;
+  }
+}
+
+// Populate filters
+function setupFilterOptions() {
+  const batches = new Set();
+  const uploaders = new Set();
+
+  inventoryData.forEach(item => {
+    if (item.batch) batches.add(item.batch);
+    if (item.uploader_name) uploaders.add(item.uploader_name);
+  });
+
+  batches.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b;
+    opt.textContent = b;
+    filterBatch.appendChild(opt);
+  });
+
+  uploaders.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u;
+    opt.textContent = u;
+    filterUploader.appendChild(opt);
+  });
+
+  [filterBatch, filterUploader, filterCategory, filterState].forEach(elem => {
+    elem.addEventListener('change', renderGrid);
+  });
+
+  filterSearch.addEventListener('input', renderGrid);
+}
+
+// Button actions
+btnShowSelected.addEventListener('click', () => {
+  filterState.value = 'SELECTED';
+  filterCategory.value = '';
+  renderGrid();
+});
+
+btnShowUnselected.addEventListener('click', () => {
+  filterState.value = 'UNSELECTED';
+  filterCategory.value = '';
+  renderGrid();
+});
+
+btnShowAll.addEventListener('click', () => {
+  filterBatch.value = '';
+  filterUploader.value = '';
+  filterCategory.value = '';
+  filterState.value = '';
+  filterSearch.value = '';
+  renderGrid();
+});
+
+btnReset.addEventListener('click', () => {
+  if (confirm('¿Estás seguro de restablecer todas las selecciones a NONE?')) {
+    selections = {};
+    saveLocalSelections();
+    renderGrid();
+    showStatus('Selecciones restablecidas correctamente.', 'success');
+  }
+});
+
+// Export JSON
+btnExport.addEventListener('click', () => {
+  hideStatus();
+  const counts = getCategoryCounts();
+
+  if (counts.HERO > LIMITS.HERO || counts.HISTORIA > LIMITS.HISTORIA ||
+      counts.CIVIL_FEATURED > LIMITS.CIVIL_FEATURED || counts.GUEST_SHARED > LIMITS.GUEST_SHARED) {
+    showStatus('❌ Exportación bloqueada: una o más categorías superan los límites permitidos.', 'error');
+    return;
+  }
+
+  const exportPayload = {
+    generated_at: new Date().toISOString(),
+    source_inventory_count: inventoryData.length,
+    hero: [],
+    historia: [],
+    civil_featured: [],
+    guest_shared: [],
+    excluded: [],
+    validation: {
+      hero_count: counts.HERO,
+      historia_count: counts.HISTORIA,
+      civil_featured_count: counts.CIVIL_FEATURED,
+      guest_shared_count: counts.GUEST_SHARED,
+      valid: true
+    }
+  };
+
+  inventoryData.forEach((item, index) => {
+    const visualId = String(index + 1).padStart(3, '0');
+    const cat = selections[item.guest_photo_id];
+    if (!cat || cat === 'NONE') return;
+
+    const record = {
+      visual_id: visualId,
+      guest_photo_id: item.guest_photo_id,
+      url: item.url,
+      object_path: item.object_path,
+      uploader_name: item.uploader_name,
+      created_at: item.created_at,
+      batch: item.batch
+    };
+
+    if (cat === 'HERO') exportPayload.hero.push(record);
+    else if (cat === 'HISTORIA') exportPayload.historia.push(record);
+    else if (cat === 'CIVIL_FEATURED') exportPayload.civil_featured.push(record);
+    else if (cat === 'GUEST_SHARED') exportPayload.guest_shared.push(record);
+    else if (cat === 'EXCLUDE') exportPayload.excluded.push(record);
+  });
+
+  const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'photo-curation-selection.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showStatus('✅ Archivo photo-curation-selection.json exportado correctamente.', 'success');
+});
+
+// Import JSON
+btnImport.addEventListener('click', () => {
+  fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+  hideStatus();
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+      const validGuestIds = new Set(inventoryData.map(i => i.guest_photo_id));
+
+      let importedHero = data.hero || [];
+      let importedHistoria = data.historia || [];
+      let importedCivil = data.civil_featured || [];
+      let importedGuest = data.guest_shared || [];
+      let importedExcluded = data.excluded || [];
+
+      // Validation
+      if (importedHero.length > LIMITS.HERO ||
+          importedHistoria.length > LIMITS.HISTORIA ||
+          importedCivil.length > LIMITS.CIVIL_FEATURED ||
+          importedGuest.length > LIMITS.GUEST_SHARED) {
+        throw new Error('El archivo importado excede los límites por categoría.');
+      }
+
+      const newSelections = {};
+      const processedIds = new Set();
+
+      const assignCategory = (arr, cat) => {
+        arr.forEach(item => {
+          if (!item.guest_photo_id || !validGuestIds.has(item.guest_photo_id)) {
+            throw new Error(`ID desconocido en la importación: ${item.guest_photo_id}`);
+          }
+          if (processedIds.has(item.guest_photo_id)) {
+            throw new Error(`La foto ${item.guest_photo_id} aparece en múltiples categorías.`);
+          }
+          processedIds.add(item.guest_photo_id);
+          newSelections[item.guest_photo_id] = cat;
+        });
+      };
+
+      assignCategory(importedHero, 'HERO');
+      assignCategory(importedHistoria, 'HISTORIA');
+      assignCategory(importedCivil, 'CIVIL_FEATURED');
+      assignCategory(importedGuest, 'GUEST_SHARED');
+      assignCategory(importedExcluded, 'EXCLUDE');
+
+      selections = newSelections;
+      saveLocalSelections();
+      renderGrid();
+      showStatus('✅ Selección importada y validada exitosamente.', 'success');
+    } catch (err) {
+      showStatus(`❌ Error al importar archivo: ${err.message}`, 'error');
+    } finally {
+      fileInput.value = '';
+    }
+  };
+  reader.readAsText(file);
+});
+
+// Initialize
 fetch('photo-inventory.json')
   .then(r => r.json())
   .then(data => {
-    const tbody = document.querySelector('#photoTable tbody');
-    const batchSet = new Set();
-    const uploaderSet = new Set();
-    data.forEach(rec => {
-      const tr = document.createElement('tr');
-      tr.dataset.batch = rec.batch || '';
-      tr.dataset.uploader = rec.uploader_name || '';
-      const tdImg = document.createElement('td');
-      const a = document.createElement('a');
-      a.href = rec.url;
-      a.target = '_blank';
-      const img = document.createElement('img');
-      img.src = rec.url;
-      a.appendChild(img);
-      tdImg.appendChild(a);
-      tr.appendChild(tdImg);
-      const tdId = document.createElement('td'); tdId.textContent = rec.id; tr.appendChild(tdId);
-      const tdUploader = document.createElement('td'); tdUploader.textContent = rec.uploader_name || '';
-      tr.appendChild(tdUploader);
-      const tdCreated = document.createElement('td'); tdCreated.textContent = rec.created_at; tr.appendChild(tdCreated);
-      const tdBatch = document.createElement('td'); tdBatch.textContent = rec.batch || '';
-      tr.appendChild(tdBatch);
-      const tdPath = document.createElement('td'); tdPath.textContent = rec.object_path || '';
-      tr.appendChild(tdPath);
-      tbody.appendChild(tr);
-      batchSet.add(rec.batch);
-      uploaderSet.add(rec.uploader_name);
-    });
-    const batchFilter = document.getElementById('batchFilter');
-    batchSet.forEach(b => { if(b){ const opt=document.createElement('option'); opt.value=b; opt.textContent=b; batchFilter.appendChild(opt);} });
-    const uploaderFilter = document.getElementById('uploaderFilter');
-    uploaderSet.forEach(u => { if(u){ const opt=document.createElement('option'); opt.value=u; opt.textContent=u; uploaderFilter.appendChild(opt);} });
-    function filterRows(){
-      const batch = batchFilter.value;
-      const uploader = uploaderFilter.value;
-      document.querySelectorAll('#photoTable tbody tr').forEach(row=>{
-        const matchBatch = !batch || row.dataset.batch===batch;
-        const matchUploader = !uploader || row.dataset.uploader===uploader;
-        row.style.display = (matchBatch && matchUploader) ? '' : 'none';
-      });
-    }
-    batchFilter.addEventListener('change', filterRows);
-    uploaderFilter.addEventListener('change', filterRows);
+    inventoryData = data;
+    loadLocalSelections();
+    setupFilterOptions();
+    renderGrid();
   })
-  .catch(err => console.error('Failed to load inventory', err));
+  .catch(err => {
+    console.error('Failed to load inventory', err);
+    showStatus('❌ Error al cargar docs/photo-inventory/photo-inventory.json', 'error');
+  });
 </script>
+
 </body>
 </html>
+
