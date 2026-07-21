@@ -411,7 +411,42 @@ window.closeLightbox = function() {
         // Official WhatsApp Number
         const NOVIOS_PHONE = '56981393436'; 
 
-        // Toggle dietary specification input visibility and set required attribute
+        const attendanceRadios = document.getElementsByName('rsvp-attendance');
+        const dietaryFlagGroup = document.getElementById('rsvp-dietary-flag-group');
+
+        // Toggle dietary fields based on attendance selection
+        function handleAttendanceChange() {
+            let isAttending = true;
+            for (const radio of attendanceRadios) {
+                if (radio.checked && radio.value === 'no') {
+                    isAttending = false;
+                }
+            }
+
+            if (isAttending) {
+                if (dietaryFlagGroup) dietaryFlagGroup.classList.remove('hidden');
+                if (rsvpDietarySelect && rsvpDietarySelect.value === 'Alergias') {
+                    if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.remove('hidden');
+                    if (rsvpDietaryDetailInput) {
+                        rsvpDietaryDetailInput.required = true;
+                        rsvpDietaryDetailInput.placeholder = "Especifica tu restricción (Ej: Maní, mariscos)";
+                    }
+                }
+            } else {
+                if (dietaryFlagGroup) dietaryFlagGroup.classList.add('hidden');
+                if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.add('hidden');
+                if (rsvpDietaryDetailInput) {
+                    rsvpDietaryDetailInput.required = false;
+                    rsvpDietaryDetailInput.value = '';
+                }
+            }
+        }
+
+        for (const radio of attendanceRadios) {
+            radio.addEventListener('change', handleAttendanceChange);
+        }
+
+        // Toggle dietary specification input visibility when dietary option changes
         if (rsvpDietarySelect) {
             rsvpDietarySelect.addEventListener('change', () => {
                 if (rsvpDietarySelect.value === 'Alergias') {
@@ -431,30 +466,41 @@ window.closeLightbox = function() {
         }
 
         // Copy message to clipboard helper with robust legacy fallback
-        function copyTextToClipboard(text) {
-            if (navigator.clipboard && window.isSecureContext) {
-                return navigator.clipboard.writeText(text);
-            } else {
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.focus();
-                textarea.select();
-                try {
-                    const successful = document.execCommand('copy');
-                    textarea.remove();
-                    if (successful) {
-                        return Promise.resolve();
-                    } else {
-                        return Promise.reject(new Error('Fallback copy command failed'));
-                    }
-                } catch (err) {
-                    textarea.remove();
-                    return Promise.reject(err);
+        function runFallbackCopy(text, resolve, reject) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                const successful = document.execCommand('copy');
+                textarea.remove();
+                if (successful) {
+                    resolve();
+                } else {
+                    reject(new Error('Fallback copy command failed'));
                 }
+            } catch (err) {
+                textarea.remove();
+                reject(err);
             }
+        }
+
+        function copyTextToClipboard(text) {
+            return new Promise((resolve, reject) => {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text)
+                        .then(resolve)
+                        .catch((err) => {
+                            console.warn('Clipboard writeText failed, trying fallback:', err);
+                            runFallbackCopy(text, resolve, reject);
+                        });
+                } else {
+                    runFallbackCopy(text, resolve, reject);
+                }
+            });
         }
 
         // Handle Form Submit
@@ -467,7 +513,6 @@ window.closeLightbox = function() {
                 const whatsapp = rsvpWhatsappInput.value.trim();
                 
                 let isAttending = true;
-                const attendanceRadios = document.getElementsByName('rsvp-attendance');
                 for (const radio of attendanceRadios) {
                     if (radio.checked && radio.value === 'no') {
                         isAttending = false;
@@ -492,12 +537,12 @@ window.closeLightbox = function() {
                     dietary = 'NO ASISTIRÁ';
                 }
 
-                // WhatsApp message templates matching client requirements exactly
+                // WhatsApp message templates matching client requirements exactly with contact phone number
                 let whatsappMsg = '';
                 if (isAttending) {
-                    whatsappMsg = `Hola, soy ${firstName} ${lastName}. Confirmo mi asistencia al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi restricción alimentaria es: ${dietary}.`;
+                    whatsappMsg = `Hola, soy ${firstName} ${lastName}. Confirmo mi asistencia al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi restricción alimentaria es: ${dietary}. Mi WhatsApp de contacto es: ${whatsapp}.`;
                 } else {
-                    whatsappMsg = `Hola, soy ${firstName} ${lastName}. Lamentablemente no podré asistir al matrimonio de Felipe y Camila el 23 de octubre de 2026.`;
+                    whatsappMsg = `Hola, soy ${firstName} ${lastName}. Lamentablemente no podré asistir al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi WhatsApp de contacto es: ${whatsapp}.`;
                 }
                 const whatsappUrl = `https://wa.me/${NOVIOS_PHONE}?text=${encodeURIComponent(whatsappMsg)}`;
 
@@ -550,6 +595,46 @@ window.closeLightbox = function() {
                 // Transition to success state (No automatic popup windows opened, no confetti)
                 if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
                 if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
+            });
+        }
+
+        // Configure "Hacer otra confirmación" button click listener
+        const anotherBtn = document.getElementById('rsvp-another-btn');
+        if (anotherBtn) {
+            anotherBtn.addEventListener('click', () => {
+                if (rsvpForm) rsvpForm.reset();
+
+                // Reset form fields state to default
+                if (rsvpDietaryDetailInput) {
+                    rsvpDietaryDetailInput.required = false;
+                    rsvpDietaryDetailInput.value = '';
+                }
+                if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.add('hidden');
+                if (dietaryFlagGroup) dietaryFlagGroup.classList.remove('hidden');
+
+                // Set attendance selection back to "Sí"
+                const defaultAttendanceRadio = document.querySelector('input[name="rsvp-attendance"][value="yes"]');
+                if (defaultAttendanceRadio) defaultAttendanceRadio.checked = true;
+
+                // Reset summary fields
+                const summaryName = document.getElementById('summary-name');
+                const summaryWhatsapp = document.getElementById('summary-whatsapp');
+                const summaryAttendance = document.getElementById('summary-attendance');
+                const summaryDietary = document.getElementById('summary-dietary');
+                const summaryDietaryRow = document.getElementById('summary-dietary-row');
+
+                if (summaryName) summaryName.textContent = '-';
+                if (summaryWhatsapp) summaryWhatsapp.textContent = '-';
+                if (summaryAttendance) summaryAttendance.textContent = '-';
+                if (summaryDietary) summaryDietary.textContent = '-';
+                if (summaryDietaryRow) summaryDietaryRow.classList.remove('hidden');
+
+                const whatsappShareBtn = document.getElementById('rsvp-whatsapp-share-btn');
+                if (whatsappShareBtn) whatsappShareBtn.href = '#';
+
+                // Go back to the form step
+                if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
+                if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
             });
         }
 
