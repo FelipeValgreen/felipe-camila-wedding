@@ -112,7 +112,7 @@
             overflow: hidden;
             height: 100vh;
         }
-        /* Horizontal Scroll Rail */
+        /* Horizontal Scroll Rails */
         .rail-container {
             display: flex;
             overflow-x: auto;
@@ -128,15 +128,36 @@
             scroll-snap-align: start;
             flex-shrink: 0;
             width: 84vw;
+            height: 440px;
         }
         @media (min-width: 768px) {
             .rail-item {
-                width: 60vw;
+                width: 65vw;
+                height: 480px;
             }
         }
         @media (min-width: 1024px) {
             .rail-item {
-                width: 420px;
+                width: 440px;
+                height: 540px;
+            }
+        }
+        .rail-wrapper {
+            position: relative;
+        }
+        .rail-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 40px;
+            background: linear-gradient(to right, transparent, rgba(243, 239, 231, 0.8));
+            pointer-events: none;
+        }
+        @media (min-width: 768px) {
+            .rail-wrapper::after {
+                width: 60px;
             }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -176,24 +197,24 @@
             <div class="flex space-x-6 md:space-x-8 text-[11px] uppercase tracking-[0.25em]">
                 <a href="#historia" class="text-muted hover:text-dark transition-colors">Historia</a>
                 <a href="#ceremonia" class="text-muted hover:text-dark transition-colors">Ceremonia</a>
-                <a href="#rsvp" class="text-dark font-semibold hover:text-gold transition-colors">RSVP</a>
-                <a href="#galeria-horizontal" class="text-muted hover:text-dark transition-colors">Galería</a>
+                <a href="#rsvp" class="text-dark font-semibold hover:text-gold transition-colors">Confirmar</a>
+                <a href="#galeria-civil" class="text-muted hover:text-dark transition-colors">Galería</a>
             </div>
         </div>
     </nav>
 
     <main class="relative">
 
-        <!-- 02 HERO -->
-        <section id="hero" class="min-h-screen flex items-center justify-center relative bg-light py-28 px-6 border-b border-dark/5">
-            <div class="max-w-2xl mx-auto text-center space-y-8">
+        <!-- 02 HERO + INFORMACIÓN ESENCIAL -->
+        <section id="hero" class="min-h-[80vh] md:min-h-[75vh] flex items-center justify-center relative bg-light py-20 px-6 border-b border-dark/5">
+            <div class="max-w-2xl mx-auto text-center space-y-6">
                 <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Matrimonio Religioso</span>
                 
-                <h1 class="font-serif text-5xl md:text-7xl text-dark tracking-wide font-normal">
+                <h1 class="font-serif text-5xl md:text-6xl text-dark tracking-wide font-normal">
                     Felipe & Camila
                 </h1>
 
-                <div class="w-12 h-[1px] bg-dark/20 mx-auto my-4"></div>
+                <div class="w-12 h-[1px] bg-dark/20 mx-auto my-3"></div>
 
                 <p class="font-serif text-2xl md:text-3xl text-dark italic font-light">
                     Viernes 23 de octubre de 2026
@@ -203,30 +224,133 @@
                     Después de nuestro civil, llega el momento de celebrar por la iglesia y reunirnos con ustedes para vivir una noche inolvidable.
                 </p>
 
-                <!-- Editorial Typographic Card replacing unverified photo -->
-                <div class="pt-6">
-                    <div class="max-w-sm mx-auto aspect-[4/5] bg-cream border border-dark/10 p-8 flex flex-col justify-between text-center items-center shadow-sm">
-                        <span class="font-sans text-[10px] uppercase tracking-[0.35em] text-gold">23 · 10 · 26</span>
-                        <div class="space-y-3">
-                            <span class="font-serif text-4xl text-dark font-normal block">F & C</span>
-                            <div class="w-8 h-[1px] bg-dark/20 mx-auto"></div>
-                            <p class="font-serif italic text-sm text-muted">Celebración religiosa & Gala</p>
-                        </div>
-                        <span class="font-sans text-[9px] uppercase tracking-[0.25em] text-dark/40">Santiago · Chile</span>
-                    </div>
+                <!-- Hero CTAs -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+                    <a href="#rsvp" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-dark text-light text-xs uppercase tracking-[0.25em] px-8 py-4 hover:bg-black transition-all font-semibold">
+                        <span>Confirmar asistencia</span>
+                        <i class="fa-solid fa-arrow-down text-[10px]"></i>
+                    </a>
+                    <a href="#ceremonia" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 border border-dark/30 text-dark text-xs uppercase tracking-[0.25em] px-8 py-4 hover:bg-dark hover:text-light transition-all font-medium">
+                        <span>Ver información del día</span>
+                    </a>
                 </div>
             </div>
         </section>
 
-        <!-- 03 HISTORIA BREVE -->
-        <section id="historia" class="py-24 md:py-32 bg-cream text-dark border-b border-dark/5">
-            <div class="max-w-3xl mx-auto px-6 text-center space-y-8">
-                <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Nuestra Historia</span>
-                <h2 class="font-serif text-3xl md:text-4xl text-dark font-normal">Un Antes y un Después</h2>
-                <div class="w-12 h-[1px] bg-dark/20 mx-auto"></div>
-                <p class="font-serif text-xl md:text-2xl text-dark/90 font-light leading-relaxed italic max-w-2xl mx-auto">
-                    Hay momentos que marcan un antes y un después. Nuestro civil fue uno de ellos. El 23 de octubre queremos seguir escribiendo esta historia con ustedes.
-                </p>
+        <!-- 03 RSVP / CONFIRMACIÓN INDIVIDUAL (TERCERA SECCIÓN) -->
+        <section id="rsvp" class="py-20 md:py-28 bg-cream border-b border-dark/5">
+            <div class="max-w-xl mx-auto px-6 space-y-10">
+                <div class="text-center space-y-4">
+                    <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">RSVP</span>
+                    <h2 class="font-serif text-4xl text-dark font-normal">Confirma tu asistencia</h2>
+                    <div class="w-12 h-[1px] bg-dark/20 mx-auto"></div>
+                    <p class="font-sans text-base text-muted font-light">
+                        La confirmación es individual. Completa tus datos para preparar tu respuesta.
+                    </p>
+                </div>
+
+                <div class="bg-light p-8 md:p-12 border border-dark/10 shadow-sm">
+                    <!-- Form Step -->
+                    <div id="rsvp-form-step">
+                        <form id="rsvp-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Nombre</label>
+                                    <input type="text" id="rsvp-firstname" required class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Apellido</label>
+                                    <input type="text" id="rsvp-lastname" required class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 pt-2">
+                                <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">WhatsApp de Contacto</label>
+                                <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56 9 0000 0000" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
+                            </div>
+
+                            <div class="space-y-3 pt-4 border-t border-dark/10">
+                                <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">¿Asistirás?</label>
+                                <div class="flex gap-8 py-2">
+                                    <label class="flex items-center gap-2 cursor-pointer text-base text-dark">
+                                        <input type="radio" name="rsvp-attendance" value="yes" checked class="w-4 h-4 accent-dark">
+                                        <span>Sí, asistiré</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer text-base text-dark">
+                                        <input type="radio" name="rsvp-attendance" value="no" class="w-4 h-4 accent-dark">
+                                        <span>No podré asistir</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="rsvp-dietary-flag-group" class="space-y-3 pt-4 border-t border-dark/10">
+                                <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Restricción Alimentaria</label>
+                                <select id="rsvp-dietary-select" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
+                                    <option value="Ninguna">Ninguna</option>
+                                    <option value="Vegetariano">Vegetariano</option>
+                                    <option value="Vegano">Vegano</option>
+                                    <option value="Celíaco / libre de gluten">Celíaco / libre de gluten</option>
+                                    <option value="Alergias">Alergias</option>
+                                    <option value="Otra">Otra</option>
+                                </select>
+                            </div>
+
+                            <div id="rsvp-dietary-details-section" class="hidden space-y-2 pt-2">
+                                <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Cuéntanos el detalle</label>
+                                <input type="text" id="rsvp-dietary-detail" placeholder="Ej: alergia al maní, intolerancia a la lactosa u otra indicación." class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
+                            </div>
+
+                            <button type="submit" id="rsvp-submit-btn" class="w-full bg-dark text-light font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors font-semibold cursor-pointer">
+                                Preparar respuesta
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Success / WhatsApp Step -->
+                    <div id="rsvp-success" class="hidden text-center space-y-6">
+                        <h3 class="font-serif text-3xl text-dark">Tu respuesta está lista</h3>
+                        <p class="text-muted text-sm font-light">Para completar la confirmación, envía este mensaje al WhatsApp oficial del matrimonio.</p>
+
+                        <!-- Box informative -->
+                        <div class="bg-cream p-6 text-left border border-dark/10 space-y-3 font-sans text-sm text-dark">
+                            <p class="text-xs uppercase tracking-wider text-gold font-bold border-b border-dark/10 pb-2">WhatsApp del matrimonio</p>
+                            <p class="font-serif text-2xl text-dark">+56 9 8139 3436</p>
+                            <p class="text-xs text-muted font-light leading-relaxed">
+                                Se abrirá el chat oficial de Felipe y Cami con tu respuesta ya escrita. Solo debes revisar el mensaje y presionar enviar.
+                            </p>
+                        </div>
+
+                        <!-- Response Summary -->
+                        <div class="bg-light p-6 text-left border border-dark/10 space-y-2 font-sans text-sm text-dark">
+                            <p class="text-xs uppercase tracking-wider text-muted font-bold border-b border-dark/10 pb-2">Resumen de respuesta</p>
+                            <p><strong>Invitado:</strong> <span id="summary-name">-</span></p>
+                            <p><strong>WhatsApp:</strong> <span id="summary-whatsapp">-</span></p>
+                            <p><strong>Asistencia:</strong> <span id="summary-attendance">-</span></p>
+                            <p id="summary-dietary-row"><strong>Restricción:</strong> <span id="summary-dietary">-</span></p>
+                        </div>
+
+                        <div>
+                            <a id="rsvp-whatsapp-share-btn" href="#" target="_blank" class="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white font-sans text-xs uppercase tracking-[0.2em] py-4.5 hover:bg-[#20ba5a] transition-all font-bold rounded-sm shadow-sm">
+                                <i class="fa-brands fa-whatsapp text-base"></i> Enviar al WhatsApp del matrimonio
+                            </a>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                            <button type="button" id="rsvp-copy-msg-btn" class="flex-1 border border-dark/30 text-dark text-[11px] uppercase tracking-[0.2em] py-3.5 hover:bg-dark hover:text-light transition-all font-semibold bg-light">
+                                <i class="fa-regular fa-copy"></i> Copiar respuesta
+                            </button>
+                            <button type="button" id="rsvp-edit-btn" class="flex-1 border border-dark/30 text-dark text-[11px] uppercase tracking-[0.2em] py-3.5 hover:bg-dark hover:text-light transition-all font-semibold bg-light">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar mis datos
+                            </button>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="button" id="rsvp-another-btn" class="text-dark text-[10px] tracking-[0.3em] uppercase border-b border-dark hover:text-muted hover:border-muted transition-colors pb-1">
+                                Confirmar otra persona
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -248,19 +372,16 @@
                         </p>
                         <div class="flex flex-wrap gap-4 pt-2">
                             <a href="https://maps.app.goo.gl/R8GLmxvNC2KLagVL9" target="_blank" class="inline-flex items-center gap-2 border border-dark/30 text-dark text-xs uppercase tracking-[0.2em] px-5 py-3 hover:bg-dark hover:text-light transition-all">
-                                <i class="fa-solid fa-map-location-dot"></i> Google Maps
+                                <i class="fa-solid fa-map-location-dot"></i> Abrir en Google Maps
                             </a>
                             <a href="https://waze.com/ul?q=Santuario%20de%20la%20Divina%20Misericordia%20Chicureo" target="_blank" class="inline-flex items-center gap-2 border border-dark/30 text-dark text-xs uppercase tracking-[0.2em] px-5 py-3 hover:bg-dark hover:text-light transition-all">
-                                <i class="fa-solid fa-waze"></i> Waze
+                                <i class="fa-solid fa-waze"></i> Abrir en Waze
                             </a>
                         </div>
                     </div>
-                    <!-- Editorial Architectural Graphic replacing unverified photo -->
-                    <div class="aspect-[4/3] bg-cream border border-dark/10 p-8 flex flex-col justify-center items-center text-center space-y-4">
-                        <i class="fa-solid fa-church text-3xl text-gold"></i>
-                        <h3 class="font-serif text-2xl text-dark">Santuario de la Divina Misericordia</h3>
-                        <div class="w-8 h-[1px] bg-dark/20"></div>
-                        <p class="font-sans text-xs text-muted uppercase tracking-widest">Chicureo · Colina</p>
+                    <!-- Official Church Approved Photo -->
+                    <div class="aspect-[4/3] overflow-hidden bg-cream border border-dark/10">
+                        <img src="images/santuario_divina_misericordia.jpg" alt="Santuario de la Divina Misericordia en Chicureo" loading="lazy" class="w-full h-full object-cover object-center grayscale opacity-90">
                     </div>
                 </div>
 
@@ -287,10 +408,10 @@
                         </div>
                         <div class="flex flex-wrap gap-4 pt-2">
                             <a href="https://maps.app.goo.gl/kRdvXmbtHmYXUaB49" target="_blank" class="inline-flex items-center gap-2 border border-dark/30 text-dark text-xs uppercase tracking-[0.2em] px-5 py-3 hover:bg-dark hover:text-light transition-all">
-                                <i class="fa-solid fa-map-location-dot"></i> Google Maps
+                                <i class="fa-solid fa-map-location-dot"></i> Abrir en Google Maps
                             </a>
                             <a href="https://waze.com/ul?q=Centro%20de%20Eventos%20Arboleda%20Chicureo" target="_blank" class="inline-flex items-center gap-2 border border-dark/30 text-dark text-xs uppercase tracking-[0.2em] px-5 py-3 hover:bg-dark hover:text-light transition-all">
-                                <i class="fa-solid fa-waze"></i> Waze
+                                <i class="fa-solid fa-waze"></i> Abrir en Waze
                             </a>
                         </div>
                     </div>
@@ -311,214 +432,163 @@
             </div>
         </section>
 
-        <!-- 06 RSVP -->
-        <section id="rsvp" class="py-24 md:py-32 bg-light border-b border-dark/5">
-            <div class="max-w-xl mx-auto px-6 space-y-12">
-                <div class="text-center space-y-4">
-                    <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">RSVP</span>
-                    <h2 class="font-serif text-4xl text-dark font-normal">Confirma tu asistencia</h2>
-                    <div class="w-12 h-[1px] bg-dark/20 mx-auto"></div>
-                    <p class="font-sans text-base text-muted font-light">
-                        La confirmación es individual. Completa tus datos para preparar tu respuesta.
-                    </p>
-                </div>
-
-                <div class="bg-cream p-8 md:p-12 border border-dark/10 shadow-sm">
-                    <!-- Form Step -->
-                    <div id="rsvp-form-step">
-                        <form id="rsvp-form" class="space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="space-y-2">
-                                    <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Nombre</label>
-                                    <input type="text" id="rsvp-firstname" required class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Apellido</label>
-                                    <input type="text" id="rsvp-lastname" required class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
-                                </div>
-                            </div>
-
-                            <div class="space-y-2 pt-2">
-                                <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">WhatsApp de Contacto</label>
-                                <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56 9 0000 0000" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
-                            </div>
-
-                            <div class="space-y-3 pt-4 border-t border-dark/10">
-                                <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">¿Confirmas tu asistencia?</label>
-                                <div class="flex gap-8 py-2">
-                                    <label class="flex items-center gap-2 cursor-pointer text-base text-dark">
-                                        <input type="radio" name="rsvp-attendance" value="yes" checked class="w-4 h-4 accent-dark">
-                                        <span>Sí, asistiré</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer text-base text-dark">
-                                        <input type="radio" name="rsvp-attendance" value="no" class="w-4 h-4 accent-dark">
-                                        <span>No podré asistir</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div id="rsvp-dietary-flag-group" class="space-y-3 pt-4 border-t border-dark/10">
-                                <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Restricción Alimentaria</label>
-                                <select id="rsvp-dietary-select" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
-                                    <option value="Ninguna">Ninguna</option>
-                                    <option value="Vegano">Vegano</option>
-                                    <option value="Celíaco">Celíaco / Libre de Gluten</option>
-                                    <option value="Alergias">Alergias (especificar a continuación)</option>
-                                </select>
-                            </div>
-
-                            <div id="rsvp-dietary-details-section" class="hidden space-y-2 pt-2">
-                                <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Especifica tu restricción o alergias</label>
-                                <input type="text" id="rsvp-dietary-detail" placeholder="Ej: Maní, mariscos, etc." class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
-                            </div>
-
-                            <button type="submit" id="rsvp-submit-btn" class="w-full bg-dark text-light font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-black transition-colors font-semibold cursor-pointer">
-                                Preparar respuesta
-                            </button>
-                        </form>
-                    </div>
-
-                    <!-- Success / WhatsApp Step -->
-                    <div id="rsvp-success" class="hidden text-center space-y-6">
-                        <h3 class="font-serif text-3xl text-dark">Tu respuesta está lista</h3>
-                        <p class="text-muted text-sm font-light">Para completar la confirmación, envía el mensaje por WhatsApp.</p>
-
-                        <div class="bg-light p-6 text-left border border-dark/10 space-y-3 font-sans text-sm text-dark">
-                            <p class="text-xs uppercase tracking-wider text-muted font-bold border-b border-dark/10 pb-2">Resumen de respuesta</p>
-                            <p><strong>Invitado:</strong> <span id="summary-name">-</span></p>
-                            <p><strong>WhatsApp:</strong> <span id="summary-whatsapp">-</span></p>
-                            <p><strong>Asistencia:</strong> <span id="summary-attendance">-</span></p>
-                            <p id="summary-dietary-row"><strong>Restricción:</strong> <span id="summary-dietary">-</span></p>
-                        </div>
-
-                        <div>
-                            <a id="rsvp-whatsapp-share-btn" href="#" target="_blank" class="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white font-sans text-xs uppercase tracking-[0.2em] py-4.5 hover:bg-[#20ba5a] transition-all font-bold rounded-sm shadow-sm">
-                                <i class="fa-brands fa-whatsapp text-base"></i> Enviar confirmación por WhatsApp
-                            </a>
-                        </div>
-
-                        <div class="flex gap-3 justify-center">
-                            <button type="button" id="rsvp-copy-msg-btn" class="flex-1 border border-dark/30 text-dark text-[11px] uppercase tracking-[0.2em] py-3.5 hover:bg-dark hover:text-light transition-all font-semibold bg-light">
-                                <i class="fa-regular fa-copy"></i> Copiar Mensaje
-                            </button>
-                            <button type="button" id="rsvp-edit-btn" class="flex-1 border border-dark/30 text-dark text-[11px] uppercase tracking-[0.2em] py-3.5 hover:bg-dark hover:text-light transition-all font-semibold bg-light">
-                                <i class="fa-solid fa-pen-to-square"></i> Editar Respuesta
-                            </button>
-                        </div>
-
-                        <div class="pt-4">
-                            <button type="button" id="rsvp-another-btn" class="text-dark text-[10px] tracking-[0.3em] uppercase border-b border-dark hover:text-muted hover:border-muted transition-colors pb-1">
-                                Hacer otra confirmación
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 07 GALERÍA HORIZONTAL CON CONTROLES -->
-        <section id="galeria-horizontal" class="py-24 bg-cream border-b border-dark/5">
+        <!-- 06 NUESTRO CIVIL (GALERÍA HORIZONTAL 1) -->
+        <section id="galeria-civil" class="py-24 bg-cream border-b border-dark/5">
             <div class="max-w-6xl mx-auto px-6 space-y-8">
                 <div class="flex justify-between items-end">
                     <div>
-                        <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block mb-2">Colección Fotografías</span>
-                        <h2 class="font-serif text-3xl md:text-4xl text-dark font-normal">Galería en Vivo</h2>
+                        <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block mb-2">28 · 03 · 26</span>
+                        <h2 class="font-serif text-3xl md:text-4xl text-dark font-normal">Nuestro civil</h2>
+                        <p class="font-sans text-sm text-muted font-light mt-1">Algunos recuerdos del día en que comenzó esta nueva etapa.</p>
                     </div>
                     <div class="flex items-center gap-6">
-                        <span id="rail-counter" class="font-sans text-xs tracking-widest text-muted">01 / 06</span>
+                        <span id="civil-counter" class="font-sans text-xs tracking-widest text-muted">01 / 08</span>
                         <div class="hidden md:flex gap-2">
-                            <button id="rail-prev-btn" aria-label="Fotografía anterior" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
+                            <button id="civil-prev-btn" aria-label="Fotografía anterior" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
                                 <i class="fa-solid fa-chevron-left text-xs"></i>
                             </button>
-                            <button id="rail-next-btn" aria-label="Fotografía siguiente" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
+                            <button id="civil-next-btn" aria-label="Fotografía siguiente" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Rail Carousel (Max 6 verified items) -->
-                <div class="relative">
-                    <div id="home-gallery-rail" class="rail-container gap-6 py-4" tabindex="0" aria-label="Galería horizontal de fotografías">
-                        <!-- Item 1: Arboleda Main -->
-                        <div class="rail-item aspect-[4/5] overflow-hidden bg-light border border-dark/10">
-                            <img src="images/arboleda_main.jpg" alt="Centro de Eventos Arboleda" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                <!-- Horizontal Rail 1 (Civil Photos - Max 8) -->
+                <div class="rail-wrapper">
+                    <div id="civil-rail" class="rail-container gap-6 py-4" tabindex="0" aria-label="Galería Nuestro civil">
+                        <div class="rail-item overflow-hidden bg-light border border-dark/10">
+                            <img src="images/insta_beach_selfie.jpg" alt="Felipe y Camila Civil" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
                         </div>
-                        <!-- Item 2: Arboleda Cóctel -->
-                        <div class="rail-item aspect-[4/5] overflow-hidden bg-light border border-dark/10">
-                            <img src="images/arboleda_coctel.jpg" alt="Cóctel Arboleda" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        <div class="rail-item overflow-hidden bg-light border border-dark/10">
+                            <img src="images/insta_party_1.jpg" alt="Ceremonia Civil" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
                         </div>
-                        <!-- Item 3: Arboleda Jardín -->
-                        <div class="rail-item aspect-[4/5] overflow-hidden bg-light border border-dark/10">
-                            <img src="images/arboleda_jardin.jpg" alt="Jardines Arboleda" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        <div class="rail-item overflow-hidden bg-light border border-dark/10">
+                            <img src="images/insta_formal_selfie.jpg" alt="Felipe & Camila" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
                         </div>
-                        <!-- Item 4: Editorial Card 1 -->
-                        <div class="rail-item aspect-[4/5] bg-light border border-dark/10 p-8 flex flex-col justify-between text-center items-center">
-                            <span class="font-sans text-[10px] uppercase tracking-[0.35em] text-gold">23 · 10 · 26</span>
-                            <div class="space-y-2">
-                                <h3 class="font-serif text-3xl text-dark">La Celebración</h3>
-                                <p class="font-serif italic text-xs text-muted">Arboleda · Chicureo</p>
-                            </div>
-                            <span class="font-sans text-[9px] uppercase tracking-[0.2em] text-dark/40">Felipe & Camila</span>
+                        <div class="rail-item overflow-hidden bg-light border border-dark/10">
+                            <img src="images/insta_vineyard.jpg" alt="Celebración Civil" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
                         </div>
-                        <!-- Item 5: Editorial Card 2 -->
-                        <div class="rail-item aspect-[4/5] bg-dark text-cream p-8 flex flex-col justify-between text-center items-center">
-                            <span class="font-sans text-[10px] uppercase tracking-[0.35em] text-gold">Black Tie</span>
-                            <div class="space-y-2">
-                                <h3 class="font-serif text-3xl text-cream font-normal">Gala & Música</h3>
-                                <p class="font-sans text-xs text-muted font-light">Viernes 23 de Octubre</p>
-                            </div>
-                            <span class="font-sans text-[9px] uppercase tracking-[0.2em] text-gold">2026</span>
+                        <div class="rail-item overflow-hidden bg-light border border-dark/10">
+                            <img src="images/insta_restaurant.jpg" alt="Nuestra Historia" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
                         </div>
-                        <!-- Item 6: Editorial Card 3 -->
-                        <div class="rail-item aspect-[4/5] bg-light border border-dark/10 p-8 flex flex-col justify-between text-center items-center">
-                            <span class="font-sans text-[10px] uppercase tracking-[0.35em] text-gold">Santuario</span>
-                            <div class="space-y-2">
-                                <h3 class="font-serif text-3xl text-dark">Ceremonia Religiosa</h3>
-                                <p class="font-sans text-xs text-muted">17:50 Horas</p>
-                            </div>
-                            <a href="/galeria/" class="font-sans text-[10px] uppercase tracking-[0.2em] text-dark font-semibold border-b border-dark">Ver más →</a>
+                        <div class="rail-item overflow-hidden bg-light border border-dark/10">
+                            <img src="images/insta_hiking.jpg" alt="Viajes" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="rail-item overflow-hidden bg-light border border-dark/10">
+                            <img src="images/insta_party_2.jpg" alt="Fiesta Civil" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="rail-item overflow-hidden bg-light border border-dark/10">
+                            <img src="images/insta_table_group.jpg" alt="Familia" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
                         </div>
                     </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-2">
+                    <span class="md:hidden font-sans text-xs text-muted italic">Desliza para ver más →</span>
+                    <a href="/galeria/" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1 ml-auto">
+                        Ver galería completa
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 07 FOTOS COMPARTIDAS POR USTEDES (GALERÍA HORIZONTAL 2) -->
+        <section id="galeria-compartidas" class="py-24 bg-light border-b border-dark/5">
+            <div class="max-w-6xl mx-auto px-6 space-y-8">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block mb-2">Comunidad</span>
+                        <h2 class="font-serif text-3xl md:text-4xl text-dark font-normal">Fotos compartidas por ustedes</h2>
+                        <p class="font-sans text-sm text-muted font-light mt-1">Momentos capturados por quienes han sido parte de nuestra celebración.</p>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <span id="shared-counter" class="font-sans text-xs tracking-widest text-muted">01 / 08</span>
+                        <div class="hidden md:flex gap-2">
+                            <button id="shared-prev-btn" aria-label="Fotografía anterior" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
+                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                            </button>
+                            <button id="shared-next-btn" aria-label="Fotografía siguiente" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horizontal Rail 2 (Shared Guest Photos - Max 8) -->
+                <div class="rail-wrapper">
+                    <div id="shared-rail" class="rail-container gap-6 py-4" tabindex="0" aria-label="Fotos compartidas por ustedes">
+                        <div class="rail-item overflow-hidden bg-cream border border-dark/10">
+                            <img src="images/guest_example_1.jpg" alt="Foto de invitado" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="rail-item overflow-hidden bg-cream border border-dark/10">
+                            <img src="images/guest_example_2.jpg" alt="Foto de invitado" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="rail-item overflow-hidden bg-cream border border-dark/10">
+                            <img src="images/guest_example_3.jpg" alt="Foto de invitado" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="rail-item overflow-hidden bg-cream border border-dark/10">
+                            <img src="images/guest_example_4.jpg" alt="Foto de invitado" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="rail-item overflow-hidden bg-cream border border-dark/10">
+                            <img src="images/guest_example_5.jpg" alt="Foto de invitado" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="rail-item overflow-hidden bg-cream border border-dark/10">
+                            <img src="images/guest_example_7.jpg" alt="Foto de invitado" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="rail-item overflow-hidden bg-cream border border-dark/10">
+                            <img src="images/guest_example_8.jpg" alt="Foto de invitado" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                        <div class="rail-item overflow-hidden bg-cream border border-dark/10">
+                            <img src="images/guest_example_10.jpg" alt="Foto de invitado" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-2">
+                    <span class="md:hidden font-sans text-xs text-muted italic">Desliza para ver más →</span>
+                    <a href="/galeria/" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1 ml-auto">
+                        Ver fotos compartidas
+                    </a>
                 </div>
             </div>
         </section>
 
         <!-- 08 LISTA DE NOVIOS + AYUDA -->
-        <section id="novios-ayuda" class="py-24 bg-light border-b border-dark/5">
+        <section id="novios-ayuda" class="py-24 bg-cream border-b border-dark/5">
             <div class="max-w-4xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12">
                 
                 <!-- LISTA DE NOVIOS -->
-                <div class="space-y-6 p-8 bg-cream border border-dark/10 flex flex-col justify-between">
+                <div class="space-y-6 p-8 bg-light border border-dark/10 flex flex-col justify-between">
                     <div class="space-y-4">
-                        <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Un Gesto de Amor</span>
-                        <h3 class="font-serif text-3xl text-dark font-normal">Lista de Novios</h3>
+                        <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Regalos</span>
+                        <h3 class="font-serif text-3xl text-dark font-normal">Lista de novios</h3>
                         <p class="font-sans text-sm text-muted font-light leading-relaxed">
-                            Tu presencia es lo más importante para nosotros. Si además quieres acompañarnos con un regalo, dejamos aquí nuestra lista de novios.
+                            Tu presencia es lo más importante para nosotros. Si además quieres acompañarnos con un regalo, dejamos aquí nuestra lista.
                         </p>
+                        <p class="font-sans text-xs text-dark/70 font-semibold uppercase tracking-wider">Código 21030724</p>
                     </div>
                     <div class="pt-4">
                         <a href="https://club.noviosparis.cl/home/couple-catalog/21030724" target="_blank" class="inline-flex items-center gap-3 border border-dark text-dark text-xs uppercase tracking-[0.25em] px-6 py-4 hover:bg-dark hover:text-light transition-all font-semibold w-full justify-center">
-                            <span>Ver Lista en Paris</span>
-                            <span>·</span>
-                            <span>Código 21030724</span>
+                            <span>Ver lista de novios en Paris</span>
                         </a>
                     </div>
                 </div>
 
                 <!-- AYUDA POR WHATSAPP -->
-                <div class="space-y-6 p-8 bg-cream border border-dark/10 flex flex-col justify-between">
+                <div class="space-y-6 p-8 bg-light border border-dark/10 flex flex-col justify-between">
                     <div class="space-y-4">
                         <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Atención Directa</span>
-                        <h3 class="font-serif text-3xl text-dark font-normal">¿Necesitas Ayuda?</h3>
+                        <h3 class="font-serif text-3xl text-dark font-normal">¿Necesitas ayuda?</h3>
                         <p class="font-sans text-sm text-muted font-light leading-relaxed">
-                            Si necesitas ayuda con horarios, ubicación, dress code o confirmación, escríbenos directamente por WhatsApp.
+                            Si tienes dudas sobre horarios, ubicación, dress code o confirmación, escríbenos directamente.
                         </p>
+                        <p class="font-serif text-xl text-dark font-normal">+56 9 8139 3436</p>
                     </div>
                     <div class="pt-4">
                         <a href="https://wa.me/56981393436?text=Hola,%20tengo%20una%20consulta%20sobre%20el%20matrimonio%20de%20Felipe%20y%20Camila" target="_blank" class="inline-flex items-center gap-3 bg-[#25D366] text-white text-xs uppercase tracking-[0.25em] px-6 py-4 hover:bg-[#20ba5a] transition-all font-semibold w-full justify-center">
                             <i class="fa-brands fa-whatsapp text-base"></i>
-                            <span>Escribir por WhatsApp</span>
+                            <span>Escribir al WhatsApp del matrimonio</span>
                         </a>
                     </div>
                 </div>
@@ -539,9 +609,9 @@
     </main>
 
     <!-- Persistent Floating RSVP CTA -->
-    <a href="#rsvp" id="rsvp-cta" class="fixed bottom-6 right-6 z-40 bg-dark text-gold text-xs uppercase tracking-[0.25em] px-6 py-4 rounded-full shadow-lg border border-gold/30 transition-all duration-300 hover:scale-105 flex items-center gap-2">
-        <i class="fa-solid fa-envelope-open-text text-sm"></i>
-        <span>RSVP</span>
+    <a href="#rsvp" id="rsvp-cta" class="fixed bottom-6 right-6 z-40 bg-dark text-gold text-xs uppercase tracking-[0.25em] px-5 py-3.5 rounded-full shadow-lg border border-gold/30 transition-all duration-300 hover:scale-105 flex items-center gap-2">
+        <i class="fa-regular fa-calendar-check text-sm"></i>
+        <span>Confirmar asistencia</span>
     </a>
 
     <script src="js/main.js" defer></script>

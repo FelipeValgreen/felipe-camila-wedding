@@ -50,7 +50,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 3. RSVP Logic & Honest Messaging
+    // 3. Floating CTA Logic
+    const rsvpCta = document.getElementById('rsvp-cta');
+    const rsvpSection = document.getElementById('rsvp');
+    let rsvpCompleted = false;
+
+    function updateCtaVisibility() {
+        if (!rsvpCta || !rsvpSection) return;
+        if (rsvpCompleted) {
+            rsvpCta.style.transform = 'translateY(200%)';
+            return;
+        }
+
+        const rect = rsvpSection.getBoundingClientRect();
+        const isRsvpVisible = (rect.top <= window.innerHeight * 0.8) && (rect.bottom >= window.innerHeight * 0.2);
+
+        if (isRsvpVisible) {
+            rsvpCta.style.transform = 'translateY(200%)';
+        } else {
+            rsvpCta.style.transform = 'translateY(0)';
+        }
+    }
+
+    window.addEventListener('scroll', updateCtaVisibility);
+
+    // 4. RSVP Logic & Honest Messaging
     const rsvpForm = document.getElementById('rsvp-form');
     const rsvpSuccess = document.getElementById('rsvp-success');
     const rsvpFormStep = document.getElementById('rsvp-form-step');
@@ -76,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isAttending) {
             if (dietaryFlagGroup) dietaryFlagGroup.classList.remove('hidden');
-            if (rsvpDietarySelect && rsvpDietarySelect.value === 'Alergias') {
+            if (rsvpDietarySelect && (rsvpDietarySelect.value === 'Alergias' || rsvpDietarySelect.value === 'Otra')) {
                 if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.remove('hidden');
                 if (rsvpDietaryDetailInput) rsvpDietaryDetailInput.required = true;
             }
@@ -96,9 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (rsvpDietarySelect) {
         rsvpDietarySelect.addEventListener('change', () => {
-            if (rsvpDietarySelect.value === 'Alergias') {
+            if (rsvpDietarySelect.value === 'Alergias' || rsvpDietarySelect.value === 'Otra') {
                 if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.remove('hidden');
-                if (rsvpDietaryDetailInput) rsvpDietaryDetailInput.required = true;
+                if (rsvpDietaryDetailInput) {
+                    rsvpDietaryDetailInput.required = true;
+                    rsvpDietaryDetailInput.placeholder = "Ej: alergia al maní, intolerancia a la lactosa u otra indicación.";
+                }
             } else {
                 if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.add('hidden');
                 if (rsvpDietaryDetailInput) {
@@ -158,10 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let dietary = 'Ninguna';
             if (isAttending) {
-                if (rsvpDietarySelect.value === 'Alergias') {
+                if (rsvpDietarySelect.value === 'Alergias' || rsvpDietarySelect.value === 'Otra') {
                     const detail = rsvpDietaryDetailInput.value.trim();
-                    if (!detail || detail.toLowerCase() === 'alergias') {
-                        showToast('Por favor especifica tu alergia o restricción alimentaria.', 'error');
+                    if (!detail || detail.toLowerCase() === 'alergias' || detail.toLowerCase() === 'otra') {
+                        showToast('Por favor cuéntanos el detalle de tu restricción alimentaria.', 'error');
                         rsvpDietaryDetailInput.focus();
                         return;
                     }
@@ -204,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (copyBtn) {
                 copyBtn.onclick = () => {
                     copyTextToClipboard(whatsappMsg).then(() => {
-                        showToast('Mensaje copiado al portapapeles', 'success');
+                        showToast('Respuesta copiada al portapapeles', 'success');
                     }).catch(() => {
                         showToast('No se pudo copiar automáticamente', 'error');
                     });
@@ -213,6 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
             if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
+
+            rsvpCompleted = true;
+            updateCtaVisibility();
         });
     }
 
@@ -220,8 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const editBtn = document.getElementById('rsvp-edit-btn');
     if (editBtn) {
         editBtn.addEventListener('click', () => {
+            rsvpCompleted = false;
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
+            updateCtaVisibility();
         });
     }
 
@@ -229,23 +261,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const anotherBtn = document.getElementById('rsvp-another-btn');
     if (anotherBtn) {
         anotherBtn.addEventListener('click', () => {
+            rsvpCompleted = false;
             if (rsvpForm) rsvpForm.reset();
             handleAttendanceChange();
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
             if (rsvpForm) rsvpForm.scrollIntoView({ behavior: 'smooth' });
+            updateCtaVisibility();
         });
     }
 
-    // 4. Horizontal Rail Controls
-    const rail = document.getElementById('home-gallery-rail');
-    const prevBtn = document.getElementById('rail-prev-btn');
-    const nextBtn = document.getElementById('rail-next-btn');
-    const counter = document.getElementById('rail-counter');
+    // 5. Setup Rail Helper
+    function setupRail(railId, prevBtnId, nextBtnId, counterId) {
+        const rail = document.getElementById(railId);
+        const prevBtn = document.getElementById(prevBtnId);
+        const nextBtn = document.getElementById(nextBtnId);
+        const counter = document.getElementById(counterId);
 
-    if (rail) {
+        if (!rail) return;
+
         const totalItems = rail.children.length;
-        
+
         function updateCounter() {
             const itemWidth = rail.children[0].getBoundingClientRect().width + 24;
             const currentIndex = Math.min(Math.round(rail.scrollLeft / itemWidth) + 1, totalItems);
@@ -268,7 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Keyboard Navigation for Rail
         rail.addEventListener('keydown', (e) => {
             const itemWidth = rail.children[0].getBoundingClientRect().width + 24;
             if (e.key === 'ArrowRight') {
@@ -278,5 +313,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Setup both horizontal rails
+    setupRail('civil-rail', 'civil-prev-btn', 'civil-next-btn', 'civil-counter');
+    setupRail('shared-rail', 'shared-prev-btn', 'shared-next-btn', 'shared-counter');
 
 });
