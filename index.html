@@ -2,7 +2,6 @@
 <html lang="es" class="scroll-smooth">
 
 <head>
-    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DT0H5BS4B4"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -16,9 +15,9 @@
     <title>Felipe & Camila — 23.10.26</title>
     <link rel="canonical" href="https://felipeycami.cl/">
 
-    <!-- Favicon & PWA -->
-    <link rel="icon" type="image/png" href="images/envelope_stamp.png">
-    <link rel="apple-touch-icon" href="images/envelope_stamp.png">
+    <!-- Minimal SVG Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2311110F'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='%23B99B71' font-family='serif' font-size='32'>F%26C</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2311110F'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='%23B99B71' font-family='serif' font-size='32'>F%26C</text></svg>">
     <link rel="manifest" href="site.webmanifest">
 
     <!-- OpenGraph / Facebook -->
@@ -26,7 +25,6 @@
     <meta property="og:url" content="https://felipeycami.cl/">
     <meta property="og:title" content="Felipe & Camila — 23 de octubre 2026">
     <meta property="og:description" content="Te invitamos a celebrar nuestro matrimonio el 23 de Octubre de 2026 en el Santuario de la Divina Misericordia y Gala en Arboleda, Chicureo.">
-    <meta property="og:image" content="images/uploaded_image_4_1764298805324.jpg">
 
     <!-- Schema.org Event Metadata -->
     <script type="application/ld+json">
@@ -59,9 +57,6 @@
             "addressCountry": "CL"
           }
         }
-      ],
-      "image": [
-        "https://felipeycami.cl/images/uploaded_image_4_1764298805324.jpg"
       ],
       "description": "Ceremonia religiosa en el Santuario de la Divina Misericordia y Gala en Centro de Eventos Arboleda.",
       "organizer": {
@@ -117,12 +112,6 @@
             overflow: hidden;
             height: 100vh;
         }
-        .editorial-line {
-            width: 40px;
-            height: 1px;
-            background-color: currentColor;
-            opacity: 0.3;
-        }
         /* Horizontal Scroll Rail */
         .rail-container {
             display: flex;
@@ -142,12 +131,12 @@
         }
         @media (min-width: 768px) {
             .rail-item {
-                width: 65vw;
+                width: 60vw;
             }
         }
         @media (min-width: 1024px) {
             .rail-item {
-                width: 440px;
+                width: 420px;
             }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -159,12 +148,11 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body class="font-sans text-dark bg-light antialiased locked">
 
-    <!-- 01 APERTURA / UMBRAL (Opening Cover) -->
+    <!-- 01 APERTURA / UMBRAL -->
     <div id="envelope-overlay" class="fixed inset-0 z-[100] transition-all duration-[1000ms] ease-[cubic-bezier(0.77,0,0.175,1)] flex flex-col items-center justify-center px-6 bg-dark text-cream">
         <div class="max-w-md w-full text-center space-y-8">
             <span class="font-sans text-[11px] uppercase tracking-[0.4em] text-gold block">23 · 10 · 26</span>
@@ -181,7 +169,7 @@
         </div>
     </div>
 
-    <!-- MAIN NAVIGATION -->
+    <!-- NAVIGATION -->
     <nav id="main-nav" class="fixed top-0 w-full z-50 transition-all duration-500 bg-light/95 backdrop-blur-md border-b border-dark/5 py-4 opacity-0 -translate-y-full">
         <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
             <a href="#hero" class="font-serif text-2xl tracking-widest text-dark hover:text-gold transition-colors">F&C</a>
@@ -215,10 +203,16 @@
                     Después de nuestro civil, llega el momento de celebrar por la iglesia y reunirnos con ustedes para vivir una noche inolvidable.
                 </p>
 
-                <!-- Editorial Photo Placement Placeholder -->
+                <!-- Editorial Typographic Card replacing unverified photo -->
                 <div class="pt-6">
-                    <div class="max-w-sm mx-auto aspect-[4/5] overflow-hidden bg-cream border border-dark/10 shadow-sm relative group">
-                        <img src="images/cami_editorial.png" alt="Felipe & Camila" class="w-full h-full object-cover grayscale opacity-90 group-hover:scale-105 transition-transform duration-700">
+                    <div class="max-w-sm mx-auto aspect-[4/5] bg-cream border border-dark/10 p-8 flex flex-col justify-between text-center items-center shadow-sm">
+                        <span class="font-sans text-[10px] uppercase tracking-[0.35em] text-gold">23 · 10 · 26</span>
+                        <div class="space-y-3">
+                            <span class="font-serif text-4xl text-dark font-normal block">F & C</span>
+                            <div class="w-8 h-[1px] bg-dark/20 mx-auto"></div>
+                            <p class="font-serif italic text-sm text-muted">Celebración religiosa & Gala</p>
+                        </div>
+                        <span class="font-sans text-[9px] uppercase tracking-[0.25em] text-dark/40">Santiago · Chile</span>
                     </div>
                 </div>
             </div>
@@ -261,8 +255,12 @@
                             </a>
                         </div>
                     </div>
-                    <div class="aspect-[4/3] overflow-hidden bg-cream border border-dark/10">
-                        <img src="images/iglesia_bw.jpg" alt="Santuario de la Divina Misericordia" class="w-full h-full object-cover grayscale opacity-90">
+                    <!-- Editorial Architectural Graphic replacing unverified photo -->
+                    <div class="aspect-[4/3] bg-cream border border-dark/10 p-8 flex flex-col justify-center items-center text-center space-y-4">
+                        <i class="fa-solid fa-church text-3xl text-gold"></i>
+                        <h3 class="font-serif text-2xl text-dark">Santuario de la Divina Misericordia</h3>
+                        <div class="w-8 h-[1px] bg-dark/20"></div>
+                        <p class="font-sans text-xs text-muted uppercase tracking-widest">Chicureo · Colina</p>
                     </div>
                 </div>
 
@@ -271,7 +269,7 @@
                 <!-- ARBOLEDA -->
                 <div id="arboleda" class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     <div class="aspect-[4/3] overflow-hidden bg-cream border border-dark/10 order-2 md:order-1">
-                        <img src="images/arboleda_main.jpg" alt="Centro de Eventos Arboleda" class="w-full h-full object-cover grayscale opacity-90">
+                        <img src="images/arboleda_main.jpg" alt="Centro de Eventos Arboleda" loading="lazy" class="w-full h-full object-cover grayscale opacity-90">
                     </div>
                     <div class="space-y-6 order-1 md:order-2">
                         <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">La Celebración</span>
@@ -321,7 +319,7 @@
                     <h2 class="font-serif text-4xl text-dark font-normal">Confirma tu asistencia</h2>
                     <div class="w-12 h-[1px] bg-dark/20 mx-auto"></div>
                     <p class="font-sans text-base text-muted font-light">
-                        La confirmación es individual. Completa tus datos para registrar tu respuesta.
+                        La confirmación es individual. Completa tus datos para preparar tu respuesta.
                     </p>
                 </div>
 
@@ -383,7 +381,7 @@
                     <!-- Success / WhatsApp Step -->
                     <div id="rsvp-success" class="hidden text-center space-y-6">
                         <h3 class="font-serif text-3xl text-dark">Tu respuesta está lista</h3>
-                        <p class="text-muted text-sm font-light">Envía la confirmación directamente por WhatsApp para completar tu registro.</p>
+                        <p class="text-muted text-sm font-light">Para completar la confirmación, envía el mensaje por WhatsApp.</p>
 
                         <div class="bg-light p-6 text-left border border-dark/10 space-y-3 font-sans text-sm text-dark">
                             <p class="text-xs uppercase tracking-wider text-muted font-bold border-b border-dark/10 pb-2">Resumen de respuesta</p>
@@ -418,7 +416,7 @@
             </div>
         </section>
 
-        <!-- 07 GALERÍA HORIZONTAL -->
+        <!-- 07 GALERÍA HORIZONTAL CON CONTROLES -->
         <section id="galeria-horizontal" class="py-24 bg-cream border-b border-dark/5">
             <div class="max-w-6xl mx-auto px-6 space-y-8">
                 <div class="flex justify-between items-end">
@@ -426,31 +424,60 @@
                         <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block mb-2">Colección Fotografías</span>
                         <h2 class="font-serif text-3xl md:text-4xl text-dark font-normal">Galería en Vivo</h2>
                     </div>
-                    <a href="/galeria/" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold">
-                        Ver galería completa →
-                    </a>
+                    <div class="flex items-center gap-6">
+                        <span id="rail-counter" class="font-sans text-xs tracking-widest text-muted">01 / 06</span>
+                        <div class="hidden md:flex gap-2">
+                            <button id="rail-prev-btn" aria-label="Fotografía anterior" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
+                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                            </button>
+                            <button id="rail-next-btn" aria-label="Fotografía siguiente" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Rail Carousel -->
+                <!-- Rail Carousel (Max 6 verified items) -->
                 <div class="relative">
-                    <div id="home-gallery-rail" class="rail-container gap-6 py-4">
+                    <div id="home-gallery-rail" class="rail-container gap-6 py-4" tabindex="0" aria-label="Galería horizontal de fotografías">
+                        <!-- Item 1: Arboleda Main -->
                         <div class="rail-item aspect-[4/5] overflow-hidden bg-light border border-dark/10">
-                            <img src="images/cami_editorial.png" alt="Camila & Felipe" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                            <img src="images/arboleda_main.jpg" alt="Centro de Eventos Arboleda" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
                         </div>
+                        <!-- Item 2: Arboleda Cóctel -->
                         <div class="rail-item aspect-[4/5] overflow-hidden bg-light border border-dark/10">
-                            <img src="images/felipe_editorial.png" alt="Felipe" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                            <img src="images/arboleda_coctel.jpg" alt="Cóctel Arboleda" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
                         </div>
+                        <!-- Item 3: Arboleda Jardín -->
                         <div class="rail-item aspect-[4/5] overflow-hidden bg-light border border-dark/10">
-                            <img src="images/insta_beach_selfie.jpg" alt="Matrimonio Civil" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                            <img src="images/arboleda_jardin.jpg" alt="Jardines Arboleda" loading="lazy" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
                         </div>
-                        <div class="rail-item aspect-[4/5] overflow-hidden bg-light border border-dark/10">
-                            <img src="images/insta_party_1.jpg" alt="Celebración Civil" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        <!-- Item 4: Editorial Card 1 -->
+                        <div class="rail-item aspect-[4/5] bg-light border border-dark/10 p-8 flex flex-col justify-between text-center items-center">
+                            <span class="font-sans text-[10px] uppercase tracking-[0.35em] text-gold">23 · 10 · 26</span>
+                            <div class="space-y-2">
+                                <h3 class="font-serif text-3xl text-dark">La Celebración</h3>
+                                <p class="font-serif italic text-xs text-muted">Arboleda · Chicureo</p>
+                            </div>
+                            <span class="font-sans text-[9px] uppercase tracking-[0.2em] text-dark/40">Felipe & Camila</span>
                         </div>
-                        <div class="rail-item aspect-[4/5] overflow-hidden bg-light border border-dark/10">
-                            <img src="images/insta_formal_selfie.jpg" alt="Felipe & Camila Gala" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        <!-- Item 5: Editorial Card 2 -->
+                        <div class="rail-item aspect-[4/5] bg-dark text-cream p-8 flex flex-col justify-between text-center items-center">
+                            <span class="font-sans text-[10px] uppercase tracking-[0.35em] text-gold">Black Tie</span>
+                            <div class="space-y-2">
+                                <h3 class="font-serif text-3xl text-cream font-normal">Gala & Música</h3>
+                                <p class="font-sans text-xs text-muted font-light">Viernes 23 de Octubre</p>
+                            </div>
+                            <span class="font-sans text-[9px] uppercase tracking-[0.2em] text-gold">2026</span>
                         </div>
-                        <div class="rail-item aspect-[4/5] overflow-hidden bg-light border border-dark/10">
-                            <img src="images/insta_vineyard.jpg" alt="Nuestra Historia" class="w-full h-full object-cover grayscale opacity-90 hover:opacity-100 transition-opacity">
+                        <!-- Item 6: Editorial Card 3 -->
+                        <div class="rail-item aspect-[4/5] bg-light border border-dark/10 p-8 flex flex-col justify-between text-center items-center">
+                            <span class="font-sans text-[10px] uppercase tracking-[0.35em] text-gold">Santuario</span>
+                            <div class="space-y-2">
+                                <h3 class="font-serif text-3xl text-dark">Ceremonia Religiosa</h3>
+                                <p class="font-sans text-xs text-muted">17:50 Horas</p>
+                            </div>
+                            <a href="/galeria/" class="font-sans text-[10px] uppercase tracking-[0.2em] text-dark font-semibold border-b border-dark">Ver más →</a>
                         </div>
                     </div>
                 </div>
