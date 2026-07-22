@@ -84,22 +84,46 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
 
         let targetRowNumber = rsvpData.sheet_row_number;
 
+        // Verify existing row number if provided
+        if (isUpdate && targetRowNumber) {
+            const checkUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A' + targetRowNumber;
+            const checkRes = await fetch(checkUrl, {
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            let isMatched = false;
+            if (checkRes.ok) {
+                const checkData = await checkRes.json();
+                if (checkData.values && checkData.values[0] && checkData.values[0][0] === rsvpData.id) {
+                    isMatched = true;
+                }
+            }
+            if (!isMatched) {
+                targetRowNumber = null; // Stale row number, force UUID search
+            }
+        }
+
         if (isUpdate && !targetRowNumber) {
-            // Search column A for UUID
+            // Search column A by UUID
             const searchUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A:A';
             const searchRes = await fetch(searchUrl, {
                 headers: { 'Authorization': 'Bearer ' + accessToken }
             });
-            if (searchRes.ok) {
-                const searchData = await searchRes.json();
-                const values = searchData.values || [];
-                for (let i = 0; i < values.length; i++) {
-                    if (values[i][0] === rsvpData.id) {
-                        targetRowNumber = i + 1;
-                        break;
-                    }
+
+            if (!searchRes.ok) {
+                // Search failed: return sync failure without appending
+                return { synced: false, error: 'SHEETS_SEARCH_FAILED' };
+            }
+
+            const searchData = await searchRes.json();
+            const values = searchData.values || [];
+            for (let i = 0; i < values.length; i++) {
+                if (values[i][0] === rsvpData.id) {
+                    targetRowNumber = i + 1;
+                    break;
                 }
             }
+
+            // If still not found, search confirmed UUID does not exist -> fall back to append
         }
 
         if (isUpdate && targetRowNumber) {
@@ -132,11 +156,14 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
             if (!appendRes.ok) throw new Error('SHEETS_APPEND_HTTP_' + appendRes.status);
             const appendData = await appendRes.json();
 
-            // Parse exact row number from updatedRange (e.g., 'CONFIRMACIONES_RSVP_TEST!A12:M12')
             let parsedRow = null;
             if (appendData.updates && appendData.updates.updatedRange) {
                 const match = appendData.updates.updatedRange.match(/!A(\d+):/);
                 if (match) parsedRow = parseInt(match[1], 10);
+            }
+
+            if (!parsedRow) {
+                return { synced: false, error: 'UNPARSED_ROW_NUMBER' };
             }
 
             return {

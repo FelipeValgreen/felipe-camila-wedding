@@ -5,8 +5,7 @@ export async function sendWhatsAppMessage(toPhone, textBody, buttons = []) {
     const token = process.env.WHATSAPP_ACCESS_TOKEN;
 
     if (!phoneId || !token) {
-        // Return simulated mock sending result when real Cloud API credentials are not set
-        return { ok: true, mock: true, message_id: 'mock_msg_' + Date.now() };
+        return { ok: false, error: 'WHATSAPP_NOT_CONFIGURED' };
     }
 
     try {
@@ -40,14 +39,19 @@ export async function sendWhatsAppMessage(toPhone, textBody, buttons = []) {
             };
         }
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
         const res = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer ' + token,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (!res.ok) {
             console.error('WhatsApp Cloud API HTTP error:', res.status);
@@ -59,6 +63,6 @@ export async function sendWhatsAppMessage(toPhone, textBody, buttons = []) {
         return { ok: true, message_id: msgId };
     } catch (err) {
         console.error('WhatsApp API Failure:', err.message);
-        return { ok: false, error: err.message };
+        return { ok: false, error: err.message || 'WHATSAPP_SEND_FAILED' };
     }
 }

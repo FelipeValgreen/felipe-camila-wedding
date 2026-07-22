@@ -45,7 +45,10 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_sessions (
 CREATE TABLE IF NOT EXISTS public.whatsapp_processed_messages (
     message_id TEXT PRIMARY KEY,
     phone_e164 TEXT NULL,
-    processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('processing', 'processed', 'failed')),
+    started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    processed_at TIMESTAMPTZ NULL,
+    last_error_code TEXT NULL,
     expires_at TIMESTAMPTZ NOT NULL
 );
 
@@ -61,15 +64,16 @@ CREATE INDEX IF NOT EXISTS idx_rsvp_responses_attendance ON public.rsvp_response
 CREATE INDEX IF NOT EXISTS idx_rsvp_responses_sync ON public.rsvp_responses(sheet_sync_status);
 CREATE INDEX IF NOT EXISTS idx_whatsapp_sessions_expires ON public.whatsapp_sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_whatsapp_processed_messages_expires ON public.whatsapp_processed_messages(expires_at);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_processed_messages_status ON public.whatsapp_processed_messages(status);
 
 -- Updated_at triggers
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS 4678
+RETURNS TRIGGER AS 4966
 BEGIN
    NEW.updated_at = NOW();
    RETURN NEW;
 END;
-4678 language 'plpgsql';
+4966 LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS set_updated_at_rsvp_responses ON public.rsvp_responses;
 CREATE TRIGGER set_updated_at_rsvp_responses

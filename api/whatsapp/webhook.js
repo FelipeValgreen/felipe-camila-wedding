@@ -2,8 +2,9 @@ import crypto from 'crypto';
 import {
     getWhatsAppSession,
     saveWhatsAppSession,
-    isMessageProcessed,
-    getRSVPsByPhone,
+    claimWhatsAppMessage,
+    markWhatsAppMessageStatus,
+    getRSVPsByPhoneSanitized,
     getRSVPByPhoneAndName,
     updateRSVPRecord,
     createRSVPRecord,
@@ -97,8 +98,8 @@ export default async function handler(req, res) {
                         const fromPhone = normalizePhone(msg.from);
 
                         if (msgId && fromPhone) {
-                            const processed = await isMessageProcessed(msgId, fromPhone);
-                            if (!processed) {
+                            const claimRes = await claimWhatsAppMessage(msgId, fromPhone);
+                            if (claimRes.claimed) {
                                 let msgText = '';
                                 if (msg.interactive) {
                                     if (msg.interactive.button_reply) msgText = msg.interactive.button_reply.id;
@@ -107,7 +108,14 @@ export default async function handler(req, res) {
                                     msgText = msg.text.body;
                                 }
                                 msgText = msgText.trim();
-                                await processPersistentWhatsAppFlow(fromPhone, msgText, msgId);
+
+                                try {
+                                    await processPersistentWhatsAppFlow(fromPhone, msgText, msgId);
+                                    await markWhatsAppMessageStatus(msgId, 'processed');
+                                } catch (flowErr) {
+                                    console.error('WhatsApp flow error:', flowErr.message);
+                                    await markWhatsAppMessageStatus(msgId, 'failed', flowErr.message);
+                                }
                             }
                         }
                     }
@@ -128,22 +136,25 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
 
     for (const [key, answer] of Object.entries(FAQ_MAP)) {
         if (lowerText.includes(key)) {
-            await sendWhatsAppMessage(phone, answer);
+            const sendRes = await sendWhatsAppMessage(phone, answer);
+            if (!sendRes.ok) throw new Error(sendRes.error);
             return;
         }
     }
 
     if (lowerText === 'cancelar' || text === 'rsvp_cancel') {
+        const sendRes = await sendWhatsAppMessage(phone, 'Operación cancelada. Puedes escribirnos nuevamente cuando desees.');
+        if (!sendRes.ok) throw new Error(sendRes.error);
         await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
-        await sendWhatsAppMessage(phone, 'Operación cancelada. Puedes escribirnos nuevamente cuando desees.');
         return;
     }
 
     if (lowerText === 'modificar' || text === 'rsvp_modify') {
-        const rsvps = await getRSVPsByPhone(phone);
+        const rsvps = await getRSVPsByPhoneSanitized(phone); // returns id, first_name, last_name only
         if (!rsvps || rsvps.length === 0) {
+            const sendRes = await sendWhatsAppMessage(phone, 'No encontramos una respuesta previa registrada para este número. Iniciemos una nueva confirmación.\n\nPor favor ingresa tu Nombre y Apellido:');
+            if (!sendRes.ok) throw new Error(sendRes.error);
             await saveWhatsAppSession(phone, 'AWAITING_NAME', {}, msgId);
-            await sendWhatsAppMessage(phone, 'No encontramos una respuesta previa registrada para este número. Iniciemos una nueva confirmación.\n\nPor favor ingresa tu Nombre y Apellido:');
             return;
         }
 
@@ -151,24 +162,27 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
             const single = rsvps[0];
             session.data = { target_id: single.id, first_name: single.first_name, last_name: single.last_name };
             session.state = 'AWAITING_ATTENDANCE';
-            await saveWhatsAppSession(phone, 'AWAITING_ATTENDANCE', session.data, msgId);
-            await sendWhatsAppMessage(phone, 'Modificaremos la respuesta de ' + single.first_name + ' ' + single.last_name + '.\n\n¿Asistirás al matrimonio?', [
+            const sendRes = await sendWhatsAppMessage(phone, 'Modificaremos la respuesta de ' + single.first_name + ' ' + single.last_name + '.\n\n¿Asistirás al matrimonio?', [
                 { id: 'attendance_attending', title: 'Sí, asistiré' },
                 { id: 'attendance_not_attending', title: 'No podré asistir' },
                 { id: 'attendance_pending', title: 'Todavía no puedo' }
             ]);
+            if (!sendRes.ok) throw new Error(sendRes.error);
+            await saveWhatsAppSession(phone, 'AWAITING_ATTENDANCE', session.data, msgId);
             return;
         }
 
-        session.data = { candidates: rsvps };
+        // Sanitized candidates containing only id, first_name, last_name
+        session.data = { candidates: rsvps.map(r => ({ id: r.id, first_name: r.first_name, last_name: r.last_name })) };
         session.state = 'AWAITING_SELECTION';
-        await saveWhatsAppSession(phone, 'AWAITING_SELECTION', session.data, msgId);
 
         let listText = 'Encontramos varios nombres registrados con este número. Responde con el número de la persona a modificar:\n\n';
         rsvps.forEach((r, idx) => {
             listText += (idx + 1) + '. ' + r.first_name + ' ' + r.last_name + '\n';
         });
-        await sendWhatsAppMessage(phone, listText);
+        const sendRes = await sendWhatsAppMessage(phone, listText);
+        if (!sendRes.ok) throw new Error(sendRes.error);
+        await saveWhatsAppSession(phone, 'AWAITING_SELECTION', session.data, msgId);
         return;
     }
 
@@ -176,45 +190,49 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
         const choice = parseInt(text, 10);
         const candidates = session.data.candidates || [];
         if (isNaN(choice) || choice < 1 || choice > candidates.length) {
-            await sendWhatsAppMessage(phone, 'Por favor responde únicamente con el número correspondiente a la persona que deseas modificar.');
+            const sendRes = await sendWhatsAppMessage(phone, 'Por favor responde únicamente con el número correspondiente a la persona que deseas modificar.');
+            if (!sendRes.ok) throw new Error(sendRes.error);
             return;
         }
 
         const selected = candidates[choice - 1];
         session.data = { target_id: selected.id, first_name: selected.first_name, last_name: selected.last_name };
         session.state = 'AWAITING_ATTENDANCE';
-        await saveWhatsAppSession(phone, 'AWAITING_ATTENDANCE', session.data, msgId);
-        await sendWhatsAppMessage(phone, 'Modificaremos la respuesta de ' + selected.first_name + ' ' + selected.last_name + '.\n\n¿Asistirás al matrimonio?', [
+        const sendRes = await sendWhatsAppMessage(phone, 'Modificaremos la respuesta de ' + selected.first_name + ' ' + selected.last_name + '.\n\n¿Asistirás al matrimonio?', [
             { id: 'attendance_attending', title: 'Sí, asistiré' },
             { id: 'attendance_not_attending', title: 'No podré asistir' },
             { id: 'attendance_pending', title: 'Todavía no puedo' }
         ]);
+        if (!sendRes.ok) throw new Error(sendRes.error);
+        await saveWhatsAppSession(phone, 'AWAITING_ATTENDANCE', session.data, msgId);
         return;
     }
 
     if (session.state === 'IDLE') {
         session.state = 'AWAITING_NAME';
+        const sendRes = await sendWhatsAppMessage(phone, '¡Hola! Este es el WhatsApp que Felipe y Cami habilitaron para mantener las confirmaciones del matrimonio ordenadas. Te ayudaremos a registrar tu respuesta. Toma menos de un minuto.\n\nPor favor, ingresa tu Nombre y Apellido:');
+        if (!sendRes.ok) throw new Error(sendRes.error);
         await saveWhatsAppSession(phone, 'AWAITING_NAME', {}, msgId);
-        await sendWhatsAppMessage(phone, '¡Hola! Este es el WhatsApp que Felipe y Cami habilitaron para mantener las confirmaciones del matrimonio ordenadas. Te ayudaremos a registrar tu respuesta. Toma menos de un minuto.\n\nPor favor, ingresa tu Nombre y Apellido:');
         return;
     }
 
     if (session.state === 'AWAITING_NAME') {
         const parts = text.split(' ');
         if (parts.length < 2 || parts[0].length < 2 || parts[1].length < 2) {
-            await sendWhatsAppMessage(phone, 'Por favor ingresa tu nombre y apellido completo (ejemplo: Camila Pérez):');
+            const sendRes = await sendWhatsAppMessage(phone, 'Por favor ingresa tu nombre y apellido completo (ejemplo: Camila Pérez):');
+            if (!sendRes.ok) throw new Error(sendRes.error);
             return;
         }
         session.data.first_name = parts[0];
         session.data.last_name = parts.slice(1).join(' ');
         session.state = 'AWAITING_ATTENDANCE';
-        await saveWhatsAppSession(phone, 'AWAITING_ATTENDANCE', session.data, msgId);
-
-        await sendWhatsAppMessage(phone, '¿Asistirás al matrimonio?', [
+        const sendRes = await sendWhatsAppMessage(phone, '¿Asistirás al matrimonio?', [
             { id: 'attendance_attending', title: 'Sí, asistiré' },
             { id: 'attendance_not_attending', title: 'No podré asistir' },
             { id: 'attendance_pending', title: 'Todavía no puedo' }
         ]);
+        if (!sendRes.ok) throw new Error(sendRes.error);
+        await saveWhatsAppSession(phone, 'AWAITING_ATTENDANCE', session.data, msgId);
         return;
     }
 
@@ -225,7 +243,8 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
         else if (text === 'attendance_pending' || lowerText.includes('todavía no puedo') || lowerText.includes('todavia no puedo')) attStatus = 'pending';
 
         if (!attStatus) {
-            await sendWhatsAppMessage(phone, 'Para ayudarte con tu confirmación, responde una de las opciones disponibles.');
+            const sendRes = await sendWhatsAppMessage(phone, 'Para ayudarte con tu confirmación, responde una de las opciones disponibles.');
+            if (!sendRes.ok) throw new Error(sendRes.error);
             return;
         }
 
@@ -233,16 +252,18 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
 
         if (attStatus === 'attending') {
             session.state = 'AWAITING_DIETARY';
+            const sendRes = await sendWhatsAppMessage(phone, '¿Tienes alguna restricción alimentaria?\n1. Ninguna\n2. Vegetariano\n3. Vegano\n4. Celíaco / libre de gluten\n5. Alergias\n6. Otra');
+            if (!sendRes.ok) throw new Error(sendRes.error);
             await saveWhatsAppSession(phone, 'AWAITING_DIETARY', session.data, msgId);
-            await sendWhatsAppMessage(phone, '¿Tienes alguna restricción alimentaria?\n1. Ninguna\n2. Vegetariano\n3. Vegano\n4. Celíaco / libre de gluten\n5. Alergias\n6. Otra');
         } else {
             session.state = 'AWAITING_CONFIRMATION';
-            await saveWhatsAppSession(phone, 'AWAITING_CONFIRMATION', session.data, msgId);
             const statusLabel = attStatus === 'not_attending' ? 'No podré asistir' : 'Todavía no puedo confirmar';
-            await sendWhatsAppMessage(phone, 'Registraremos la siguiente respuesta:\n\nNombre: ' + session.data.first_name + ' ' + session.data.last_name + '\nAsistencia: ' + statusLabel + '\n\n¿Está correcto?', [
+            const sendRes = await sendWhatsAppMessage(phone, 'Registraremos la siguiente respuesta:\n\nNombre: ' + session.data.first_name + ' ' + session.data.last_name + '\nAsistencia: ' + statusLabel + '\n\n¿Está correcto?', [
                 { id: 'rsvp_confirm', title: 'CONFIRMAR' },
                 { id: 'rsvp_cancel', title: 'CANCELAR' }
             ]);
+            if (!sendRes.ok) throw new Error(sendRes.error);
+            await saveWhatsAppSession(phone, 'AWAITING_CONFIRMATION', session.data, msgId);
         }
         return;
     }
@@ -257,7 +278,8 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
         else if (text === 'dietary_other' || text === '6' || lowerText.includes('otra')) dietary = 'Otra';
 
         if (!dietary) {
-            await sendWhatsAppMessage(phone, 'Para ayudarte con tu confirmación, responde una de las opciones disponibles.');
+            const sendRes = await sendWhatsAppMessage(phone, 'Para ayudarte con tu confirmación, responde una de las opciones disponibles.');
+            if (!sendRes.ok) throw new Error(sendRes.error);
             return;
         }
 
@@ -265,107 +287,112 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
 
         if (dietary === 'Alergias' || dietary === 'Otra') {
             session.state = 'AWAITING_DIETARY_DETAIL';
+            const sendRes = await sendWhatsAppMessage(phone, 'Escribe el detalle de tu restricción alimentaria (ej: alergia al maní):');
+            if (!sendRes.ok) throw new Error(sendRes.error);
             await saveWhatsAppSession(phone, 'AWAITING_DIETARY_DETAIL', session.data, msgId);
-            await sendWhatsAppMessage(phone, 'Escribe el detalle de tu restricción alimentaria (ej: alergia al maní):');
             return;
         }
 
         session.state = 'AWAITING_CONFIRMATION';
-        await saveWhatsAppSession(phone, 'AWAITING_CONFIRMATION', session.data, msgId);
-        await sendWhatsAppMessage(phone, 'Registraremos la siguiente respuesta:\n\nNombre: ' + session.data.first_name + ' ' + session.data.last_name + '\nAsistencia: Sí, asistiré\nRestricción: ' + dietary + '\n\n¿Está correcto?', [
+        const sendRes = await sendWhatsAppMessage(phone, 'Registraremos la siguiente respuesta:\n\nNombre: ' + session.data.first_name + ' ' + session.data.last_name + '\nAsistencia: Sí, asistiré\nRestricción: ' + dietary + '\n\n¿Está correcto?', [
             { id: 'rsvp_confirm', title: 'CONFIRMAR' },
             { id: 'rsvp_cancel', title: 'CANCELAR' }
         ]);
+        if (!sendRes.ok) throw new Error(sendRes.error);
+        await saveWhatsAppSession(phone, 'AWAITING_CONFIRMATION', session.data, msgId);
         return;
     }
 
     if (session.state === 'AWAITING_DIETARY_DETAIL') {
         const detail = text.trim();
         if (detail.length < 2 || detail.toLowerCase() === 'alergias' || detail.toLowerCase() === 'otra') {
-            await sendWhatsAppMessage(phone, 'Por favor especifica el detalle de tu restricción alimentaria:');
+            const sendRes = await sendWhatsAppMessage(phone, 'Por favor especifica el detalle de tu restricción alimentaria:');
+            if (!sendRes.ok) throw new Error(sendRes.error);
             return;
         }
 
         session.data.dietary_detail = detail;
         session.state = 'AWAITING_CONFIRMATION';
-        await saveWhatsAppSession(phone, 'AWAITING_CONFIRMATION', session.data, msgId);
-
-        await sendWhatsAppMessage(phone, 'Registraremos la siguiente respuesta:\n\nNombre: ' + session.data.first_name + ' ' + session.data.last_name + '\nAsistencia: Sí, asistiré\nRestricción: ' + session.data.dietary_type + ' (' + session.data.dietary_detail + ')\n\n¿Está correcto?', [
+        const sendRes = await sendWhatsAppMessage(phone, 'Registraremos la siguiente respuesta:\n\nNombre: ' + session.data.first_name + ' ' + session.data.last_name + '\nAsistencia: Sí, asistiré\nRestricción: ' + session.data.dietary_type + ' (' + session.data.dietary_detail + ')\n\n¿Está correcto?', [
             { id: 'rsvp_confirm', title: 'CONFIRMAR' },
             { id: 'rsvp_cancel', title: 'CANCELAR' }
         ]);
+        if (!sendRes.ok) throw new Error(sendRes.error);
+        await saveWhatsAppSession(phone, 'AWAITING_CONFIRMATION', session.data, msgId);
         return;
     }
 
     if (session.state === 'AWAITING_CONFIRMATION') {
         if (text === 'rsvp_confirm' || lowerText.includes('confirmar')) {
-            try {
-                // Server validation call before save
-                const valRes = validateRSVPInput({
-                    first_name: session.data.first_name,
-                    last_name: session.data.last_name,
-                    phone: phone,
-                    attendance_status: session.data.attendance_status,
-                    dietary_type: session.data.dietary_type,
-                    dietary_detail: session.data.dietary_detail
+            const valRes = validateRSVPInput({
+                first_name: session.data.first_name,
+                last_name: session.data.last_name,
+                phone: phone,
+                attendance_status: session.data.attendance_status,
+                dietary_type: session.data.dietary_type,
+                dietary_detail: session.data.dietary_detail
+            });
+
+            if (!valRes.valid) {
+                const sendRes = await sendWhatsAppMessage(phone, 'Datos de confirmación no válidos: ' + valRes.error);
+                if (!sendRes.ok) throw new Error(sendRes.error);
+                return;
+            }
+
+            let savedRecord = null;
+            let isUpdateOperation = false;
+            const fullNameNorm = valRes.data.full_name_normalized;
+
+            if (session.data.target_id) {
+                isUpdateOperation = true;
+                savedRecord = await updateRSVPRecord(session.data.target_id, {
+                    attendance_status: valRes.data.attendance_status,
+                    dietary_type: valRes.data.dietary_type,
+                    dietary_detail: valRes.data.dietary_detail
                 });
-
-                if (!valRes.valid) {
-                    await sendWhatsAppMessage(phone, 'Datos de confirmación no válidos: ' + valRes.error);
-                    return;
-                }
-
-                let savedRecord = null;
-                const fullNameNorm = valRes.data.full_name_normalized;
-
-                if (session.data.target_id) {
-                    savedRecord = await updateRSVPRecord(session.data.target_id, {
+                if (savedRecord) await createRSVPEvent(session.data.target_id, 'updated', 'whatsapp');
+            } else {
+                const existing = await getRSVPByPhoneAndName(phone, fullNameNorm);
+                if (existing) {
+                    isUpdateOperation = true;
+                    savedRecord = await updateRSVPRecord(existing.id, {
                         attendance_status: valRes.data.attendance_status,
                         dietary_type: valRes.data.dietary_type,
                         dietary_detail: valRes.data.dietary_detail
                     });
-                    if (savedRecord) await createRSVPEvent(session.data.target_id, 'updated', 'whatsapp');
+                    if (savedRecord) await createRSVPEvent(existing.id, 'updated', 'whatsapp');
                 } else {
-                    const existing = await getRSVPByPhoneAndName(phone, fullNameNorm);
-                    if (existing) {
-                        savedRecord = await updateRSVPRecord(existing.id, {
-                            attendance_status: valRes.data.attendance_status,
-                            dietary_type: valRes.data.dietary_type,
-                            dietary_detail: valRes.data.dietary_detail
-                        });
-                        if (savedRecord) await createRSVPEvent(existing.id, 'updated', 'whatsapp');
-                    } else {
-                        savedRecord = await createRSVPRecord({
-                            ...valRes.data,
-                            source: 'whatsapp',
-                            reconfirmation_status: 'not_started'
-                        });
-                        if (savedRecord) await createRSVPEvent(savedRecord.id, 'created', 'whatsapp');
-                    }
+                    isUpdateOperation = false;
+                    savedRecord = await createRSVPRecord({
+                        ...valRes.data,
+                        source: 'whatsapp',
+                        reconfirmation_status: 'not_started'
+                    });
+                    if (savedRecord) await createRSVPEvent(savedRecord.id, 'created', 'whatsapp');
                 }
-
-                if (!savedRecord) {
-                    await sendWhatsAppMessage(phone, 'No pudimos registrar tu respuesta en este momento. Intenta nuevamente en unos minutos.');
-                    return;
-                }
-
-                const sheetRes = await syncToGoogleSheets(savedRecord, Boolean(session.data.target_id));
-                if (sheetRes.synced) {
-                    await updateRSVPRecord(savedRecord.id, { sheet_sync_status: 'synced', sheet_row_number: sheetRes.sheet_row_number });
-                } else {
-                    await updateRSVPRecord(savedRecord.id, { sheet_sync_status: 'failed' });
-                }
-
-                await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
-                await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
-
-            } catch (err) {
-                console.error('WhatsApp confirmation save error:', err.message);
-                await sendWhatsAppMessage(phone, 'No pudimos registrar tu respuesta en este momento. Intenta nuevamente en unos minutos.');
             }
+
+            if (!savedRecord) {
+                const sendRes = await sendWhatsAppMessage(phone, 'No pudimos registrar tu respuesta en este momento. Intenta nuevamente en unos minutos.');
+                if (!sendRes.ok) throw new Error(sendRes.error);
+                return;
+            }
+
+            const sheetRes = await syncToGoogleSheets(savedRecord, isUpdateOperation);
+            if (sheetRes.synced) {
+                await updateRSVPRecord(savedRecord.id, { sheet_sync_status: 'synced', sheet_row_number: sheetRes.sheet_row_number });
+            } else {
+                await updateRSVPRecord(savedRecord.id, { sheet_sync_status: 'failed' });
+            }
+
+            await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
+            const sendRes = await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
+            if (!sendRes.ok) throw new Error(sendRes.error);
+
         } else {
             await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
-            await sendWhatsAppMessage(phone, 'Operación cancelada.');
+            const sendRes = await sendWhatsAppMessage(phone, 'Operación cancelada.');
+            if (!sendRes.ok) throw new Error(sendRes.error);
         }
     }
 }

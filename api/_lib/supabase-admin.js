@@ -43,6 +43,11 @@ export async function supabaseRequest(path, options = {}) {
     }
 }
 
+export function isValidUUID(uuid) {
+    if (!uuid || typeof uuid !== 'string') return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid.trim());
+}
+
 export async function createRSVPRecord(data) {
     const res = await supabaseRequest('rsvp_responses', {
         method: 'POST',
@@ -52,7 +57,8 @@ export async function createRSVPRecord(data) {
 }
 
 export async function getRSVPById(id) {
-    const res = await supabaseRequest('rsvp_responses?id=eq.' + id + '&select=*');
+    if (!isValidUUID(id)) return null;
+    const res = await supabaseRequest('rsvp_responses?id=eq.' + encodeURIComponent(id) + '&select=*');
     return res && res[0] ? res[0] : null;
 }
 
@@ -61,12 +67,13 @@ export async function getRSVPByPhoneAndName(phone, fullNameNormalized) {
     return res && res[0] ? res[0] : null;
 }
 
-export async function getRSVPsByPhone(phone) {
-    return await supabaseRequest('rsvp_responses?phone_e164=eq.' + encodeURIComponent(phone) + '&select=*');
+export async function getRSVPsByPhoneSanitized(phone) {
+    return await supabaseRequest('rsvp_responses?phone_e164=eq.' + encodeURIComponent(phone) + '&select=id,first_name,last_name');
 }
 
 export async function updateRSVPRecord(id, updates) {
-    const res = await supabaseRequest('rsvp_responses?id=eq.' + id, {
+    if (!isValidUUID(id)) return null;
+    const res = await supabaseRequest('rsvp_responses?id=eq.' + encodeURIComponent(id), {
         method: 'PATCH',
         body: updates
     });
@@ -74,10 +81,16 @@ export async function updateRSVPRecord(id, updates) {
 }
 
 export async function createRSVPEvent(rsvpId, eventType, source) {
-    return await supabaseRequest('rsvp_events', {
-        method: 'POST',
-        body: { rsvp_id: rsvpId, event_type: eventType, source }
-    });
+    if (!isValidUUID(rsvpId)) return null;
+    try {
+        return await supabaseRequest('rsvp_events', {
+            method: 'POST',
+            body: { rsvp_id: rsvpId, event_type: eventType, source }
+        });
+    } catch (err) {
+        console.error('Non-critical event log failure:', err.message);
+        return null;
+    }
 }
 
 export async function getWhatsAppSession(phone) {
@@ -100,19 +113,42 @@ export async function saveWhatsAppSession(phone, state, sessionData, lastMsgId) 
     });
 }
 
-export async function isMessageProcessed(msgId, phone) {
+export async function claimWhatsAppMessage(msgId, phone) {
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     try {
-        const res = await supabaseRequest('whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId) + '&select=*');
-        if (res && res.length > 0) return true;
-
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-        await supabaseRequest('whatsapp_processed_messages', {
+        const res = await supabaseRequest('whatsapp_processed_messages', {
             method: 'POST',
-            body: { message_id: msgId, phone_e164: phone, expires_at: expiresAt }
+            prefer: 'return=representation',
+            body: { message_id: msgId, phone_e164: phone, status: 'processing', expires_at: expiresAt }
         });
-        return false;
+        return { claimed: true, record: res ? res[0] : null };
     } catch (err) {
-        if (err.status === 409) return true;
+        if (err.status === 409 || (err.detail && err.detail.includes('duplicate'))) {
+            const existing = await supabaseRequest('whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId) + '&select=*');
+            const rec = existing && existing[0] ? existing[0] : null;
+            if (rec && rec.status === 'processed') {
+                return { claimed: false, status: 'processed' };
+            }
+            if (rec && rec.status === 'processing') {
+                return { claimed: false, status: 'processing' };
+            }
+            if (rec && rec.status === 'failed') {
+                await supabaseRequest('whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId), {
+                    method: 'PATCH',
+                    body: { status: 'processing', started_at: new Date().toISOString() }
+                });
+                return { claimed: true, retry: true };
+            }
+        }
         throw err;
     }
+}
+
+export async function markWhatsAppMessageStatus(msgId, status, errorCode = null) {
+    const updates = { status, last_error_code: errorCode };
+    if (status === 'processed') updates.processed_at = new Date().toISOString();
+    return await supabaseRequest('whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId), {
+        method: 'PATCH',
+        body: updates
+    });
 }

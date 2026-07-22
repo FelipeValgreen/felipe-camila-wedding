@@ -3,9 +3,9 @@ import {
     createRSVPRecord,
     getRSVPById,
     getRSVPByPhoneAndName,
-    getRSVPsByPhone,
     updateRSVPRecord,
-    createRSVPEvent
+    createRSVPEvent,
+    isValidUUID
 } from './supabase-admin.js';
 import { syncToGoogleSheets } from './google-sheets.js';
 
@@ -24,17 +24,23 @@ export function normalizePhone(rawPhone) {
     const trimmed = rawPhone.trim();
     if (!trimmed) return null;
 
+    if (/[a-zA-Z]/.test(trimmed)) return null;
     const isLeadingPlus = trimmed.startsWith('+');
     const rest = isLeadingPlus ? trimmed.slice(1) : trimmed;
-
-    if (/[a-zA-Z]/.test(trimmed)) return null;
     if (/[^0-9\s().-]/.test(rest)) return null;
     if ((trimmed.match(/\+/g) || []).length > 1) return null;
 
-    const digits = trimmed.replace(/[^\d]/g, '');
+    let digits = trimmed.replace(/[^\d]/g, '');
+    if (!digits) return null;
+
+    // Chilean 9-digit mobile starting with 9 (e.g. 981393436) -> prepend 56
+    if (!isLeadingPlus && digits.length === 9 && digits.startsWith('9')) {
+        digits = '56' + digits;
+    }
+
     if (digits.length < 8 || digits.length > 15) return null;
 
-    return (isLeadingPlus ? '+' : '') + digits;
+    return '+' + digits;
 }
 
 export function generateManageToken() {
@@ -132,7 +138,21 @@ export async function createRSVP(input, source = 'web') {
         sheet_sync_status: 'pending'
     };
 
-    const inserted = await createRSVPRecord(recordPayload);
+    let inserted = null;
+    try {
+        inserted = await createRSVPRecord(recordPayload);
+    } catch (err) {
+        if (err.status === 409 || (err.detail && err.detail.includes('duplicate'))) {
+            return {
+                ok: false,
+                status: 409,
+                error: 'RSVP_ALREADY_EXISTS',
+                user_message: 'Ya existe una respuesta con estos datos.'
+            };
+        }
+        throw err;
+    }
+
     if (!inserted) {
         return { ok: false, status: 500, error: 'NO_SE_PUDO_REGISTRAR' };
     }
@@ -167,8 +187,35 @@ export async function createRSVP(input, source = 'web') {
     };
 }
 
+export async function readRSVP(rsvpId, manageToken) {
+    if (!rsvpId || !manageToken || !isValidUUID(rsvpId)) {
+        return { ok: false, status: 401, error: 'INVALID_CREDENTIALS' };
+    }
+
+    const existing = await getRSVPById(rsvpId);
+    if (!existing) {
+        return { ok: false, status: 401, error: 'INVALID_CREDENTIALS' };
+    }
+
+    if (!timingSafeTokenEqual(manageToken, existing.manage_token_hash)) {
+        return { ok: false, status: 401, error: 'INVALID_CREDENTIALS' };
+    }
+
+    return {
+        ok: true,
+        rsvp: {
+            first_name: existing.first_name,
+            last_name: existing.last_name,
+            phone_e164: existing.phone_e164,
+            attendance_status: existing.attendance_status,
+            dietary_type: existing.dietary_type,
+            dietary_detail: existing.dietary_detail
+        }
+    };
+}
+
 export async function updateRSVP(rsvpId, manageToken, updates) {
-    if (!rsvpId || !manageToken) {
+    if (!rsvpId || !manageToken || !isValidUUID(rsvpId)) {
         return { ok: false, status: 401, error: 'INVALID_CREDENTIALS' };
     }
 

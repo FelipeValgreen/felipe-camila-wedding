@@ -167,6 +167,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentRSVPId = localStorage.getItem('rsvp_id') || null;
     let currentManageToken = localStorage.getItem('rsvp_manage_token') || null;
+    let isExplicitUpdateMode = false;
+
+    // Page Load Safe RSVP Restoration via action=read
+    async function restoreRSVPSessionOnLoad() {
+        if (!currentRSVPId || !currentManageToken) return;
+
+        try {
+            const response = await fetch('/api/rsvp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'read',
+                    rsvp_id: currentRSVPId,
+                    manage_token: currentManageToken
+                })
+            });
+
+            const data = await response.json();
+            if (response.ok && data.ok && data.rsvp) {
+                const rsvp = data.rsvp;
+                if (rsvpFirstnameInput) rsvpFirstnameInput.value = rsvp.first_name || '';
+                if (rsvpLastnameInput) rsvpLastnameInput.value = rsvp.last_name || '';
+                if (rsvpWhatsappInput) rsvpWhatsappInput.value = rsvp.phone_e164 || '';
+
+                for (const radio of attendanceRadios) {
+                    radio.checked = (radio.value === rsvp.attendance_status);
+                }
+                handleAttendanceChange();
+
+                if (rsvp.attendance_status === 'attending' && rsvp.dietary_type && rsvpDietarySelect) {
+                    rsvpDietarySelect.value = rsvp.dietary_type;
+                    if (rsvp.dietary_detail && rsvpDietaryDetailInput) {
+                        rsvpDietaryDetailInput.value = rsvp.dietary_detail;
+                    }
+                }
+
+                // Show summary state
+                const summaryName = document.getElementById('summary-name');
+                const summaryAttendance = document.getElementById('summary-attendance');
+                const summaryDietary = document.getElementById('summary-dietary');
+                const summaryDietaryRow = document.getElementById('summary-dietary-row');
+
+                if (summaryName) summaryName.textContent = `${rsvp.first_name} ${rsvp.last_name}`;
+                let attendanceLabel = 'Sí, asistiré';
+                if (rsvp.attendance_status === 'not_attending') attendanceLabel = 'No podré asistir';
+                if (rsvp.attendance_status === 'pending') attendanceLabel = 'Todavía no puedo confirmar';
+                if (summaryAttendance) summaryAttendance.textContent = attendanceLabel;
+
+                if (rsvp.attendance_status === 'attending') {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.remove('hidden');
+                    if (summaryDietary) summaryDietary.textContent = rsvp.dietary_detail || rsvp.dietary_type || 'Ninguna';
+                } else {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.add('hidden');
+                }
+
+                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
+                if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
+                rsvpCompleted = true;
+                isExplicitUpdateMode = true;
+                updateCtaVisibility();
+            } else {
+                // Verification failed -> clear stale tokens
+                currentRSVPId = null;
+                currentManageToken = null;
+                localStorage.removeItem('rsvp_id');
+                localStorage.removeItem('rsvp_manage_token');
+            }
+        } catch (e) {
+            console.warn('RSVP session restore warning:', e);
+        }
+    }
+    restoreRSVPSessionOnLoad();
 
     function handleAttendanceChange() {
         let selectedValue = 'attending';
@@ -223,13 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const rawPhone = rsvpWhatsappInput.value.trim();
             const honeypot = rsvpWebsiteField ? rsvpWebsiteField.value : '';
 
-            // Honeypot check
-            if (honeypot.trim() !== '') {
-                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
-                if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
-                return;
-            }
-
             if (firstName.length < 2) {
                 showToast('Ingresa un nombre válido (mínimo 2 caracteres).', 'error');
                 rsvpFirstnameInput.focus();
@@ -280,14 +345,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Disable submit button during request
             if (rsvpSubmitBtn) {
                 rsvpSubmitBtn.disabled = true;
                 rsvpSubmitBtn.textContent = 'Registrando...';
             }
 
             try {
-                const isUpdate = Boolean(currentRSVPId && currentManageToken);
+                const isUpdate = Boolean(isExplicitUpdateMode && currentRSVPId && currentManageToken);
                 const payload = {
                     action: isUpdate ? 'update' : 'create',
                     first_name: firstName,
@@ -296,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     attendance_status: attendanceStatus,
                     dietary_type: attendanceStatus === 'attending' ? rsvpDietarySelect.value : null,
                     dietary_detail: attendanceStatus === 'attending' ? dietaryDetail : null,
-                    website: ''
+                    website: honeypot
                 };
 
                 if (isUpdate) {
@@ -334,18 +398,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('rsvp_manage_token', currentManageToken);
                 }
 
-                // Render Summary State using textContent securely
                 const summaryName = document.getElementById('summary-name');
                 const summaryAttendance = document.getElementById('summary-attendance');
                 const summaryDietary = document.getElementById('summary-dietary');
                 const summaryDietaryRow = document.getElementById('summary-dietary-row');
 
                 if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
-                
                 let attendanceLabel = 'Sí, asistiré';
                 if (attendanceStatus === 'not_attending') attendanceLabel = 'No podré asistir';
                 if (attendanceStatus === 'pending') attendanceLabel = 'Todavía no puedo confirmar';
-
                 if (summaryAttendance) summaryAttendance.textContent = attendanceLabel;
                 
                 if (attendanceStatus === 'attending') {
@@ -359,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
 
                 rsvpCompleted = true;
+                isExplicitUpdateMode = true;
                 updateCtaVisibility();
 
             } catch (err) {
@@ -378,6 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editBtn) {
         editBtn.addEventListener('click', () => {
             rsvpCompleted = false;
+            isExplicitUpdateMode = true;
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
             updateCtaVisibility();
@@ -389,6 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (anotherBtn) {
         anotherBtn.addEventListener('click', () => {
             rsvpCompleted = false;
+            isExplicitUpdateMode = false;
             currentRSVPId = null;
             currentManageToken = null;
             localStorage.removeItem('rsvp_id');
@@ -402,6 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCtaVisibility();
         });
     }
+
 
     // Fetch Public Config for WhatsApp option
     async function loadPublicConfig() {

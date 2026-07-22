@@ -7,6 +7,7 @@ import { mapRSVPStatusToSheet, syncToGoogleSheets } from '../api/_lib/google-she
 import publicConfigHandler from '../api/public-config.js';
 import rsvpHandler from '../api/rsvp.js';
 import webhookHandler from '../api/whatsapp/webhook.js';
+import { sendWhatsAppMessage } from '../api/_lib/whatsapp-client.js';
 
 // Group A: RSVP Validation & Normalization
 test('A1. normalizeName cleans accents, casing and spaces', () => {
@@ -14,9 +15,10 @@ test('A1. normalizeName cleans accents, casing and spaces', () => {
     assert.equal(normalizeName('Felipe   Valenzuela '), 'felipe valenzuela');
 });
 
-test('A2. normalizePhone enforces 8-15 digits and single leading plus', () => {
+test('A2. normalizePhone enforces 8-15 digits and always prepends + (canonical)', () => {
     assert.equal(normalizePhone('+56 9 1234 5678'), '+56912345678');
-    assert.equal(normalizePhone('56912345678'), '56912345678');
+    assert.equal(normalizePhone('56912345678'), '+56912345678');
+    assert.equal(normalizePhone('912345678'), '+56912345678');
     assert.equal(normalizePhone('++56912345678'), null);
     assert.equal(normalizePhone('56+912345678'), null);
     assert.equal(normalizePhone('phone123'), null);
@@ -27,17 +29,20 @@ test('A3. validateRSVPInput validates valid attending and dietary', () => {
     const v = validateRSVPInput({ first_name: 'Camila', last_name: 'Pérez', phone: '+56912345678', attendance_status: 'attending', dietary_type: 'Vegano' });
     assert.equal(v.valid, true);
     assert.equal(v.data.full_name_normalized, 'camila perez');
+    assert.equal(v.data.phone_e164, '+56912345678');
 });
 
 test('A4. validateRSVPInput handles not_attending without dietary', () => {
-    const v = validateRSVPInput({ first_name: 'Camila', last_name: 'Pérez', phone: '+56912345678', attendance_status: 'not_attending' });
+    const v = validateRSVPInput({ first_name: 'Camila', last_name: 'Pérez', phone: '56912345678', attendance_status: 'not_attending' });
     assert.equal(v.valid, true);
+    assert.equal(v.data.phone_e164, '+56912345678');
     assert.equal(v.data.dietary_type, null);
 });
 
 test('A5. validateRSVPInput handles pending status', () => {
-    const v = validateRSVPInput({ first_name: 'Camila', last_name: 'Pérez', phone: '+56912345678', attendance_status: 'pending' });
+    const v = validateRSVPInput({ first_name: 'Camila', last_name: 'Pérez', phone: '912345678', attendance_status: 'pending' });
     assert.equal(v.valid, true);
+    assert.equal(v.data.phone_e164, '+56912345678');
 });
 
 test('A6. validateRSVPInput rejects invalid short names', () => {
@@ -71,7 +76,7 @@ test('A11. validateRSVPInput supports Ninguna option', () => {
     assert.equal(v.valid, true);
 });
 
-// Group B: Timing-safe token management
+// Group B: Timing-safe token management & UUID validation
 test('B1. timingSafeTokenEqual verifies valid token and rejects invalid', () => {
     const token = generateManageToken();
     const hash = hashToken(token);
@@ -85,7 +90,7 @@ test('B2. timingSafeTokenEqual handles malformed tokens safely', () => {
     assert.equal(timingSafeTokenEqual(123, 'hash'), false);
 });
 
-// Group C: Google Sheets Mapping & Config
+// Group C: Google Sheets Mapping & Private Key newline conversion
 test('C1. mapRSVPStatusToSheet correctly maps values', () => {
     assert.equal(mapRSVPStatusToSheet('attending', 'web'), 'Confirmado Web');
     assert.equal(mapRSVPStatusToSheet('attending', 'whatsapp'), 'Confirmado WhatsApp');
@@ -97,6 +102,20 @@ test('C2. syncToGoogleSheets returns SHEETS_NOT_CONFIGURED when environment vari
     const res = await syncToGoogleSheets({ attendance_status: 'attending', source: 'web' }, false);
     assert.equal(res.synced, false);
     assert.equal(res.error, 'SHEETS_NOT_CONFIGURED');
+});
+
+test('C3. syncToGoogleSheets attempts auth with formatted private key containing literal \\n', async () => {
+    process.env.GOOGLE_SHEETS_SPREADSHEET_ID = 'test_sheet';
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = 'test@account.com';
+    process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY = '-----BEGIN PRIVATE KEY-----\nFAKE_KEY\n-----END PRIVATE KEY-----';
+
+    const res = await syncToGoogleSheets({ attendance_status: 'attending', source: 'web' }, false);
+    assert.equal(res.synced, false);
+    assert.equal(res.error.includes('GOOGLE_AUTH_FAILED') || res.error.includes('error'), true);
+
+    delete process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+    delete process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    delete process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
 });
 
 // Group D: Web API Endpoint
@@ -225,7 +244,7 @@ test('E2. publicConfigHandler exposes WEDDING_WHATSAPP_NUMBER when set', () => {
     delete process.env.WEDDING_WHATSAPP_NUMBER;
 });
 
-// Group F: WhatsApp Webhook Signature & Behavior Verification
+// Group F: WhatsApp Webhook Signature & Client Errors
 test('F1. webhook GET returns 500 when WHATSAPP_VERIFY_TOKEN is absent', async () => {
     const req = { method: 'GET', query: { 'hub.mode': 'subscribe', 'hub.verify_token': 'test' } };
     let statusCode = 0;
@@ -322,4 +341,10 @@ test('F5. webhook POST rejects malformed JSON', async () => {
     assert.equal(jsonBody.error, 'MALFORMED_JSON');
 
     delete process.env.META_APP_SECRET;
+});
+
+test('F6. sendWhatsAppMessage returns WHATSAPP_NOT_CONFIGURED when environment variables absent', async () => {
+    const res = await sendWhatsAppMessage('+56912345678', 'Hello');
+    assert.equal(res.ok, false);
+    assert.equal(res.error, 'WHATSAPP_NOT_CONFIGURED');
 });

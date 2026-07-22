@@ -1,4 +1,4 @@
-import { createRSVP, updateRSVP } from './_lib/rsvp-service.js';
+import { createRSVP, updateRSVP, readRSVP } from './_lib/rsvp-service.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -32,7 +32,14 @@ export default async function handler(req, res) {
 
         const action = body.action || 'create';
 
-        if (action === 'create') {
+        if (action === 'read') {
+            const result = await readRSVP(body.rsvp_id, body.manage_token);
+            if (!result.ok) {
+                return res.status(result.status || 401).json({ ok: false, error: result.error });
+            }
+            return res.status(200).json({ ok: true, rsvp: result.rsvp });
+
+        } else if (action === 'create') {
             const result = await createRSVP({
                 first_name: body.first_name,
                 last_name: body.last_name,
