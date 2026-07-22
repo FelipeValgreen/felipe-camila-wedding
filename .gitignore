@@ -1,1 +1,14 @@
 .vercel
+.DS_Store
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Credentials and Keys
+*.pem
+*.key
+*service*account*.json
+credentials*.json
+secrets*.json

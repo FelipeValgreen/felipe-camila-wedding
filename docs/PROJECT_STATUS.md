@@ -1,28 +1,27 @@
 # Estado del Proyecto y Plan de Cierre · “El Umbral Vivo”
 
 **Felipe & Camila · Matrimonio Viernes 23 de Octubre de 2026**
-**Versión**: 1.2
-**Fecha de Baseline**: 22 de Julio de 2026
+**Versión**: 1.3
+**Fecha de Actualización**: 22 de Julio de 2026
 **Repositorio**: `FelipeValgreen/felipe-camila-wedding`
 **Rama activa**: `feature/unified-rsvp-v3-2026-07-21`
 **SHA inicial de Fase 0**: `2a62e4f15da6ee6876831c2ef1ff4bbc230b3dfe`
-**Primer commit de baseline reemplazado**: `00e6436f9f05d744070ad68a55019ea1eaa15a68`
-**SHA actual de Fase 0**: `a83972350b3216e0c22292e5269b90d65413d25d`
 **Pull Request activo**: [PR #6](https://github.com/FelipeValgreen/felipe-camila-wedding/pull/6)
 **Pull Request Release Candidate**: [PR #5](https://github.com/FelipeValgreen/felipe-camila-wedding/pull/5)
+**Informe de Seguridad de Fase 1A**: [docs/SECURITY_STATUS.md](docs/SECURITY_STATUS.md)
 **Producción intacta**: `https://felipeycami.cl/` (Sin modificar)
 
 ---
 
 ## 1. Declaración de Bloqueadores
 
-### 1.1 Bloqueadores para la ejecución de Fase 0 (Baseline)
-- **Ninguno**. La recolección de metadatos, inspección de solo lectura de repositorio, Vercel, Supabase y Google Sheets se ha completado.
+### 1.1 Bloqueadores para la ejecución de Fase 1A (Auditoría No Destructiva)
+- **Ninguno**. La auditoría no destructiva de seguridad, inventario de credenciales y simulación de mergeabilidad se ha completado.
 
 ### 1.2 Bloqueadores del Proyecto para el Lanzamiento a Producción
 1. **Seguridad**: Confirmación de rotación de la `SUPABASE_SERVICE_ROLE_KEY` expuesta en el historial previo.
 2. **Seguridad**: Confirmación de eliminación del cliente OAuth comprometido en Google Cloud Console.
-3. **Seguridad**: Revocación/rotación de claves de servicio de Google antiguas redundantes en GCP.
+3. **Seguridad**: Revocación/rotación de 6 claves de servicio de Google redundantes en GCP IAM.
 4. **Google Sheets**: Verificación y restricción del acceso general "Cualquiera con el enlace" en Google Drive por parte del propietario.
 5. **Infraestructura**: Verificación y re-adición limpia de variables en Vercel Preview tras la rotación formal de credenciales.
 6. **E2E**: Prueba E2E real Web → Supabase → Google Sheets en ambiente Preview previa al release.
@@ -31,20 +30,24 @@
 
 ---
 
-## 2. Verificación de Git y Pull Requests
+## 2. Verificación de Git, PR #6 y Mergeabilidad
 
-### 2.1 Registro de SHAs de Git
-- **SHA inicial de Fase 0**: `2a62e4f15da6ee6876831c2ef1ff4bbc230b3dfe`
-- **Primer commit de baseline reemplazado**: `00e6436f9f05d744070ad68a55019ea1eaa15a68`
-- **SHA actual de Fase 0**: `a83972350b3216e0c22292e5269b90d65413d25d`
+### 2.1 Comando de Verificación Ejecutado
+```bash
+git fetch origin
+git rev-parse origin/release/final-wedding-rc-2026-07-21
+git rev-parse origin/feature/unified-rsvp-v3-2026-07-21
+gh pr view 6 --repo FelipeValgreen/felipe-camila-wedding --json baseRefName,baseRefOid,headRefName,headRefOid,state,mergeable,mergeStateStatus
+```
 
 ### 2.2 Metadatos Reales de Git y PR #6
 - **Base real (`origin/release/final-wedding-rc-2026-07-21`)**: `724f8561be87e4c61cdfbdcdc4fe646796672b7c`
-- **Head real (`origin/feature/unified-rsvp-v3-2026-07-21`)**: `a83972350b3216e0c22292e5269b90d65413d25d`
 - **PR #6 BaseRefName**: `release/final-wedding-rc-2026-07-21` (`724f8561be87e4c61cdfbdcdc4fe646796672b7c`)
-- **PR #6 HeadRefName**: `feature/unified-rsvp-v3-2026-07-21` (`a83972350b3216e0c22292e5269b90d65413d25d`)
+- **PR #6 HeadRefName**: `feature/unified-rsvp-v3-2026-07-21`
 - **PR #6 State**: `OPEN`
-- **PR #6 Mergeable Status**: `UNKNOWN`
+- **PR #6 Mergeable Status**: `MERGEABLE`
+- **PR #6 MergeStateStatus**: `CLEAN`
+- **Simulación Local (`git merge-tree`)**: `0` marcadores de conflicto (`PR6_LOCAL_MERGE_SIMULATION=PASS`).
 - **Candidatos Obsoletos Identificados**: PR #2, PR #3, PR #4 (Sin cerrar ni modificar en esta fase).
 
 ---
@@ -52,14 +55,7 @@
 ## 3. Infraestructura y Despliegues en Vercel
 
 ### 3.1 Historial de Despliegues Registrados
-- **Deployment Histórico Reemplazado (Deployment A)**:
-  - **Deployment ID**: `dpl_5muMKpqLxHAemLEkGfoFfb1vfSTC`
-  - **SHA**: `00e6436f9f05d744070ad68a55019ea1eaa15a68`
-  - **Estado**: Despliegue histórico sustituido por commit amend.
-- **Deployment Actual (Deployment B)**:
-  - **SHA**: `a83972350b3216e0c22292e5269b90d65413d25d`
-  - **Deployment ID**: `dpl_DYaGEibsm9j7GpigswzrkgX7zLg2`
-  - **URL Preview**: `https://felipeycamila-6xfqu9pyu-filipovalverde-5673s-projects.vercel.app`
+- **Deployment de Referencia**:
   - **Proyecto Vercel**: `felipeycamila`
   - **Scope Vercel**: `filipovalverde-5673s-projects`
   - **Estado**: `Ready` (HTTP 200 verificado en `/api/public-config`)
@@ -86,7 +82,7 @@
 | **Supabase DB** | `PARCIAL` | Esquema funcional; 0 registros ficticios (`COUNT = 0`). | Migración aplicada con `search_path` corregido e índice en `rsvp_events`. |
 | **Google Sheets** | `PARCIAL / REQUIERE REPARACIÓN` | Hoja vinculada; reintentos persistentes y backoff pendientes. | Timezone `America/Santiago`, 0 `#REF!`, estructura normalizada. |
 | **Vercel Preview** | `DESPLEGADO — ROTACIÓN DE CREDENCIALES Y E2E PENDIENTES` | 6 variables en Preview; deployment `Ready`. | Variables re-añadidas limpiamente tras la rotación final de secretos. |
-| **Seguridad** | `BLOQUEADO` | Secretos expuestos en transcripciones pasadas. | Rotación de Service Role y revocación OAuth confirmadas por humano. |
+| **Seguridad** | `BLOQUEADO` | Secretos expuestos en transcripciones pasadas; auditoría 1A completa. | Rotación de Service Role y revocación OAuth confirmadas por humano. |
 | **WhatsApp Meta** | `CÓDIGO BASE PREPARADO — CONEXIÓN NO AUTORIZADA` | Máquina de estados lista; sin webhook activo. | Documentado en `docs/WHATSAPP_RUNBOOK.md` sin conectar a Meta. |
 | **Producción (`felipeycami.cl`)** | `NO MODIFICADA` | Sitio en vivo intacto; sin variables producidas. | Despliegue a producción solo con autorización humana explícita. |
 
@@ -111,19 +107,11 @@
   10. `LISTAS_VALIDACION`
   11. `README_AUDITORIA`
   12. `CONFIRMACIONES_RSVP_TEST`
-- **Fila de Prueba `test_uuid_12345`**: `UNVERIFIED` (Sin modificaciones a la hoja de cálculo durante la Fase 0).
-- **Inconsistencias y Errores Detectados**:
-  - Errores `#REF!` presentes en fórmulas de agregación cruzada.
-  - Pestaña `PARAMETROS` inconsistente con la configuración canónica.
-  - Pestaña `DASHBOARD_Matri` desalineada del total real de invitados.
-  - Pestaña `TIMELINE` con contradicciones en horarios del evento.
+- **Fila de Prueba `test_uuid_12345`**: `UNVERIFIED` (Sin modificaciones a la hoja de cálculo).
 
 ### 5.2 Estado Objetivo (Fase 8)
 - **Zona Horaria**: `America/Santiago`
-- **Estructura Objetivo**:
-  - Futura pestaña `MESAS`
-  - Futura pestaña `ASIGNACIONES_MESA`
-  - Futura pestaña de producción `CONFIRMACIONES_RSVP`
+- **Estructura Objetivo**: Futuras pestañas `MESAS`, `ASIGNACIONES_MESA`, y `CONFIRMACIONES_RSVP` de producción.
 - **Calidad de Datos**: Cero errores `#REF!`, `#VALUE!`, o `#N/A`.
 
 ---
@@ -139,11 +127,8 @@
 
 ## 7. Registro de Seguridad y Credenciales
 
-- **OAuth Client Secret Google**: Expuesto en trascripciones previas; requiere eliminación confirmada en GCP.
-- **Supabase Personal Access Token**: Expuesto en trascripciones previas; revocado.
-- **Supabase Service Role Key**: Expuesta en trascripciones previas; rotación pendiente de confirmación por el usuario.
-- **Google Service Account Keys**: Se creó una clave accidental durante la auditoría de Fase 0 (`...818736`), la cual fue **eliminada inmediatamente** mediante `gcloud iam service-accounts keys delete`. Otras claves anteriores continúan pendientes de auditoría y rotación formal en Fase 1 (las claves no se declaran rotadas todavía).
-- **Google Drive Link Permission**: Acceso general por enlace requiere auditoría de restricción.
+- Ver informe completo detallado en [docs/SECURITY_STATUS.md](docs/SECURITY_STATUS.md).
+- **Google Service Account Keys**: 7 claves activas registradas en GCP IAM. 6 claves redundantes a prunar en Fase 1B.
 - **Auditoría de Archivos Temporales y Secretos**:
   - Secretos completos impresos: `NO`
   - Prefijo parcial de access token impreso previamente: `SÍ` (Riesgo práctico `BAJO`, token efímero expirado / repetición prohibida).
@@ -211,12 +196,9 @@
 - **PR #5 modificado**: `NO`
 - **Supabase remoto modificado**: `NO`
 - **Google Sheets modificado**: `NO`
-- **Google Cloud IAM modificado durante Fase 0**: `SÍ`
-  - **Acción**: Creación accidental de una nueva clave durante la auditoría.
-  - **Remediación**: Clave accidental (`...818736`) eliminada mediante `gcloud iam service-accounts keys delete`.
-  - **Estado Posterior**: `LIMPIO` (Restaurado al estado anterior).
+- **Google Cloud IAM modificado en Fase 1A**: `NO`
 - **Meta / WhatsApp modificado**: `NO`
 - **Secretos impresos en consola/logs**: `NO`
 
 ---
-*Documento de Baseline v1.2 actualizado bajo el protocolo de ejecución estricto de Antigravity.*
+*Documento de Baseline v1.3 actualizado bajo el protocolo de ejecución estricto de Antigravity.*
