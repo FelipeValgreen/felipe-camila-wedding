@@ -3,113 +3,418 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galería Invitados | Felipe & Camila</title>
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>Galería Completa de Fotos — Felipe & Camila</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Great+Vibes&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <link rel="manifest" href="../site.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            theme: { extend: { colors: { sage: '#8FA382', charcoal: '#2C3E50', ivory: '#F9F9F7' }, fontFamily: { serif: ['Playfair Display', 'serif'], sans: ['"Montserrat"', 'sans-serif'], hand: ['"Amatic SC"', 'cursive'] } } }
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#11110F',
+                        cream: '#F3EFE7',
+                        light: '#FAF8F3',
+                        muted: '#918D85',
+                        wine: '#4A222A',
+                        gold: '#B99B71',
+                    },
+                    fontFamily: {
+                        serif: ['Newsreader', 'Georgia', 'serif'],
+                        sans: ['Inter', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
         }
     </script>
-    <link rel="stylesheet" href="../css/style.css">
 </head>
+<body class="font-sans text-dark bg-light antialiased min-h-screen flex flex-col">
 
-<body class="font-sans text-charcoal bg-ivory bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] min-h-screen flex flex-col">
-
-    <nav class="w-full py-4 text-center border-b border-sage/20 bg-white/80 backdrop-blur-md sticky top-0 z-50 flex justify-between px-6 items-center">
-        <a href="/" class="text-sage text-sm uppercase tracking-widest"><i class="fa-solid fa-arrow-left mr-2"></i> Inicio</a>
-        <a href="/" class="font-serif text-2xl text-charcoal font-bold">F&C</a>
-        <a href="/fotos" class="bg-sage text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm hover:scale-105 transition-transform"><i class="fa-solid fa-camera mr-1"></i> Subir</a>
+    <!-- Navigation -->
+    <nav class="w-full py-5 bg-light/95 border-b border-dark/10 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+            <a href="/" class="text-xs uppercase tracking-[0.25em] text-muted hover:text-dark transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left text-[10px]"></i> Volver a la invitación
+            </a>
+            <a href="/" class="font-serif text-2xl tracking-widest text-dark font-normal">F&C</a>
+            <div class="w-24"></div>
+        </div>
     </nav>
 
-    <main class="flex-grow p-6 max-w-6xl mx-auto w-full">
-        <div class="text-center mb-12 mt-8">
-            <h1 class="font-serif text-5xl text-charcoal mb-4">Galería de Invitados</h1>
-            <p class="text-slate-500 max-w-lg mx-auto">Momentos capturados por ustedes. ¡Gracias por ser parte de nuestra historia!</p>
+    <!-- Header -->
+    <main class="flex-grow max-w-6xl mx-auto px-6 py-12 w-full">
+        <div class="text-center space-y-4 max-w-xl mx-auto mb-12">
+            <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Archivo Fotográfico Completo</span>
+            <h1 class="font-serif text-4xl md:text-5xl text-dark font-normal">Galería de Recuerdos</h1>
+            <div class="w-12 h-[1px] bg-dark/20 mx-auto"></div>
+            <p class="font-sans text-base text-muted font-light leading-relaxed">
+                Todas las fotografías compartidas desde el inicio de nuestra celebración.
+            </p>
         </div>
 
-        <!-- Filters (Optional JS integration) -->
-        <div class="flex justify-center mb-10 hidden" id="gallery-filters">
-            <input type="text" id="filter-guest" placeholder="Buscar por invitado..." class="px-4 py-2 border rounded-l-full focus:outline-none focus:border-sage text-sm w-64">
-            <button id="btn-filter" class="bg-sage text-white px-6 py-2 rounded-r-full font-bold text-sm"><i class="fa-solid fa-search"></i></button>
+        <!-- Filter Buttons with Live Dynamic Counts -->
+        <div class="flex justify-center flex-wrap gap-3 mb-12">
+            <button id="filter-todas" data-filter="todas" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark bg-dark text-light transition-all">
+                Todas las fotos (<span id="count-todas">--</span>)
+            </button>
+            <button id="filter-historia" data-filter="historia" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all">
+                Nuestra historia (<span id="count-historia">--</span>)
+            </button>
+            <button id="filter-civil" data-filter="civil" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all">
+                Nuestro civil (<span id="count-civil">--</span>)
+            </button>
+            <button id="filter-despues" data-filter="despues" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all">
+                Después del civil (<span id="count-despues">--</span>)
+            </button>
         </div>
 
-        <!-- Masonry Grid -->
-        <div id="masonry-grid" class="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-            <!-- Loading State -->
-            <div id="loading-state" class="col-span-full w-full text-center py-20 text-sage-light">
-                <i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i>
-                <p class="font-bold tracking-widest uppercase">Cargando Recuerdos...</p>
-            </div>
-            
-            <!-- Empty State -->
-            <div id="empty-state" class="col-span-full w-full text-center py-20 hidden">
-                <i class="fa-regular fa-images text-6xl text-gray-300 mb-4"></i>
-                <h3 class="font-serif text-2xl text-charcoal mb-2">Aún no hay fotos</h3>
-                <p class="text-gray-500 mb-6">¡Sé el primero en compartir un recuerdo!</p>
-                <a href="/fotos" class="bg-sage text-white px-8 py-3 rounded-full font-bold uppercase tracking-widest hover:bg-sage-dark transition-colors inline-block">Subir Foto</a>
-            </div>
+        <!-- Loading / Status Container -->
+        <div id="gallery-status" class="hidden text-center py-12">
+            <p id="status-text" class="text-sm font-sans text-muted font-light">Cargando fotografías...</p>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Dynamic Image Buttons Loaded via JS -->
+        </div>
+
+        <!-- Load More Container -->
+        <div id="load-more-container" class="hidden text-center pt-12">
+            <button id="load-more-btn" class="px-8 py-3.5 border border-dark text-dark text-xs uppercase tracking-[0.25em] font-semibold hover:bg-dark hover:text-light transition-all">
+                Cargar más fotografías
+            </button>
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../js/supabase-client.js"></script>
+    <!-- Accessible Lightbox Modal Dialog -->
+    <div id="lightbox" role="dialog" aria-modal="true" aria-label="Visualizador de fotografía" class="fixed inset-0 z-50 bg-dark/95 hidden flex flex-col items-center justify-center p-4">
+        <button id="lightbox-close" aria-label="Cerrar ventana" class="absolute top-6 right-6 text-cream hover:text-gold text-2xl p-3 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button id="lightbox-prev" aria-label="Fotografía anterior" class="absolute left-4 top-1/2 -translate-y-1/2 text-cream hover:text-gold text-2xl p-3 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button id="lightbox-next" aria-label="Fotografía siguiente" class="absolute right-4 top-1/2 -translate-y-1/2 text-cream hover:text-gold text-2xl p-3 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <div class="max-w-4xl max-h-[80vh] flex items-center justify-center p-2">
+            <img id="lightbox-img" src="" alt="" class="max-w-full max-h-[75vh] object-contain rounded-sm shadow-2xl">
+        </div>
+        <p id="lightbox-caption" class="font-sans text-xs text-cream/70 tracking-widest uppercase mt-4 text-center"></p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 bg-cream border-t border-dark/5 text-center font-sans text-xs text-muted">
+        <p>Felipe & Camila — 23 · 10 · 26</p>
+    </footer>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const grid = document.getElementById('masonry-grid');
-            const loading = document.getElementById('loading-state');
-            const empty = document.getElementById('empty-state');
-            
-            // Check url params for filters
-            const urlParams = new URLSearchParams(window.location.search);
-            const guestFilter = urlParams.get('guest');
-            
-            if (!window.supabaseClient) {
-                loading.innerHTML = '<p class="text-red-500">Error: Base de datos no conectada.</p>';
-                return;
+            const grid = document.getElementById('gallery-grid');
+            const statusBox = document.getElementById('gallery-status');
+            const statusText = document.getElementById('status-text');
+            const loadMoreContainer = document.getElementById('load-more-container');
+            const loadMoreBtn = document.getElementById('load-more-btn');
+
+            const filterBtns = document.querySelectorAll('[data-filter]');
+            const countTodas = document.getElementById('count-todas');
+            const countHistoria = document.getElementById('count-historia');
+            const countCivil = document.getElementById('count-civil');
+            const countDespues = document.getElementById('count-despues');
+
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const lightboxCaption = document.getElementById('lightbox-caption');
+            const lightboxClose = document.getElementById('lightbox-close');
+            const lightboxPrev = document.getElementById('lightbox-prev');
+            const lightboxNext = document.getElementById('lightbox-next');
+
+            let allArchivePhotos = [];
+            let activeFilteredPhotos = [];
+            let displayedCount = 0;
+            const BATCH_SIZE = 24;
+
+            let currentFilter = getFilterFromUrl();
+            let currentIndex = 0;
+            let lastTriggerCard = null;
+
+            function getFilterFromUrl() {
+                const params = new URLSearchParams(window.location.search);
+                const f = params.get('filtro');
+                return ['todas', 'historia', 'civil', 'despues'].includes(f) ? f : 'todas';
             }
 
-            try {
-                let query = supabaseClient
-                    .from('guest_photos')
-                    .select('url, uploader_name, created_at')
-                    .order('created_at', { ascending: false });
-                    
-                if (guestFilter) {
-                    query = query.eq('uploader_name', guestFilter);
+            function updateUrlFilter(filterKey) {
+                const url = new URL(window.location);
+                if (url.searchParams.get('filtro') === filterKey) return;
+                url.searchParams.set('filtro', filterKey);
+                window.history.pushState({ filtro: filterKey }, '', url);
+            }
+
+            window.addEventListener('popstate', () => {
+                const filterFromUrl = getFilterFromUrl();
+                applyFilter(filterFromUrl, false);
+            });
+
+            async function fetchAllPublicArchive() {
+                statusBox.classList.remove('hidden');
+                statusText.textContent = 'Cargando fotografías...';
+                
+                let fetchedItems = [];
+                let page = 0;
+                let hasMore = true;
+
+                try {
+                    while (hasMore) {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+                        const response = await fetch(`/api/gallery?page=${page}&limit=100`, {
+                            signal: controller.signal
+                        });
+
+                        clearTimeout(timeoutId);
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        if (data && Array.isArray(data.items)) {
+                            fetchedItems = fetchedItems.concat(data.items);
+                            hasMore = data.has_more === true;
+                            page++;
+                        } else {
+                            hasMore = false;
+                        }
+                    }
+
+                    allArchivePhotos = fetchedItems.map(p => ({
+                        src: p.src,
+                        category: p.category,
+                        label: getCategoryLabel(p.category),
+                        alt: p.alt
+                    }));
+
+                    // Dynamic Live Counts
+                    const historiaCount = allArchivePhotos.filter(p => p.category === 'historia').length;
+                    const civilCount = allArchivePhotos.filter(p => p.category === 'civil').length;
+                    const despuesCount = allArchivePhotos.filter(p => p.category === 'despues').length;
+
+                    countTodas.textContent = allArchivePhotos.length;
+                    countHistoria.textContent = historiaCount;
+                    countCivil.textContent = civilCount;
+                    countDespues.textContent = despuesCount;
+
+                    statusBox.classList.add('hidden');
+                    applyFilter(currentFilter, false);
+
+                } catch (err) {
+                    console.error('Error fetching gallery archive:', err);
+                    statusBox.classList.remove('hidden');
+                    statusText.textContent = 'No se pudieron cargar las fotografías del archivo.';
+                }
+            }
+
+            function getCategoryLabel(cat) {
+                if (cat === 'historia') return 'Nuestra historia';
+                if (cat === 'civil') return 'Nuestro civil';
+                return 'Después del civil';
+            }
+
+            function applyFilter(filterKey, updateHistory = true) {
+                currentFilter = filterKey;
+                if (updateHistory) updateUrlFilter(filterKey);
+
+                filterBtns.forEach(btn => {
+                    if (btn.dataset.filter === filterKey) {
+                        btn.className = 'px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark bg-dark text-light transition-all';
+                    } else {
+                        btn.className = 'px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all';
+                    }
+                });
+
+                if (filterKey === 'todas') {
+                    activeFilteredPhotos = [...allArchivePhotos];
+                } else {
+                    activeFilteredPhotos = allArchivePhotos.filter(p => p.category === filterKey);
                 }
 
-                const { data, error } = await query;
+                grid.innerHTML = '';
+                displayedCount = 0;
 
-                loading.classList.add('hidden');
+                if (activeFilteredPhotos.length === 0) {
+                    statusBox.classList.remove('hidden');
+                    statusText.textContent = 'No hay fotografías en esta categoría.';
+                    loadMoreContainer.classList.add('hidden');
+                } else {
+                    statusBox.classList.add('hidden');
+                    renderNextBatch();
+                }
+            }
 
-                if (error) throw error;
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (btn.dataset.filter !== currentFilter) {
+                        applyFilter(btn.dataset.filter, true);
+                    }
+                });
+            });
 
-                if (!data || data.length === 0) {
-                    empty.classList.remove('hidden');
+            function renderNextBatch() {
+                const nextBatch = activeFilteredPhotos.slice(displayedCount, displayedCount + BATCH_SIZE);
+                
+                nextBatch.forEach((photo, idxInBatch) => {
+                    const globalIdx = displayedCount + idxInBatch;
+                    
+                    const buttonCard = document.createElement('button');
+                    buttonCard.type = 'button';
+                    buttonCard.className = 'aspect-[4/3] bg-cream border border-dark/10 overflow-hidden cursor-pointer group relative rounded-sm focus:outline-none focus:ring-2 focus:ring-gold text-left w-full block';
+                    buttonCard.setAttribute('aria-label', `${photo.label} - Abrir fotografía ${globalIdx + 1}`);
+
+                    const img = document.createElement('img');
+                    img.src = photo.src;
+                    img.alt = photo.alt;
+                    img.loading = 'lazy';
+                    img.decoding = 'async';
+                    img.className = 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-105';
+                    img.onerror = () => {
+                        img.style.display = 'none';
+                        const fallback = document.createElement('div');
+                        fallback.className = 'w-full h-full flex items-center justify-center bg-cream/50 text-muted/50 text-xs font-sans italic p-4 text-center';
+                        fallback.textContent = 'Fotografía no disponible';
+                        buttonCard.appendChild(fallback);
+                    };
+
+                    const overlay = document.createElement('div');
+                    overlay.className = 'absolute inset-0 bg-dark/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4';
+                    
+                    const badge = document.createElement('span');
+                    badge.className = 'font-sans text-[10px] uppercase tracking-widest text-light bg-dark/80 px-2.5 py-1 rounded-sm';
+                    badge.textContent = photo.label;
+                    overlay.appendChild(badge);
+
+                    buttonCard.appendChild(img);
+                    buttonCard.appendChild(overlay);
+
+                    buttonCard.addEventListener('click', () => {
+                        lastTriggerCard = buttonCard;
+                        openLightbox(globalIdx);
+                    });
+
+                    grid.appendChild(buttonCard);
+                });
+
+                displayedCount += nextBatch.length;
+
+                if (displayedCount < activeFilteredPhotos.length) {
+                    loadMoreContainer.classList.remove('hidden');
+                } else {
+                    loadMoreContainer.classList.add('hidden');
+                }
+            }
+
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', renderNextBatch);
+            }
+
+            // Real Accessible Lightbox Modal Focus Trap (Close -> Prev -> Next)
+            const lightboxFocusables = [lightboxClose, lightboxPrev, lightboxNext];
+
+            function openLightbox(index) {
+                currentIndex = index;
+                updateLightbox();
+                lightbox.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                lightboxClose.focus();
+            }
+
+            function closeLightbox() {
+                lightbox.classList.add('hidden');
+                document.body.style.overflow = '';
+                if (lastTriggerCard) lastTriggerCard.focus();
+            }
+
+            function updateLightbox() {
+                const photo = activeFilteredPhotos[currentIndex];
+                if (!photo) return;
+                lightboxImg.src = photo.src;
+                lightboxImg.alt = photo.alt;
+                lightboxCaption.textContent = `${photo.label} (${currentIndex + 1} de ${activeFilteredPhotos.length})`;
+            }
+
+            function nextPhoto() {
+                if (activeFilteredPhotos.length === 0) return;
+                currentIndex = (currentIndex + 1) % activeFilteredPhotos.length;
+                updateLightbox();
+            }
+
+            function prevPhoto() {
+                if (activeFilteredPhotos.length === 0) return;
+                currentIndex = (currentIndex - 1 + activeFilteredPhotos.length) % activeFilteredPhotos.length;
+                updateLightbox();
+            }
+
+            lightboxClose.addEventListener('click', closeLightbox);
+            lightboxNext.addEventListener('click', nextPhoto);
+            lightboxPrev.addEventListener('click', prevPhoto);
+
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox) closeLightbox();
+            });
+
+            window.addEventListener('keydown', (e) => {
+                if (lightbox.classList.contains('hidden')) return;
+
+                if (e.key === 'Escape') {
+                    closeLightbox();
+                    return;
+                }
+                if (e.key === 'ArrowRight') {
+                    nextPhoto();
+                    return;
+                }
+                if (e.key === 'ArrowLeft') {
+                    prevPhoto();
                     return;
                 }
 
-                data.forEach(photo => {
-                    const el = document.createElement('div');
-                    el.className = 'break-inside-avoid relative group mb-4 rounded-xl overflow-hidden bg-white shadow-sm border border-gray-100 transform hover:-translate-y-1 transition-transform';
-                    el.innerHTML = `
-                        <img src="${photo.url}" alt="Foto de ${photo.uploader_name || 'Invitado'}" class="w-full object-cover" loading="lazy" onerror="this.parentElement.style.display='none'">
-                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform">
-                            <span class="text-white font-hand text-xl shadow-sm"><i class="fa-solid fa-camera mr-2"></i>${photo.uploader_name || 'Anónimo'}</span>
-                        </div>
-                    `;
-                    grid.appendChild(el);
-                });
+                // Strict Tab Focus Trap inside Lightbox
+                if (e.key === 'Tab') {
+                    const firstEl = lightboxClose;
+                    const lastEl = lightboxNext;
 
-            } catch (err) {
-                console.error(err);
-                loading.classList.remove('hidden');
-                loading.innerHTML = '<p class="text-red-500">Error al cargar las fotos. Por favor refresca la página.</p>';
-            }
+                    if (e.shiftKey) { // Shift + Tab
+                        if (document.activeElement === firstEl) {
+                            e.preventDefault();
+                            lastEl.focus();
+                        }
+                    } else { // Tab
+                        if (document.activeElement === lastEl) {
+                            e.preventDefault();
+                            firstEl.focus();
+                        }
+                    }
+                }
+            });
+
+            fetchAllPublicArchive();
         });
     </script>
+
 </body>
 </html>
+
+

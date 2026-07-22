@@ -1,0 +1,76 @@
+export default async function handler(req, res) {
+    if (req.method !== 'GET') {
+        res.setHeader('Allow', ['GET']);
+        return res.status(405).json({ error: 'GALLERY_UNAVAILABLE' });
+    }
+
+    const SUPABASE_URL = process.env.SUPABASE_URL || 'https://mwumnywbvjxekskfrlms.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_fd17si3WzUC2EgAqCeczAg_Gy3HW-n-';
+
+    try {
+        let page = parseInt(req.query.page || '0', 10);
+        let limit = parseInt(req.query.limit || '100', 10);
+
+        if (isNaN(page) || page < 0) page = 0;
+        if (isNaN(limit) || limit < 1) limit = 100;
+        if (limit > 100) limit = 100;
+
+        const offset = page * limit;
+        const endpoint = `${SUPABASE_URL}/rest/v1/guest_photos?select=url,created_at&order=created_at.asc&offset=${offset}&limit=${limit}`;
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const response = await fetch(endpoint, {
+            headers: {
+                'apikey': SUPABASE_PUBLISHABLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            return res.status(502).json({ error: 'GALLERY_UNAVAILABLE' });
+        }
+
+        const rawData = await response.json();
+
+        if (!Array.isArray(rawData)) {
+            return res.status(502).json({ error: 'GALLERY_UNAVAILABLE' });
+        }
+
+        const items = rawData.map(item => {
+            const createdAt = item.created_at || '';
+            let category = 'historia';
+            let alt = 'Recuerdo de nuestra historia';
+
+            if (createdAt >= '2026-03-28' && createdAt < '2026-03-30') {
+                category = 'civil';
+                alt = 'Momento de nuestro matrimonio civil';
+            } else if (createdAt >= '2026-03-30') {
+                category = 'despues';
+                alt = 'Fotografía compartida después de la celebración';
+            }
+
+            return {
+                src: item.url,
+                category: category,
+                alt: alt
+            };
+        });
+
+        const has_more = rawData.length === limit;
+
+        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+        return res.status(200).json({
+            items: items,
+            page: page,
+            has_more: has_more
+        });
+
+    } catch (err) {
+        return res.status(500).json({ error: 'GALLERY_UNAVAILABLE' });
+    }
+}
