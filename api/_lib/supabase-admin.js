@@ -137,13 +137,27 @@ export async function claimWhatsAppMessage(msgId, phone) {
             const startedAtMs = rec.started_at ? new Date(rec.started_at).getTime() : 0;
             const isStaleProcessing = (rec.status === 'processing' && (now - startedAtMs > 30000));
 
-            if (rec.status === 'failed' || isStaleProcessing) {
-                // Conditional atomic claim matching status
-                const patchUrl = 'whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId) + '&status=eq.' + rec.status;
+            if (rec.status === 'failed') {
+                const patchUrl = 'whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId) + '&status=eq.failed';
                 const updated = await supabaseRequest(patchUrl, {
                     method: 'PATCH',
                     prefer: 'return=representation',
-                    body: { status: 'processing', started_at: new Date().toISOString() }
+                    body: { status: 'processing', started_at: new Date().toISOString(), last_error_code: null }
+                });
+
+                if (updated && updated.length === 1) {
+                    return { claimed: true, retry: true, record: updated[0] };
+                } else {
+                    return { claimed: false, status: 'processing' };
+                }
+            }
+
+            if (isStaleProcessing) {
+                const patchUrl = 'whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId) + '&status=eq.processing&started_at=eq.' + encodeURIComponent(rec.started_at);
+                const updated = await supabaseRequest(patchUrl, {
+                    method: 'PATCH',
+                    prefer: 'return=representation',
+                    body: { status: 'processing', started_at: new Date().toISOString(), last_error_code: null }
                 });
 
                 if (updated && updated.length === 1) {

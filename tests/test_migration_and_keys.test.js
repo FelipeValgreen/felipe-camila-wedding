@@ -2,10 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'fs';
 
-import { formatPrivateKey, mapRSVPStatusToSheet } from '../api/_lib/google-sheets.js';
+import { formatPrivateKey } from '../api/_lib/google-sheets.js';
 
-// Migration integrity test
-test('M1. SQL migration uses valid $ tag and contains no numeric delimiters', () => {
+test('M1. SQL migration uses exact $ tag and contains no numeric delimiters', () => {
     const sql = fs.readFileSync('supabase/migrations/20260721213300_unified_rsvp.sql', 'utf-8');
     assert.equal(sql.includes('RETURNS TRIGGER AS $'), true);
     assert.equal(sql.includes('$ LANGUAGE plpgsql;'), true);
@@ -13,17 +12,16 @@ test('M1. SQL migration uses valid $ tag and contains no numeric delimiters', ()
     assert.equal(/\d+ LANGUAGE plpgsql;/.test(sql), false);
 });
 
-// Private key formatter tests
-test('P1. formatPrivateKey converts literal \\n to real newlines', () => {
-    const rawKey = 'LINE1\nLINE2\nLINE3';
-    const formatted = formatPrivateKey(rawKey);
-    assert.equal(formatted, 'LINE1\nLINE2\nLINE3');
+test('P1. formatPrivateKey converts literal \\n to real newlines via split/join', () => {
+    const literalEscaped = 'LINE1' + '\\' + 'n' + 'LINE2';
+    const formatted = formatPrivateKey(literalEscaped);
+    assert.equal(formatted, 'LINE1\nLINE2');
 });
 
 test('P2. formatPrivateKey preserves existing real newlines', () => {
-    const rawKey = 'LINE1\nLINE2\nLINE3';
+    const rawKey = 'LINE1\nLINE2';
     const formatted = formatPrivateKey(rawKey);
-    assert.equal(formatted, 'LINE1\nLINE2\nLINE3');
+    assert.equal(formatted, 'LINE1\nLINE2');
 });
 
 test('P3. formatPrivateKey handles empty or null input', () => {

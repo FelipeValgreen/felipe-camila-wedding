@@ -86,6 +86,7 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'MALFORMED_JSON' });
         }
 
+        let hasErrors = false;
         if (body.object === 'whatsapp_business_account') {
             const entries = body.entry || [];
             for (const entry of entries) {
@@ -113,6 +114,7 @@ export default async function handler(req, res) {
                                     await processPersistentWhatsAppFlow(fromPhone, msgText, msgId);
                                     await markWhatsAppMessageStatus(msgId, 'processed');
                                 } catch (flowErr) {
+                                    hasErrors = true;
                                     console.error('WhatsApp flow error:', flowErr.message);
                                     await markWhatsAppMessageStatus(msgId, 'failed', flowErr.message);
                                 }
@@ -123,6 +125,9 @@ export default async function handler(req, res) {
             }
         }
 
+        if (hasErrors) {
+            return res.status(500).json({ error: 'WEBHOOK_PROCESSING_FAILED' });
+        }
         return res.status(200).json({ status: 'EVENT_RECEIVED' });
     }
 
@@ -270,12 +275,19 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
 
     if (session.state === 'AWAITING_DIETARY') {
         let dietary = null;
-        if (text === 'dietary_none' || text === '1' || lowerText.includes('ninguna')) dietary = 'Ninguna';
-        else if (text === 'dietary_vegetarian' || text === '2' || lowerText.includes('vegetariano')) dietary = 'Vegetariano';
-        else if (text === 'dietary_vegan' || text === '3' || lowerText.includes('vegano')) dietary = 'Vegano';
-        else if (text === 'dietary_gluten_free' || text === '4' || lowerText.includes('celíaco') || lowerText.includes('celiaco')) dietary = 'Celíaco / libre de gluten';
-        else if (text === 'dietary_allergies' || text === '5' || lowerText.includes('alergias')) dietary = 'Alergias';
-        else if (text === 'dietary_other' || text === '6' || lowerText.includes('otra')) dietary = 'Otra';
+        const validNone = ['dietary_none', '1', 'ninguna'];
+        const validVeg = ['dietary_vegetarian', '2', 'vegetariano', 'vegetariana'];
+        const validVegan = ['dietary_vegan', '3', 'vegano', 'vegana'];
+        const validGluten = ['dietary_gluten_free', '4', 'celíaco', 'celiaco', 'celíaca', 'celiaca', 'libre de gluten'];
+        const validAllergies = ['dietary_allergies', '5', 'alergias'];
+        const validOther = ['dietary_other', '6', 'otra', 'otro'];
+
+        if (validNone.includes(text) || validNone.includes(lowerText)) dietary = 'Ninguna';
+        else if (validVeg.includes(text) || validVeg.includes(lowerText)) dietary = 'Vegetariano';
+        else if (validVegan.includes(text) || validVegan.includes(lowerText)) dietary = 'Vegano';
+        else if (validGluten.includes(text) || validGluten.includes(lowerText)) dietary = 'Celíaco / libre de gluten';
+        else if (validAllergies.includes(text) || validAllergies.includes(lowerText)) dietary = 'Alergias';
+        else if (validOther.includes(text) || validOther.includes(lowerText)) dietary = 'Otra';
 
         if (!dietary) {
             const sendRes = await sendWhatsAppMessage(phone, 'Para ayudarte con tu confirmación, responde una de las opciones disponibles.');
@@ -323,8 +335,12 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
     }
 
     if (session.state === 'COMPLETED_PENDING_ACK') {
-        const sendRes = await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
-        if (!sendRes.ok) throw new Error(sendRes.error);
+        const ackSent = Boolean(session.data && session.data.ack_sent);
+        if (!ackSent) {
+            const sendRes = await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
+            if (!sendRes.ok) throw new Error(sendRes.error);
+            await saveWhatsAppSession(phone, 'COMPLETED_PENDING_ACK', { ...session.data, ack_sent: true }, msgId);
+        }
         await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
         return;
     }
@@ -393,10 +409,10 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
                 await updateRSVPRecord(savedRecord.id, { sheet_sync_status: 'failed' });
             }
 
-            await saveWhatsAppSession(phone, 'COMPLETED_PENDING_ACK', { rsvp_id: savedRecord.id, ack_type: 'final_confirm' }, msgId);
+            await saveWhatsAppSession(phone, 'COMPLETED_PENDING_ACK', { rsvp_id: savedRecord.id, ack_type: 'final_confirm', ack_sent: false, source_message_id: msgId }, msgId);
             const sendRes = await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
             if (!sendRes.ok) throw new Error(sendRes.error);
-            await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
+            await saveWhatsAppSession(phone, 'COMPLETED_PENDING_ACK', { rsvp_id: savedRecord.id, ack_type: 'final_confirm', ack_sent: true, source_message_id: msgId }, msgId);
 
         } else {
             await saveWhatsAppSession(phone, 'IDLE', {}, msgId);

@@ -13,10 +13,17 @@ export function mapRSVPStatusToSheet(attendance_status, source) {
 
 export function formatPrivateKey(key) {
     if (!key) return '';
-    return key.replace(/\n/g, '\n');
+    const escapedNewline = '\\' + 'n';
+    return key.split(escapedNewline).join('\n');
 }
 
-async function getGoogleAccessToken(email, privateKey) {
+function defaultSignJwt(signInput, formattedKey) {
+    const signer = crypto.createSign('RSA-SHA256');
+    signer.update(signInput);
+    return signer.sign(formattedKey, 'base64url');
+}
+
+export async function getGoogleAccessToken(email, privateKey, { fetchImpl = globalThis.fetch, signImpl = defaultSignJwt } = {}) {
     const header = { alg: 'RS256', typ: 'JWT' };
     const now = Math.floor(Date.now() / 1000);
     const claimSet = {
@@ -32,13 +39,11 @@ async function getGoogleAccessToken(email, privateKey) {
     const signInput = b64Header + '.' + b64Claim;
 
     const formattedKey = formatPrivateKey(privateKey);
-    const signer = crypto.createSign('RSA-SHA256');
-    signer.update(signInput);
-    const signature = privateKey.startsWith("dummy") ? "mock_signature" : signer.sign(formattedKey, 'base64url');
+    const signature = signImpl(signInput, formattedKey);
 
     const jwt = signInput + '.' + signature;
 
-    const res = await fetch('https://oauth2.googleapis.com/token', {
+    const res = await fetchImpl('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -55,7 +60,7 @@ async function getGoogleAccessToken(email, privateKey) {
     return data.access_token;
 }
 
-export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
+export async function syncToGoogleSheets(rsvpData, isUpdate = false, dependencies = {}) {
     const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
     const tabName = process.env.GOOGLE_SHEETS_TAB || 'CONFIRMACIONES_RSVP_TEST';
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
@@ -65,8 +70,10 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
         return { synced: false, error: 'SHEETS_NOT_CONFIGURED' };
     }
 
+    const fetchImpl = dependencies.fetchImpl || globalThis.fetch;
+
     try {
-        const accessToken = await getGoogleAccessToken(clientEmail, privateKey);
+        const accessToken = await getGoogleAccessToken(clientEmail, privateKey, dependencies);
         const rowValues = [
             rsvpData.id || '',
             rsvpData.first_name || '',
@@ -88,7 +95,7 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
         // Verify existing row number if provided
         if (isUpdate && targetRowNumber) {
             const checkUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A' + targetRowNumber;
-            const checkRes = await fetch(checkUrl, {
+            const checkRes = await fetchImpl(checkUrl, {
                 headers: { 'Authorization': 'Bearer ' + accessToken }
             });
             let isMatched = false;
@@ -106,12 +113,11 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
         if (isUpdate && !targetRowNumber) {
             // Search column A by UUID
             const searchUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A:A';
-            const searchRes = await fetch(searchUrl, {
+            const searchRes = await fetchImpl(searchUrl, {
                 headers: { 'Authorization': 'Bearer ' + accessToken }
             });
 
             if (!searchRes.ok) {
-                // Search failed: return sync failure without appending
                 return { synced: false, error: 'SHEETS_SEARCH_FAILED' };
             }
 
@@ -123,14 +129,12 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
                     break;
                 }
             }
-
-            // If still not found, search confirmed UUID does not exist -> fall back to append
         }
 
         if (isUpdate && targetRowNumber) {
             // Update exact row
             const updateUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A' + targetRowNumber + ':M' + targetRowNumber + '?valueInputOption=USER_ENTERED';
-            const updateRes = await fetch(updateUrl, {
+            const updateRes = await fetchImpl(updateUrl, {
                 method: 'PUT',
                 headers: {
                     'Authorization': 'Bearer ' + accessToken,
@@ -145,7 +149,7 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
         } else {
             // Append new row
             const appendUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A:M:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
-            const appendRes = await fetch(appendUrl, {
+            const appendRes = await fetchImpl(appendUrl, {
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + accessToken,
