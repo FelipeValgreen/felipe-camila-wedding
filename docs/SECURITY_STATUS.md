@@ -1,24 +1,22 @@
 # Informe de Auditoría de Seguridad y Plan de Rotación de Credenciales
 
 **Felipe & Camila · “El Umbral Vivo”**
-**Versión**: 1.0 (Fase 1A — Auditoría No Destructiva)
+**Versión**: 1.1 (Fase 1B.1 — Compatibilidad Supabase Secret Key y Corrección de Plan)
 **Fecha**: 22 de Julio de 2026
 **Repositorio**: `FelipeValgreen/felipe-camila-wedding`
 **Rama**: `feature/unified-rsvp-v3-2026-07-21`
 **PR Asociado**: [#6](https://github.com/FelipeValgreen/felipe-camila-wedding/pull/6)
-**SHA Base Autorizativo**: `74b72fd3c32c8690b63cf20459b0bd2783aaf115`
+**SHA Autoritativo de Inicio**: `3f5baf23a0add13df34a965e5bd8ded69a80e58d`
 
 ---
 
 ## 1. Resumen Ejecutivo
 
-Este documento establece la auditoría técnica de seguridad no destructiva del repositorio `felipe-camila-wedding`. Su propósito es identificar el estado exacto de todas las credenciales del proyecto, evaluar riesgos históricos de exposición en transcripciones anteriores, definir el orden estricto de rotación sin romper producción ni Preview, y preparar los controles de endurecimiento del repositorio.
+Este documento registra las modificaciones de compatibilidad para claves modernas de servidor Supabase (`SUPABASE_SECRET_KEY`) con fallback a la clave legacy (`SUPABASE_SERVICE_ROLE_KEY`), el endurecimiento de la sanitización de errores en el cliente administrativo de Supabase, y la corrección formal del plan de rotación de claves de Google Service Account.
 
 ---
 
 ## 2. Registro de Incidentes Históricos de Credenciales
-
-Durante conversaciones e iteraciones pasadas del desarrollo, las siguientes credenciales quedaron registradas en historiales/logs:
 
 1. **Google OAuth Client Secret** (Patrón `GOCSPX-...`): Expuesto en transcripciones pasadas.
 2. **Supabase Personal Access Token (PAT)** (Patrón `sbp_de...`): Expuesto en transcripciones pasadas.
@@ -28,8 +26,8 @@ Durante conversaciones e iteraciones pasadas del desarrollo, las siguientes cred
 ### Estado Actual de Remediación
 - **Supabase PAT**: `REVOCADO` (Confirmado por el usuario).
 - **Google OAuth Client Secret**: `PENDIENTE DE ELIMINACIÓN EN GCP CONSOLE` (Requiere acción manual del propietario).
-- **Supabase Service Role Key**: `PENDIENTE DE ROTACIÓN FORMAL` (Sigue activa para Preview).
-- **Google Service Account Keys**: `PENDIENTE DE LIMPIEZA DE CLAVES REDUNDANTES` (7 claves activas registradas en GCP IAM).
+- **Supabase Service Role Key**: `COMPATIBILIDAD SOPORTADA / PENDIENTE CONFIGURACIÓN` (Soporte para `SUPABASE_SECRET_KEY` implementado en backend con fallback a `SUPABASE_SERVICE_ROLE_KEY`).
+- **Google Service Account Keys**: `AUDITORÍA Y PLAN CORREGIDO` (7 claves activas registradas; clave actualmente utilizada en Vercel Preview `UNVERIFIED`).
 
 ---
 
@@ -39,73 +37,61 @@ Durante conversaciones e iteraciones pasadas del desarrollo, las siguientes cred
 | :--- | :--- | :--- | :--- | :--- |
 | **`SUPABASE_URL`** | Preview / Prod | `js/supabase-client.js`, `api/_lib/supabase-admin.js` | `ACTIVO / PÚBLICO` | No requiere rotación (URL pública). |
 | **`SUPABASE_ANON_KEY` / Publishable** | Frontend Client | `js/supabase-client.js` | `ACTIVO / PÚBLICO` | No requiere rotación. Uso adecuado en cliente. |
-| **`SUPABASE_SERVICE_ROLE_KEY`** | Serverless API | `api/_lib/supabase-admin.js`, Vercel Preview | `EXPUESTO / PENDIENTE` | Sustituir por `SUPABASE_SECRET_KEY` y rotar en Dashboard. |
-| **`SUPABASE_SECRET_KEY`** | Serverless API | `.env.example`, `api/_lib/supabase-admin.js` | `PENDIENTE SOPORTE` | Agregar soporte dual en backend (Fase 1B). |
+| **`SUPABASE_SECRET_KEY`** | Serverless API | `.env.example`, `api/_lib/supabase-admin.js` | `CÓDIGO SOPORTADO` | Configurar en Vercel Preview en Fase 1B.2. |
+| **`SUPABASE_SERVICE_ROLE_KEY`** | Serverless API | `api/_lib/supabase-admin.js`, Vercel Preview | `EXPUESTO / FALLBACK` | Mantener como fallback legacy hasta verificar `SUPABASE_SECRET_KEY`. |
 | **`GOOGLE_SERVICE_ACCOUNT_EMAIL`** | Vercel Preview | `api/_lib/google-sheets.js` | `ACTIVO` | Identificador público de Service Account. |
-| **`GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`**| Vercel Preview | `api/_lib/google-sheets.js` | `EXPUESTO / PENDIENTE` | Prunar 6 claves redundantes en GCP y mantener 1 limpia. |
+| **`GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`**| Vercel Preview | `api/_lib/google-sheets.js` | `ACTIVO / UNVERIFIED` | Generar nueva clave dedicada en Fase 1B.2 antes de purga. |
 | **Google OAuth Client Secret** | GCP Console | No usado en PR #6 backend | `EXPUESTO / PENDIENTE` | Eliminar cliente OAuth antiguo en GCP Console. |
 | **`WHATSAPP_ACCESS_TOKEN`** | Ninguno | `api/_lib/whatsapp-client.js` | `NO CONFIGURADO` | No conectar a Meta sin autorización humana. |
 | **`META_APP_SECRET`** | Ninguno | `api/whatsapp/webhook.js` | `NO CONFIGURADO` | No conectar a Meta sin autorización humana. |
 
 ---
 
-## 4. Análisis de Riesgo e Impacto Potencial
+## 4. Auditoría y Corrección del Plan de Google Service Account
 
-- **Riesgo por `SUPABASE_SERVICE_ROLE_KEY` expuesta**:
-  - *Impacto*: Acceso administrativo completo a Supabase DB (bypassa RLS).
-  - *Nivel de Riesgo*: `ALTO` en Producción si estuviera configurada (Actualmente 0 variables en Production Vercel).
-  - *Mitigación*: Implementar `SUPABASE_SECRET_KEY` en backend, re-añadir limpia en Vercel Preview y rotar clave expuesta.
+### 4.1 Estado Actual de Claves en GCP IAM
+- **Claves User-Managed Activas**: `7` claves registradas.
+- **Sufijos de KEY_ID**: `d95f0a`, `5ab757`, `034151`, `75e1e4`, `2e23a5`, `82bfe0`, `ae8e40`.
+- **Clave actualmente utilizada en Vercel Preview**: `UNVERIFIED` (No se puede inferir o clasificar como prescindible ninguna clave solo por fecha de creación).
+- **Eliminación de claves en esta fase**: `NO AUTORIZADA`.
 
-- **Riesgo por Google OAuth Client Secret expuesto**:
-  - *Impacto*: Intentos de autenticación no autorizados si el cliente estuviera activo.
-  - *Nivel de Riesgo*: `MEDIO`.
-  - *Mitigación*: Desactivar/eliminar cliente OAuth en GCP Console tras verificar que Supabase Auth no dependa de él.
-
-- **Riesgo por claves de Service Account redundantes (7 claves activas)**:
-  - *Impacto*: Superficie de ataque ampliada inútilmente.
-  - *Nivel de Riesgo*: `MEDIO`.
-  - *Mitigación*: Eliminar 6 claves obsoletas en GCP IAM, manteniendo únicamente la clave activa vinculada a Preview.
-
----
-
-## 5. Escaneo de Secretos del Repositorio (Resultados)
-
-### 5.1 Escaneo de Patrones de Secretos
-- **Comando**: `git grep -nE "sbp_|GOCSPX|BEGIN PRIVATE KEY|eyJhbGciOiJIUzI1NiI"`
-- **Coincidencias en Árbol de Trabajo**: `1` (Línea 110 en `tests/test_rsvp.test.js` correspondiente a un string ficticio de prueba unitaria `'-----BEGIN PRIVATE KEY-----\nFAKE_KEY...'`).
-- **Coincidencias de Credenciales Reales en Código**: `0`.
-
-### 5.2 Inventario de Archivos Sensibles Rastreados y Locales
-- **Archivos Sensibles Rastreados en Git**: `0`
-- **Archivos Locales Auditados**:
-  - `./.env.example` (Plantilla de ejemplo sin valores reales).
-  - `./.gitignore` (Endurecido para ignorar `.env*`, `*.pem`, `*.key`, `*service-account*.json`).
-- **Archivos Temporales Borrados**: Confirmada la eliminación de `/tmp/matrimonio-rsvp-sheets-key.json` y `.env.preview.local`.
+### 4.2 Plan Técnico de Rotación Segura para Google SA (Fase 1B.2)
+1. Crear una nueva clave dedicada para la Service Account en GCP.
+2. Registrar únicamente los 6 caracteres finales (sufijo) de su KEY_ID.
+3. Configurar esa nueva clave en Vercel Preview de forma segura mediante stdin.
+4. Redesplegar ambiente Preview.
+5. Ejecutar verificación de autenticación real con Google Sheets API.
+6. Ejecutar pruebas E2E de lectura y escritura.
+7. Confirmar operatividad completa de la nueva clave.
+8. Revisar métricas de uso de las claves anteriores cuando estén disponibles en GCP.
+9. Eliminar las claves anteriores únicamente después de validar la nueva clave en producción/Preview.
+10. Conservar temporalmente una única clave nueva validada.
 
 ---
 
-## 6. Metadata de Claves en Google Cloud IAM
+## 5. Escaneo de Secretos e Historial Git
 
-Inspección efectuada mediante `gcloud iam service-accounts keys list` para `matrimonio-rsvp-sheets@claude-498820.iam.gserviceaccount.com`:
+- **Árbol de Trabajo Escaneado**: `SÍ` (1 coincidencia de prueba unitaria ficticia en `tests/test_rsvp.test.js:110`).
+- **Archivos Rastreados Escaneados**: `SÍ` (0 credenciales reales).
+- **Historial Git Completo Escaneado**: `NO DEMOSTRADO` (`HISTORY_SECRET_SCAN=UNVERIFIED` por ausencia de binario `gitleaks` local).
+- **Secretos Completos Impresos**: `NO`
 
-| Sufijo del KEY_ID | Fecha de Creación | Estado de Clave | Clasificación de Auditoría |
-| :--- | :--- | :--- | :--- |
-| `...d95f0a` | `2026-07-22T04:10:16Z` | `USER_MANAGED` | Clave redundante a prunar en Fase 1B. |
-| `...5ab757` | `2026-07-22T04:12:07Z` | `USER_MANAGED` | Clave redundante a prunar en Fase 1B. |
-| `...034151` | `2026-07-22T04:40:32Z` | `USER_MANAGED` | Clave redundante a prunar en Fase 1B. |
-| `...75e1e4` | `2026-07-22T04:42:44Z` | `USER_MANAGED` | Clave redundante a prunar en Fase 1B. |
-| `...2e23a5` | `2026-07-22T04:44:26Z` | `USER_MANAGED` | Clave redundante a prunar en Fase 1B. |
-| `...82bfe0` | `2026-07-22T04:47:27Z` | `USER_MANAGED` | Clave redundante a prunar en Fase 1B. |
-| `...ae8e40` | `2026-07-22T04:50:36Z` | `USER_MANAGED` | Clave activa asociada a Vercel Preview. |
+---
 
-- **`GOOGLE_KEYS_ROTATION_REQUIRED`**: `YES` (7 claves activas, 6 redundantes a revocar).
-- **`OAUTH_CONSOLE_VERIFICATION_REQUIRED`**: `YES` (Eliminación manual en GCP Console).
+## 6. Implementación Técnica en `api/_lib/supabase-admin.js`
+
+- **Soporte de Clave**: Implementada función `getSupabaseServerKey(env)` con preferencia a `SUPABASE_SECRET_KEY` y fallback a `SUPABASE_SERVICE_ROLE_KEY`.
+- **Encabezados HTTP Supabase (`buildSupabaseHeaders`)**:
+  - Claves modernas `sb_secret_`: Envío en header `apikey`. Omisión de header `Authorization: Bearer`.
+  - Claves legacy `service_role`: Envío en header `apikey` y header `Authorization: Bearer`.
+  - Detección: Basada estrictamente en el prefijo `sb_secret_`.
+- **Sanitización de Errores (`sanitizeSupabaseError`)**:
+  - Retorna únicamente `{ code, status }`.
+  - Excluye campos `detail`, `headers`, `request body` y credenciales.
 
 ---
 
 ## 7. Inventario de Variables de Entorno en Vercel
-
-Inspección no destructiva de nombres realizada vía `vercel env ls`:
 
 - **Preview Environment**: 6 variables configuradas (`GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_SHEETS_TAB`, `GOOGLE_SHEETS_SPREADSHEET_ID`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`).
 - **Production Environment**: `0` variables configuradas.
@@ -114,45 +100,17 @@ Inspección no destructiva de nombres realizada vía `vercel env ls`:
 
 ---
 
-## 8. Verificación de Mergeabilidad de PR #6
+## 8. Confirmación de Políticas de Control y Límites
 
-Metadatos reales de GitHub CLI (`gh pr view 6`):
-- **BaseRefOid**: `724f8561be87e4c61cdfbdcdc4fe646796672b7c`
-- **HeadRefOid**: `74b72fd3c32c8690b63cf20459b0bd2783aaf115`
-- **Mergeable Status**: `MERGEABLE`
-- **MergeStateStatus**: `CLEAN`
-- **Simulación Local (`git merge-tree`)**: `0` marcadores de conflicto (`PR6_LOCAL_MERGE_SIMULATION=PASS`).
-
----
-
-## 9. Plan Técnico de Rotación de Credenciales (Fase 1B)
-
-El orden estricto de rotación en Fase 1B será:
-
-1. **Paso 1: Implementar soporte dual en backend**:
-   - Modificar `api/_lib/supabase-admin.js` para dar preferencia a `process.env.SUPABASE_SECRET_KEY` manteniendo `SUPABASE_SERVICE_ROLE_KEY` como fallback.
-2. **Paso 2: Configurar nueva `SUPABASE_SECRET_KEY` en Vercel Preview**:
-   - Generar clave de servidor limpia en Supabase Dashboard y añadirla a Preview.
-3. **Paso 3: Prunar 6 claves de Google Service Account redundantes**:
-   - Eliminar las 6 claves redundantes en GCP IAM dejando solo 1 clave activa.
-4. **Paso 4: Verificación E2E en Preview**:
-   - Redesplegar Preview y validar funcionamiento del RSVP.
-5. **Paso 5: Retirar clave expuesta y confirmación manual OAuth**:
-   - Eliminar `SUPABASE_SERVICE_ROLE_KEY` expuesta de Vercel Preview y confirmar eliminación del cliente OAuth en GCP Console.
-
----
-
-## 10. Confirmación de Políticas de Control y Límites
-
-- **Rotación ejecutada en Fase 1A**: `NO` (Fase exclusivamente auditiva/no destructiva).
+- **Rotaciones / Modificaciones Remotas Ejecutadas**: `NO`
 - **Producción modificada**: `NO`
 - **Rama `main` modificada**: `NO`
 - **PR #5 modificado**: `NO`
 - **Supabase remoto modificado**: `NO`
-- **Google Cloud IAM modificado en Fase 1A**: `NO`
+- **Google Cloud IAM modificado en Fase 1B.1**: `NO`
 - **Google Sheets modificado**: `NO`
 - **Meta / WhatsApp modificado**: `NO`
 - **Secretos impresos en reporte**: `NO`
 
 ---
-*Informe de Auditoría de Seguridad de Fase 1A generado por Security Engineer / Antigravity.*
+*Informe de Auditoría de Seguridad de Fase 1B.1 generado por Security Engineer / Antigravity.*

@@ -1,19 +1,45 @@
+export function getSupabaseServerKey(env = process.env) {
+    return env.SUPABASE_SECRET_KEY
+        || env.SUPABASE_SERVICE_ROLE_KEY
+        || null;
+}
+
+export function buildSupabaseHeaders(key, options = {}) {
+    if (!key) {
+        throw new Error('SUPABASE_NOT_CONFIGURED');
+    }
+
+    const headers = {
+        apikey: key,
+        'Content-Type': 'application/json',
+        Prefer: options.prefer || 'return=representation',
+        ...(options.headers || {})
+    };
+
+    if (!key.startsWith('sb_secret_')) {
+        headers.Authorization = 'Bearer ' + key;
+    }
+
+    return headers;
+}
+
+export function sanitizeSupabaseError(error) {
+    return {
+        code: error?.message || 'SUPABASE_REQUEST_FAILED',
+        status: error?.status || 500
+    };
+}
+
 export async function supabaseRequest(path, options = {}) {
     const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceKey = getSupabaseServerKey();
 
     if (!supabaseUrl || !serviceKey) {
         throw new Error('SUPABASE_NOT_CONFIGURED');
     }
 
     const url = supabaseUrl + '/rest/v1/' + path;
-    const headers = {
-        'apikey': serviceKey,
-        'Authorization': 'Bearer ' + serviceKey,
-        'Content-Type': 'application/json',
-        'Prefer': options.prefer || 'return=representation',
-        ...(options.headers || {})
-    };
+    const headers = buildSupabaseHeaders(serviceKey, options);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -61,7 +87,6 @@ export async function getRSVPById(id) {
     const res = await supabaseRequest('rsvp_responses?id=eq.' + encodeURIComponent(id) + '&select=*');
     return res && res[0] ? res[0] : null;
 }
-
 
 export async function getRSVPByLastWhatsAppMessageId(msgId) {
     if (!msgId) return null;
