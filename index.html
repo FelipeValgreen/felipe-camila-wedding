@@ -16,10 +16,11 @@
     <link rel="canonical" href="https://felipeycami.cl/">
 
     <!-- Favicons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="manifest" href="site.webmanifest">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-fc-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-fc-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-fc.png">
+    <link rel="manifest" href="/site.webmanifest?v=2">
 
     <!-- OpenGraph / Facebook -->
     <meta property="og:type" content="website">
@@ -314,7 +315,7 @@
 
         <!-- 04 RSVP / CONFIRMACIÓN UNIFICADA -->
         <section id="rsvp" class="py-20 md:py-28 bg-cream border-b border-dark/5">
-            <div class="max-w-xl mx-auto px-6 space-y-10">
+            <div class="max-w-2xl mx-auto px-6 space-y-8">
                 <div class="text-center space-y-4">
                     <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">RSVP</span>
                     <h2 class="font-serif text-4xl text-dark font-normal">Confirma tu asistencia</h2>
@@ -324,32 +325,33 @@
                     </p>
                 </div>
 
-                <!-- Dual Option Selection Cards (Equal Weight) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-2">
-                    <!-- Option 1: WhatsApp Direct -->
-                    <a href="https://wa.me/56981393436?text=Hola%2C%20soy%20%5Bnombre%20y%20apellido%5D.%20Quiero%20confirmar%20mi%20asistencia%20al%20matrimonio%20de%20Felipe%20y%20Camila%20del%2023%20de%20octubre%20de%202026." target="_blank" rel="noopener noreferrer" id="rsvp-tab-wa" class="p-5 bg-light text-dark border border-dark/20 text-center rounded-sm hover:border-dark transition-all flex flex-col justify-between group shadow-sm">
-                        <div class="space-y-2">
-                            <span class="block text-xs uppercase tracking-[0.2em] font-bold text-dark flex items-center justify-center gap-2">
-                                <i class="fa-brands fa-whatsapp text-base text-[#25D366]"></i> Confirmar por WhatsApp
-                            </span>
-                            <span class="block text-[11px] text-muted font-light leading-snug">Se abrirá una conversación con nosotros para confirmar personalmente.</span>
+                <!-- Compact WhatsApp Alternative Banner -->
+                <a href="https://wa.me/56981393436?text=Hola%2C%20soy%20%5Bnombre%20y%20apellido%5D.%20Quiero%20confirmar%20mi%20asistencia%20al%20matrimonio%20de%20Felipe%20y%20Camila%20del%2023%20de%20octubre%20de%202026." target="_blank" rel="noopener noreferrer" id="rsvp-tab-wa" class="p-5 bg-light text-dark border border-dark/15 rounded-sm hover:border-dark transition-all flex flex-col sm:flex-row items-center justify-between gap-4 group shadow-sm">
+                    <div class="flex items-center gap-3 text-center sm:text-left">
+                        <i class="fa-brands fa-whatsapp text-2xl text-[#25D366] shrink-0"></i>
+                        <div>
+                            <span class="block text-xs uppercase tracking-[0.2em] font-bold text-dark">Confirmar por WhatsApp</span>
+                            <span class="block text-xs text-muted font-light mt-0.5">Se abrirá una conversación con nosotros para confirmar personalmente.</span>
                         </div>
-                        <span class="inline-block mt-4 text-[10px] uppercase tracking-[0.2em] font-semibold text-[#25D366] group-hover:underline">Abrir WhatsApp →</span>
-                    </a>
+                    </div>
+                    <span class="text-xs uppercase tracking-[0.2em] font-semibold text-[#25D366] group-hover:underline whitespace-nowrap shrink-0">Abrir WhatsApp →</span>
+                </a>
 
-                    <!-- Option 2: Form RSVP -->
-                    <button type="button" id="rsvp-tab-web" class="p-5 bg-dark text-light border border-dark text-center rounded-sm transition-all cursor-pointer flex flex-col justify-between shadow-sm">
-                        <div class="space-y-2">
-                            <span class="block text-xs uppercase tracking-[0.2em] font-bold">Confirmar mediante formulario</span>
-                            <span class="block text-[11px] text-light/70 font-light leading-snug">Completa tus datos y guarda tu respuesta directamente.</span>
-                        </div>
-                        <span class="inline-block mt-4 text-[10px] uppercase tracking-[0.2em] font-semibold text-gold">Completar formulario ↓</span>
-                    </button>
+                <!-- Editorial Visual Separator -->
+                <div class="flex items-center gap-4 py-1">
+                    <div class="h-[1px] bg-dark/15 flex-1"></div>
+                    <span class="font-sans text-[11px] uppercase tracking-[0.25em] text-muted font-semibold">O CONFIRMA AQUÍ</span>
+                    <div class="h-[1px] bg-dark/15 flex-1"></div>
                 </div>
 
                 <div class="bg-light p-8 md:p-12 border border-dark/10 shadow-sm">
                     <!-- Form Step -->
                     <div id="rsvp-form-step">
+                        <div class="space-y-1 mb-6 text-center sm:text-left">
+                            <h3 class="font-serif text-xl text-dark">Confirmación mediante formulario</h3>
+                            <p class="font-sans text-xs text-muted font-light">Completa tus datos y registra tu respuesta directamente.</p>
+                        </div>
+
                         <form id="rsvp-form" class="space-y-6">
                             <!-- Honeypot Field -->
                             <div class="hidden" aria-hidden="true">
@@ -374,7 +376,7 @@
 
                             <div class="space-y-3 pt-4 border-t border-dark/10">
                                 <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">¿Podrás acompañarnos?</label>
-                                <div class="flex flex-col sm:flex-row gap-4 py-2">
+                                <div class="flex flex-col sm:flex-row sm:flex-wrap gap-4 py-2">
                                     <label class="flex items-center gap-2 cursor-pointer text-sm text-dark">
                                         <input type="radio" name="rsvp-attendance" value="attending" checked class="w-4 h-4 accent-dark">
                                         <span>Sí, asistiré</span>
