@@ -1,4 +1,5 @@
 import { createRSVP, updateRSVP, readRSVP } from './_lib/rsvp-service.js';
+import { getSupabaseServerKey, sanitizeSupabaseError } from './_lib/supabase-admin.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -7,9 +8,9 @@ export default async function handler(req, res) {
     }
 
     const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serverKey = getSupabaseServerKey();
 
-    if (!supabaseUrl || !serviceKey) {
+    if (!supabaseUrl || !serverKey) {
         return res.status(503).json({ ok: false, error: 'RSVP_NOT_CONFIGURED' });
     }
 
@@ -93,7 +94,8 @@ export default async function handler(req, res) {
         }
 
     } catch (err) {
-        console.error('Server error in /api/rsvp:', err.message);
+        const safeError = sanitizeSupabaseError(err);
+        console.error('Server error in /api/rsvp:', safeError.code);
         return res.status(500).json({ ok: false, error: 'SERVER_ERROR' });
     }
 }

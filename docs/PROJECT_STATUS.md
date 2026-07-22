@@ -1,7 +1,7 @@
 # Estado del Proyecto y Plan de Cierre · “El Umbral Vivo”
 
 **Felipe & Camila · Matrimonio Viernes 23 de Octubre de 2026**
-**Versión**: 1.4
+**Versión**: 1.5
 **Fecha de Actualización**: 22 de Julio de 2026
 **Repositorio**: `FelipeValgreen/felipe-camila-wedding`
 **Rama activa**: `feature/unified-rsvp-v3-2026-07-21`
@@ -15,8 +15,8 @@
 
 ## 1. Declaración de Bloqueadores
 
-### 1.1 Bloqueadores para la ejecución de Fase 1B.1 (Compatibilidad Supabase Keys)
-- **Ninguno**. Se completó la implementación del soporte dual para `SUPABASE_SECRET_KEY` y `SUPABASE_SERVICE_ROLE_KEY`, la sanitización de errores Supabase y la corrección del plan de rotación para Google SA.
+### 1.1 Bloqueadores para la ejecución de Fase 1B.1 (Compatibilidad y Endurecimiento)
+- **Ninguno**. Se completó la implementación del gate dual en `/api/rsvp.js`, la mitigación de inyección de headers en `buildSupabaseHeaders` y las pruebas exhaustivas de la suite.
 
 ### 1.2 Bloqueadores del Proyecto para el Lanzamiento a Producción
 1. **Seguridad**: Confirmación de rotación de la `SUPABASE_SERVICE_ROLE_KEY` expuesta en el historial previo mediante `SUPABASE_SECRET_KEY`.
@@ -78,7 +78,7 @@ gh pr view 6 --repo FelipeValgreen/felipe-camila-wedding --json baseRefName,base
 | Componente | Estado Formal | Estado Actual (Baseline) | Estado Objetivo |
 | :--- | :--- | :--- | :--- |
 | **Experiencia Editorial** | `CÓDIGO RELEASE CANDIDATE — QA VISUAL PENDIENTE` | Integrado en PR #5 / PR #6 con assets locales. | Auditado en dispositivos reales sin regresiones CLS/LCP. |
-| **RSVP Web API** | `CÓDIGO COMPLETO — E2E REAL PENDIENTE` | Endpoint `/api/rsvp` con soporte dual `SUPABASE_SECRET_KEY`. | Validado mediante prueba E2E de ciclo completo con reintentos. |
+| **RSVP Web API** | `CÓDIGO COMPLETO — E2E REAL PENDIENTE` | Endpoint `/api/rsvp` compatible con `SUPABASE_SECRET_KEY`. | Validado mediante prueba E2E de ciclo completo con reintentos. |
 | **Supabase DB** | `PARCIAL` | Esquema funcional; 0 registros ficticios (`COUNT = 0`). | Migración aplicada con `search_path` corregido e índice en `rsvp_events`. |
 | **Google Sheets** | `PARCIAL / REQUIERE REPARACIÓN` | Hoja vinculada; reintentos persistentes y backoff pendientes. | Timezone `America/Santiago`, 0 `#REF!`, estructura normalizada. |
 | **Vercel Preview** | `DESPLEGADO — ROTACIÓN DE CREDENCIALES Y E2E PENDIENTES` | 6 variables en Preview; deployment `Ready`. | Variables re-añadidas limpiamente tras la rotación final de secretos. |
@@ -157,7 +157,7 @@ gh pr view 6 --repo FelipeValgreen/felipe-camila-wedding --json baseRefName,base
 | **P0-03** | Revocar claves de Service Account Google redundantes | P0 | PENDIENTE | GCP Access | Security Engineer | Máximo 1 clave activa por Service Account. |
 | **P0-04** | Verificación/restricción de acceso a Google Sheet en Drive | P0 | PENDIENTE | Drive Owner | Security Engineer | Acceso general por enlace desactivado. |
 | **P0-05** | Corregir ID duplicado HTML (`rsvp-support-wa`) | P0 | PENDIENTE | Código | UX / Frontend Lead | 0 IDs duplicados validados por HTML linter. |
-| **P0-06** | Soporte para `SUPABASE_SECRET_KEY` con fallback legacy | P0 | COMPLETO | Ninguna | Backend Engineer | Pruebas pasan con ambas variables. |
+| **P0-06** | Soporte para `SUPABASE_SECRET_KEY` con fallback legacy | P0 | CÓDIGO COMPLETO — CONFIGURACIÓN REMOTA PENDIENTE | Ninguna | Backend Engineer | Pruebas pasan con ambas variables. |
 | **P0-07** | Corregir `search_path` en función `update_updated_at_column()` | P0 | PENDIENTE | Migración SQL | Supabase Architect | Alerta resuelta en linter Supabase. |
 | **P0-08** | Crear índice explícito `idx_rsvp_events_rsvp_id` | P0 | PENDIENTE | Migración SQL | Supabase Architect | Alerta de índice resuelta en linter. |
 | **P0-09** | Limpiar registros de prueba ficticios en Supabase y Sheets | P0 | PARCIAL | P0-11 | QA Lead | Supabase COUNT 0 confirmado; Sheets `test_uuid_12345` UNVERIFIED. |
@@ -200,4 +200,4 @@ gh pr view 6 --repo FelipeValgreen/felipe-camila-wedding --json baseRefName,base
 - **Secretos impresos en consola/logs**: `NO`
 
 ---
-*Documento de Baseline v1.4 actualizado bajo el protocolo de ejecución estricto de Antigravity.*
+*Documento de Baseline v1.5 actualizado bajo el protocolo de ejecución estricto de Antigravity.*

@@ -9,11 +9,17 @@ export function buildSupabaseHeaders(key, options = {}) {
         throw new Error('SUPABASE_NOT_CONFIGURED');
     }
 
+    const customHeaders = { ...(options.headers || {}) };
+
+    delete customHeaders.apikey;
+    delete customHeaders.Authorization;
+    delete customHeaders.authorization;
+
     const headers = {
+        ...customHeaders,
         apikey: key,
         'Content-Type': 'application/json',
-        Prefer: options.prefer || 'return=representation',
-        ...(options.headers || {})
+        Prefer: options.prefer || 'return=representation'
     };
 
     if (!key.startsWith('sb_secret_')) {

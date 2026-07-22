@@ -45,8 +45,10 @@ test('8. buildSupabaseHeaders throws SUPABASE_NOT_CONFIGURED if key is missing o
     assert.throws(() => buildSupabaseHeaders(''), { message: 'SUPABASE_NOT_CONFIGURED' });
 });
 
-test('9. buildSupabaseHeaders preserves Content-Type header', () => {
-    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL');
+test('9. buildSupabaseHeaders preserves Content-Type header and prevents override', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        headers: { 'Content-Type': 'text/plain' }
+    });
     assert.equal(headers['Content-Type'], 'application/json');
 });
 
@@ -81,4 +83,42 @@ test('13. No test logs print actual keys or full Authorization headers', () => {
     const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL');
     const repr = JSON.stringify(headers);
     assert.equal(repr.includes('Authorization'), false);
+});
+
+// Additional Hardening Tests (Step 6)
+test('14. custom Authorization header is stripped when using sb_secret_', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        headers: { Authorization: 'Bearer malicious_token' }
+    });
+    assert.equal(headers.Authorization, undefined);
+});
+
+test('15. custom lowercase authorization header is stripped', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        headers: { authorization: 'Bearer malicious_token' }
+    });
+    assert.equal(headers.authorization, undefined);
+    assert.equal(headers.Authorization, undefined);
+});
+
+test('16. custom apikey header cannot override real key', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        headers: { apikey: 'malicious_apikey' }
+    });
+    assert.equal(headers.apikey, 'sb_secret_TEST_ONLY_NOT_REAL');
+});
+
+test('17. custom Authorization header cannot override legacy JWT Bearer', () => {
+    const headers = buildSupabaseHeaders('legacy.jwt.test-only', {
+        headers: { Authorization: 'Bearer malicious_token' }
+    });
+    assert.equal(headers.Authorization, 'Bearer legacy.jwt.test-only');
+});
+
+test('18. Prefer custom works exclusively via options.prefer', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        prefer: 'count=exact',
+        headers: { Prefer: 'resolution=ignore-duplicates' }
+    });
+    assert.equal(headers.Prefer, 'count=exact');
 });

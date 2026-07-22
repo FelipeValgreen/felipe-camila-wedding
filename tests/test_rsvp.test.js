@@ -211,6 +211,51 @@ test('D5. /api/rsvp rejects honeypot field', async () => {
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 });
 
+test('D6. /api/rsvp accepts SUPABASE_URL + SUPABASE_SECRET_KEY without RSVP_NOT_CONFIGURED', async () => {
+    process.env.SUPABASE_URL = 'https://fake.supabase.co';
+    process.env.SUPABASE_SECRET_KEY = 'sb_secret_TEST_ONLY_NOT_REAL';
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    const req = { method: 'POST', headers: { 'content-type': 'application/json', 'content-length': '9000' }, body: {} };
+    let statusCode = 0;
+    let jsonBody = null;
+    const res = {
+        setHeader: () => {},
+        status: (code) => { statusCode = code; return res; },
+        json: (data) => { jsonBody = data; return res; }
+    };
+
+    await rsvpHandler(req, res);
+    assert.equal(statusCode, 413);
+    assert.equal(jsonBody.error, 'PAYLOAD_TOO_LARGE');
+
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SECRET_KEY;
+});
+
+test('D7. /api/rsvp accepts SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY without RSVP_NOT_CONFIGURED', async () => {
+    process.env.SUPABASE_URL = 'https://fake.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'legacy.jwt.test-only';
+    delete process.env.SUPABASE_SECRET_KEY;
+
+    const req = { method: 'POST', headers: { 'content-type': 'application/json', 'content-length': '9000' }, body: {} };
+    let statusCode = 0;
+    let jsonBody = null;
+    const res = {
+        setHeader: () => {},
+        status: (code) => { statusCode = code; return res; },
+        json: (data) => { jsonBody = data; return res; }
+    };
+
+    await rsvpHandler(req, res);
+    assert.equal(statusCode, 413);
+    assert.equal(jsonBody.error, 'PAYLOAD_TOO_LARGE');
+
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+});
+
+
 // Group E: Public Config Endpoint
 test('E1. publicConfigHandler returns configured number or null', () => {
     const req = { method: 'GET' };
