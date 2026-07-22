@@ -68,12 +68,12 @@ CREATE INDEX IF NOT EXISTS idx_whatsapp_processed_messages_status ON public.what
 
 -- Updated_at triggers
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS 4966
+RETURNS TRIGGER AS $rsvp$
 BEGIN
    NEW.updated_at = NOW();
    RETURN NEW;
 END;
-4966 LANGUAGE plpgsql;
+$rsvp$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS set_updated_at_rsvp_responses ON public.rsvp_responses;
 CREATE TRIGGER set_updated_at_rsvp_responses

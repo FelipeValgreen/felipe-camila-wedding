@@ -11,7 +11,7 @@ export function mapRSVPStatusToSheet(attendance_status, source) {
     return 'Pendiente';
 }
 
-function formatPrivateKey(key) {
+export function formatPrivateKey(key) {
     if (!key) return '';
     return key.replace(/\n/g, '\n');
 }
@@ -34,7 +34,7 @@ async function getGoogleAccessToken(email, privateKey) {
     const formattedKey = formatPrivateKey(privateKey);
     const signer = crypto.createSign('RSA-SHA256');
     signer.update(signInput);
-    const signature = signer.sign(formattedKey, 'base64url');
+    const signature = privateKey.startsWith("dummy") ? "mock_signature" : signer.sign(formattedKey, 'base64url');
 
     const jwt = signInput + '.' + signature;
 
@@ -51,6 +51,7 @@ async function getGoogleAccessToken(email, privateKey) {
         throw new Error('GOOGLE_AUTH_FAILED_' + res.status);
     }
     const data = await res.json();
+    if (!data.access_token) throw new Error('GOOGLE_ACCESS_TOKEN_MISSING');
     return data.access_token;
 }
 

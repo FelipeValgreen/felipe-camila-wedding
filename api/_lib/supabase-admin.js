@@ -126,18 +126,35 @@ export async function claimWhatsAppMessage(msgId, phone) {
         if (err.status === 409 || (err.detail && err.detail.includes('duplicate'))) {
             const existing = await supabaseRequest('whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId) + '&select=*');
             const rec = existing && existing[0] ? existing[0] : null;
-            if (rec && rec.status === 'processed') {
+            if (!rec) return { claimed: false, status: 'unknown' };
+
+            if (rec.status === 'processed') {
                 return { claimed: false, status: 'processed' };
             }
-            if (rec && rec.status === 'processing') {
-                return { claimed: false, status: 'processing' };
-            }
-            if (rec && rec.status === 'failed') {
-                await supabaseRequest('whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId), {
+
+            // Allow atomic reclaim if stuck in processing for > 30 seconds
+            const now = Date.now();
+            const startedAtMs = rec.started_at ? new Date(rec.started_at).getTime() : 0;
+            const isStaleProcessing = (rec.status === 'processing' && (now - startedAtMs > 30000));
+
+            if (rec.status === 'failed' || isStaleProcessing) {
+                // Conditional atomic claim matching status
+                const patchUrl = 'whatsapp_processed_messages?message_id=eq.' + encodeURIComponent(msgId) + '&status=eq.' + rec.status;
+                const updated = await supabaseRequest(patchUrl, {
                     method: 'PATCH',
+                    prefer: 'return=representation',
                     body: { status: 'processing', started_at: new Date().toISOString() }
                 });
-                return { claimed: true, retry: true };
+
+                if (updated && updated.length === 1) {
+                    return { claimed: true, retry: true, record: updated[0] };
+                } else {
+                    return { claimed: false, status: 'processing' };
+                }
+            }
+
+            if (rec.status === 'processing') {
+                return { claimed: false, status: 'processing' };
             }
         }
         throw err;

@@ -322,8 +322,16 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
         return;
     }
 
+    if (session.state === 'COMPLETED_PENDING_ACK') {
+        const sendRes = await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
+        if (!sendRes.ok) throw new Error(sendRes.error);
+        await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
+        return;
+    }
+
     if (session.state === 'AWAITING_CONFIRMATION') {
-        if (text === 'rsvp_confirm' || lowerText.includes('confirmar')) {
+        const isExplicitConfirm = (text === 'rsvp_confirm' || lowerText === 'confirmar');
+        if (isExplicitConfirm) {
             const valRes = validateRSVPInput({
                 first_name: session.data.first_name,
                 last_name: session.data.last_name,
@@ -385,9 +393,10 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
                 await updateRSVPRecord(savedRecord.id, { sheet_sync_status: 'failed' });
             }
 
-            await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
+            await saveWhatsAppSession(phone, 'COMPLETED_PENDING_ACK', { rsvp_id: savedRecord.id, ack_type: 'final_confirm' }, msgId);
             const sendRes = await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
             if (!sendRes.ok) throw new Error(sendRes.error);
+            await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
 
         } else {
             await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
