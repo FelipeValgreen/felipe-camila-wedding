@@ -148,31 +148,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('scroll', updateCtaVisibility);
 
-    // 5. RSVP Logic & Safe Validation
+    // 5. Unified Web RSVP Submission & Direct Registration
     const rsvpForm = document.getElementById('rsvp-form');
     const rsvpSuccess = document.getElementById('rsvp-success');
     const rsvpFormStep = document.getElementById('rsvp-form-step');
+    const rsvpSubmitBtn = document.getElementById('rsvp-submit-btn');
     
     const rsvpFirstnameInput = document.getElementById('rsvp-firstname');
     const rsvpLastnameInput = document.getElementById('rsvp-lastname');
     const rsvpWhatsappInput = document.getElementById('rsvp-whatsapp');
+    const rsvpWebsiteField = document.getElementById('rsvp-website-field');
     const rsvpDietarySelect = document.getElementById('rsvp-dietary-select');
     const rsvpDietaryDetailInput = document.getElementById('rsvp-dietary-detail');
     const rsvpDietaryDetailSection = document.getElementById('rsvp-dietary-details-section');
 
-    const NOVIOS_PHONE = '56981393436'; 
     const attendanceRadios = document.getElementsByName('rsvp-attendance');
     const dietaryFlagGroup = document.getElementById('rsvp-dietary-flag-group');
 
+    let currentRSVPId = localStorage.getItem('rsvp_id') || null;
+    let currentManageToken = localStorage.getItem('rsvp_manage_token') || null;
+
     function handleAttendanceChange() {
-        let isAttending = true;
+        let selectedValue = 'attending';
         for (const radio of attendanceRadios) {
-            if (radio.checked && radio.value === 'no') {
-                isAttending = false;
+            if (radio.checked) {
+                selectedValue = radio.value;
             }
         }
 
-        if (isAttending) {
+        if (selectedValue === 'attending') {
             if (dietaryFlagGroup) dietaryFlagGroup.classList.remove('hidden');
             if (rsvpDietarySelect && (rsvpDietarySelect.value === 'Alergias' || rsvpDietarySelect.value === 'Otra')) {
                 if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.remove('hidden');
@@ -210,47 +214,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Clipboard Copy Helper
-    function runFallbackCopy(text, resolve, reject) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        try {
-            const successful = document.execCommand('copy');
-            textarea.remove();
-            if (successful) resolve();
-            else reject(new Error('Fallback copy command failed'));
-        } catch (err) {
-            textarea.remove();
-            reject(err);
-        }
-    }
-
-    function copyTextToClipboard(text) {
-        return new Promise((resolve, reject) => {
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text)
-                    .then(resolve)
-                    .catch(() => runFallbackCopy(text, resolve, reject));
-            } else {
-                runFallbackCopy(text, resolve, reject);
-            }
-        });
-    }
-
     if (rsvpForm) {
-        rsvpForm.addEventListener('submit', (e) => {
+        rsvpForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const firstName = rsvpFirstnameInput.value.trim();
             const lastName = rsvpLastnameInput.value.trim();
             const rawPhone = rsvpWhatsappInput.value.trim();
+            const honeypot = rsvpWebsiteField ? rsvpWebsiteField.value : '';
 
-            // 1. First & Last name validation (min 2 chars)
+            // Honeypot check
+            if (honeypot.trim() !== '') {
+                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
+                if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
+                return;
+            }
+
             if (firstName.length < 2) {
                 showToast('Ingresa un nombre válido (mínimo 2 caracteres).', 'error');
                 rsvpFirstnameInput.focus();
@@ -263,15 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 2. Strict Phone validation & normalization
             const isLeadingPlus = rawPhone.startsWith('+');
             const phoneRest = isLeadingPlus ? rawPhone.slice(1) : rawPhone;
-
-            // Reject if letters exist, or if + exists anywhere else, or invalid characters
             const hasLetters = /[a-zA-Z]/.test(rawPhone);
             const hasInvalidChars = /[^0-9\s().-]/.test(phoneRest);
             const hasMultiplePlus = (rawPhone.match(/\+/g) || []).length > 1;
-
             const digitsOnly = rawPhone.replace(/[^\d]/g, '');
 
             if (hasLetters || hasInvalidChars || hasMultiplePlus || digitsOnly.length < 8 || digitsOnly.length > 15) {
@@ -280,17 +255,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const normalizedPhone = (isLeadingPlus ? '+' : '') + digitsOnly;
-
-            let isAttending = true;
+            let attendanceStatus = 'attending';
             for (const radio of attendanceRadios) {
-                if (radio.checked && radio.value === 'no') {
-                    isAttending = false;
+                if (radio.checked) {
+                    attendanceStatus = radio.value;
                 }
             }
 
             let dietary = 'Ninguna';
-            if (isAttending) {
+            let dietaryDetail = '';
+
+            if (attendanceStatus === 'attending') {
                 if (rsvpDietarySelect.value === 'Alergias' || rsvpDietarySelect.value === 'Otra') {
                     const detail = rsvpDietaryDetailInput.value.trim();
                     if (!detail || detail.length < 2 || detail.toLowerCase() === 'alergias' || detail.toLowerCase() === 'otra') {
@@ -299,57 +274,96 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
                     dietary = detail;
+                    dietaryDetail = detail;
                 } else {
                     dietary = rsvpDietarySelect.value;
                 }
             }
 
-            let whatsappMsg = '';
-            if (isAttending) {
-                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Confirmo mi asistencia al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi restricción alimentaria es: ${dietary}. Mi WhatsApp de contacto es: ${normalizedPhone}.`;
-            } else {
-                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Lamentablemente no podré asistir al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi WhatsApp de contacto es: ${normalizedPhone}.`;
+            // Disable submit button during request
+            if (rsvpSubmitBtn) {
+                rsvpSubmitBtn.disabled = true;
+                rsvpSubmitBtn.textContent = 'Registrando...';
             }
 
-
-            const whatsappUrl = `https://wa.me/${NOVIOS_PHONE}?text=${encodeURIComponent(whatsappMsg)}`;
-
-            const summaryName = document.getElementById('summary-name');
-            const summaryWhatsapp = document.getElementById('summary-whatsapp');
-            const summaryAttendance = document.getElementById('summary-attendance');
-            const summaryDietary = document.getElementById('summary-dietary');
-            const summaryDietaryRow = document.getElementById('summary-dietary-row');
-
-            if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
-            if (summaryWhatsapp) summaryWhatsapp.textContent = rawPhone;
-            if (summaryAttendance) summaryAttendance.textContent = isAttending ? 'Sí, asistiré' : 'No podré asistir';
-            
-            if (isAttending) {
-                if (summaryDietaryRow) summaryDietaryRow.classList.remove('hidden');
-                if (summaryDietary) summaryDietary.textContent = dietary;
-            } else {
-                if (summaryDietaryRow) summaryDietaryRow.classList.add('hidden');
-            }
-
-            const whatsappShareBtn = document.getElementById('rsvp-whatsapp-share-btn');
-            if (whatsappShareBtn) whatsappShareBtn.href = whatsappUrl;
-
-            const copyBtn = document.getElementById('rsvp-copy-msg-btn');
-            if (copyBtn) {
-                copyBtn.onclick = () => {
-                    copyTextToClipboard(whatsappMsg).then(() => {
-                        showToast('Respuesta copiada al portapapeles', 'success');
-                    }).catch(() => {
-                        showToast('No se pudo copiar automáticamente', 'error');
-                    });
+            try {
+                const isUpdate = Boolean(currentRSVPId && currentManageToken);
+                const payload = {
+                    action: isUpdate ? 'update' : 'create',
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone: rawPhone,
+                    attendance_status: attendanceStatus,
+                    dietary_type: attendanceStatus === 'attending' ? rsvpDietarySelect.value : null,
+                    dietary_detail: attendanceStatus === 'attending' ? dietaryDetail : null,
+                    website: ''
                 };
+
+                if (isUpdate) {
+                    payload.rsvp_id = currentRSVPId;
+                    payload.manage_token = currentManageToken;
+                }
+
+                const response = await fetch('api/rsvp.js', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.ok) {
+                    showToast(data.error || 'No se pudo procesar la confirmación.', 'error');
+                    if (rsvpSubmitBtn) {
+                        rsvpSubmitBtn.disabled = false;
+                        rsvpSubmitBtn.textContent = 'Registrar mi respuesta';
+                    }
+                    return;
+                }
+
+                if (data.rsvp_id && data.manage_token) {
+                    currentRSVPId = data.rsvp_id;
+                    currentManageToken = data.manage_token;
+                    localStorage.setItem('rsvp_id', currentRSVPId);
+                    localStorage.setItem('rsvp_manage_token', currentManageToken);
+                }
+
+                // Render Summary State using textContent securely
+                const summaryName = document.getElementById('summary-name');
+                const summaryAttendance = document.getElementById('summary-attendance');
+                const summaryDietary = document.getElementById('summary-dietary');
+                const summaryDietaryRow = document.getElementById('summary-dietary-row');
+
+                if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
+                
+                let attendanceLabel = 'Sí, asistiré';
+                if (attendanceStatus === 'not_attending') attendanceLabel = 'No podré asistir';
+                if (attendanceStatus === 'pending') attendanceLabel = 'Todavía no puedo confirmar';
+
+                if (summaryAttendance) summaryAttendance.textContent = attendanceLabel;
+                
+                if (attendanceStatus === 'attending') {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.remove('hidden');
+                    if (summaryDietary) summaryDietary.textContent = dietary;
+                } else {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.add('hidden');
+                }
+
+                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
+                if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
+
+                rsvpCompleted = true;
+                updateCtaVisibility();
+
+            } catch (err) {
+                console.error('RSVP API fetch error:', err);
+                showToast('Error de conexión. Revisa tu internet e intenta nuevamente.', 'error');
+            } finally {
+                if (rsvpSubmitBtn) {
+                    rsvpSubmitBtn.disabled = false;
+                    rsvpSubmitBtn.textContent = 'Registrar mi respuesta';
+                }
             }
-
-            if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
-            if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
-
-            rsvpCompleted = true;
-            updateCtaVisibility();
         });
     }
 
@@ -363,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCtaVisibility();
         });
     }
+
 
     // RSVP Another Button
     const anotherBtn = document.getElementById('rsvp-another-btn');
