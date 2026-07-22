@@ -1,4 +1,13 @@
 import crypto from 'crypto';
+import {
+    createRSVPRecord,
+    getRSVPById,
+    getRSVPByPhoneAndName,
+    getRSVPsByPhone,
+    updateRSVPRecord,
+    createRSVPEvent
+} from './supabase-admin.js';
+import { syncToGoogleSheets } from './google-sheets.js';
 
 export function normalizeName(name) {
     if (!name) return '';
@@ -70,7 +79,7 @@ export function validateRSVPInput({ first_name, last_name, phone, attendance_sta
         }
     }
 
-    const fullNameNormalized = normalizeName();
+    const fullNameNormalized = normalizeName(fName + ' ' + lName);
 
     return {
         valid: true,
@@ -83,5 +92,120 @@ export function validateRSVPInput({ first_name, last_name, phone, attendance_sta
             dietary_type: finalDietaryType,
             dietary_detail: finalDietaryDetail
         }
+    };
+}
+
+export async function createRSVP(input, source = 'web') {
+    const val = validateRSVPInput(input);
+    if (!val.valid) return { ok: false, status: 400, error: val.error };
+
+    const existing = await getRSVPByPhoneAndName(val.data.phone_e164, val.data.full_name_normalized);
+    if (existing) {
+        return {
+            ok: false,
+            status: 409,
+            error: 'RSVP_ALREADY_EXISTS',
+            user_message: 'Ya existe una respuesta con estos datos. Puedes modificarla desde el dispositivo donde la registraste o escribir al WhatsApp del matrimonio.'
+        };
+    }
+
+    const rawToken = generateManageToken();
+    const tokenHash = hashToken(rawToken);
+
+    const recordPayload = {
+        ...val.data,
+        source,
+        reconfirmation_status: 'not_started',
+        manage_token_hash: tokenHash,
+        sheet_sync_status: 'pending'
+    };
+
+    const inserted = await createRSVPRecord(recordPayload);
+    if (!inserted) {
+        return { ok: false, status: 500, error: 'NO_SE_PUDO_REGISTRAR' };
+    }
+
+    await createRSVPEvent(inserted.id, 'created', source);
+
+    let sheetsStatus = 'pending';
+    let sheetRowNumber = null;
+
+    try {
+        const syncRes = await syncToGoogleSheets(inserted, false);
+        if (syncRes.synced) {
+            sheetsStatus = 'synced';
+            sheetRowNumber = syncRes.sheet_row_number;
+            await updateRSVPRecord(inserted.id, { sheet_sync_status: 'synced', sheet_row_number: sheetRowNumber });
+        } else {
+            sheetsStatus = 'failed';
+            await updateRSVPRecord(inserted.id, { sheet_sync_status: 'failed' });
+        }
+    } catch (err) {
+        console.error('Sheets sync error:', err.message);
+    }
+
+    return {
+        ok: true,
+        rsvp_id: inserted.id,
+        manage_token: rawToken,
+        attendance_status: inserted.attendance_status,
+        dietary_type: inserted.dietary_type,
+        dietary_detail: inserted.dietary_detail,
+        sheet_sync_status: sheetsStatus
+    };
+}
+
+export async function updateRSVP(rsvpId, manageToken, updates) {
+    if (!rsvpId || !manageToken) {
+        return { ok: false, status: 400, error: 'Credenciales de modificación faltantes.' };
+    }
+
+    const existing = await getRSVPById(rsvpId);
+    if (!existing) {
+        return { ok: false, status: 401, error: 'No se encontró el registro o token inválido.' };
+    }
+
+    const providedHash = hashToken(manageToken);
+    if (existing.manage_token_hash !== providedHash) {
+        return { ok: false, status: 401, error: 'No se encontró el registro o token inválido.' };
+    }
+
+    const val = validateRSVPInput({
+        first_name: existing.first_name,
+        last_name: existing.last_name,
+        phone: existing.phone_e164,
+        attendance_status: updates.attendance_status,
+        dietary_type: updates.dietary_type,
+        dietary_detail: updates.dietary_detail
+    });
+
+    if (!val.valid) return { ok: false, status: 400, error: val.error };
+
+    const updatePayload = {
+        attendance_status: val.data.attendance_status,
+        dietary_type: val.data.dietary_type,
+        dietary_detail: val.data.dietary_detail
+    };
+
+    const updated = await updateRSVPRecord(rsvpId, updatePayload);
+    if (!updated) return { ok: false, status: 500, error: 'NO_SE_PUDO_ACTUALIZAR' };
+
+    await createRSVPEvent(rsvpId, 'updated', 'web');
+
+    try {
+        const syncRes = await syncToGoogleSheets(updated, true);
+        if (syncRes.synced) {
+            await updateRSVPRecord(rsvpId, { sheet_sync_status: 'synced' });
+        }
+    } catch (err) {
+        console.error('Sheets update sync error:', err.message);
+    }
+
+    return {
+        ok: true,
+        rsvp_id: rsvpId,
+        attendance_status: updated.attendance_status,
+        dietary_type: updated.dietary_type,
+        dietary_detail: updated.dietary_detail
     };
 }

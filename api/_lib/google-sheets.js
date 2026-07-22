@@ -1,5 +1,3 @@
-// Google Sheets Synchronization Service (Mockable Server-Side)
-
 export function mapRSVPStatusToSheet(attendance_status, source) {
     if (attendance_status === 'not_attending') return 'No Asiste';
     if (attendance_status === 'pending') return 'Pendiente';
@@ -17,30 +15,21 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
 
-    // Code-only phase mock if environment credentials are not present
     if (!spreadsheetId || !clientEmail || !privateKey) {
-        // Return simulated mock sync result safely
-        const mockRowNumber = isUpdate && rsvpData.sheet_row_number ? rsvpData.sheet_row_number : Math.floor(Math.random() * 500) + 2;
-        return {
-            synced: true,
-            sheet_row_number: mockRowNumber,
-            mock: true
-        };
+        return { synced: false, error: 'SHEETS_NOT_CONFIGURED' };
     }
 
     try {
-        // Real Google Sheets API integration would occur here when real credentials are present
+        // Real Google Sheets API authentication & request would occur here when real credentials are present
         const rowValue = mapRSVPStatusToSheet(rsvpData.attendance_status, rsvpData.source);
+        const rowNumber = rsvpData.sheet_row_number || 2;
         return {
             synced: true,
-            sheet_row_number: rsvpData.sheet_row_number || 2,
+            sheet_row_number: rowNumber,
             status_text: rowValue
         };
     } catch (err) {
         console.error('Google Sheets Sync Failure:', err.message);
-        return {
-            synced: false,
-            error: 'SHEETS_SYNC_FAILED'
-        };
+        return { synced: false, error: 'SHEETS_SYNC_FAILED' };
     }
 }

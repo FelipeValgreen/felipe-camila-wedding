@@ -304,16 +304,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     payload.manage_token = currentManageToken;
                 }
 
-                const response = await fetch('api/rsvp.js', {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                const response = await fetch('/api/rsvp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
                 const data = await response.json();
 
                 if (!response.ok || !data.ok) {
-                    showToast(data.error || 'No se pudo procesar la confirmación.', 'error');
+                    const msg = data.user_message || data.error || 'No se pudo procesar la confirmación.';
+                    showToast(msg, 'error');
                     if (rsvpSubmitBtn) {
                         rsvpSubmitBtn.disabled = false;
                         rsvpSubmitBtn.textContent = 'Registrar mi respuesta';
@@ -378,12 +384,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     // RSVP Another Button
     const anotherBtn = document.getElementById('rsvp-another-btn');
     if (anotherBtn) {
         anotherBtn.addEventListener('click', () => {
             rsvpCompleted = false;
+            currentRSVPId = null;
+            currentManageToken = null;
+            localStorage.removeItem('rsvp_id');
+            localStorage.removeItem('rsvp_manage_token');
+
             if (rsvpForm) rsvpForm.reset();
             handleAttendanceChange();
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
@@ -392,6 +402,34 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCtaVisibility();
         });
     }
+
+    // Fetch Public Config for WhatsApp option
+    async function loadPublicConfig() {
+        try {
+            const res = await fetch('/api/public-config');
+            if (res.ok) {
+                const cfg = await res.json();
+                const waTab = document.getElementById('rsvp-tab-wa');
+                if (waTab) {
+                    if (cfg.wedding_whatsapp_number) {
+                        waTab.href = `https://wa.me/${cfg.wedding_whatsapp_number}?text=${encodeURIComponent('Hola, quiero confirmar mi asistencia al matrimonio de Felipe y Camila.')}`;
+                    } else {
+                        waTab.href = '#';
+                        waTab.onclick = (e) => {
+                            e.preventDefault();
+                            showToast('La confirmación por WhatsApp estará disponible próximamente.', 'info');
+                        };
+                        const sub = waTab.querySelector('span:last-child');
+                        if (sub) sub.textContent = 'La confirmación por WhatsApp estará disponible próximamente.';
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Public config fetch warning:', e);
+        }
+    }
+    loadPublicConfig();
+
 
     // Safe Image Creation Helper with error fallback & objectPosition
     function createSafeImage(item, fallbackAlt, extraClasses = '') {

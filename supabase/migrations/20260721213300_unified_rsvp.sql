@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public.rsvp_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     rsvp_id UUID NOT NULL REFERENCES public.rsvp_responses(id) ON DELETE CASCADE,
     event_type TEXT NOT NULL,
-    source TEXT NOT NULL,
+    source TEXT NOT NULL CHECK (source IN ('web', 'whatsapp', 'manual', 'system')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -42,19 +42,34 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_sessions (
     expires_at TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS public.whatsapp_processed_messages (
+    message_id TEXT PRIMARY KEY,
+    phone_e164 TEXT NULL,
+    processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL
+);
+
 -- Enable RLS on all tables
 ALTER TABLE public.rsvp_responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rsvp_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.whatsapp_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.whatsapp_processed_messages ENABLE ROW LEVEL SECURITY;
+
+-- Indexes for performance & maintenance
+CREATE INDEX IF NOT EXISTS idx_rsvp_responses_phone ON public.rsvp_responses(phone_e164);
+CREATE INDEX IF NOT EXISTS idx_rsvp_responses_attendance ON public.rsvp_responses(attendance_status);
+CREATE INDEX IF NOT EXISTS idx_rsvp_responses_sync ON public.rsvp_responses(sheet_sync_status);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_sessions_expires ON public.whatsapp_sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_processed_messages_expires ON public.whatsapp_processed_messages(expires_at);
 
 -- Updated_at triggers
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS 4438
+RETURNS TRIGGER AS 4678
 BEGIN
    NEW.updated_at = NOW();
    RETURN NEW;
 END;
-4438 language 'plpgsql';
+4678 language 'plpgsql';
 
 DROP TRIGGER IF EXISTS set_updated_at_rsvp_responses ON public.rsvp_responses;
 CREATE TRIGGER set_updated_at_rsvp_responses
