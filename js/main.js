@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (rsvpSubmitBtn) {
                 rsvpSubmitBtn.disabled = true;
-                rsvpSubmitBtn.textContent = 'Registrando...';
+                rsvpSubmitBtn.textContent = 'Guardando...';
             }
 
             try {
@@ -382,11 +382,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (!response.ok || !data.ok) {
-                    const msg = data.user_message || data.error || 'No se pudo procesar la confirmación.';
+                    const msg = 'No pudimos guardar tu respuesta. Intenta nuevamente o escríbenos por WhatsApp.';
                     showToast(msg, 'error');
                     if (rsvpSubmitBtn) {
                         rsvpSubmitBtn.disabled = false;
-                        rsvpSubmitBtn.textContent = 'Registrar mi respuesta';
+                        rsvpSubmitBtn.textContent = isUpdate ? 'Guardar cambios' : 'Registrar mi respuesta';
                     }
                     return;
                 }
@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
                 let attendanceLabel = 'Sí, asistiré';
                 if (attendanceStatus === 'not_attending') attendanceLabel = 'No podré asistir';
-                if (attendanceStatus === 'pending') attendanceLabel = 'Todavía no puedo confirmar';
+                if (attendanceStatus === 'pending') attendanceLabel = 'Aún no estoy seguro/a';
                 if (summaryAttendance) summaryAttendance.textContent = attendanceLabel;
                 
                 if (attendanceStatus === 'attending') {
@@ -419,17 +419,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
                 if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
 
+                showToast(isUpdate ? 'Tu respuesta fue actualizada.' : 'Tu respuesta quedó registrada.', 'success');
+
                 rsvpCompleted = true;
                 isExplicitUpdateMode = true;
                 updateCtaVisibility();
 
             } catch (err) {
                 console.error('RSVP API fetch error:', err);
-                showToast('Error de conexión. Revisa tu internet e intenta nuevamente.', 'error');
+                showToast('No pudimos guardar tu respuesta. Intenta nuevamente o escríbenos por WhatsApp.', 'error');
             } finally {
                 if (rsvpSubmitBtn) {
                     rsvpSubmitBtn.disabled = false;
-                    rsvpSubmitBtn.textContent = 'Registrar mi respuesta';
+                    rsvpSubmitBtn.textContent = isExplicitUpdateMode ? 'Guardar cambios' : 'Registrar mi respuesta';
                 }
             }
         });
@@ -441,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editBtn.addEventListener('click', () => {
             rsvpCompleted = false;
             isExplicitUpdateMode = true;
+            if (rsvpSubmitBtn) rsvpSubmitBtn.textContent = 'Guardar cambios';
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
             updateCtaVisibility();
@@ -460,6 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (rsvpForm) rsvpForm.reset();
             handleAttendanceChange();
+            if (rsvpSubmitBtn) rsvpSubmitBtn.textContent = 'Registrar mi respuesta';
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
             if (rsvpForm) rsvpForm.scrollIntoView({ behavior: 'smooth' });
@@ -475,33 +479,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const cfg = await res.json();
                 const waTab = document.getElementById('rsvp-tab-wa');
-                const waSupport = document.getElementById('rsvp-support-wa');
+                const waSuccessSupport = document.getElementById('rsvp-success-wa-support');
+                const footerWaSupport = document.getElementById('footer-wa-support');
 
-                if (cfg.wedding_whatsapp_number) {
-                    const confirmUrl = `https://wa.me/${cfg.wedding_whatsapp_number}?text=${encodeURIComponent('Hola, quiero confirmar mi asistencia al matrimonio de Felipe y Camila.')}`;
-                    const supportUrl = `https://wa.me/${cfg.wedding_whatsapp_number}?text=${encodeURIComponent('Hola, tengo una consulta sobre el matrimonio de Felipe y Camila.')}`;
+                const targetNumber = cfg.wedding_whatsapp_number || '56981393436';
+                const confirmUrl = `https://wa.me/${targetNumber}?text=${encodeURIComponent('Hola, soy [nombre y apellido]. Quiero confirmar mi asistencia al matrimonio de Felipe y Camila del 23 de octubre de 2026.')}`;
+                const supportUrl = `https://wa.me/${targetNumber}`;
 
-                    if (waTab) {
-                        waTab.href = confirmUrl;
-                        const sub = waTab.querySelector('span:last-child');
-                        if (sub) sub.textContent = 'Se abrirá el WhatsApp del matrimonio para guiarte.';
-                    }
-                    if (waSupport) waSupport.href = supportUrl;
-                } else {
-                    const disableHandler = (e) => {
-                        e.preventDefault();
-                        showToast('La atención por WhatsApp estará disponible próximamente.', 'info');
-                    };
-                    if (waTab) {
-                        waTab.href = '#';
-                        waTab.onclick = disableHandler;
-                        const sub = waTab.querySelector('span:last-child');
-                        if (sub) sub.textContent = 'La confirmación por WhatsApp estará disponible próximamente.';
-                    }
-                    if (waSupport) {
-                        waSupport.href = '#';
-                        waSupport.onclick = disableHandler;
-                    }
+                if (waTab) {
+                    waTab.href = confirmUrl;
+                    waTab.target = '_blank';
+                    waTab.rel = 'noopener noreferrer';
+                }
+                if (waSuccessSupport) {
+                    waSuccessSupport.href = supportUrl;
+                    waSuccessSupport.target = '_blank';
+                    waSuccessSupport.rel = 'noopener noreferrer';
+                }
+                if (footerWaSupport) {
+                    footerWaSupport.href = supportUrl;
+                    footerWaSupport.target = '_blank';
+                    footerWaSupport.rel = 'noopener noreferrer';
                 }
             }
         } catch (e) {
