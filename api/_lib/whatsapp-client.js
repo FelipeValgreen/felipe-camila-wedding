@@ -9,7 +9,11 @@ export async function sendWhatsAppMessage(toPhone, textBody, buttons = []) {
     }
 
     try {
-        const endpoint = 'https://graph.facebook.com/v18.0/' + phoneId + '/messages';
+        const version = process.env.WHATSAPP_GRAPH_API_VERSION;
+    if (!version || !/^v\d+\.\d+$/.test(version)) {
+        return { ok: false, error: 'WHATSAPP_NOT_CONFIGURED' };
+    }
+    const endpoint = 'https://graph.facebook.com/' + version + '/' + phoneId + '/messages';
         let payload = {};
 
         if (buttons && buttons.length > 0) {

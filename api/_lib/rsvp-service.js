@@ -269,3 +269,46 @@ export async function updateRSVP(rsvpId, manageToken, updates) {
         dietary_detail: updated.dietary_detail
     };
 }
+
+
+export function parseAttendanceCommand(text) {
+    if (!text || typeof text !== 'string') return null;
+    const trimmed = text.trim();
+    const lower = trimmed.toLowerCase();
+
+    if (trimmed === 'attendance_attending') return 'attending';
+    if (trimmed === 'attendance_not_attending') return 'not_attending';
+    if (trimmed === 'attendance_pending') return 'pending';
+
+    const validAttending = ['sí, asistiré', 'si, asistire'];
+    const validNotAttending = ['no podré asistir', 'no podre asistir'];
+    const validPending = ['todavía no puedo', 'todavia no puedo', 'todavía no puedo confirmar', 'todavia no puedo confirmar'];
+
+    if (validAttending.includes(lower)) return 'attending';
+    if (validNotAttending.includes(lower)) return 'not_attending';
+    if (validPending.includes(lower)) return 'pending';
+
+    return null;
+}
+
+export function parseDietaryCommand(text) {
+    if (!text || typeof text !== 'string') return null;
+    const trimmed = text.trim();
+    const lower = trimmed.toLowerCase();
+
+    const validNone = ['dietary_none', '1', 'ninguna'];
+    const validVeg = ['dietary_vegetarian', '2', 'vegetariano', 'vegetariana'];
+    const validVegan = ['dietary_vegan', '3', 'vegano', 'vegana'];
+    const validGluten = ['dietary_gluten_free', '4', 'celíaco', 'celiaco', 'celíaca', 'celiaca', 'libre de gluten'];
+    const validAllergies = ['dietary_allergies', '5', 'alergias'];
+    const validOther = ['dietary_other', '6', 'otra', 'otro'];
+
+    if (validNone.includes(trimmed) || validNone.includes(lower)) return 'Ninguna';
+    if (validVeg.includes(trimmed) || validVeg.includes(lower)) return 'Vegetariano';
+    if (validVegan.includes(trimmed) || validVegan.includes(lower)) return 'Vegano';
+    if (validGluten.includes(trimmed) || validGluten.includes(lower)) return 'Celíaco / libre de gluten';
+    if (validAllergies.includes(trimmed) || validAllergies.includes(lower)) return 'Alergias';
+    if (validOther.includes(trimmed) || validOther.includes(lower)) return 'Otra';
+
+    return null;
+}

@@ -6,11 +6,12 @@ import {
     markWhatsAppMessageStatus,
     getRSVPsByPhoneSanitized,
     getRSVPByPhoneAndName,
+    getRSVPByLastWhatsAppMessageId,
     updateRSVPRecord,
     createRSVPRecord,
     createRSVPEvent
 } from '../_lib/supabase-admin.js';
-import { normalizePhone, normalizeName, validateRSVPInput } from '../_lib/rsvp-service.js';
+import { normalizePhone, normalizeName, validateRSVPInput, parseAttendanceCommand, parseDietaryCommand } from '../_lib/rsvp-service.js';
 import { syncToGoogleSheets } from '../_lib/google-sheets.js';
 import { sendWhatsAppMessage } from '../_lib/whatsapp-client.js';
 
@@ -111,12 +112,19 @@ export default async function handler(req, res) {
                                 msgText = msgText.trim();
 
                                 try {
-                                    await processPersistentWhatsAppFlow(fromPhone, msgText, msgId);
+                                    const result = await processPersistentWhatsAppFlow(fromPhone, msgText, msgId);
                                     await markWhatsAppMessageStatus(msgId, 'processed');
+                                    if (result && result.finalize_completed_session) {
+                                        await saveWhatsAppSession(fromPhone, 'IDLE', {}, msgId);
+                                    }
                                 } catch (flowErr) {
                                     hasErrors = true;
                                     console.error('WhatsApp flow error:', flowErr.message);
-                                    await markWhatsAppMessageStatus(msgId, 'failed', flowErr.message);
+                                    try {
+                                        await markWhatsAppMessageStatus(msgId, 'failed', flowErr.message);
+                                    } catch (markErr) {
+                                        console.error('Failed to mark message failed status:', markErr.message);
+                                    }
                                 }
                             }
                         }
@@ -242,10 +250,7 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
     }
 
     if (session.state === 'AWAITING_ATTENDANCE') {
-        let attStatus = null;
-        if (text === 'attendance_attending' || lowerText.includes('sí, asistiré') || lowerText.includes('si, asistire')) attStatus = 'attending';
-        else if (text === 'attendance_not_attending' || lowerText.includes('no podré asistir') || lowerText.includes('no podre asistir')) attStatus = 'not_attending';
-        else if (text === 'attendance_pending' || lowerText.includes('todavía no puedo') || lowerText.includes('todavia no puedo')) attStatus = 'pending';
+        const attStatus = parseAttendanceCommand(text);
 
         if (!attStatus) {
             const sendRes = await sendWhatsAppMessage(phone, 'Para ayudarte con tu confirmación, responde una de las opciones disponibles.');
@@ -274,20 +279,7 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
     }
 
     if (session.state === 'AWAITING_DIETARY') {
-        let dietary = null;
-        const validNone = ['dietary_none', '1', 'ninguna'];
-        const validVeg = ['dietary_vegetarian', '2', 'vegetariano', 'vegetariana'];
-        const validVegan = ['dietary_vegan', '3', 'vegano', 'vegana'];
-        const validGluten = ['dietary_gluten_free', '4', 'celíaco', 'celiaco', 'celíaca', 'celiaca', 'libre de gluten'];
-        const validAllergies = ['dietary_allergies', '5', 'alergias'];
-        const validOther = ['dietary_other', '6', 'otra', 'otro'];
-
-        if (validNone.includes(text) || validNone.includes(lowerText)) dietary = 'Ninguna';
-        else if (validVeg.includes(text) || validVeg.includes(lowerText)) dietary = 'Vegetariano';
-        else if (validVegan.includes(text) || validVegan.includes(lowerText)) dietary = 'Vegano';
-        else if (validGluten.includes(text) || validGluten.includes(lowerText)) dietary = 'Celíaco / libre de gluten';
-        else if (validAllergies.includes(text) || validAllergies.includes(lowerText)) dietary = 'Alergias';
-        else if (validOther.includes(text) || validOther.includes(lowerText)) dietary = 'Otra';
+        const dietary = parseDietaryCommand(text);
 
         if (!dietary) {
             const sendRes = await sendWhatsAppMessage(phone, 'Para ayudarte con tu confirmación, responde una de las opciones disponibles.');
@@ -335,14 +327,18 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
     }
 
     if (session.state === 'COMPLETED_PENDING_ACK') {
-        const ackSent = Boolean(session.data && session.data.ack_sent);
-        if (!ackSent) {
-            const sendRes = await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
-            if (!sendRes.ok) throw new Error(sendRes.error);
-            await saveWhatsAppSession(phone, 'COMPLETED_PENDING_ACK', { ...session.data, ack_sent: true }, msgId);
+        const isSameMessage = session.data && session.data.source_message_id === msgId;
+        if (isSameMessage) {
+            const ackSent = Boolean(session.data.ack_sent);
+            if (!ackSent) {
+                const sendRes = await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
+                if (!sendRes.ok) throw new Error(sendRes.error);
+                await saveWhatsAppSession(phone, 'COMPLETED_PENDING_ACK', { ...session.data, ack_sent: true }, msgId);
+            }
+            return { ok: true, finalize_completed_session: true };
+        } else {
+            session = { state: 'IDLE', data: {} };
         }
-        await saveWhatsAppSession(phone, 'IDLE', {}, msgId);
-        return;
     }
 
     if (session.state === 'AWAITING_CONFIRMATION') {
@@ -363,16 +359,19 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
                 return;
             }
 
-            let savedRecord = null;
+            let savedRecord = await getRSVPByLastWhatsAppMessageId(msgId);
             let isUpdateOperation = false;
             const fullNameNorm = valRes.data.full_name_normalized;
 
-            if (session.data.target_id) {
+            if (savedRecord) {
+                isUpdateOperation = true;
+            } else if (session.data.target_id) {
                 isUpdateOperation = true;
                 savedRecord = await updateRSVPRecord(session.data.target_id, {
                     attendance_status: valRes.data.attendance_status,
                     dietary_type: valRes.data.dietary_type,
-                    dietary_detail: valRes.data.dietary_detail
+                    dietary_detail: valRes.data.dietary_detail,
+                    last_whatsapp_message_id: msgId
                 });
                 if (savedRecord) await createRSVPEvent(session.data.target_id, 'updated', 'whatsapp');
             } else {
@@ -382,7 +381,8 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
                     savedRecord = await updateRSVPRecord(existing.id, {
                         attendance_status: valRes.data.attendance_status,
                         dietary_type: valRes.data.dietary_type,
-                        dietary_detail: valRes.data.dietary_detail
+                        dietary_detail: valRes.data.dietary_detail,
+                        last_whatsapp_message_id: msgId
                     });
                     if (savedRecord) await createRSVPEvent(existing.id, 'updated', 'whatsapp');
                 } else {
@@ -390,7 +390,8 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
                     savedRecord = await createRSVPRecord({
                         ...valRes.data,
                         source: 'whatsapp',
-                        reconfirmation_status: 'not_started'
+                        reconfirmation_status: 'not_started',
+                        last_whatsapp_message_id: msgId
                     });
                     if (savedRecord) await createRSVPEvent(savedRecord.id, 'created', 'whatsapp');
                 }
@@ -413,6 +414,7 @@ async function processPersistentWhatsAppFlow(phone, text, msgId) {
             const sendRes = await sendWhatsAppMessage(phone, 'Tu respuesta quedó registrada correctamente. No necesitas confirmarla nuevamente en la web. Si tus planes cambian, escribe MODIFICAR.');
             if (!sendRes.ok) throw new Error(sendRes.error);
             await saveWhatsAppSession(phone, 'COMPLETED_PENDING_ACK', { rsvp_id: savedRecord.id, ack_type: 'final_confirm', ack_sent: true, source_message_id: msgId }, msgId);
+            return { ok: true, finalize_completed_session: true };
 
         } else {
             await saveWhatsAppSession(phone, 'IDLE', {}, msgId);

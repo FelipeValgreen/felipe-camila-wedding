@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.rsvp_responses (
 
 -- Unique index to prevent duplicate confirmations per person/phone
 CREATE UNIQUE INDEX IF NOT EXISTS idx_rsvp_responses_phone_name ON public.rsvp_responses (phone_e164, full_name_normalized);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_rsvp_responses_last_whatsapp_message ON public.rsvp_responses(last_whatsapp_message_id) WHERE last_whatsapp_message_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS public.rsvp_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

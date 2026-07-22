@@ -62,6 +62,13 @@ export async function getRSVPById(id) {
     return res && res[0] ? res[0] : null;
 }
 
+
+export async function getRSVPByLastWhatsAppMessageId(msgId) {
+    if (!msgId) return null;
+    const res = await supabaseRequest('rsvp_responses?last_whatsapp_message_id=eq.' + encodeURIComponent(msgId) + '&select=*');
+    return res && res[0] ? res[0] : null;
+}
+
 export async function getRSVPByPhoneAndName(phone, fullNameNormalized) {
     const res = await supabaseRequest('rsvp_responses?phone_e164=eq.' + encodeURIComponent(phone) + '&full_name_normalized=eq.' + encodeURIComponent(fullNameNormalized) + '&select=*');
     return res && res[0] ? res[0] : null;
