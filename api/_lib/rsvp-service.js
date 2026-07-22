@@ -45,6 +45,18 @@ export function hashToken(token) {
     return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+export function timingSafeTokenEqual(token, storedHash) {
+    if (!token || !storedHash || typeof token !== 'string' || typeof storedHash !== 'string') {
+        return false;
+    }
+    const computedHash = hashToken(token);
+    const bufA = Buffer.from(computedHash, 'hex');
+    const bufB = Buffer.from(storedHash, 'hex');
+
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+}
+
 export function validateRSVPInput({ first_name, last_name, phone, attendance_status, dietary_type, dietary_detail }) {
     const fName = (first_name || '').trim();
     const lName = (last_name || '').trim();
@@ -157,17 +169,16 @@ export async function createRSVP(input, source = 'web') {
 
 export async function updateRSVP(rsvpId, manageToken, updates) {
     if (!rsvpId || !manageToken) {
-        return { ok: false, status: 400, error: 'Credenciales de modificación faltantes.' };
+        return { ok: false, status: 401, error: 'INVALID_CREDENTIALS' };
     }
 
     const existing = await getRSVPById(rsvpId);
     if (!existing) {
-        return { ok: false, status: 401, error: 'No se encontró el registro o token inválido.' };
+        return { ok: false, status: 401, error: 'INVALID_CREDENTIALS' };
     }
 
-    const providedHash = hashToken(manageToken);
-    if (existing.manage_token_hash !== providedHash) {
-        return { ok: false, status: 401, error: 'No se encontró el registro o token inválido.' };
+    if (!timingSafeTokenEqual(manageToken, existing.manage_token_hash)) {
+        return { ok: false, status: 401, error: 'INVALID_CREDENTIALS' };
     }
 
     const val = validateRSVPInput({
@@ -195,7 +206,9 @@ export async function updateRSVP(rsvpId, manageToken, updates) {
     try {
         const syncRes = await syncToGoogleSheets(updated, true);
         if (syncRes.synced) {
-            await updateRSVPRecord(rsvpId, { sheet_sync_status: 'synced' });
+            await updateRSVPRecord(rsvpId, { sheet_sync_status: 'synced', sheet_row_number: syncRes.sheet_row_number || updated.sheet_row_number });
+        } else {
+            await updateRSVPRecord(rsvpId, { sheet_sync_status: 'failed' });
         }
     } catch (err) {
         console.error('Sheets update sync error:', err.message);

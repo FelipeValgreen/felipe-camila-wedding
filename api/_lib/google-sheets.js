@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 export function mapRSVPStatusToSheet(attendance_status, source) {
     if (attendance_status === 'not_attending') return 'No Asiste';
     if (attendance_status === 'pending') return 'Pendiente';
@@ -7,6 +9,49 @@ export function mapRSVPStatusToSheet(attendance_status, source) {
         return 'Confirmado Manual';
     }
     return 'Pendiente';
+}
+
+function formatPrivateKey(key) {
+    if (!key) return '';
+    return key.replace(/\n/g, '\n');
+}
+
+async function getGoogleAccessToken(email, privateKey) {
+    const header = { alg: 'RS256', typ: 'JWT' };
+    const now = Math.floor(Date.now() / 1000);
+    const claimSet = {
+        iss: email,
+        scope: 'https://www.googleapis.com/auth/spreadsheets',
+        aud: 'https://oauth2.googleapis.com/token',
+        exp: now + 3600,
+        iat: now
+    };
+
+    const b64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
+    const b64Claim = Buffer.from(JSON.stringify(claimSet)).toString('base64url');
+    const signInput = b64Header + '.' + b64Claim;
+
+    const formattedKey = formatPrivateKey(privateKey);
+    const signer = crypto.createSign('RSA-SHA256');
+    signer.update(signInput);
+    const signature = signer.sign(formattedKey, 'base64url');
+
+    const jwt = signInput + '.' + signature;
+
+    const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            assertion: jwt
+        })
+    });
+
+    if (!res.ok) {
+        throw new Error('GOOGLE_AUTH_FAILED_' + res.status);
+    }
+    const data = await res.json();
+    return data.access_token;
 }
 
 export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
@@ -20,16 +65,88 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false) {
     }
 
     try {
-        // Real Google Sheets API authentication & request would occur here when real credentials are present
-        const rowValue = mapRSVPStatusToSheet(rsvpData.attendance_status, rsvpData.source);
-        const rowNumber = rsvpData.sheet_row_number || 2;
-        return {
-            synced: true,
-            sheet_row_number: rowNumber,
-            status_text: rowValue
-        };
+        const accessToken = await getGoogleAccessToken(clientEmail, privateKey);
+        const rowValues = [
+            rsvpData.id || '',
+            rsvpData.first_name || '',
+            rsvpData.last_name || '',
+            rsvpData.phone_e164 || '',
+            mapRSVPStatusToSheet(rsvpData.attendance_status, rsvpData.source),
+            rsvpData.source || 'web',
+            rsvpData.dietary_type || 'Ninguna',
+            rsvpData.dietary_detail || '',
+            rsvpData.first_response_at || new Date().toISOString(),
+            rsvpData.updated_at || new Date().toISOString(),
+            rsvpData.reconfirmation_status || 'not_started',
+            rsvpData.reconfirmed_at || '',
+            ''
+        ];
+
+        let targetRowNumber = rsvpData.sheet_row_number;
+
+        if (isUpdate && !targetRowNumber) {
+            // Search column A for UUID
+            const searchUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A:A';
+            const searchRes = await fetch(searchUrl, {
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            if (searchRes.ok) {
+                const searchData = await searchRes.json();
+                const values = searchData.values || [];
+                for (let i = 0; i < values.length; i++) {
+                    if (values[i][0] === rsvpData.id) {
+                        targetRowNumber = i + 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (isUpdate && targetRowNumber) {
+            // Update exact row
+            const updateUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A' + targetRowNumber + ':M' + targetRowNumber + '?valueInputOption=USER_ENTERED';
+            const updateRes = await fetch(updateUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ values: [rowValues] })
+            });
+
+            if (!updateRes.ok) throw new Error('SHEETS_UPDATE_HTTP_' + updateRes.status);
+            return { synced: true, sheet_row_number: targetRowNumber };
+
+        } else {
+            // Append new row
+            const appendUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A:M:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
+            const appendRes = await fetch(appendUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ values: [rowValues] })
+            });
+
+            if (!appendRes.ok) throw new Error('SHEETS_APPEND_HTTP_' + appendRes.status);
+            const appendData = await appendRes.json();
+
+            // Parse exact row number from updatedRange (e.g., 'CONFIRMACIONES_RSVP_TEST!A12:M12')
+            let parsedRow = null;
+            if (appendData.updates && appendData.updates.updatedRange) {
+                const match = appendData.updates.updatedRange.match(/!A(\d+):/);
+                if (match) parsedRow = parseInt(match[1], 10);
+            }
+
+            return {
+                synced: true,
+                sheet_row_number: parsedRow
+            };
+        }
+
     } catch (err) {
         console.error('Google Sheets Sync Failure:', err.message);
-        return { synced: false, error: 'SHEETS_SYNC_FAILED' };
+        return { synced: false, error: err.message || 'SHEETS_SYNC_FAILED' };
     }
 }

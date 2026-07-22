@@ -410,17 +410,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const cfg = await res.json();
                 const waTab = document.getElementById('rsvp-tab-wa');
-                if (waTab) {
-                    if (cfg.wedding_whatsapp_number) {
-                        waTab.href = `https://wa.me/${cfg.wedding_whatsapp_number}?text=${encodeURIComponent('Hola, quiero confirmar mi asistencia al matrimonio de Felipe y Camila.')}`;
-                    } else {
+                const waSupport = document.getElementById('rsvp-support-wa');
+
+                if (cfg.wedding_whatsapp_number) {
+                    const confirmUrl = `https://wa.me/${cfg.wedding_whatsapp_number}?text=${encodeURIComponent('Hola, quiero confirmar mi asistencia al matrimonio de Felipe y Camila.')}`;
+                    const supportUrl = `https://wa.me/${cfg.wedding_whatsapp_number}?text=${encodeURIComponent('Hola, tengo una consulta sobre el matrimonio de Felipe y Camila.')}`;
+
+                    if (waTab) {
+                        waTab.href = confirmUrl;
+                        const sub = waTab.querySelector('span:last-child');
+                        if (sub) sub.textContent = 'Se abrirá el WhatsApp del matrimonio para guiarte.';
+                    }
+                    if (waSupport) waSupport.href = supportUrl;
+                } else {
+                    const disableHandler = (e) => {
+                        e.preventDefault();
+                        showToast('La atención por WhatsApp estará disponible próximamente.', 'info');
+                    };
+                    if (waTab) {
                         waTab.href = '#';
-                        waTab.onclick = (e) => {
-                            e.preventDefault();
-                            showToast('La confirmación por WhatsApp estará disponible próximamente.', 'info');
-                        };
+                        waTab.onclick = disableHandler;
                         const sub = waTab.querySelector('span:last-child');
                         if (sub) sub.textContent = 'La confirmación por WhatsApp estará disponible próximamente.';
+                    }
+                    if (waSupport) {
+                        waSupport.href = '#';
+                        waSupport.onclick = disableHandler;
                     }
                 }
             }
@@ -429,6 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     loadPublicConfig();
+
 
 
     // Safe Image Creation Helper with error fallback & objectPosition

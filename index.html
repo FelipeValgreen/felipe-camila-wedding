@@ -330,9 +330,9 @@
                         <span class="block text-xs uppercase tracking-[0.2em] font-bold">Confirmar en la invitación</span>
                         <span class="block text-[10px] text-light/70 font-light mt-1">Tu respuesta quedará registrada sin salir de esta página.</span>
                     </button>
-                    <a href="https://wa.me/56981393436?text=Hola%2C%20quiero%20confirmar%20mi%20asistencia%20al%20matrimonio%20de%20Felipe%20y%20Camila." target="_blank" rel="noopener noreferrer" id="rsvp-tab-wa" class="p-4 bg-light text-dark border border-dark/20 text-center rounded-sm hover:border-dark transition-all flex flex-col justify-center">
+                    <a href="#" id="rsvp-tab-wa" class="p-4 bg-light text-dark border border-dark/20 text-center rounded-sm hover:border-dark transition-all flex flex-col justify-center">
                         <span class="block text-xs uppercase tracking-[0.2em] font-bold text-dark flex items-center justify-center gap-1.5"><i class="fa-brands fa-whatsapp text-sm text-[#25D366]"></i> Confirmar por WhatsApp</span>
-                        <span class="block text-[10px] text-muted font-light mt-1">Se abrirá el WhatsApp del matrimonio para guiarte.</span>
+                        <span class="block text-[10px] text-muted font-light mt-1">La confirmación por WhatsApp estará disponible próximamente.</span>
                     </a>
                 </div>
 
@@ -358,7 +358,7 @@
 
                             <div class="space-y-2 pt-2">
                                 <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">WhatsApp de Contacto</label>
-                                <input type="tel" id="rsvp-whatsapp" required autocomplete="tel" inputmode="tel" pattern="[+0-9(). -]{8,25}" placeholder="Ej: +56 9 8139 3436" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
+                                <input type="tel" id="rsvp-whatsapp" required autocomplete="tel" inputmode="tel" pattern="[+0-9(). -]{8,25}" placeholder="Ej: +56 9 1234 5678" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
                             </div>
 
                             <div class="space-y-3 pt-4 border-t border-dark/10">
@@ -409,7 +409,7 @@
                     <!-- Success / Direct Registration Step -->
                     <div id="rsvp-success" class="hidden text-center space-y-6">
                         <h3 class="font-serif text-3xl text-dark">Tu respuesta quedó registrada</h3>
-                        <p class="text-muted text-sm font-light">Podrás modificarla si tus plans cambian.</p>
+                        <p class="text-muted text-sm font-light">Podrás modificarla si tus planes cambian.</p>
 
                         <!-- Response Summary -->
                         <div class="bg-cream p-6 text-left border border-dark/10 space-y-2 font-sans text-sm text-dark">
@@ -423,9 +423,9 @@
                             <button type="button" id="rsvp-edit-btn" class="w-full border border-dark/30 text-dark text-xs uppercase tracking-[0.2em] py-4 hover:bg-dark hover:text-light transition-all font-semibold bg-light">
                                 <i class="fa-solid fa-pen-to-square"></i> Modificar mi respuesta
                             </button>
-                            <a href="https://wa.me/56981393436?text=Hola%2C%20tengo%20una%20consulta%20sobre%20mi%20confirmaci%C3%B3n" target="_blank" rel="noopener noreferrer" class="w-full border border-dark/20 text-muted hover:text-dark text-xs uppercase tracking-[0.2em] py-3.5 transition-all text-center">
-                                Escribir al WhatsApp del matrimonio
-                            </a>
+                            <button type="button" id="rsvp-another-btn" class="w-full border border-dark/20 text-dark text-xs uppercase tracking-[0.2em] py-3.5 hover:bg-dark hover:text-light transition-all font-semibold bg-light">
+                                Confirmar otra persona
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -627,10 +627,9 @@
                         <p class="font-sans text-sm text-muted font-light leading-relaxed">
                             Si tienes dudas sobre horarios, ubicación, dress code o confirmación, escríbenos directamente.
                         </p>
-                        <p class="font-serif text-xl text-dark font-normal">+56 9 8139 3436</p>
                     </div>
                     <div class="pt-4">
-                        <a href="https://wa.me/56981393436?text=Hola%2C%20tengo%20una%20consulta%20sobre%20el%20matrimonio%20de%20Felipe%20y%20Camila" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-3 bg-[#25D366] text-white text-xs uppercase tracking-[0.25em] px-6 py-4 hover:bg-[#20ba5a] transition-all font-semibold w-full justify-center">
+                        <a href="#" id="rsvp-support-wa" class="inline-flex items-center gap-3 bg-[#25D366] text-white text-xs uppercase tracking-[0.25em] px-6 py-4 hover:bg-[#20ba5a] transition-all font-semibold w-full justify-center">
                             <i class="fa-brands fa-whatsapp text-base"></i>
                             <span>Escribir al WhatsApp del matrimonio</span>
                         </a>
