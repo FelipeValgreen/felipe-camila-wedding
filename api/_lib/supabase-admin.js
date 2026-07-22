@@ -1,3 +1,10 @@
+const PROTECTED_SUPABASE_HEADERS = new Set([
+    'apikey',
+    'authorization',
+    'content-type',
+    'prefer'
+]);
+
 export function getSupabaseServerKey(env = process.env) {
     return env.SUPABASE_SECRET_KEY
         || env.SUPABASE_SERVICE_ROLE_KEY
@@ -9,11 +16,13 @@ export function buildSupabaseHeaders(key, options = {}) {
         throw new Error('SUPABASE_NOT_CONFIGURED');
     }
 
-    const customHeaders = { ...(options.headers || {}) };
+    const customHeaders = {};
 
-    delete customHeaders.apikey;
-    delete customHeaders.Authorization;
-    delete customHeaders.authorization;
+    for (const [name, value] of Object.entries(options.headers || {})) {
+        if (!PROTECTED_SUPABASE_HEADERS.has(name.toLowerCase())) {
+            customHeaders[name] = value;
+        }
+    }
 
     const headers = {
         ...customHeaders,

@@ -6,6 +6,12 @@ import {
     sanitizeSupabaseError
 } from '../api/_lib/supabase-admin.js';
 
+function countHeaderNames(headers, expectedName) {
+    return Object.keys(headers)
+        .filter(name => name.toLowerCase() === expectedName.toLowerCase())
+        .length;
+}
+
 test('1. getSupabaseServerKey uses SUPABASE_SECRET_KEY when present', () => {
     const env = { SUPABASE_SECRET_KEY: 'sb_secret_TEST_ONLY_NOT_REAL' };
     assert.equal(getSupabaseServerKey(env), 'sb_secret_TEST_ONLY_NOT_REAL');
@@ -29,7 +35,7 @@ test('4 & 5. buildSupabaseHeaders sends sb_secret_ in apikey and omits Authoriza
     const headers = buildSupabaseHeaders(key);
 
     assert.equal(headers.apikey, 'sb_secret_TEST_ONLY_NOT_REAL');
-    assert.equal(headers.Authorization, undefined);
+    assert.equal(countHeaderNames(headers, 'authorization'), 0);
 });
 
 test('6 & 7. buildSupabaseHeaders sends legacy JWT in both apikey and Authorization Bearer', () => {
@@ -38,6 +44,7 @@ test('6 & 7. buildSupabaseHeaders sends legacy JWT in both apikey and Authorizat
 
     assert.equal(headers.apikey, 'legacy.jwt.test-only');
     assert.equal(headers.Authorization, 'Bearer legacy.jwt.test-only');
+    assert.equal(countHeaderNames(headers, 'authorization'), 1);
 });
 
 test('8. buildSupabaseHeaders throws SUPABASE_NOT_CONFIGURED if key is missing or empty', () => {
@@ -50,6 +57,7 @@ test('9. buildSupabaseHeaders preserves Content-Type header and prevents overrid
         headers: { 'Content-Type': 'text/plain' }
     });
     assert.equal(headers['Content-Type'], 'application/json');
+    assert.equal(countHeaderNames(headers, 'content-type'), 1);
 });
 
 test('10. buildSupabaseHeaders preserves default and custom Prefer options', () => {
@@ -58,6 +66,7 @@ test('10. buildSupabaseHeaders preserves default and custom Prefer options', () 
 
     const customHeaders = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', { prefer: 'count=exact' });
     assert.equal(customHeaders.Prefer, 'count=exact');
+    assert.equal(countHeaderNames(customHeaders, 'prefer'), 1);
 });
 
 test('11. buildSupabaseHeaders preserves additional custom headers', () => {
@@ -85,40 +94,96 @@ test('13. No test logs print actual keys or full Authorization headers', () => {
     assert.equal(repr.includes('Authorization'), false);
 });
 
-// Additional Hardening Tests (Step 6)
-test('14. custom Authorization header is stripped when using sb_secret_', () => {
+// Case-Insensitive Protected Headers Verification Tests (Step 3)
+test('14. AUTHORIZATION uppercase custom header is stripped with sb_secret_', () => {
     const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
-        headers: { Authorization: 'Bearer malicious_token' }
+        headers: { AUTHORIZATION: 'Bearer malicious_token' }
     });
-    assert.equal(headers.Authorization, undefined);
+    assert.equal(countHeaderNames(headers, 'authorization'), 0);
 });
 
-test('15. custom lowercase authorization header is stripped', () => {
+test('15. AuthoriZation mixed case custom header is stripped with sb_secret_', () => {
     const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
-        headers: { authorization: 'Bearer malicious_token' }
+        headers: { AuthoriZation: 'Bearer malicious_token' }
     });
-    assert.equal(headers.authorization, undefined);
-    assert.equal(headers.Authorization, undefined);
+    assert.equal(countHeaderNames(headers, 'authorization'), 0);
 });
 
-test('16. custom apikey header cannot override real key', () => {
+test('16. APIKEY uppercase custom header cannot override real key', () => {
     const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
-        headers: { apikey: 'malicious_apikey' }
+        headers: { APIKEY: 'malicious_apikey' }
     });
     assert.equal(headers.apikey, 'sb_secret_TEST_ONLY_NOT_REAL');
+    assert.equal(countHeaderNames(headers, 'apikey'), 1);
 });
 
-test('17. custom Authorization header cannot override legacy JWT Bearer', () => {
-    const headers = buildSupabaseHeaders('legacy.jwt.test-only', {
-        headers: { Authorization: 'Bearer malicious_token' }
+test('17. ApiKey mixed case custom header cannot override real key', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        headers: { ApiKey: 'malicious_apikey' }
     });
+    assert.equal(headers.apikey, 'sb_secret_TEST_ONLY_NOT_REAL');
+    assert.equal(countHeaderNames(headers, 'apikey'), 1);
+});
+
+test('18. content-type lowercase custom header cannot override application/json', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        headers: { 'content-type': 'text/html' }
+    });
+    assert.equal(headers['Content-Type'], 'application/json');
+    assert.equal(countHeaderNames(headers, 'content-type'), 1);
+});
+
+test('19. CONTENT-TYPE uppercase custom header cannot override application/json', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        headers: { 'CONTENT-TYPE': 'text/html' }
+    });
+    assert.equal(headers['Content-Type'], 'application/json');
+    assert.equal(countHeaderNames(headers, 'content-type'), 1);
+});
+
+test('20. prefer lowercase custom header cannot override options.prefer', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        prefer: 'count=exact',
+        headers: { prefer: 'resolution=ignore-duplicates' }
+    });
+    assert.equal(headers.Prefer, 'count=exact');
+    assert.equal(countHeaderNames(headers, 'prefer'), 1);
+});
+
+test('21. PREFER uppercase custom header cannot override options.prefer', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        prefer: 'count=exact',
+        headers: { PREFER: 'resolution=ignore-duplicates' }
+    });
+    assert.equal(headers.Prefer, 'count=exact');
+    assert.equal(countHeaderNames(headers, 'prefer'), 1);
+});
+
+test('22. legacy key produces exactly one authorization header case-insensitive', () => {
+    const headers = buildSupabaseHeaders('legacy.jwt.test-only', {
+        headers: { AUTHORIZATION: 'Bearer malicious_token' }
+    });
+    assert.equal(countHeaderNames(headers, 'authorization'), 1);
     assert.equal(headers.Authorization, 'Bearer legacy.jwt.test-only');
 });
 
-test('18. Prefer custom works exclusively via options.prefer', () => {
+test('23. modern key produces zero authorization headers case-insensitive', () => {
     const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
-        prefer: 'count=exact',
-        headers: { Prefer: 'resolution=ignore-duplicates' }
+        headers: { AUTHORIZATION: 'Bearer malicious_token', authorization: 'Bearer token2' }
     });
-    assert.equal(headers.Prefer, 'count=exact');
+    assert.equal(countHeaderNames(headers, 'authorization'), 0);
+});
+
+test('24. apikey header is exactly one case-insensitive for both modern and legacy keys', () => {
+    const modernHeaders = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', { headers: { APIKEY: 'test' } });
+    const legacyHeaders = buildSupabaseHeaders('legacy.jwt.test-only', { headers: { APIKEY: 'test' } });
+    assert.equal(countHeaderNames(modernHeaders, 'apikey'), 1);
+    assert.equal(countHeaderNames(legacyHeaders, 'apikey'), 1);
+});
+
+test('25. X-Custom-Header continues to be preserved cleanly', () => {
+    const headers = buildSupabaseHeaders('sb_secret_TEST_ONLY_NOT_REAL', {
+        headers: { 'X-Custom-Header': 'valid_value' }
+    });
+    assert.equal(headers['X-Custom-Header'], 'valid_value');
 });

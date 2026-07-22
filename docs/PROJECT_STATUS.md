@@ -1,7 +1,7 @@
 # Estado del Proyecto y Plan de Cierre · “El Umbral Vivo”
 
 **Felipe & Camila · Matrimonio Viernes 23 de Octubre de 2026**
-**Versión**: 1.5
+**Versión**: 1.6
 **Fecha de Actualización**: 22 de Julio de 2026
 **Repositorio**: `FelipeValgreen/felipe-camila-wedding`
 **Rama activa**: `feature/unified-rsvp-v3-2026-07-21`
@@ -15,8 +15,8 @@
 
 ## 1. Declaración de Bloqueadores
 
-### 1.1 Bloqueadores para la ejecución de Fase 1B.1 (Compatibilidad y Endurecimiento)
-- **Ninguno**. Se completó la implementación del gate dual en `/api/rsvp.js`, la mitigación de inyección de headers en `buildSupabaseHeaders` y las pruebas exhaustivas de la suite.
+### 1.1 Bloqueadores para la ejecución de Fase 1B.1 (Hardening Final de Headers)
+- **Ninguno**. Se completó la normalización case-insensitive del filtrado de headers en `buildSupabaseHeaders` y la suite de pruebas asociada.
 
 ### 1.2 Bloqueadores del Proyecto para el Lanzamiento a Producción
 1. **Seguridad**: Confirmación de rotación de la `SUPABASE_SERVICE_ROLE_KEY` expuesta en el historial previo mediante `SUPABASE_SECRET_KEY`.
@@ -128,7 +128,7 @@ gh pr view 6 --repo FelipeValgreen/felipe-camila-wedding --json baseRefName,base
 ## 7. Registro de Seguridad y Credenciales
 
 - Ver informe completo detallado en [docs/SECURITY_STATUS.md](docs/SECURITY_STATUS.md).
-- **Google Service Account Keys**: 7 claves activas registradas en GCP IAM. Plan de rotación corregido para generar clave dedicada antes de purga.
+- **Google Service Account Keys**: 7 claves activas registradas en GCP IAM. Clave actualmente usada por Vercel `UNVERIFIED`.
 - **Auditoría de Archivos Temporales y Secretos**:
   - Secretos completos impresos: `NO`
   - Limpieza local de temporales: Confirmada.
@@ -200,4 +200,4 @@ gh pr view 6 --repo FelipeValgreen/felipe-camila-wedding --json baseRefName,base
 - **Secretos impresos en consola/logs**: `NO`
 
 ---
-*Documento de Baseline v1.5 actualizado bajo el protocolo de ejecución estricto de Antigravity.*
+*Documento de Baseline v1.6 actualizado bajo el protocolo de ejecución estricto de Antigravity.*
