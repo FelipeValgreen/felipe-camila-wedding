@@ -148,31 +148,107 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('scroll', updateCtaVisibility);
 
-    // 5. RSVP Logic & Safe Validation
+    // 5. Unified Web RSVP Submission & Direct Registration
     const rsvpForm = document.getElementById('rsvp-form');
     const rsvpSuccess = document.getElementById('rsvp-success');
     const rsvpFormStep = document.getElementById('rsvp-form-step');
+    const rsvpSubmitBtn = document.getElementById('rsvp-submit-btn');
     
     const rsvpFirstnameInput = document.getElementById('rsvp-firstname');
     const rsvpLastnameInput = document.getElementById('rsvp-lastname');
     const rsvpWhatsappInput = document.getElementById('rsvp-whatsapp');
+    const rsvpWebsiteField = document.getElementById('rsvp-website-field');
     const rsvpDietarySelect = document.getElementById('rsvp-dietary-select');
     const rsvpDietaryDetailInput = document.getElementById('rsvp-dietary-detail');
     const rsvpDietaryDetailSection = document.getElementById('rsvp-dietary-details-section');
 
-    const NOVIOS_PHONE = '56981393436'; 
     const attendanceRadios = document.getElementsByName('rsvp-attendance');
     const dietaryFlagGroup = document.getElementById('rsvp-dietary-flag-group');
 
+    let currentRSVPId = localStorage.getItem('rsvp_id') || null;
+    let currentManageToken = localStorage.getItem('rsvp_manage_token') || null;
+    let isExplicitUpdateMode = false;
+
+    // Page Load Safe RSVP Restoration via action=read
+    async function restoreRSVPSessionOnLoad() {
+        if (!currentRSVPId || !currentManageToken) return;
+
+        try {
+            const response = await fetch('/api/rsvp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'read',
+                    rsvp_id: currentRSVPId,
+                    manage_token: currentManageToken
+                })
+            });
+
+            const data = await response.json();
+            if (response.ok && data.ok && data.rsvp) {
+                const rsvp = data.rsvp;
+                if (rsvpFirstnameInput) rsvpFirstnameInput.value = rsvp.first_name || '';
+                if (rsvpLastnameInput) rsvpLastnameInput.value = rsvp.last_name || '';
+                if (rsvpWhatsappInput) rsvpWhatsappInput.value = rsvp.phone_e164 || '';
+
+                for (const radio of attendanceRadios) {
+                    radio.checked = (radio.value === rsvp.attendance_status);
+                }
+                handleAttendanceChange();
+
+                if (rsvp.attendance_status === 'attending' && rsvp.dietary_type && rsvpDietarySelect) {
+                    rsvpDietarySelect.value = rsvp.dietary_type;
+                    if (rsvp.dietary_detail && rsvpDietaryDetailInput) {
+                        rsvpDietaryDetailInput.value = rsvp.dietary_detail;
+                    }
+                }
+
+                // Show summary state
+                const summaryName = document.getElementById('summary-name');
+                const summaryAttendance = document.getElementById('summary-attendance');
+                const summaryDietary = document.getElementById('summary-dietary');
+                const summaryDietaryRow = document.getElementById('summary-dietary-row');
+
+                if (summaryName) summaryName.textContent = `${rsvp.first_name} ${rsvp.last_name}`;
+                let attendanceLabel = 'Sí, asistiré';
+                if (rsvp.attendance_status === 'not_attending') attendanceLabel = 'No podré asistir';
+                if (rsvp.attendance_status === 'pending') attendanceLabel = 'Todavía no puedo confirmar';
+                if (summaryAttendance) summaryAttendance.textContent = attendanceLabel;
+
+                if (rsvp.attendance_status === 'attending') {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.remove('hidden');
+                    if (summaryDietary) summaryDietary.textContent = rsvp.dietary_detail || rsvp.dietary_type || 'Ninguna';
+                } else {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.add('hidden');
+                }
+
+                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
+                if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
+                rsvpCompleted = true;
+                isExplicitUpdateMode = true;
+                updateCtaVisibility();
+            } else {
+                // Verification failed -> clear stale tokens
+                currentRSVPId = null;
+                currentManageToken = null;
+                localStorage.removeItem('rsvp_id');
+                localStorage.removeItem('rsvp_manage_token');
+            }
+        } catch (e) {
+            console.warn('RSVP session restore warning:', e);
+        }
+    }
+    restoreRSVPSessionOnLoad();
+
     function handleAttendanceChange() {
-        let isAttending = true;
+        let selectedValue = 'attending';
         for (const radio of attendanceRadios) {
-            if (radio.checked && radio.value === 'no') {
-                isAttending = false;
+            if (radio.checked) {
+                selectedValue = radio.value;
             }
         }
 
-        if (isAttending) {
+        if (selectedValue === 'attending') {
             if (dietaryFlagGroup) dietaryFlagGroup.classList.remove('hidden');
             if (rsvpDietarySelect && (rsvpDietarySelect.value === 'Alergias' || rsvpDietarySelect.value === 'Otra')) {
                 if (rsvpDietaryDetailSection) rsvpDietaryDetailSection.classList.remove('hidden');
@@ -210,47 +286,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Clipboard Copy Helper
-    function runFallbackCopy(text, resolve, reject) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        try {
-            const successful = document.execCommand('copy');
-            textarea.remove();
-            if (successful) resolve();
-            else reject(new Error('Fallback copy command failed'));
-        } catch (err) {
-            textarea.remove();
-            reject(err);
-        }
-    }
-
-    function copyTextToClipboard(text) {
-        return new Promise((resolve, reject) => {
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text)
-                    .then(resolve)
-                    .catch(() => runFallbackCopy(text, resolve, reject));
-            } else {
-                runFallbackCopy(text, resolve, reject);
-            }
-        });
-    }
-
     if (rsvpForm) {
-        rsvpForm.addEventListener('submit', (e) => {
+        rsvpForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const firstName = rsvpFirstnameInput.value.trim();
             const lastName = rsvpLastnameInput.value.trim();
             const rawPhone = rsvpWhatsappInput.value.trim();
+            const honeypot = rsvpWebsiteField ? rsvpWebsiteField.value : '';
 
-            // 1. First & Last name validation (min 2 chars)
             if (firstName.length < 2) {
                 showToast('Ingresa un nombre válido (mínimo 2 caracteres).', 'error');
                 rsvpFirstnameInput.focus();
@@ -263,15 +307,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 2. Strict Phone validation & normalization
             const isLeadingPlus = rawPhone.startsWith('+');
             const phoneRest = isLeadingPlus ? rawPhone.slice(1) : rawPhone;
-
-            // Reject if letters exist, or if + exists anywhere else, or invalid characters
             const hasLetters = /[a-zA-Z]/.test(rawPhone);
             const hasInvalidChars = /[^0-9\s().-]/.test(phoneRest);
             const hasMultiplePlus = (rawPhone.match(/\+/g) || []).length > 1;
-
             const digitsOnly = rawPhone.replace(/[^\d]/g, '');
 
             if (hasLetters || hasInvalidChars || hasMultiplePlus || digitsOnly.length < 8 || digitsOnly.length > 15) {
@@ -280,17 +320,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const normalizedPhone = (isLeadingPlus ? '+' : '') + digitsOnly;
-
-            let isAttending = true;
+            let attendanceStatus = 'attending';
             for (const radio of attendanceRadios) {
-                if (radio.checked && radio.value === 'no') {
-                    isAttending = false;
+                if (radio.checked) {
+                    attendanceStatus = radio.value;
                 }
             }
 
             let dietary = 'Ninguna';
-            if (isAttending) {
+            let dietaryDetail = '';
+
+            if (attendanceStatus === 'attending') {
                 if (rsvpDietarySelect.value === 'Alergias' || rsvpDietarySelect.value === 'Otra') {
                     const detail = rsvpDietaryDetailInput.value.trim();
                     if (!detail || detail.length < 2 || detail.toLowerCase() === 'alergias' || detail.toLowerCase() === 'otra') {
@@ -299,57 +339,101 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
                     dietary = detail;
+                    dietaryDetail = detail;
                 } else {
                     dietary = rsvpDietarySelect.value;
                 }
             }
 
-            let whatsappMsg = '';
-            if (isAttending) {
-                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Confirmo mi asistencia al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi restricción alimentaria es: ${dietary}. Mi WhatsApp de contacto es: ${normalizedPhone}.`;
-            } else {
-                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Lamentablemente no podré asistir al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi WhatsApp de contacto es: ${normalizedPhone}.`;
+            if (rsvpSubmitBtn) {
+                rsvpSubmitBtn.disabled = true;
+                rsvpSubmitBtn.textContent = 'Guardando...';
             }
 
-
-            const whatsappUrl = `https://wa.me/${NOVIOS_PHONE}?text=${encodeURIComponent(whatsappMsg)}`;
-
-            const summaryName = document.getElementById('summary-name');
-            const summaryWhatsapp = document.getElementById('summary-whatsapp');
-            const summaryAttendance = document.getElementById('summary-attendance');
-            const summaryDietary = document.getElementById('summary-dietary');
-            const summaryDietaryRow = document.getElementById('summary-dietary-row');
-
-            if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
-            if (summaryWhatsapp) summaryWhatsapp.textContent = rawPhone;
-            if (summaryAttendance) summaryAttendance.textContent = isAttending ? 'Sí, asistiré' : 'No podré asistir';
-            
-            if (isAttending) {
-                if (summaryDietaryRow) summaryDietaryRow.classList.remove('hidden');
-                if (summaryDietary) summaryDietary.textContent = dietary;
-            } else {
-                if (summaryDietaryRow) summaryDietaryRow.classList.add('hidden');
-            }
-
-            const whatsappShareBtn = document.getElementById('rsvp-whatsapp-share-btn');
-            if (whatsappShareBtn) whatsappShareBtn.href = whatsappUrl;
-
-            const copyBtn = document.getElementById('rsvp-copy-msg-btn');
-            if (copyBtn) {
-                copyBtn.onclick = () => {
-                    copyTextToClipboard(whatsappMsg).then(() => {
-                        showToast('Respuesta copiada al portapapeles', 'success');
-                    }).catch(() => {
-                        showToast('No se pudo copiar automáticamente', 'error');
-                    });
+            try {
+                const isUpdate = Boolean(isExplicitUpdateMode && currentRSVPId && currentManageToken);
+                const payload = {
+                    action: isUpdate ? 'update' : 'create',
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone: rawPhone,
+                    attendance_status: attendanceStatus,
+                    dietary_type: attendanceStatus === 'attending' ? rsvpDietarySelect.value : null,
+                    dietary_detail: attendanceStatus === 'attending' ? dietaryDetail : null,
+                    website: honeypot
                 };
+
+                if (isUpdate) {
+                    payload.rsvp_id = currentRSVPId;
+                    payload.manage_token = currentManageToken;
+                }
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                const response = await fetch('/api/rsvp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                const data = await response.json();
+
+                if (!response.ok || !data.ok) {
+                    const msg = 'No pudimos guardar tu respuesta. Intenta nuevamente o escríbenos por WhatsApp.';
+                    showToast(msg, 'error');
+                    if (rsvpSubmitBtn) {
+                        rsvpSubmitBtn.disabled = false;
+                        rsvpSubmitBtn.textContent = isUpdate ? 'Guardar cambios' : 'Registrar mi respuesta';
+                    }
+                    return;
+                }
+
+                if (data.rsvp_id && data.manage_token) {
+                    currentRSVPId = data.rsvp_id;
+                    currentManageToken = data.manage_token;
+                    localStorage.setItem('rsvp_id', currentRSVPId);
+                    localStorage.setItem('rsvp_manage_token', currentManageToken);
+                }
+
+                const summaryName = document.getElementById('summary-name');
+                const summaryAttendance = document.getElementById('summary-attendance');
+                const summaryDietary = document.getElementById('summary-dietary');
+                const summaryDietaryRow = document.getElementById('summary-dietary-row');
+
+                if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
+                let attendanceLabel = 'Sí, asistiré';
+                if (attendanceStatus === 'not_attending') attendanceLabel = 'No podré asistir';
+                if (attendanceStatus === 'pending') attendanceLabel = 'Aún no estoy seguro/a';
+                if (summaryAttendance) summaryAttendance.textContent = attendanceLabel;
+                
+                if (attendanceStatus === 'attending') {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.remove('hidden');
+                    if (summaryDietary) summaryDietary.textContent = dietary;
+                } else {
+                    if (summaryDietaryRow) summaryDietaryRow.classList.add('hidden');
+                }
+
+                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
+                if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
+
+                showToast(isUpdate ? 'Tu respuesta fue actualizada.' : 'Tu respuesta quedó registrada.', 'success');
+
+                rsvpCompleted = true;
+                isExplicitUpdateMode = true;
+                updateCtaVisibility();
+
+            } catch (err) {
+                console.error('RSVP API fetch error:', err);
+                showToast('No pudimos guardar tu respuesta. Intenta nuevamente o escríbenos por WhatsApp.', 'error');
+            } finally {
+                if (rsvpSubmitBtn) {
+                    rsvpSubmitBtn.disabled = false;
+                    rsvpSubmitBtn.textContent = isExplicitUpdateMode ? 'Guardar cambios' : 'Registrar mi respuesta';
+                }
             }
-
-            if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
-            if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
-
-            rsvpCompleted = true;
-            updateCtaVisibility();
         });
     }
 
@@ -358,6 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editBtn) {
         editBtn.addEventListener('click', () => {
             rsvpCompleted = false;
+            isExplicitUpdateMode = true;
+            if (rsvpSubmitBtn) rsvpSubmitBtn.textContent = 'Guardar cambios';
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
             updateCtaVisibility();
@@ -369,14 +455,60 @@ document.addEventListener('DOMContentLoaded', () => {
     if (anotherBtn) {
         anotherBtn.addEventListener('click', () => {
             rsvpCompleted = false;
+            isExplicitUpdateMode = false;
+            currentRSVPId = null;
+            currentManageToken = null;
+            localStorage.removeItem('rsvp_id');
+            localStorage.removeItem('rsvp_manage_token');
+
             if (rsvpForm) rsvpForm.reset();
             handleAttendanceChange();
+            if (rsvpSubmitBtn) rsvpSubmitBtn.textContent = 'Registrar mi respuesta';
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
             if (rsvpForm) rsvpForm.scrollIntoView({ behavior: 'smooth' });
             updateCtaVisibility();
         });
     }
+
+
+    // Fetch Public Config for WhatsApp option
+    async function loadPublicConfig() {
+        try {
+            const res = await fetch('/api/public-config');
+            if (res.ok) {
+                const cfg = await res.json();
+                const waTab = document.getElementById('rsvp-tab-wa');
+                const waSuccessSupport = document.getElementById('rsvp-success-wa-support');
+                const footerWaSupport = document.getElementById('footer-wa-support');
+
+                const targetNumber = cfg.wedding_whatsapp_number || '56981393436';
+                const confirmUrl = `https://wa.me/${targetNumber}?text=${encodeURIComponent('Hola, soy [nombre y apellido]. Quiero confirmar mi asistencia al matrimonio de Felipe y Camila del 23 de octubre de 2026.')}`;
+                const supportUrl = `https://wa.me/${targetNumber}`;
+
+                if (waTab) {
+                    waTab.href = confirmUrl;
+                    waTab.target = '_blank';
+                    waTab.rel = 'noopener noreferrer';
+                }
+                if (waSuccessSupport) {
+                    waSuccessSupport.href = supportUrl;
+                    waSuccessSupport.target = '_blank';
+                    waSuccessSupport.rel = 'noopener noreferrer';
+                }
+                if (footerWaSupport) {
+                    footerWaSupport.href = supportUrl;
+                    footerWaSupport.target = '_blank';
+                    footerWaSupport.rel = 'noopener noreferrer';
+                }
+            }
+        } catch (e) {
+            console.warn('Public config fetch warning:', e);
+        }
+    }
+    loadPublicConfig();
+
+
 
     // Safe Image Creation Helper with error fallback & objectPosition
     function createSafeImage(item, fallbackAlt, extraClasses = '') {
