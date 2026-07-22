@@ -263,17 +263,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 2. Phone validation & normalization
+            // 2. Strict Phone validation & normalization
+            const isLeadingPlus = rawPhone.startsWith('+');
+            const phoneRest = isLeadingPlus ? rawPhone.slice(1) : rawPhone;
+
+            // Reject if letters exist, or if + exists anywhere else, or invalid characters
             const hasLetters = /[a-zA-Z]/.test(rawPhone);
+            const hasInvalidChars = /[^0-9\s().-]/.test(phoneRest);
+            const hasMultiplePlus = (rawPhone.match(/\+/g) || []).length > 1;
+
             const digitsOnly = rawPhone.replace(/[^\d]/g, '');
 
-            if (hasLetters || digitsOnly.length < 8 || digitsOnly.length > 15) {
+            if (hasLetters || hasInvalidChars || hasMultiplePlus || digitsOnly.length < 8 || digitsOnly.length > 15) {
                 showToast('Ingresa un número de teléfono válido (entre 8 y 15 dígitos).', 'error');
                 rsvpWhatsappInput.focus();
                 return;
             }
 
-            const isLeadingPlus = rawPhone.startsWith('+');
             const normalizedPhone = (isLeadingPlus ? '+' : '') + digitsOnly;
 
             let isAttending = true;
@@ -300,10 +306,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let whatsappMsg = '';
             if (isAttending) {
-                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Confirmo mi asistencia al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi restricción alimentaria es: ${dietary}. Mi WhatsApp de contacto es: ${rawPhone}.`;
+                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Confirmo mi asistencia al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi restricción alimentaria es: ${dietary}. Mi WhatsApp de contacto es: ${normalizedPhone}.`;
             } else {
-                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Lamentablemente no podré asistir al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi WhatsApp de contacto es: ${rawPhone}.`;
+                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Lamentablemente no podré asistir al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi WhatsApp de contacto es: ${normalizedPhone}.`;
             }
+
 
             const whatsappUrl = `https://wa.me/${NOVIOS_PHONE}?text=${encodeURIComponent(whatsappMsg)}`;
 

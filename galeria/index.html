@@ -122,9 +122,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const SUPABASE_URL = 'https://mwumnywbvjxekskfrlms.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_fd17si3WzUC2EgAqCeczAg_Gy3HW-n-';
-
             const grid = document.getElementById('gallery-grid');
             const statusBox = document.getElementById('gallery-status');
             const statusText = document.getElementById('status-text');
@@ -149,98 +146,69 @@
             let displayedCount = 0;
             const BATCH_SIZE = 24;
 
-            let currentFilter = 'todas';
+            let currentFilter = getFilterFromUrl();
             let currentIndex = 0;
             let lastTriggerCard = null;
 
-            // Read filter from URL query param
-            const urlParams = new URLSearchParams(window.location.search);
-            const initialFiltro = urlParams.get('filtro');
-            if (['todas', 'historia', 'civil', 'despues'].includes(initialFiltro)) {
-                currentFilter = initialFiltro;
+            function getFilterFromUrl() {
+                const params = new URLSearchParams(window.location.search);
+                const f = params.get('filtro');
+                return ['todas', 'historia', 'civil', 'despues'].includes(f) ? f : 'todas';
             }
 
-            // Sync URL query state without full reload
             function updateUrlFilter(filterKey) {
                 const url = new URL(window.location);
+                if (url.searchParams.get('filtro') === filterKey) return;
                 url.searchParams.set('filtro', filterKey);
                 window.history.pushState({ filtro: filterKey }, '', url);
             }
 
-            window.addEventListener('popstate', (e) => {
-                const f = e.state ? e.state.filtro : 'todas';
-                applyFilter(f, false);
+            window.addEventListener('popstate', () => {
+                const filterFromUrl = getFilterFromUrl();
+                applyFilter(filterFromUrl, false);
             });
 
-            // Classify photo by created_at
-            function getCategory(createdAt) {
-                if (!createdAt) return 'historia';
-                if (createdAt < '2026-03-28') return 'historia';
-                if (createdAt >= '2026-03-28' && createdAt < '2026-03-30') return 'civil';
-                return 'despues';
-            }
-
-            function getCategoryLabel(cat) {
-                if (cat === 'historia') return 'Nuestra historia';
-                if (cat === 'civil') return 'Nuestro civil';
-                return 'Después del civil';
-            }
-
-            function getGenericAlt(cat) {
-                if (cat === 'historia') return 'Recuerdo de nuestra historia';
-                if (cat === 'civil') return 'Momento de nuestro matrimonio civil';
-                return 'Fotografía compartida después de la celebración';
-            }
-
-            // Fetch complete public photo archive using Supabase REST API with full pagination
             async function fetchAllPublicArchive() {
                 statusBox.classList.remove('hidden');
                 statusText.textContent = 'Cargando fotografías...';
                 
-                let fetchedAll = [];
+                let fetchedItems = [];
                 let page = 0;
-                const pageSize = 100;
                 let hasMore = true;
 
                 try {
                     while (hasMore) {
-                        const offset = page * pageSize;
-                        const endpoint = `${SUPABASE_URL}/rest/v1/guest_photos?select=url,created_at&order=created_at.asc&offset=${offset}&limit=${pageSize}`;
-                        const response = await fetch(endpoint, {
-                            headers: {
-                                'apikey': SUPABASE_KEY,
-                                'Authorization': `Bearer ${SUPABASE_KEY}`
-                            }
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+                        const response = await fetch(`/api/gallery?page=${page}&limit=100`, {
+                            signal: controller.signal
                         });
+
+                        clearTimeout(timeoutId);
 
                         if (!response.ok) {
                             throw new Error(`HTTP error ${response.status}`);
                         }
 
                         const data = await response.json();
-                        if (Array.isArray(data) && data.length > 0) {
-                            fetchedAll = fetchedAll.concat(data);
-                            if (data.length < pageSize) {
-                                hasMore = false;
-                            } else {
-                                page++;
-                            }
+                        if (data && Array.isArray(data.items)) {
+                            fetchedItems = fetchedItems.concat(data.items);
+                            hasMore = data.has_more === true;
+                            page++;
                         } else {
                             hasMore = false;
                         }
                     }
 
-                    allArchivePhotos = fetchedAll.map(p => {
-                        const cat = getCategory(p.created_at);
-                        return {
-                            src: p.url,
-                            category: cat,
-                            label: getCategoryLabel(cat),
-                            alt: getGenericAlt(cat)
-                        };
-                    });
+                    allArchivePhotos = fetchedItems.map(p => ({
+                        src: p.src,
+                        category: p.category,
+                        label: getCategoryLabel(p.category),
+                        alt: p.alt
+                    }));
 
-                    // Update live counts
+                    // Dynamic Live Counts
                     const historiaCount = allArchivePhotos.filter(p => p.category === 'historia').length;
                     const civilCount = allArchivePhotos.filter(p => p.category === 'civil').length;
                     const despuesCount = allArchivePhotos.filter(p => p.category === 'despues').length;
@@ -254,17 +222,22 @@
                     applyFilter(currentFilter, false);
 
                 } catch (err) {
-                    console.error('Error fetching Supabase public archive:', err);
+                    console.error('Error fetching gallery archive:', err);
                     statusBox.classList.remove('hidden');
                     statusText.textContent = 'No se pudieron cargar las fotografías del archivo.';
                 }
             }
 
-            function applyFilter(filterKey, updateHistory = True) {
+            function getCategoryLabel(cat) {
+                if (cat === 'historia') return 'Nuestra historia';
+                if (cat === 'civil') return 'Nuestro civil';
+                return 'Después del civil';
+            }
+
+            function applyFilter(filterKey, updateHistory = true) {
                 currentFilter = filterKey;
                 if (updateHistory) updateUrlFilter(filterKey);
 
-                // Update active button styling
                 filterBtns.forEach(btn => {
                     if (btn.dataset.filter === filterKey) {
                         btn.className = 'px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark bg-dark text-light transition-all';
@@ -294,7 +267,9 @@
 
             filterBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    applyFilter(btn.dataset.filter, true);
+                    if (btn.dataset.filter !== currentFilter) {
+                        applyFilter(btn.dataset.filter, true);
+                    }
                 });
             });
 
@@ -355,7 +330,9 @@
                 loadMoreBtn.addEventListener('click', renderNextBatch);
             }
 
-            // Lightbox Modal Controls & Trap Focus
+            // Real Accessible Lightbox Modal Focus Trap (Close -> Prev -> Next)
+            const lightboxFocusables = [lightboxClose, lightboxPrev, lightboxNext];
+
             function openLightbox(index) {
                 currentIndex = index;
                 updateLightbox();
@@ -400,14 +377,43 @@
 
             window.addEventListener('keydown', (e) => {
                 if (lightbox.classList.contains('hidden')) return;
-                if (e.key === 'Escape') closeLightbox();
-                if (e.key === 'ArrowRight') nextPhoto();
-                if (e.key === 'ArrowLeft') prevPhoto();
+
+                if (e.key === 'Escape') {
+                    closeLightbox();
+                    return;
+                }
+                if (e.key === 'ArrowRight') {
+                    nextPhoto();
+                    return;
+                }
+                if (e.key === 'ArrowLeft') {
+                    prevPhoto();
+                    return;
+                }
+
+                // Strict Tab Focus Trap inside Lightbox
+                if (e.key === 'Tab') {
+                    const firstEl = lightboxClose;
+                    const lastEl = lightboxNext;
+
+                    if (e.shiftKey) { // Shift + Tab
+                        if (document.activeElement === firstEl) {
+                            e.preventDefault();
+                            lastEl.focus();
+                        }
+                    } else { // Tab
+                        if (document.activeElement === lastEl) {
+                            e.preventDefault();
+                            firstEl.focus();
+                        }
+                    }
+                }
             });
 
             fetchAllPublicArchive();
         });
     </script>
+
 </body>
 </html>
 
