@@ -43,6 +43,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Mobile Navigation Drawer Toggle & Accessibility Controls
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileLinks = document.querySelectorAll('.nav-mobile-link');
+
+    function closeMobileMenu() {
+        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                mobileMenuBtn.focus();
+            }
+        }
+    }
+
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+            mobileMenuBtn.setAttribute('aria-expanded', String(!isExpanded));
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMobileMenu();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                closeMobileMenu();
+            }
+        });
+    }
+
     // Nav Scroll Handling
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50 && nav) {
@@ -110,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('scroll', updateCtaVisibility);
 
-    // 5. RSVP Logic & Honest Messaging
+    // 5. RSVP Logic & Safe Validation
     const rsvpForm = document.getElementById('rsvp-form');
     const rsvpSuccess = document.getElementById('rsvp-success');
     const rsvpFormStep = document.getElementById('rsvp-form-step');
@@ -210,8 +248,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const firstName = rsvpFirstnameInput.value.trim();
             const lastName = rsvpLastnameInput.value.trim();
-            const whatsapp = rsvpWhatsappInput.value.trim();
-            
+            const rawPhone = rsvpWhatsappInput.value.trim();
+
+            // 1. First & Last name validation (min 2 chars)
+            if (firstName.length < 2) {
+                showToast('Ingresa un nombre válido (mínimo 2 caracteres).', 'error');
+                rsvpFirstnameInput.focus();
+                return;
+            }
+
+            if (lastName.length < 2) {
+                showToast('Ingresa un apellido válido (mínimo 2 caracteres).', 'error');
+                rsvpLastnameInput.focus();
+                return;
+            }
+
+            // 2. Phone validation & normalization
+            const hasLetters = /[a-zA-Z]/.test(rawPhone);
+            const digitsOnly = rawPhone.replace(/[^\d]/g, '');
+
+            if (hasLetters || digitsOnly.length < 8 || digitsOnly.length > 15) {
+                showToast('Ingresa un número de teléfono válido (entre 8 y 15 dígitos).', 'error');
+                rsvpWhatsappInput.focus();
+                return;
+            }
+
+            const isLeadingPlus = rawPhone.startsWith('+');
+            const normalizedPhone = (isLeadingPlus ? '+' : '') + digitsOnly;
+
             let isAttending = true;
             for (const radio of attendanceRadios) {
                 if (radio.checked && radio.value === 'no') {
@@ -223,8 +287,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isAttending) {
                 if (rsvpDietarySelect.value === 'Alergias' || rsvpDietarySelect.value === 'Otra') {
                     const detail = rsvpDietaryDetailInput.value.trim();
-                    if (!detail || detail.toLowerCase() === 'alergias' || detail.toLowerCase() === 'otra') {
-                        showToast('Por favor cuéntanos el detalle de tu restricción alimentaria.', 'error');
+                    if (!detail || detail.length < 2 || detail.toLowerCase() === 'alergias' || detail.toLowerCase() === 'otra') {
+                        showToast('Por favor especifica el detalle de tu restricción alimentaria.', 'error');
                         rsvpDietaryDetailInput.focus();
                         return;
                     }
@@ -236,9 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let whatsappMsg = '';
             if (isAttending) {
-                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Confirmo mi asistencia al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi restricción alimentaria es: ${dietary}. Mi WhatsApp de contacto es: ${whatsapp}.`;
+                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Confirmo mi asistencia al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi restricción alimentaria es: ${dietary}. Mi WhatsApp de contacto es: ${rawPhone}.`;
             } else {
-                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Lamentablemente no podré asistir al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi WhatsApp de contacto es: ${whatsapp}.`;
+                whatsappMsg = `Hola, soy ${firstName} ${lastName}. Lamentablemente no podré asistir al matrimonio de Felipe y Camila el 23 de octubre de 2026. Mi WhatsApp de contacto es: ${rawPhone}.`;
             }
 
             const whatsappUrl = `https://wa.me/${NOVIOS_PHONE}?text=${encodeURIComponent(whatsappMsg)}`;
@@ -250,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const summaryDietaryRow = document.getElementById('summary-dietary-row');
 
             if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
-            if (summaryWhatsapp) summaryWhatsapp.textContent = whatsapp;
+            if (summaryWhatsapp) summaryWhatsapp.textContent = rawPhone;
             if (summaryAttendance) summaryAttendance.textContent = isAttending ? 'Sí, asistiré' : 'No podré asistir';
             
             if (isAttending) {
@@ -307,6 +371,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Safe Image Creation Helper with error fallback & objectPosition
+    function createSafeImage(item, fallbackAlt, extraClasses = '') {
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.alt = item.alt || fallbackAlt;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.style.objectPosition = item.objectPosition || 'center center';
+        img.className = `w-full h-full object-cover ${extraClasses}`;
+        
+        img.onerror = () => {
+            console.warn('Image failed to load in category:', fallbackAlt);
+            img.style.display = 'none';
+            const parent = img.parentElement;
+            if (parent) {
+                const fallback = document.createElement('div');
+                fallback.className = 'w-full h-full flex items-center justify-center bg-cream/50 text-muted/50 text-xs font-sans italic p-4 text-center';
+                fallback.textContent = 'Fotografía no disponible';
+                parent.appendChild(fallback);
+            }
+        };
+
+        return img;
+    }
+
     // 6. Curated Photo Loading Logic
     async function loadCuratedPhotos() {
         try {
@@ -318,7 +407,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Set Hero image if present
                 if (heroStoryData.hero && heroStoryData.hero.length > 0) {
                     const heroImg = document.getElementById('hero-img');
-                    if (heroImg) heroImg.src = heroStoryData.hero[0].src;
+                    if (heroImg) {
+                        heroImg.src = heroStoryData.hero[0].src;
+                        heroImg.alt = heroStoryData.hero[0].alt || 'Retrato de la pareja';
+                        heroImg.style.objectPosition = heroStoryData.hero[0].objectPosition || 'center center';
+                    }
                 }
 
                 // Render Historia images (4 photos)
@@ -328,10 +421,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     heroStoryData.historia.forEach((item) => {
                         const div = document.createElement('div');
                         div.className = 'aspect-[4/3] overflow-hidden bg-cream border border-dark/10 shadow-sm rounded-sm';
-                        div.innerHTML = `<img src="${item.src}" alt="${item.alt || 'Nuestra historia'}" loading="lazy" decoding="async" class="w-full h-full object-cover">`;
+                        const img = createSafeImage(item, 'Recuerdo de nuestra historia');
+                        div.appendChild(img);
                         historiaGrid.appendChild(div);
                     });
                 }
+            } else {
+                console.error('Failed to load hero_story.json');
             }
 
             // Load Civil Rail (8 photos)
@@ -344,7 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     civilData.forEach((item) => {
                         const div = document.createElement('div');
                         div.className = 'rail-item overflow-hidden bg-light border border-dark/10 rounded-sm';
-                        div.innerHTML = `<img src="${item.src}" alt="${item.alt || 'Nuestro civil'}" loading="lazy" decoding="async" class="w-full h-full object-cover">`;
+                        const img = createSafeImage(item, 'Momento del matrimonio civil');
+                        div.appendChild(img);
                         civilRail.appendChild(div);
                     });
                     setupRail('civil-rail', 'civil-prev-btn', 'civil-next-btn', 'civil-counter');
@@ -361,7 +458,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     sharedData.forEach((item) => {
                         const div = document.createElement('div');
                         div.className = 'rail-item overflow-hidden bg-cream border border-dark/10 rounded-sm';
-                        div.innerHTML = `<img src="${item.src}" alt="${item.alt || 'Fotos compartidas'}" loading="lazy" decoding="async" class="w-full h-full object-cover">`;
+                        const img = createSafeImage(item, 'Fotografía compartida durante la celebración');
+                        div.appendChild(img);
                         sharedRail.appendChild(div);
                     });
                     setupRail('shared-rail', 'shared-prev-btn', 'shared-next-btn', 'shared-counter');

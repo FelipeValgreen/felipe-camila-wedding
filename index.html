@@ -15,9 +15,10 @@
     <title>Felipe & Camila — 23 de octubre 2026</title>
     <link rel="canonical" href="https://felipeycami.cl/">
 
-    <!-- Minimal SVG Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2311110F'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='%23B99B71' font-family='serif' font-size='32'>F%26C</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2311110F'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' fill='%23B99B71' font-family='serif' font-size='32'>F%26C</text></svg>">
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="manifest" href="site.webmanifest">
 
     <!-- OpenGraph / Facebook -->
@@ -25,13 +26,19 @@
     <meta property="og:url" content="https://felipeycami.cl/">
     <meta property="og:title" content="Felipe & Camila — 23 de octubre 2026">
     <meta property="og:description" content="Felipe y Camila se casan el 23 de octubre de 2026. Ceremonia en el Santuario de la Divina Misericordia y celebración en Centro de Eventos Arboleda, Chicureo.">
-    <meta property="og:image" content="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_8fbfeb8c-7473-43a0-86f4-de866d1518cd.jpeg">
+    <meta property="og:image" content="https://felipeycami.cl/images/og-felipe-camila-1200x630.jpg">
+    <meta property="og:image:secure_url" content="https://felipeycami.cl/images/og-felipe-camila-1200x630.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Felipe y Camila — 23 de octubre de 2026">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Felipe & Camila — 23 de octubre 2026">
-    <meta name="twitter:description" content="Felipe y Camila se casan el 23 de octubre de 2026. Ceremonia en el Santuario de la Divina Misericordia y celebración en Centro de Eventos Arboleda, Chicureo.">
-    <meta name="twitter:image" content="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_8fbfeb8c-7473-43a0-86f4-de866d1518cd.jpeg">
+    <meta name="twitter:description" content="Felipe y Camila se casan el 23 de octubre de 2026.">
+    <meta name="twitter:image" content="https://felipeycami.cl/images/og-felipe-camila-1200x630.jpg">
+    <meta name="twitter:image:alt" content="Felipe y Camila — 23 de octubre de 2026">
 
     <!-- Schema.org Event Metadata -->
     <script type="application/ld+json">
@@ -72,6 +79,7 @@
       }
     }
     </script>
+
 
     <!-- Google Fonts: Newsreader & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -201,14 +209,30 @@
     <nav id="main-nav" class="fixed top-0 w-full z-50 transition-all duration-500 bg-light/95 backdrop-blur-md border-b border-dark/5 py-4 opacity-0 -translate-y-full">
         <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
             <a href="#hero" class="font-serif text-2xl tracking-widest text-dark hover:text-gold transition-colors">F&C</a>
-            <div class="flex space-x-6 md:space-x-8 text-[11px] uppercase tracking-[0.25em]">
+            
+            <!-- Desktop Links (md and above) -->
+            <div class="hidden md:flex space-x-8 text-[11px] uppercase tracking-[0.25em] items-center">
                 <a href="#historia" class="text-muted hover:text-dark transition-colors">Historia</a>
                 <a href="#ceremonia" class="text-muted hover:text-dark transition-colors">Información</a>
                 <a href="#rsvp" class="text-dark font-semibold hover:text-gold transition-colors">Confirmar</a>
-                <a href="/galeria/" class="text-muted hover:text-dark transition-colors">Galería</a>
+                <a href="/galeria/?filtro=todas" target="_blank" rel="noopener noreferrer" class="text-muted hover:text-dark transition-colors">Galería</a>
             </div>
+
+            <!-- Mobile Hamburger Button (< md) -->
+            <button id="mobile-menu-btn" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mobile-menu" class="md:hidden text-dark p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Container -->
+        <div id="mobile-menu" class="hidden md:hidden bg-light border-b border-dark/10 px-6 py-6 space-y-4 text-center text-xs uppercase tracking-[0.25em]">
+            <a href="#historia" class="block py-2 text-dark border-b border-dark/5 nav-mobile-link">Historia</a>
+            <a href="#ceremonia" class="block py-2 text-dark border-b border-dark/5 nav-mobile-link">Información</a>
+            <a href="#rsvp" class="block py-2 text-gold font-bold border-b border-dark/5 nav-mobile-link">Confirmar</a>
+            <a href="/galeria/?filtro=todas" target="_blank" rel="noopener noreferrer" class="block py-2 text-dark nav-mobile-link">Galería</a>
         </div>
     </nav>
+
 
     <main class="relative">
 
@@ -279,6 +303,12 @@
                 <div id="historia-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <!-- Dynamic rendering via JS from js/hero_story.json -->
                 </div>
+
+                <div class="text-center pt-6">
+                    <a href="/galeria/?filtro=historia" target="_blank" rel="noopener noreferrer" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1">
+                        Ver todas las fotos de nuestra historia →
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -301,17 +331,17 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
                                     <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Nombre</label>
-                                    <input type="text" id="rsvp-firstname" required class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
+                                    <input type="text" id="rsvp-firstname" required autocomplete="given-name" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
                                 </div>
                                 <div class="space-y-2">
                                     <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">Apellido</label>
-                                    <input type="text" id="rsvp-lastname" required class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
+                                    <input type="text" id="rsvp-lastname" required autocomplete="family-name" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
                                 </div>
                             </div>
 
                             <div class="space-y-2 pt-2">
                                 <label class="block text-xs uppercase tracking-[0.2em] text-muted font-semibold">WhatsApp de Contacto</label>
-                                <input type="tel" id="rsvp-whatsapp" required placeholder="Ej: +56 9 0000 0000" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
+                                <input type="tel" id="rsvp-whatsapp" required autocomplete="tel" inputmode="tel" placeholder="Ej: +56 9 0000 0000" class="w-full bg-transparent border-b border-dark/20 py-2 text-dark focus:outline-none focus:border-dark text-base">
                             </div>
 
                             <div class="space-y-3 pt-4 border-t border-dark/10">
@@ -375,7 +405,7 @@
                         </div>
 
                         <div>
-                            <a id="rsvp-whatsapp-share-btn" href="#" target="_blank" class="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white font-sans text-xs uppercase tracking-[0.2em] py-4.5 hover:bg-[#20ba5a] transition-all font-bold rounded-sm shadow-sm">
+                            <a id="rsvp-whatsapp-share-btn" href="#" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white font-sans text-xs uppercase tracking-[0.2em] py-4.5 hover:bg-[#20ba5a] transition-all font-bold rounded-sm shadow-sm">
                                 <i class="fa-brands fa-whatsapp text-base"></i> Enviar confirmación por WhatsApp
                             </a>
                         </div>
@@ -424,9 +454,12 @@
                             </a>
                         </div>
                     </div>
-                    <!-- Official High-Resolution Church Photo -->
+                    <!-- Official High-Resolution Church Picture Tag -->
                     <div class="aspect-[4/3] overflow-hidden bg-cream border border-dark/10 shadow-sm rounded-sm">
-                        <img src="images/santuario_divina_misericordia.jpg" alt="Santuario de la Divina Misericordia en Chicureo" loading="lazy" decoding="async" class="w-full h-full object-cover object-center">
+                        <picture>
+                            <source type="image/webp" srcset="images/santuario_divina_misericordia.webp">
+                            <img src="images/santuario_divina_misericordia.jpg" alt="Santuario de la Divina Misericordia en Chicureo" loading="lazy" decoding="async" class="w-full h-full object-cover object-center">
+                        </picture>
                     </div>
                 </div>
 
@@ -516,8 +549,8 @@
 
                 <div class="flex justify-between items-center pt-2">
                     <span class="md:hidden font-sans text-xs text-muted italic">Desliza para ver más →</span>
-                    <a href="/galeria/" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1 ml-auto">
-                        Ver galería completa
+                    <a href="/galeria/?filtro=civil" target="_blank" rel="noopener noreferrer" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1 ml-auto">
+                        Ver todas las fotos del civil →
                     </a>
                 </div>
             </div>

@@ -1,21 +1,22 @@
 {
-    "name": "Felipe & Camila | 23 de Octubre 2026",
+    "name": "Felipe & Camila — 23 de octubre 2026",
     "short_name": "Felipe & Camila",
-    "description": "Invitación oficial al matrimonio religioso de Felipe y Camila.",
+    "description": "Felipe y Camila se casan el 23 de octubre de 2026. Ceremonia en el Santuario de la Divina Misericordia y celebración en Centro de Eventos Arboleda, Chicureo.",
     "icons": [
         {
-            "src": "images/envelope_stamp.png",
+            "src": "android-chrome-192x192.png",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "images/envelope_stamp.png",
+            "src": "android-chrome-512x512.png",
             "sizes": "512x512",
             "type": "image/png"
         }
     ],
-    "theme_color": "#ffffff",
-    "background_color": "#ffffff",
+    "theme_color": "#11110F",
+    "background_color": "#FAF8F3",
     "display": "standalone",
     "start_url": "/"
 }
+
