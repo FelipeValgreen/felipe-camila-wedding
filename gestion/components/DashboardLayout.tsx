@@ -2,39 +2,71 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Grid, DollarSign, Activity, LogOut, RefreshCw } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import {
+  Activity,
+  CalendarDays,
+  DollarSign,
+  ExternalLink,
+  Grid,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  RefreshCw,
+  Sparkles,
+  Users,
+  X,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
+const navItems = [
+  { label: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Invitados & RSVP', href: '/dashboard/guests', icon: Users },
+  { label: 'Mapa & Mesas', href: '/dashboard/tables', icon: Grid },
+  { label: 'Finanzas & Pagos', href: '/dashboard/finance', icon: DollarSign },
+  { label: 'Actividad', href: '/dashboard/activity', icon: Activity },
+];
+
 export default function DashboardLayout({ children }: LayoutProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [userEmail, setUserEmail] = useState<string>('filipo.valverde@gmail.com');
-  const [userRole, setUserRole] = useState<string>('owner');
+  const [userEmail, setUserEmail] = useState('Cargando…');
+  const [userRole, setUserRole] = useState('');
   const [syncing, setSyncing] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     async function checkAuth() {
       try {
         const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email) {
-          setUserEmail(session.user.email);
-          const { data: profile } = await supabase
-            .from('admin_profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-          if (profile?.role) setUserRole(profile.role);
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          window.location.href = '/login';
+          return;
         }
-      } catch (err) {
-        console.error('Error checking auth:', err);
+
+        setUserEmail(user.email || 'Administrador');
+
+        const { data: profile } = await supabase
+          .from('admin_profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        setUserRole(profile?.role || 'administrador');
+      } catch (error) {
+        console.error('Error checking auth:', error);
       }
     }
+
     checkAuth();
   }, []);
 
@@ -42,95 +74,145 @@ export default function DashboardLayout({ children }: LayoutProps) {
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
-    } catch {}
-    window.location.href = '/login';
+    } finally {
+      window.location.href = '/login';
+    }
   }
 
   async function handleSyncNow() {
     setSyncing(true);
     try {
-      const res = await fetch('/api/sync/process', { method: 'POST' });
-      const data = await res.json();
-      alert(`Sincronización completada. Filas procesadas: ${data.processed || 0}`);
-    } catch (err) {
-      console.error('Error syncing:', err);
-      alert('Sincronización iniciada.');
+      const response = await fetch('/api/sync/process', { method: 'POST' });
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'No fue posible sincronizar.');
+      }
+
+      window.alert(`Sincronización completada. Registros procesados: ${data.processed || 0}.`);
+    } catch (error: any) {
+      console.error('Error syncing:', error);
+      window.alert(error?.message || 'No fue posible sincronizar con Google Sheets.');
     } finally {
       setSyncing(false);
     }
   }
 
-  const navItems = [
-    { label: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Invitados & RSVP', href: '/dashboard/guests', icon: Users },
-    { label: 'Mapa & Mesas', href: '/dashboard/tables', icon: Grid },
-    { label: 'Finanzas & Pagos', href: '/dashboard/finance', icon: DollarSign },
-    { label: 'Actividad & Auditoría', href: '/dashboard/activity', icon: Activity },
-  ];
-
-  return (
-    <div className="dashboard-layout">
-      <aside className="sidebar">
-        <div>
-          {/* Header Monogram */}
-          <div className="px-3 py-4 border-b border-[var(--border-color)] mb-6 flex items-center justify-between">
-            <div>
-              <span className="font-serif text-2xl text-[var(--text-primary)] block">F&C</span>
-              <span className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-secondary)] font-medium block mt-1">
-                Centro de Gestión
-              </span>
-            </div>
-            <button
-              onClick={handleSyncNow}
-              disabled={syncing}
-              className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)] rounded"
-              title="Sincronizar ahora con Google Sheets"
-            >
-              <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
-            </button>
+  const sidebarContent = (
+    <>
+      <div>
+        <div className="sidebar-brand">
+          <div>
+            <span className="sidebar-date">23 · 10 · 26</span>
+            <span className="sidebar-monogram">F&amp;C</span>
+            <span className="sidebar-subtitle">Centro de Gestión</span>
           </div>
-
-          {/* Navigation Items */}
-          <nav className="space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`nav-item ${isActive ? 'active' : ''}`}
-                >
-                  <Icon size={16} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Real User Profile */}
-        <div className="p-3 border-t border-[var(--border-color)] pt-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="truncate pr-2">
-              <span className="block text-xs font-semibold text-[var(--text-primary)] truncate">{userEmail}</span>
-              <span className="block text-[10px] text-[var(--text-secondary)] uppercase tracking-wider">Rol: {userRole}</span>
-            </div>
-            <span className="badge badge-confirmed">Autenticado</span>
-          </div>
-
           <button
-            onClick={handleSignOut}
-            className="w-full btn-secondary text-left flex items-center justify-center gap-2 py-2"
+            type="button"
+            className="sidebar-close"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Cerrar menú"
           >
-            <LogOut size={12} />
-            <span>Cerrar Sesión</span>
+            <X size={20} />
           </button>
         </div>
+
+        <div className="sidebar-wedding-card">
+          <Sparkles size={15} />
+          <div>
+            <strong>El Umbral Vivo</strong>
+            <span>Viernes 23 de octubre de 2026</span>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav" aria-label="Navegación del Centro de Gestión">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href));
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-item ${isActive ? 'active' : ''}`}
+              >
+                <Icon size={17} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      <div className="sidebar-footer">
+        <button
+          type="button"
+          onClick={handleSyncNow}
+          disabled={syncing}
+          className="sidebar-sync"
+        >
+          <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
+          <span>{syncing ? 'Sincronizando…' : 'Sincronizar con Sheets'}</span>
+        </button>
+
+        <a
+          href="https://felipeycami.cl"
+          target="_blank"
+          rel="noreferrer"
+          className="sidebar-public-link"
+        >
+          <ExternalLink size={14} />
+          <span>Ver invitación</span>
+        </a>
+
+        <div className="sidebar-profile">
+          <div className="sidebar-avatar">
+            {userEmail?.slice(0, 1).toUpperCase() || 'F'}
+          </div>
+          <div className="sidebar-profile-copy">
+            <strong>{userEmail}</strong>
+            <span>{userRole || 'administrador'}</span>
+          </div>
+          <button type="button" onClick={handleSignOut} aria-label="Cerrar sesión">
+            <LogOut size={16} />
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="dashboard-shell">
+      <header className="mobile-topbar">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Abrir navegación"
+        >
+          <Menu size={22} />
+        </button>
+        <div>
+          <span>F&amp;C</span>
+          <small>Centro de Gestión</small>
+        </div>
+        <CalendarDays size={19} />
+      </header>
+
+      {mobileOpen && (
+        <button
+          type="button"
+          className="sidebar-backdrop"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Cerrar navegación"
+        />
+      )}
+
+      <aside className={`sidebar ${mobileOpen ? 'sidebar-open' : ''}`}>
+        {sidebarContent}
       </aside>
 
       <main className="main-content">
-        {children}
+        <div className="main-content-inner">{children}</div>
       </main>
     </div>
   );
