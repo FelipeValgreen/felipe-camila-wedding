@@ -255,6 +255,17 @@ export default function TablesPage() {
               const occupancy = tableGuests.length;
               const isOverCapacity = occupancy > table.capacity;
 
+              const rawX = Number(table.position_x);
+              const rawY = Number(table.position_y);
+
+              const positionX = Number.isFinite(rawX)
+                ? Math.max(5, Math.min(90, rawX))
+                : 50;
+
+              const positionY = Number.isFinite(rawY)
+                ? Math.max(5, Math.min(90, rawY))
+                : 50;
+
               return (
                 <div
                   key={table.id}
@@ -271,8 +282,9 @@ export default function TablesPage() {
                   }}
                   style={{
                     position: 'absolute',
-                    left: `${table.position_x}%`,
-                    top: `${table.position_y}%`,
+                    left: `${positionX}%`,
+                    top: `${positionY}%`,
+                    transform: 'translate(-50%, -50%)',
                   }}
                   className={`w-28 h-28 rounded-full border-2 flex flex-col items-center justify-center text-center cursor-pointer transition-all shadow-sm ${
                     table.locked ? 'cursor-not-allowed border-dashed' : 'cursor-move'
