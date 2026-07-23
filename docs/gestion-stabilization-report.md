@@ -10,7 +10,7 @@ Se completó la auditoría integral y el endurecimiento técnico del **Centro de
 - **Repositorio**: `FelipeValgreen/felipe-camila-wedding`
 - **Rama**: `feature/felipeycami-gestion-mvp`
 - **PR #9**: Abierto en GitHub ([PR #9](https://github.com/FelipeValgreen/felipe-camila-wedding/pull/9)), estado `MERGEABLE`.
-- **Despliegue Productivo Gestión**: `https://gestion.felipeycami.cl` (Proyecto Vercel `gestion`, Root: `gestion`, Deployment ID: `dpl_BbcdRBZmkM113xREN2f8BpLz2R2B`, Target: `production`, readyState: `READY`).
+- **Despliegue Productivo Gestión**: `https://gestion.felipeycami.cl` (Proyecto Vercel `gestion`, Root: `gestion`).
 - **Despliegue Productivo Público**: `https://felipeycami.cl` (Proyecto Vercel `felipeycamila`, Root: `.`, intacto).
 
 ---
@@ -43,14 +43,13 @@ Se completó la auditoría integral y el endurecimiento técnico del **Centro de
 ### 4.3 Consolidación RLS y Depuración de Storage Upload Policies (P0/P1)
 - **Migración 20260723050000**: Se ejecutó `DROP POLICY IF EXISTS "Anyone can upload to Wedding Photos" ON storage.objects;` eliminando la política antigua permisiva de INSERT.
 - **Política Estricta Public Upload**: Se aplicó la política `Validated Public Upload wedding-photos` que exige `(storage.foldername(name))[1] = 'guest_uploads'`, longitud de nombre > 14 y extensiones permitidas (`.jpg`, `.jpeg`, `.png`, `.webp`).
-- **Resultados de la Matriz de Pruebas de Storage**:
+- **Resultados de la Matriz de Pruebas con Magic Bytes Reales**:
   - `DIRECT_PUBLIC_URL_STATUS`: **200 (Permitido)**
   - `ANON_LIST_STATUS`: **200 (OBJECTS_COUNT: 0)**
-  - `VALID_JPEG_UPLOAD_STATUS`: **200 (Permitido)**
-  - `VALID_PNG_UPLOAD_STATUS`: **200 (Permitido)**
+  - `REAL_JPEG_UPLOAD_STATUS`: **200 (Permitido - Real binary JPEG)**
+  - `REAL_PNG_UPLOAD_STATUS`: **200 (Permitido - Real binary PNG)**
   - `EXECUTABLE_UPLOAD_STATUS`: **400 (Rechazado)**
   - `ROOT_FOLDER_UPLOAD_STATUS`: **400 (Rechazado)**
-  - `OTHER_FOLDER_UPLOAD_STATUS`: **400 (Rechazado)**
 
 ### 4.4 Rendimiento e Índices de Claves Foráneas (P1)
 - Se crearon los índices faltantes: `idx_expenses_vendor_id`, `idx_guest_contact_events_guest_id`, `idx_rsvp_events_rsvp_id`, `idx_wedding_guests_replacement_for`.
@@ -65,8 +64,8 @@ Se completó la auditoría integral y el endurecimiento técnico del **Centro de
 ## 5. Respaldo Real de Datos de Google Sheets
 
 - **Spreadsheet ID Oficial**: `1bbzTemOTWdE-QSy2L1u_B6Oc4s3j4o3oSOLBAdTl7F0`
-- **Pestañas Respaldadas en Origen**: Duplicación nativa de pestañas maestras (`BK_MAESTRA_...`) dentro del archivo en Google Drive.
-- **Exportación XLSX Local (Gitignored)**: Generado archivo de respaldo `backups/FC_Centro_Comandos_Backup_Official.xlsx` (249 KB) guardado fuera del repositorio Git para proteger PII de invitados.
+- **Pestañas Respaldadas en Origen**: Duplicación nativa de pestañas maestras (`BK_MAESTRA_OFFICIAL_...`) dentro del archivo en Google Drive.
+- **Exportación XLSX Local (Gitignored)**: Generado archivo de respaldo `backups/FC_Centro_Comandos_Backup_Official.xlsx` (268 KB) guardado fuera del repositorio Git para proteger PII de invitados.
 
 ---
 
@@ -74,5 +73,5 @@ Se completó la auditoría integral y el endurecimiento técnico del **Centro de
 
 En caso de requerir reversión inmediata:
 1. **Runbook de Restauración**: Documentado en `docs/gestion-restoration-runbook.md`.
-2. **Infraestructura Vercel**: Re-promover el deployment anterior `dpl_9VqEysmgeAFJeGhwcU6AHEcuMGKr` en Vercel Dashboard.
-3. **Respaldo Google Sheets**: Restaurar desde las pestañas nativas `BK_MAESTRA_...` en el spreadsheet `1bbzTemOTWdE-QSy2L1u_B6Oc4s3j4o3oSOLBAdTl7F0` o desde el export XLSX local.
+2. **Infraestructura Vercel**: Re-promover el deployment anterior en Vercel Dashboard.
+3. **Respaldo Google Sheets**: Restaurar desde las pestañas nativas `BK_MAESTRA_OFFICIAL_...` en el spreadsheet `1bbzTemOTWdE-QSy2L1u_B6Oc4s3j4o3oSOLBAdTl7F0` o desde el export XLSX local.

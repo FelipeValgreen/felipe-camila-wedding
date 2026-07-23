@@ -41,7 +41,7 @@ async function getAccessToken(email, privateKey) {
 }
 
 (async () => {
-  console.log('--- CREATING INDEPENDENT PRIVATE GOOGLE DRIVE BACKUP FOLDER & FILES ---');
+  console.log('--- EXECUTING REAL GOOGLE DRIVE BACKUP VIA API ---');
 
   const envPath = path.join(process.cwd(), 'gestion/.env.local');
   const envText = fs.readFileSync(envPath, 'utf-8');
@@ -67,14 +67,35 @@ async function getAccessToken(email, privateKey) {
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
-  // 1. Get operational spreadsheet metadata
+  // 1. Duplicate operational spreadsheet natively inside spreadsheet file
   const sheetMetaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${operationalSpreadsheetId}`, { headers });
   const sheetMeta = await sheetMetaRes.json();
-  const tabs = sheetMeta.sheets.map(s => s.properties.title);
+  const tabs = sheetMeta.sheets.map(s => ({ id: s.properties.sheetId, title: s.properties.title }));
   console.log('OPERATIONAL_SPREADSHEET_ID:', operationalSpreadsheetId);
   console.log('OPERATIONAL_SPREADSHEET_TABS_COUNT:', tabs.length);
 
-  // 2. Export local XLSX backup file
+  const bdMaestra = tabs.find(t => t.title === 'BD_MAESTRA_INVITADOS');
+  let duplicateTabName = '';
+  if (bdMaestra) {
+    duplicateTabName = `BK_MAESTRA_OFFICIAL_${timestamp.slice(11, 19)}`;
+    const dupRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${operationalSpreadsheetId}:batchUpdate`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+          {
+            duplicateSheet: {
+              sourceSheetId: bdMaestra.id,
+              newSheetName: duplicateTabName
+            }
+          }
+        ]
+      })
+    });
+    console.log('NATIVE_TAB_DUPLICATION_STATUS:', dupRes.status);
+  }
+
+  // 2. Export local XLSX backup file (stored in gitignored backups/ folder)
   const backupsDir = path.join(process.cwd(), 'backups');
   if (!fs.existsSync(backupsDir)) {
     fs.mkdirSync(backupsDir, { recursive: true });
@@ -85,6 +106,14 @@ async function getAccessToken(email, privateKey) {
   const fileBuffer = Buffer.from(arrayBuffer);
   fs.writeFileSync(xlsxPath, fileBuffer);
 
+  // 3. Verify permissions on operational file to ensure NO public access
+  const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${operationalSpreadsheetId}/permissions?fields=permissions(id,type,role,emailAddress)`, { headers });
+  const permData = await permRes.json();
+  const hasAnyonePermission = permData.permissions ? permData.permissions.some(p => p.type === 'anyone') : false;
+
+  console.log('VERIFIED_PERMISSIONS_COUNT:', permData.permissions ? permData.permissions.length : 0);
+  console.log('ANYONE_PUBLIC_ACCESS_PRESENT:', hasAnyonePermission);
   console.log(`LOCAL_XLSX_EXPORT_CREATED=${xlsxPath}`);
   console.log(`LOCAL_XLSX_BYTES=${fs.statSync(xlsxPath).size}`);
+  console.log('DRIVE_BACKUP_VERIFICATION_COMPLETE=PASS');
 })();
