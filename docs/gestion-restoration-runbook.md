@@ -9,9 +9,10 @@
 ## 2. Puntos de Restauración y Entregables Estables
 - **SHA Estable Anterior (Pre-Hardening)**: `427a5894f076551a3366b142a82a98204f1c2e78` (Main branch inicial).
 - **Spreadsheet ID Operacional**: `1bbzTemOTWdE-QSy2L1u_B6Oc4s3j4o3oSOLBAdTl7F0`.
+- **Acceso Público de Escritura Revocado**: Permisos de tipo `anyone` / `domain` **revocados al 100%** de la planilla operacional.
 - **Despliegue Productivo Anterior Vercel (Gestión)**: `https://gestion.felipeycami.cl/login`.
 - **Despliegue Productivo Anterior Vercel (Público)**: `https://felipeycami.cl/`.
-- **Exportación XLSX Local (Gitignored)**: `backups/FC_Centro_Comandos_Backup_Official.xlsx` (268 KB).
+- **Exportación XLSX Local (Gitignored)**: `backups/FC_Centro_Comandos_Backup_Official.xlsx` (287 KB).
 
 ---
 

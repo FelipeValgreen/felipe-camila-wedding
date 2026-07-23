@@ -35,13 +35,13 @@ async function getAccessToken(email, privateKey) {
 
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(`OAuth error: ${JSON.stringify(data)}`);
+    throw new Error(`OAuth error ${res.status}: ${JSON.stringify(data)}`);
   }
   return data.access_token;
 }
 
 (async () => {
-  console.log('--- EXECUTING REAL GOOGLE DRIVE BACKUP VIA API ---');
+  console.log('--- STEP 1: REVOKE PUBLIC ACCESS ON OPERATIONAL SPREADSHEET & CREATE BACKUP ---');
 
   const envPath = path.join(process.cwd(), 'gestion/.env.local');
   const envText = fs.readFileSync(envPath, 'utf-8');
@@ -65,16 +65,42 @@ async function getAccessToken(email, privateKey) {
   const token = await getAccessToken(saEmail, saKey);
   const headers = { Authorization: `Bearer ${token}` };
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  // 1. Inspect and Revoke Public Permissions on Operational Spreadsheet
+  const permListRes = await fetch(`https://www.googleapis.com/drive/v3/files/${operationalSpreadsheetId}/permissions?fields=permissions(id,type,role,emailAddress)`, { headers });
+  if (!permListRes.ok) {
+    throw new Error(`Failed to list permissions: ${permListRes.status} ${await permListRes.text()}`);
+  }
+  const permListData = await permListRes.json();
 
-  // 1. Duplicate operational spreadsheet natively inside spreadsheet file
+  for (const perm of permListData.permissions) {
+    if (perm.type === 'anyone' || perm.type === 'domain') {
+      console.log(`REVOKING PUBLIC PERMISSION: ID=${perm.id}, type=${perm.type}, role=${perm.role}`);
+      const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${operationalSpreadsheetId}/permissions/${perm.id}`, {
+        method: 'DELETE',
+        headers
+      });
+      console.log(`REVOKE_STATUS=${delRes.status}`);
+    }
+  }
+
+  // Re-verify permissions
+  const verifyPermRes = await fetch(`https://www.googleapis.com/drive/v3/files/${operationalSpreadsheetId}/permissions?fields=permissions(id,type,role,emailAddress)`, { headers });
+  const verifyPermData = await verifyPermRes.json();
+  const hasAnyonePermission = verifyPermData.permissions.some(p => p.type === 'anyone' || p.type === 'domain');
+
+  if (hasAnyonePermission) {
+    throw new Error('CRITICAL: Public Drive access could not be revoked on operational spreadsheet!');
+  }
+  console.log('OPERATIONAL_SPREADSHEET_PUBLIC_ACCESS_REVOKED=PASS');
+  console.log('OPERATIONAL_SANITIZED_PERMISSIONS:', JSON.stringify(verifyPermData.permissions.map(p => ({ type: p.type, role: p.role, email: p.emailAddress }))));
+
+  // 2. Duplicate core master tab natively into spreadsheet
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const sheetMetaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${operationalSpreadsheetId}`, { headers });
   const sheetMeta = await sheetMetaRes.json();
   const tabs = sheetMeta.sheets.map(s => ({ id: s.properties.sheetId, title: s.properties.title }));
-  console.log('OPERATIONAL_SPREADSHEET_ID:', operationalSpreadsheetId);
-  console.log('OPERATIONAL_SPREADSHEET_TABS_COUNT:', tabs.length);
-
   const bdMaestra = tabs.find(t => t.title === 'BD_MAESTRA_INVITADOS');
+
   let duplicateTabName = '';
   if (bdMaestra) {
     duplicateTabName = `BK_MAESTRA_OFFICIAL_${timestamp.slice(11, 19)}`;
@@ -95,24 +121,22 @@ async function getAccessToken(email, privateKey) {
     console.log('NATIVE_TAB_DUPLICATION_STATUS:', dupRes.status);
   }
 
-  // 2. Export local XLSX backup file (stored in gitignored backups/ folder)
+  // 3. Export XLSX local file (stored in gitignored backups/ folder)
   const backupsDir = path.join(process.cwd(), 'backups');
   if (!fs.existsSync(backupsDir)) {
     fs.mkdirSync(backupsDir, { recursive: true });
   }
-  const xlsxPath = path.join(backupsDir, `FC_Centro_Comandos_Backup_Official.xlsx`);
+  const xlsxPath = path.join(backupsDir, 'FC_Centro_Comandos_Backup_Official.xlsx');
   const exportRes = await fetch(`https://www.googleapis.com/drive/v3/files/${operationalSpreadsheetId}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, { headers });
+  if (!exportRes.ok) {
+    throw new Error(`Failed to export XLSX: ${exportRes.status} ${await exportRes.text()}`);
+  }
   const arrayBuffer = await exportRes.arrayBuffer();
   const fileBuffer = Buffer.from(arrayBuffer);
   fs.writeFileSync(xlsxPath, fileBuffer);
 
-  // 3. Verify permissions on operational file to ensure NO public access
-  const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${operationalSpreadsheetId}/permissions?fields=permissions(id,type,role,emailAddress)`, { headers });
-  const permData = await permRes.json();
-  const hasAnyonePermission = permData.permissions ? permData.permissions.some(p => p.type === 'anyone') : false;
-
-  console.log('VERIFIED_PERMISSIONS_COUNT:', permData.permissions ? permData.permissions.length : 0);
-  console.log('ANYONE_PUBLIC_ACCESS_PRESENT:', hasAnyonePermission);
+  console.log(`REAL_OPERATIONAL_SPREADSHEET_ID=${operationalSpreadsheetId}`);
+  console.log(`NATIVE_BACKUP_TAB_CREATED=${duplicateTabName}`);
   console.log(`LOCAL_XLSX_EXPORT_CREATED=${xlsxPath}`);
   console.log(`LOCAL_XLSX_BYTES=${fs.statSync(xlsxPath).size}`);
   console.log('DRIVE_BACKUP_VERIFICATION_COMPLETE=PASS');
