@@ -3,10 +3,10 @@ import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error('[CONFIGURATION_ERROR] Supabase variables missing in middleware.');
+    console.error('[CONFIGURATION_ERROR] Supabase publishable variables missing in middleware.');
     return NextResponse.json({ ok: false, error: 'CONFIGURATION_ERROR' }, { status: 500 });
   }
 

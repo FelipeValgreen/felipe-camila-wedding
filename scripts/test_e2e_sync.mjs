@@ -1,10 +1,22 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 
 (async () => {
-  console.log('--- STARTING AUTHENTIC E2E TEST (PREVIEW DEPLOYED API V4.1) ---');
+  console.log('--- STARTING AUTHENTIC E2E TEST CONTRA VERCEL PREVIEW (V4.2) ---');
+
+  const baseUrl = (process.env.E2E_BASE_URL || '').trim();
+
+  // Strict check on E2E_BASE_URL: must be Vercel HTTPS URL
+  if (!baseUrl || !baseUrl.startsWith('https://') || !baseUrl.includes('.vercel.app')) {
+    console.error('ERROR: E2E_BASE_URL must be a valid Vercel HTTPS URL (e.g. https://<preview-real>.vercel.app). Provided:', baseUrl);
+    process.exit(1);
+  }
+
+  if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
+    console.error('ERROR: Fallback to localhost or 127.0.0.1 is strictly prohibited.');
+    process.exit(1);
+  }
 
   const envPath = path.join(process.cwd(), 'gestion/.env.local');
   const envText = fs.readFileSync(envPath, 'utf-8');
@@ -26,21 +38,8 @@ import os from 'os';
   const supabaseKey = envVars.SUPABASE_SECRET_KEY;
   const supabasePublishableKey = envVars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const supabaseUrl = envVars.NEXT_PUBLIC_SUPABASE_URL || 'https://mwumnywbvjxekskfrlms.supabase.co';
-  const previewBaseUrl = process.env.PREVIEW_BASE_URL || 'http://localhost:3001';
 
-  // 1. Authenticate owner user filipo.valverde@gmail.com by creating magic link / session
-  const userRes = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
-    headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
-  });
-  const userData = await userRes.json();
-  const ownerUser = (userData.users || []).find(u => u.email === 'filipo.valverde@gmail.com');
-
-  if (!ownerUser) {
-    console.error('Owner user filipo.valverde@gmail.com not found');
-    process.exit(1);
-  }
-
-  // Generate real owner session token using GoTrue Admin generate_link
+  // 1. Authenticate owner user filipo.valverde@gmail.com
   const linkRes = await fetch(`${supabaseUrl}/auth/v1/admin/generate_link`, {
     method: 'POST',
     headers: {
@@ -48,25 +47,15 @@ import os from 'os';
       Authorization: `Bearer ${supabaseKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      type: 'magiclink',
-      email: 'filipo.valverde@gmail.com'
-    })
+    body: JSON.stringify({ type: 'magiclink', email: 'filipo.valverde@gmail.com' })
   });
   const linkData = await linkRes.json();
   const tokenHash = linkData.hashed_token;
 
-  // Exchange hashed token for real session tokens
   const verifyRes = await fetch(`${supabaseUrl}/auth/v1/verify`, {
     method: 'POST',
-    headers: {
-      apikey: supabasePublishableKey,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      type: 'magiclink',
-      token_hash: tokenHash
-    })
+    headers: { apikey: supabasePublishableKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'magiclink', token_hash: tokenHash })
   });
   const sessionData = await verifyRes.json();
   const userAccessToken = sessionData.access_token;
@@ -77,7 +66,6 @@ import os from 'os';
     process.exit(1);
   }
 
-  // Build cookies and headers as a real authenticated browser session
   const cookieValue = `sb-mwumnywbvjxekskfrlms-auth-token=${encodeURIComponent(JSON.stringify({
     access_token: userAccessToken,
     refresh_token: userRefreshToken,
@@ -100,55 +88,44 @@ import os from 'os';
   const testGuestId = crypto.randomUUID();
   const testPayload = {
     id: testGuestId,
-    first_name: 'E2E_AUTHENTIC_V4_1',
-    last_name: 'TEST_GUEST',
-    full_name_normalized: 'e2e_authentic_v4_1 test_guest',
-    phone_e164: '+56977777777',
-    group_name: 'E2E Validation Group',
+    first_name: 'E2E_V4_2_TEST',
+    last_name: 'GUEST_VERCEL',
+    full_name_normalized: 'e2e_v4_2_test guest_vercel',
+    phone_e164: '+56988888888',
+    group_name: 'E2E Validation Group V4.2',
     family_side: 'Compartido',
     guest_category: 'Adulto',
     attendance_status: 'attending',
     guest_status: 'active'
   };
 
-  // 2. POST /api/guests on Preview API (Pure API call)
-  console.log('1. POST /api/guests ...');
-  const postRes = await fetch(`${previewBaseUrl}/api/guests`, {
+  // 2. POST E2E_BASE_URL/api/guests
+  const postRes = await fetch(`${baseUrl}/api/guests`, {
     method: 'POST',
     headers: apiHeaders,
     body: JSON.stringify(testPayload)
   });
   const postData = await postRes.json();
-
-  if (!postRes.ok || !postData.ok) {
+  const postPass = (postRes.ok && postData.ok) ? 'PASS' : 'FAIL';
+  if (postPass !== 'PASS') {
     console.error('POST /api/guests failed:', postData);
     process.exit(1);
   }
-  console.log('E2E_CALLS_PREVIEW_API=PASS (POST HTTP 200)');
 
-  // Read-only GET verification in Supabase DB / Audit / Outbox
+  // 3. Verify via read: guest, audit_log, sync_outbox pending
   const getGuestRes = await fetch(`${supabaseUrl}/rest/v1/wedding_guests?id=eq.${testGuestId}`, { headers: dbHeaders });
   const guestInDb = await getGuestRes.json();
-  if (guestInDb.length > 0) console.log('GUEST_READ_VERIFIED=PASS');
+  const auditPass = (guestInDb.length > 0) ? 'PASS' : 'FAIL';
 
   const getAuditRes = await fetch(`${supabaseUrl}/rest/v1/audit_log?entity_id=eq.${testGuestId}`, { headers: dbHeaders });
   const auditInDb = await getAuditRes.json();
-  if (auditInDb.length > 0) console.log('AUDIT_LOG_VERIFIED=PASS');
+  const auditLogPass = (auditInDb.length > 0) ? 'PASS' : 'FAIL';
 
   const getOutboxRes = await fetch(`${supabaseUrl}/rest/v1/sync_outbox?entity_id=eq.${testGuestId}&status=eq.pending`, { headers: dbHeaders });
   const outboxInDb = await getOutboxRes.json();
-  if (outboxInDb.length > 0) console.log('OUTBOX_PENDING_VERIFIED=PASS');
+  const outboxPendingPass = (outboxInDb.length > 0) ? 'PASS' : 'FAIL';
 
-  // 3. POST /api/sync/process on Preview API
-  console.log('2. POST /api/sync/process ...');
-  const syncRes = await fetch(`${previewBaseUrl}/api/sync/process`, {
-    method: 'POST',
-    headers: apiHeaders
-  });
-  const syncData = await syncRes.json();
-  console.log('SYNC_PROCESS_RESULT:', syncData);
-
-  // Read-only GET verification in Google Sheets API
+  // Helper for Google Sheets API Token
   function formatPrivateKey(key) {
     if (!key) return '';
     const escapedNewline = '\\' + 'n';
@@ -164,7 +141,6 @@ import os from 'os';
     exp: now + 3600,
     iat: now
   };
-
   const b64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
   const b64Claim = Buffer.from(JSON.stringify(claimSet)).toString('base64url');
   const signInput = b64Header + '.' + b64Claim;
@@ -182,45 +158,83 @@ import os from 'os';
   const tokenData = await tokenRes.json();
   const sheetsToken = tokenData.access_token;
 
-  const sheetReadRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('INVITADOS_NUEVO!A:A')}`, {
+  // 4. POST E2E_BASE_URL/api/sync/process
+  const syncRes1 = await fetch(`${baseUrl}/api/sync/process`, { method: 'POST', headers: apiHeaders });
+  const syncData1 = await syncRes1.json();
+  const syncInsertPass = (syncRes1.ok && syncData1.processed >= 1) ? 'PASS' : 'FAIL';
+
+  // 5. Verify row created in Sheets
+  const sheetReadRes1 = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('INVITADOS_NUEVO!A:A')}`, {
     headers: { Authorization: `Bearer ${sheetsToken}` }
   });
-  const sheetVals = await sheetReadRes.json();
-  const rows = sheetVals.values || [];
-  const foundIndex = rows.findIndex(r => r[0] === testGuestId);
-  if (foundIndex >= 0) console.log(`SHEETS_ROW_VERIFIED=PASS (Row ${foundIndex + 1})`);
+  const sheetVals1 = await sheetReadRes1.json();
+  const rows1 = sheetVals1.values || [];
+  const sheetRowIndex = rows1.findIndex(r => r[0] === testGuestId);
+  const sheetRowNumber = sheetRowIndex >= 0 ? sheetRowIndex + 1 : null;
+  const sheetRowCreatedPass = sheetRowNumber !== null ? 'PASS' : 'FAIL';
 
-  // 4. PATCH /api/guests on Preview API
-  console.log('3. PATCH /api/guests ...');
-  const patchRes = await fetch(`${previewBaseUrl}/api/guests`, {
+  // 6. PATCH E2E_BASE_URL/api/guests
+  const patchRes = await fetch(`${baseUrl}/api/guests`, {
     method: 'PATCH',
     headers: apiHeaders,
     body: JSON.stringify({
       id: testGuestId,
-      first_name: 'E2E_AUTHENTIC_V4_1_UPDATED',
+      first_name: 'E2E_V4_2_UPDATED',
       attendance_status: 'attending'
     })
   });
   const patchData = await patchRes.json();
-  if (patchData.ok) console.log('PATCH_GUEST_VERIFIED=PASS');
+  const patchApiPass = (patchRes.ok && patchData.ok) ? 'PASS' : 'FAIL';
 
-  // Process outbox update
-  await fetch(`${previewBaseUrl}/api/sync/process`, { method: 'POST', headers: apiHeaders });
+  // 7. Process outbox PATCH
+  await fetch(`${baseUrl}/api/sync/process`, { method: 'POST', headers: apiHeaders });
 
-  // 5. DELETE /api/guests on Preview API
-  console.log('4. DELETE /api/guests ...');
-  const delRes = await fetch(`${previewBaseUrl}/api/guests?id=${testGuestId}`, {
-    method: 'DELETE',
-    headers: apiHeaders
+  // 8. Verify update on same row in Sheets
+  const sheetReadRes2 = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`INVITADOS_NUEVO!A${sheetRowNumber}:B${sheetRowNumber}`)}`, {
+    headers: { Authorization: `Bearer ${sheetsToken}` }
   });
+  const sheetVals2 = await sheetReadRes2.json();
+  const updatedRowData = sheetVals2.values ? sheetVals2.values[0] : [];
+  const sameRowUpdatedPass = (updatedRowData[0] === testGuestId && updatedRowData[1] === 'E2E_V4_2_UPDATED') ? 'PASS' : 'FAIL';
+
+  // 9. DELETE E2E_BASE_URL/api/guests
+  const delRes = await fetch(`${baseUrl}/api/guests?id=${testGuestId}`, { method: 'DELETE', headers: apiHeaders });
   const delData = await delRes.json();
-  if (delData.ok) console.log('DELETE_GUEST_VERIFIED=PASS');
+  const deleteApiPass = (delRes.ok && delData.ok) ? 'PASS' : 'FAIL';
 
-  // Process outbox delete
-  await fetch(`${previewBaseUrl}/api/sync/process`, { method: 'POST', headers: apiHeaders });
+  // 10. Process outbox DELETE
+  await fetch(`${baseUrl}/api/sync/process`, { method: 'POST', headers: apiHeaders });
 
-  console.log('----------------------------------------------------');
-  console.log('E2E_CALLS_PREVIEW_API=PASS');
-  console.log('E2E_NO_DIRECT_DB_WRITES=PASS');
-  console.log('E2E_NO_DIRECT_SHEETS_WRITES=PASS');
+  // 11. Verify deletion & test cleanup
+  const getGuestDelRes = await fetch(`${supabaseUrl}/rest/v1/wedding_guests?id=eq.${testGuestId}`, { headers: dbHeaders });
+  const guestAfterDel = await getGuestDelRes.json();
+  const dbDeletedPass = (guestAfterDel.length === 0 || guestAfterDel[0].guest_status === 'deleted') ? 'PASS' : 'FAIL';
+
+  const sheetReadRes3 = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`INVITADOS_NUEVO!A${sheetRowNumber}:A${sheetRowNumber}`)}`, {
+    headers: { Authorization: `Bearer ${sheetsToken}` }
+  });
+  const sheetVals3 = await sheetReadRes3.json();
+  const rowAfterDel = sheetVals3.values ? sheetVals3.values[0] : [];
+  const sheetRowRemovedPass = (!rowAfterDel[0] || rowAfterDel[0] !== testGuestId) ? 'PASS' : 'FAIL';
+
+  // Cleanup test outbox / audit records
+  await fetch(`${supabaseUrl}/rest/v1/sync_outbox?entity_id=eq.${testGuestId}`, { method: 'DELETE', headers: dbHeaders });
+  await fetch(`${supabaseUrl}/rest/v1/audit_log?entity_id=eq.${testGuestId}`, { method: 'DELETE', headers: dbHeaders });
+  await fetch(`${supabaseUrl}/rest/v1/wedding_guests?id=eq.${testGuestId}`, { method: 'DELETE', headers: dbHeaders });
+
+  const testCleanupPass = (dbDeletedPass === 'PASS' && sheetRowRemovedPass === 'PASS') ? 'PASS' : 'FAIL';
+
+  console.log(`E2E_BASE_URL=${baseUrl}`);
+  console.log(`TEST_UUID=${testGuestId}`);
+  console.log(`SHEET_ROW=${sheetRowNumber}`);
+  console.log(`POST_API=${postPass}`);
+  console.log(`AUDIT_LOG=${auditLogPass}`);
+  console.log(`OUTBOX_PENDING=${outboxPendingPass}`);
+  console.log(`SYNC_INSERT=${syncInsertPass}`);
+  console.log(`SHEET_ROW_CREATED=${sheetRowCreatedPass}`);
+  console.log(`PATCH_API=${patchApiPass}`);
+  console.log(`SAME_ROW_UPDATED=${sameRowUpdatedPass}`);
+  console.log(`DELETE_API=${deleteApiPass}`);
+  console.log(`SHEET_ROW_REMOVED=${sheetRowRemovedPass}`);
+  console.log(`TEST_CLEANUP=${testCleanupPass}`);
 })();
