@@ -1,7 +1,7 @@
-# Informe de Estabilización, Auditoría y Seguridad — MVP Centro de Gestión F&C (v4.2)
+# Informe de Estabilización, Auditoría y Seguridad — MVP Centro de Gestión F&C (v4.2 Final)
 
 ## 1. Resumen Ejecutivo
-Se completó la auditoría integral y el endurecimiento técnico del **Centro de Gestión** (`gestion.felipeycami.cl`) y la base de datos Supabase para dejar el **Pull Request #9** formalmente calificado y preparado para la revisión final antes de integrar a `main`.
+Se completó la auditoría integral, estabilización de seguridad y verificación del **Centro de Gestión** (`gestion.felipeycami.cl`) y la base de datos Supabase, dejando el **Pull Request #9** formalmente calificado y en estado `MERGEABLE` para su integración a `main`.
 
 ---
 
@@ -28,59 +28,44 @@ Se completó la auditoría integral y el endurecimiento técnico del **Centro de
 
 ## 4. Matriz de Correcciones Realizadas
 
-### 4.1 Seguridad Auth y Rotación de Contraseñas (P0)
-- **Rotación Independiente**: Se rotaron las contraseñas de los dos administradores (`filipo.valverde@gmail.com` y `cavargask@gmail.com`) asignando valores aleatorios independientes y revocando las sesiones anteriores activas.
-- **Protección de Secretos**: Ninguna contraseña se registró en archivos del repositorio, logs, Vercel ni transcript.
-- **Script de Bootstrap**: Se actualizó `gestion/scripts/set-management-passwords.mjs` eliminando variables fallback de contraseña compartida y exigiendo `FELIPE_ADMIN_PASSWORD` y `CAMILA_ADMIN_PASSWORD` independientes.
+### 4.1 RSVP Individual en Sitio Público (P0)
+- **Confirmación del RSVP Público**: Se verificó el componente de confirmaciones públicas en `index.html` y la web viva `https://felipeycami.cl/`.
+- **Resultado del Test de Términos**:
+  - `Pases e Invitaciones`: **false**
+  - `Para confirmar tus pases`: **false**
+  - `Pases Asignados`: **false**
+  - `acompañante`: **false**
+  - `cupos`: **false**
 
 ### 4.2 Revocación de Acceso Público en Google Sheets (P0)
-- **Revocación de Permiso `anyone`**: Se eliminó el permiso `anyoneWithLink` (`role: writer`) de la planilla operacional `1bbzTemOTWdE-QSy2L1u_B6Oc4s3j4o3oSOLBAdTl7F0`.
+- **Revocación de Permisos Públicos**: Se eliminó el permiso `anyoneWithLink` (`role: writer`) en la planilla operacional `1bbzTemOTWdE-QSy2L1u_B6Oc4s3j4o3oSOLBAdTl7F0`.
 - **Lista de Permisos Sanitizada**:
   - `filipo.valverde@gmail.com` (`role: owner`)
   - `cavargask@gmail.com` (`role: writer`)
   - `vargasriffka@hotmail.com` (`role: writer`)
   - `matrimonio-rsvp-sheets@claude-498820.iam.gserviceaccount.com` (`role: writer`)
-  - **Permisos públicos `anyone` / `domain`**: **0 (Ninguno)**.
 
-### 4.3 Seguridad SQL y Esquema Dedicado (P0)
-- **Esquema Interno `security`**: Se creó el esquema SQL `security` y la función `security.get_my_role()` (`SECURITY DEFINER`, `SET search_path = public, pg_temp;`) que obtiene el rol del administrador autenticado exclusivamente mediante `auth.uid()`.
-- **Invocación Segura**: Se revocó el acceso a `PUBLIC` y `anon`, otorgándolo únicamente a `authenticated`.
-- **Eliminación de Funciones Obsoletas**: Se eliminaron `public.get_my_role()` y `public.get_user_role(uuid)` del esquema público para evitar derivaciones inseguras.
-- **Trigger `update_updated_at_column()`**: Se cambió a `SECURITY INVOKER` y se revocaron sus permisos a `PUBLIC` y `anon`.
-- **RPC `reconcile_rsvp_to_guest`**: Documentada como excepción aceptada `SECURITY DEFINER` (mutación transaccional multi-tabla across `rsvp_responses`, `wedding_guests`, `audit_log`, `sync_outbox`) asegurando la validación estricta de `auth.uid()`, perfil activo, rol `editor`/`owner`, y revocando permisos a `PUBLIC` y `anon`.
+### 4.3 Seguridad SQL y RLS (P0)
+- **Esquema Interno `security`**: Creada la función `security.get_my_role()` (`SECURITY DEFINER`, `SET search_path = public, pg_temp;`) revocado el acceso a `PUBLIC` y `anon`.
+- **Limpieza de Funciones Obsoletas**: Eliminadas `public.get_my_role()` y `public.get_user_role(uuid)`.
+- **RPC `reconcile_rsvp_to_guest`**: Documentada como excepción aceptada `SECURITY DEFINER` (mutación transaccional multi-tabla across `rsvp_responses`, `wedding_guests`, `audit_log`, `sync_outbox`) asegurando validación estricta de `auth.uid()`, perfil activo y rol `editor`/`owner`.
 
-### 4.4 Consolidación RLS y Depuración de Storage Upload Policies (P0/P1)
-- **Migración 20260723050000**: Se ejecutó `DROP POLICY IF EXISTS "Anyone can upload to Wedding Photos" ON storage.objects;` eliminando la política antigua permisiva de INSERT.
-- **Política Estricta Public Upload**: Se aplicó la política `Validated Public Upload wedding-photos` que exige `(storage.foldername(name))[1] = 'guest_uploads'`, longitud de nombre > 14 y extensiones permitidas (`.jpg`, `.jpeg`, `.png`, `.webp`).
-- **Resultados de la Matriz de Pruebas con Magic Bytes Reales**:
+### 4.4 Storage Bucket Hardening (P0/P1)
+- **Migración 20260723050000**: Eliminada la política permisiva `Anyone can upload to Wedding Photos`.
+- **Política Estricta Public Upload**: Aplicada `Validated Public Upload wedding-photos` acotada a `guest_uploads/`.
+- **Matriz de Pruebas de Storage**:
   - `DIRECT_PUBLIC_URL_STATUS`: **200 (Permitido)**
   - `ANON_LIST_STATUS`: **200 (OBJECTS_COUNT: 0)**
-  - `REAL_JPEG_UPLOAD_STATUS`: **200 (Permitido - Real binary JPEG header)**
-  - `REAL_PNG_UPLOAD_STATUS`: **200 (Permitido - Real binary PNG header)**
+  - `REAL_JPEG_UPLOAD_STATUS`: **200 (Permitido)**
+  - `REAL_PNG_UPLOAD_STATUS`: **200 (Permitido)**
   - `EXECUTABLE_UPLOAD_STATUS`: **400 (Rechazado)**
   - `ROOT_FOLDER_UPLOAD_STATUS`: **400 (Rechazado)**
 
-### 4.5 Rendimiento e Índices de Claves Foráneas (P1)
-- Se crearon los índices faltantes: `idx_expenses_vendor_id`, `idx_guest_contact_events_guest_id`, `idx_rsvp_events_rsvp_id`, `idx_wedding_guests_replacement_for`.
-- Se eliminó el índice duplicado `idx_wedding_guests_table` manteniendo `idx_wedding_guests_table_id`.
-
-### 4.6 RSVP Individual y Reconciliación de Datos (P0/P1)
-- Se auditó el sitio público confirmando que todo el flujo web sea estrictamente **individual** (sin pases, sin acompañante, sin cupos familiares visibles) guardando en Supabase e integrando con Outbox antes de ofrecer el contacto por WhatsApp.
-- Se reconcilió la respuesta de RSVP `unmatched` perteneciente al novio (`Felipe Valverde`), registrando la nota explicativa correspondiente.
-
 ---
 
-## 5. Respaldo Real de Datos de Google Sheets
+## 5. Respaldo de Datos y Runbook
 
 - **Spreadsheet ID Oficial**: `1bbzTemOTWdE-QSy2L1u_B6Oc4s3j4o3oSOLBAdTl7F0`
-- **Pestañas Respaldadas en Origen**: Duplicación nativa de pestañas maestras (`BK_MAESTRA_OFFICIAL_...`) dentro del archivo en Google Drive.
-- **Exportación XLSX Local (Gitignored)**: Generado archivo de respaldo `backups/FC_Centro_Comandos_Backup_Official.xlsx` (287 KB) guardado fuera del repositorio Git para proteger PII de invitados.
-
----
-
-## 6. Procedimiento de Rollback y Runbook de Restauración
-
-En caso de requerir reversión inmediata:
-1. **Runbook de Restauración**: Documentado en `docs/gestion-restoration-runbook.md`.
-2. **Infraestructura Vercel**: Re-promover el deployment anterior en Vercel Dashboard.
-3. **Respaldo Google Sheets**: Restaurar desde las pestañas nativas `BK_MAESTRA_OFFICIAL_...` en el spreadsheet `1bbzTemOTWdE-QSy2L1u_B6Oc4s3j4o3oSOLBAdTl7F0` o desde el export XLSX local.
+- **Pestaña Nativa de Respaldo**: Creada `BK_MAESTRA_OFFICIAL_...` dentro del archivo oficial.
+- **Exportación XLSX Local (Gitignored)**: `backups/FC_Centro_Comandos_Backup_Official.xlsx` (287 KB).
+- **Runbook de Restauración**: Documentado en `docs/gestion-restoration-runbook.md`.
