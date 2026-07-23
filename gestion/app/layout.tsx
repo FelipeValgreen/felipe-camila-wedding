@@ -2,8 +2,20 @@ import './globals.css';
 import React from 'react';
 
 export const metadata = {
-  title: 'F&C Centro de Gestión — Matrimonio Felipe & Camila',
-  description: 'Centro operativo unificado para la gestión de invitados, RSVP, mesas y finanzas de Felipe & Camila.',
+  metadataBase: new URL('https://gestion.felipeycami.cl'),
+  title: {
+    default: 'F&C — Centro de Gestión',
+    template: '%s · F&C',
+  },
+  description: 'Centro privado de gestión del matrimonio de Felipe & Camila.',
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
