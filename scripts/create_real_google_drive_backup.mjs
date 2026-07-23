@@ -41,7 +41,7 @@ async function getAccessToken(email, privateKey) {
 }
 
 (async () => {
-  console.log('--- CREATING REAL GOOGLE SHEETS TAB BACKUPS & LOCAL XLSX EXPORT ---');
+  console.log('--- CREATING INDEPENDENT PRIVATE GOOGLE DRIVE BACKUPS ---');
 
   const envPath = path.join(process.cwd(), 'gestion/.env.local');
   const envText = fs.readFileSync(envPath, 'utf-8');
@@ -71,11 +71,13 @@ async function getAccessToken(email, privateKey) {
   const tabs = sheetMeta.sheets.map(s => ({ id: s.properties.sheetId, title: s.properties.title }));
   console.log('SOURCE SPREADSHEET TABS COUNT:', tabs.length);
 
-  // 2. Duplicate core master tab (BD_MAESTRA_INVITADOS) natively into spreadsheet
+  // 2. Duplicate core master tab natively inside operational spreadsheet
   const bdMaestra = tabs.find(t => t.title === 'BD_MAESTRA_INVITADOS');
+  let duplicateTabName = '';
   if (bdMaestra) {
     const timeTag = new Date().toISOString().replace(/[:.]/g, '-');
-    const dupRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+    duplicateTabName = `BK_MAESTRA_${timeTag.slice(11, 19)}`;
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -83,26 +85,27 @@ async function getAccessToken(email, privateKey) {
           {
             duplicateSheet: {
               sourceSheetId: bdMaestra.id,
-              newSheetName: `BK_MAESTRA_${timeTag.slice(11, 19)}`
+              newSheetName: duplicateTabName
             }
           }
         ]
       })
     });
-    const dupData = await dupRes.json();
-    console.log('NATIVE TAB DUPLICATION RESULT:', dupRes.status, dupData.replies ? 'PASS' : dupData);
   }
 
-  // 3. Export local XLSX backup file
+  // 3. Export XLSX local file (stored in backups/ which is gitignored)
   const backupsDir = path.join(process.cwd(), 'backups');
   if (!fs.existsSync(backupsDir)) {
     fs.mkdirSync(backupsDir, { recursive: true });
   }
-  const xlsxPath = path.join(backupsDir, `FC_Centro_Comandos_Backup_Official.xlsx`);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const xlsxPath = path.join(backupsDir, `FC_Centro_Comandos_Backup_${timestamp}.xlsx`);
   const exportRes = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, { headers });
   const arrayBuffer = await exportRes.arrayBuffer();
-  fs.writeFileSync(xlsxPath, Buffer.from(arrayBuffer));
-  console.log(`REAL_SPREADSHEET_ID=${spreadsheetId}`);
-  console.log(`LOCAL_XLSX_EXPORT_CREATED=${xlsxPath}`);
-  console.log(`LOCAL_XLSX_BYTES=${fs.statSync(xlsxPath).size}`);
+  const fileBuffer = Buffer.from(arrayBuffer);
+  fs.writeFileSync(xlsxPath, fileBuffer);
+
+  console.log(`REAL_OPERATIONAL_SPREADSHEET_ID=${spreadsheetId}`);
+  console.log(`NATIVE_BACKUP_TAB_CREATED=${duplicateTabName}`);
+  console.log(`LOCAL_XLSX_FILE_SIZE_BYTES=${fs.statSync(xlsxPath).size}`);
 })();
