@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap');
 
 :root {
@@ -29,8 +33,6 @@
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 body {
@@ -40,11 +42,6 @@ body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-}
-
-h1, h2, h3, h4, .font-serif {
-  font-family: var(--font-serif);
-  font-weight: 400;
 }
 
 /* Custom Scrollbars */
@@ -60,7 +57,7 @@ h1, h2, h3, h4, .font-serif {
   border-radius: 3px;
 }
 
-/* Dashboard UI Components */
+/* Dashboard UI Helpers */
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
@@ -85,7 +82,7 @@ h1, h2, h3, h4, .font-serif {
 
 .nav-item {
   display: flex;
-  items-center: center;
+  align-items: center;
   gap: 12px;
   padding: 10px 14px;
   color: var(--text-secondary);
@@ -115,7 +112,6 @@ h1, h2, h3, h4, .font-serif {
   letter-spacing: 0.15em;
   color: var(--text-secondary);
   font-weight: 600;
-
 }
 
 .kpi-value {

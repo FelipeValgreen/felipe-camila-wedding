@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { supabase } from '@/lib/supabase';
-import { Plus, Lock, Unlock, AlertTriangle, Users, Move, Trash2 } from 'lucide-react';
+import { Plus, Lock, Unlock, AlertTriangle, Users, Move, Trash2, Edit, Save, X } from 'lucide-react';
 
 interface TableItem {
   id: string;
@@ -28,21 +28,34 @@ interface GuestItem {
   dietary_type: string | null;
 }
 
+interface SeatingAssignment {
+  id: string;
+  guest_id: string;
+  table_id: string;
+}
+
 export default function TablesPage() {
   const [tables, setTables] = useState<TableItem[]>([]);
   const [guests, setGuests] = useState<GuestItem[]>([]);
+  const [assignments, setAssignments] = useState<SeatingAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Selection and edit
   const [selectedTable, setSelectedTable] = useState<TableItem | null>(null);
+  const [editTableForm, setEditTableForm] = useState<Partial<TableItem>>({});
   const [draggingGuestId, setDraggingGuestId] = useState<string | null>(null);
+  const [movingTableId, setMovingTableId] = useState<string | null>(null);
 
   async function loadData() {
     setLoading(true);
     try {
       const { data: tData } = await supabase.from('wedding_tables').select('*').order('table_number', { ascending: true });
       const { data: gData } = await supabase.from('wedding_guests').select('*').eq('attendance_status', 'attending');
+      const { data: sData } = await supabase.from('seating_assignments').select('*');
 
       if (tData) setTables(tData as TableItem[]);
       if (gData) setGuests(gData as GuestItem[]);
+      if (sData) setAssignments(sData as SeatingAssignment[]);
     } catch (err) {
       console.error('Error loading tables:', err);
     } finally {
@@ -54,38 +67,87 @@ export default function TablesPage() {
     loadData();
   }, []);
 
+  function handleSelectTable(t: TableItem) {
+    setSelectedTable(t);
+    setEditTableForm({ ...t });
+  }
+
   async function handleCreateTable() {
     const nextNumber = tables.length + 1;
     try {
-      const { data, error } = await supabase.from('wedding_tables').insert({
+      const newTable = {
         table_number: nextNumber,
         name: `Mesa ${nextNumber}`,
         capacity: 10,
         table_type: 'round_guest',
         zone: 'Principal',
         position_x: 35 + (nextNumber * 8) % 40,
-        position_y: 20 + (nextNumber * 12) % 60
-      }).select();
+        position_y: 20 + (nextNumber * 12) % 60,
+        locked: false
+      };
 
-      if (!error && data) {
-        loadData();
+      const { data } = await supabase.from('wedding_tables').insert(newTable).select();
+      
+      if (data && data[0]) {
+        await supabase.from('sync_outbox').insert({
+          entity_type: 'wedding_tables',
+          entity_id: data[0].id,
+          operation: 'INSERT',
+          payload: newTable
+        });
       }
+
+      loadData();
     } catch (err) {
       console.error('Error creating table:', err);
     }
   }
 
+  async function handleSaveTableEdit() {
+    if (!selectedTable || !editTableForm.name) return;
+    try {
+      const updatedData = {
+        table_number: editTableForm.table_number || selectedTable.table_number,
+        name: editTableForm.name,
+        capacity: Number(editTableForm.capacity) || 10,
+        table_type: editTableForm.table_type || 'round_guest',
+        zone: editTableForm.zone || 'Principal',
+        locked: Boolean(editTableForm.locked)
+      };
+
+      await supabase.from('wedding_tables').update(updatedData).eq('id', selectedTable.id);
+
+      await supabase.from('sync_outbox').insert({
+        entity_type: 'wedding_tables',
+        entity_id: selectedTable.id,
+        operation: 'UPDATE',
+        payload: updatedData
+      });
+
+      loadData();
+      setSelectedTable(null);
+    } catch (err) {
+      console.error('Error updating table:', err);
+    }
+  }
+
   async function handleAssignGuest(guestId: string, tableId: string | null) {
     try {
-      await supabase.from('wedding_guests').update({ table_id: tableId }).eq('id', guestId);
-      
       if (tableId) {
-        await supabase.from('seating_assignments').upsert({
+        // Delete any existing assignment for this guest
+        await supabase.from('seating_assignments').delete().eq('guest_id', guestId);
+        
+        // Insert new primary assignment
+        await supabase.from('seating_assignments').insert({
           guest_id: guestId,
           table_id: tableId
         });
+
+        // Sync helper column on guest
+        await supabase.from('wedding_guests').update({ table_id: tableId }).eq('id', guestId);
       } else {
         await supabase.from('seating_assignments').delete().eq('guest_id', guestId);
+        await supabase.from('wedding_guests').update({ table_id: null }).eq('id', guestId);
       }
 
       loadData();
@@ -103,7 +165,39 @@ export default function TablesPage() {
     }
   }
 
-  const unassignedGuests = guests.filter(g => !g.table_id);
+  async function handleFloorplanDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    if (!movingTableId) return;
+
+    const canvas = e.currentTarget.getBoundingClientRect();
+    const xPct = Math.round(((e.clientX - canvas.left) / canvas.width) * 100);
+    const yPct = Math.round(((e.clientY - canvas.top) / canvas.height) * 100);
+
+    const targetTable = tables.find(t => t.id === movingTableId);
+    if (targetTable && !targetTable.locked) {
+      try {
+        await supabase.from('wedding_tables').update({
+          position_x: Math.max(5, Math.min(90, xPct)),
+          position_y: Math.max(5, Math.min(90, yPct))
+        }).eq('id', movingTableId);
+
+        loadData();
+      } catch (err) {
+        console.error('Error updating table position:', err);
+      }
+    }
+    setMovingTableId(null);
+  }
+
+  // Derive assigned guests from seating_assignments primary source of truth
+  const getTableAssignedGuests = (tableId: string) => {
+    const tableAssignments = assignments.filter(s => s.table_id === tableId);
+    const assignedGuestIds = new Set(tableAssignments.map(s => s.guest_id));
+    return guests.filter(g => assignedGuestIds.has(g.id));
+  };
+
+  const assignedGuestIdsAll = new Set(assignments.map(s => s.guest_id));
+  const unassignedGuests = guests.filter(g => !assignedGuestIdsAll.has(g.id));
 
   return (
     <DashboardLayout>
@@ -131,7 +225,11 @@ export default function TablesPage() {
         {/* Floorplan + Sidebar Container */}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Floorplan Canvas */}
-          <div className="flex-1 bg-[var(--bg-card)] border border-[var(--border-color)] p-6 min-h-[560px] relative overflow-hidden">
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleFloorplanDrop}
+            className="flex-1 bg-[var(--bg-card)] border border-[var(--border-color)] p-6 min-h-[560px] relative overflow-hidden select-none"
+          >
             {/* Visual Floor Layout Landmarks */}
             <div className="absolute top-6 left-6 w-32 h-44 bg-[var(--bg-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center text-center p-2 rounded-sm">
               <span className="font-serif text-sm font-semibold">Escenario</span>
@@ -153,16 +251,19 @@ export default function TablesPage() {
 
             {/* Tables Render */}
             {tables.map((table) => {
-              const tableGuests = guests.filter(g => g.table_id === table.id);
+              const tableGuests = getTableAssignedGuests(table.id);
               const occupancy = tableGuests.length;
               const isOverCapacity = occupancy > table.capacity;
 
               return (
                 <div
                   key={table.id}
-                  onClick={() => setSelectedTable(table)}
+                  draggable={!table.locked}
+                  onDragStart={() => setMovingTableId(table.id)}
+                  onClick={() => handleSelectTable(table)}
                   onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => {
+                  onDrop={(e) => {
+                    e.stopPropagation();
                     if (draggingGuestId) {
                       handleAssignGuest(draggingGuestId, table.id);
                       setDraggingGuestId(null);
@@ -174,6 +275,8 @@ export default function TablesPage() {
                     top: `${table.position_y}%`,
                   }}
                   className={`w-28 h-28 rounded-full border-2 flex flex-col items-center justify-center text-center cursor-pointer transition-all shadow-sm ${
+                    table.locked ? 'cursor-not-allowed border-dashed' : 'cursor-move'
+                  } ${
                     isOverCapacity
                       ? 'border-[#A83232] bg-[#A83232]/10'
                       : selectedTable?.id === table.id
@@ -190,6 +293,7 @@ export default function TablesPage() {
                       <AlertTriangle size={10} /> Sobrecapacidad
                     </span>
                   )}
+                  {table.locked && <Lock size={10} className="text-[var(--text-muted)] absolute top-2 right-3" />}
                 </div>
               );
             })}
@@ -232,7 +336,7 @@ export default function TablesPage() {
           </div>
         </div>
 
-        {/* Selected Table Detail Bar */}
+        {/* Selected Table Detail Drawer */}
         {selectedTable && (
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
@@ -245,12 +349,48 @@ export default function TablesPage() {
               <button onClick={() => setSelectedTable(null)} className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Cerrar detalle</button>
             </div>
 
+            {/* Table Properties Edit */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+              <div>
+                <label className="block font-semibold uppercase text-[var(--text-secondary)] mb-1">Nombre Mesa</label>
+                <input
+                  type="text"
+                  value={editTableForm.name || ''}
+                  onChange={(e) => setEditTableForm({ ...editTableForm, name: e.target.value })}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-2 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold uppercase text-[var(--text-secondary)] mb-1">Capacidad</label>
+                <input
+                  type="number"
+                  value={editTableForm.capacity || 10}
+                  onChange={(e) => setEditTableForm({ ...editTableForm, capacity: Number(e.target.value) })}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-2 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold uppercase text-[var(--text-secondary)] mb-1">Zona</label>
+                <input
+                  type="text"
+                  value={editTableForm.zone || ''}
+                  onChange={(e) => setEditTableForm({ ...editTableForm, zone: e.target.value })}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-2 focus:outline-none"
+                />
+              </div>
+              <div className="flex items-end">
+                <button onClick={handleSaveTableEdit} className="btn-primary w-full py-2">
+                  Guardar Propiedades
+                </button>
+              </div>
+            </div>
+
             <div>
               <h4 className="text-xs uppercase tracking-wider font-semibold text-[var(--text-secondary)] mb-2">
-                Invitados Asignados en esta Mesa
+                Invitados Asignados ({getTableAssignedGuests(selectedTable.id).length} / {selectedTable.capacity})
               </h4>
               <div className="flex flex-wrap gap-2">
-                {guests.filter(g => g.table_id === selectedTable.id).map(g => (
+                {getTableAssignedGuests(selectedTable.id).map(g => (
                   <div key={g.id} className="bg-[var(--bg-card)] border border-[var(--border-color)] px-3 py-1.5 rounded text-xs flex items-center gap-2">
                     <span>{g.first_name} {g.last_name}</span>
                     <button onClick={() => handleAssignGuest(g.id, null)} className="text-[var(--text-muted)] hover:text-[#A83232]">

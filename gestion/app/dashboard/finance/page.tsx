@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { supabase } from '@/lib/supabase';
-import { Plus, DollarSign, Calendar, Tag, UserCheck, CreditCard, Building2, AlertCircle } from 'lucide-react';
+import { Plus, DollarSign, Calendar, Tag, UserCheck, CreditCard, Building2, AlertCircle, Trash2, Edit, Save, X } from 'lucide-react';
 
 interface Vendor {
   id: string;
@@ -55,8 +55,11 @@ export default function FinancePage() {
   // Modal State
   const [showAddVendor, setShowAddVendor] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [showAddPayment, setShowAddPayment] = useState(false);
+
   const [vForm, setVForm] = useState({ name: '', category: 'Locación', status: 'Contratado', notes: '' });
   const [eForm, setEForm] = useState({ concept: '', category: 'Locación', vendor_id: '', total_amount: '', due_date: '', responsible: 'Felipe & Camila' });
+  const [pForm, setPForm] = useState({ expense_id: '', amount: '', payment_type: 'Transferencia', status: 'Pagado', notes: '' });
 
   async function loadFinanceData() {
     setLoading(true);
@@ -82,19 +85,31 @@ export default function FinancePage() {
   // Financial Calculations
   const totalPaid = payments.filter(p => p.status === 'Pagado').reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
   const totalContracted = expenses.reduce((sum, e) => sum + (Number(e.total_amount) || 0), 0);
-  const totalBalance = totalContracted - totalPaid;
   const itemsWithoutAmount = expenses.filter(e => e.total_amount === null).length;
+  const isBalanceCertain = itemsWithoutAmount === 0;
+  const totalBalance = totalContracted - totalPaid;
 
   async function handleAddVendor(e: React.FormEvent) {
     e.preventDefault();
     if (!vForm.name) return;
     try {
-      await supabase.from('vendors').insert({
+      const newVendor = {
         name: vForm.name,
         category: vForm.category,
         status: vForm.status,
         notes: vForm.notes || null
-      });
+      };
+      const { data } = await supabase.from('vendors').insert(newVendor).select();
+
+      if (data && data[0]) {
+        await supabase.from('sync_outbox').insert({
+          entity_type: 'vendors',
+          entity_id: data[0].id,
+          operation: 'INSERT',
+          payload: newVendor
+        });
+      }
+
       setShowAddVendor(false);
       setVForm({ name: '', category: 'Locación', status: 'Contratado', notes: '' });
       loadFinanceData();
@@ -107,7 +122,7 @@ export default function FinancePage() {
     e.preventDefault();
     if (!eForm.concept) return;
     try {
-      await supabase.from('expenses').insert({
+      const newExpense = {
         concept: eForm.concept,
         category: eForm.category,
         vendor_id: eForm.vendor_id || null,
@@ -115,12 +130,75 @@ export default function FinancePage() {
         due_date: eForm.due_date || null,
         responsible: eForm.responsible || null,
         payment_status: 'Pendiente'
-      });
+      };
+
+      const { data } = await supabase.from('expenses').insert(newExpense).select();
+
+      if (data && data[0]) {
+        await supabase.from('sync_outbox').insert({
+          entity_type: 'expenses',
+          entity_id: data[0].id,
+          operation: 'INSERT',
+          payload: newExpense
+        });
+      }
+
       setShowAddExpense(false);
       setEForm({ concept: '', category: 'Locación', vendor_id: '', total_amount: '', due_date: '', responsible: 'Felipe & Camila' });
       loadFinanceData();
     } catch (err) {
       console.error('Error adding expense:', err);
+    }
+  }
+
+  async function handleAddPayment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pForm.expense_id || !pForm.amount) return;
+    try {
+      const newPayment = {
+        expense_id: pForm.expense_id,
+        amount: Number(pForm.amount),
+        currency: 'CLP',
+        payment_date: new Date().toISOString().substring(0, 10),
+        payment_type: pForm.payment_type,
+        status: pForm.status,
+        notes: pForm.notes || null
+      };
+
+      const { data } = await supabase.from('expense_payments').insert(newPayment).select();
+
+      if (data && data[0]) {
+        await supabase.from('sync_outbox').insert({
+          entity_type: 'expense_payments',
+          entity_id: data[0].id,
+          operation: 'INSERT',
+          payload: newPayment
+        });
+      }
+
+      setShowAddPayment(false);
+      setPForm({ expense_id: '', amount: '', payment_type: 'Transferencia', status: 'Pagado', notes: '' });
+      loadFinanceData();
+    } catch (err) {
+      console.error('Error adding payment:', err);
+    }
+  }
+
+  async function handleDeletePayment(paymentId: string) {
+    if (!confirm('¿Confirmas que deseas eliminar este registro de pago?')) return;
+    try {
+      await supabase.from('expense_payments').delete().eq('id', paymentId);
+      
+      await supabase.from('audit_log').insert({
+        entity_type: 'expense_payments',
+        entity_id: paymentId,
+        action: 'DELETE_PAYMENT',
+        origin: 'dashboard'
+      });
+
+      loadFinanceData();
+    } catch (err) {
+      console.error('Error deleting payment:', err);
     }
   }
 
@@ -141,8 +219,11 @@ export default function FinancePage() {
             <button onClick={() => setShowAddVendor(true)} className="btn-secondary flex items-center gap-2">
               <Building2 size={14} /> Nuevo Proveedor
             </button>
-            <button onClick={() => setShowAddExpense(true)} className="btn-primary flex items-center gap-2">
+            <button onClick={() => setShowAddExpense(true)} className="btn-secondary flex items-center gap-2">
               <Plus size={14} /> Registrar Gasto
+            </button>
+            <button onClick={() => setShowAddPayment(true)} className="btn-primary flex items-center gap-2">
+              <DollarSign size={14} /> Registrar Pago
             </button>
           </div>
         </div>
@@ -169,8 +250,10 @@ export default function FinancePage() {
             <span className="kpi-title flex items-center gap-2 text-[#8E703E]">
               Saldo Calculado
             </span>
-            <div className="kpi-value text-[#8E703E]">${totalBalance.toLocaleString('es-CL')} CLP</div>
-            <span className="text-xs text-[var(--text-secondary)] mt-2 block">Total - Suma(Pagados)</span>
+            <div className="kpi-value text-[#8E703E]">
+              {isBalanceCertain ? `$${totalBalance.toLocaleString('es-CL')} CLP` : <span className="text-[#A83232] italic text-xl">POR COMPLETAR</span>}
+            </div>
+            <span className="text-xs text-[var(--text-secondary)] mt-2 block">Sujeto a contratos por definir</span>
           </div>
 
           <div className="kpi-card border-l-4 border-l-[#A83232]">
@@ -234,7 +317,7 @@ export default function FinancePage() {
                       <td className="font-semibold text-[var(--text-primary)]">{e.concept}</td>
                       <td>{e.category}</td>
                       <td>{vendor?.name || 'No asignado'}</td>
-                      <td>{e.total_amount ? `$${e.total_amount.toLocaleString('es-CL')} CLP` : <span className="text-[#A83232] italic">POR COMPLETAR</span>}</td>
+                      <td>{e.total_amount ? `$${e.total_amount.toLocaleString('es-CL')} CLP` : <span className="text-[#A83232] font-semibold italic text-xs">POR COMPLETAR</span>}</td>
                       <td>
                         <span className="badge badge-pending">{e.payment_status}</span>
                       </td>
@@ -292,7 +375,7 @@ export default function FinancePage() {
                   <th>Monto</th>
                   <th>Moneda</th>
                   <th>Estado</th>
-                  <th>Notas</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -307,7 +390,11 @@ export default function FinancePage() {
                     <td>
                       <span className="badge badge-confirmed">{p.status}</span>
                     </td>
-                    <td className="text-xs text-[var(--text-secondary)]">{p.notes || '-'}</td>
+                    <td>
+                      <button onClick={() => handleDeletePayment(p.id)} className="text-[var(--text-muted)] hover:text-[#A83232] p-1">
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -315,48 +402,51 @@ export default function FinancePage() {
           </div>
         )}
 
-        {/* Modal Nuevo Proveedor */}
-        {showAddVendor && (
+        {/* Modal Registrar Pago */}
+        {showAddPayment && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 w-full max-w-md space-y-4">
-              <h3 className="font-serif text-xl border-b border-[var(--border-color)] pb-3">Nuevo Proveedor</h3>
-              <form onSubmit={handleAddVendor} className="space-y-4 text-xs">
+              <h3 className="font-serif text-xl border-b border-[var(--border-color)] pb-3">Registrar Pago</h3>
+              <form onSubmit={handleAddPayment} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Nombre Proveedor</label>
-                  <input
-                    type="text"
-                    required
-                    value={vForm.name}
-                    onChange={(e) => setVForm({ ...vForm, name: e.target.value })}
-                    className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Categoría</label>
+                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Concepto de Gasto</label>
                   <select
-                    value={vForm.category}
-                    onChange={(e) => setVForm({ ...vForm, category: e.target.value })}
+                    required
+                    value={pForm.expense_id}
+                    onChange={(e) => setPForm({ ...pForm, expense_id: e.target.value })}
                     className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
                   >
-                    <option value="Locación">Locación</option>
-                    <option value="Banquetería">Banquetería / Coctelería</option>
-                    <option value="Música / Sonido">Música / Sonido</option>
-                    <option value="Fotografía / Video">Fotografía / Video</option>
-                    <option value="Decoración">Decoración</option>
-                    <option value="Otro">Otro</option>
+                    <option value="">Seleccionar gasto...</option>
+                    {expenses.map(e => (
+                      <option key={e.id} value={e.id}>{e.concept}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Notas</label>
-                  <textarea
-                    value={vForm.notes}
-                    onChange={(e) => setVForm({ ...vForm, notes: e.target.value })}
+                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Monto CLP</label>
+                  <input
+                    type="number"
+                    required
+                    value={pForm.amount}
+                    onChange={(e) => setPForm({ ...pForm, amount: e.target.value })}
                     className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
                   />
                 </div>
+                <div>
+                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Tipo de Pago</label>
+                  <select
+                    value={pForm.payment_type}
+                    onChange={(e) => setPForm({ ...pForm, payment_type: e.target.value })}
+                    className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
+                  >
+                    <option value="Transferencia">Transferencia</option>
+                    <option value="Tarjeta">Tarjeta</option>
+                    <option value="Efectivo">Efectivo</option>
+                  </select>
+                </div>
                 <div className="flex justify-end gap-2 pt-2">
-                  <button type="button" onClick={() => setShowAddVendor(false)} className="btn-secondary">Cancelar</button>
-                  <button type="submit" className="btn-primary">Guardar</button>
+                  <button type="button" onClick={() => setShowAddPayment(false)} className="btn-secondary">Cancelar</button>
+                  <button type="submit" className="btn-primary">Guardar Pago</button>
                 </div>
               </form>
             </div>

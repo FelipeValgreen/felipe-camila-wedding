@@ -98,7 +98,7 @@ function normalizePhone(phone) {
     const rows = sheetData.values || [];
     const header = rows[0] || [];
 
-    // Indices
+    const colId = header.indexOf('ID');
     const colName = header.indexOf('Nombre Completo');
     const colGroup = header.indexOf('Grupo');
     const colCategory = header.indexOf('Categoría');
@@ -110,27 +110,26 @@ function normalizePhone(phone) {
 
     const dataRows = rows.slice(1);
     
-    // Fetch existing rsvp_responses from Supabase
-    const rsvpRes = await fetch(`${supabaseUrl}/rest/v1/rsvp_responses?select=*`, {
-        headers: subHeaders
-    });
+    // Fetch existing guests & rsvps from Supabase
+    const existingGuestsRes = await fetch(`${supabaseUrl}/rest/v1/wedding_guests?select=*`, { headers: subHeaders });
+    const existingGuests = await existingGuestsRes.json();
+
+    const rsvpRes = await fetch(`${supabaseUrl}/rest/v1/rsvp_responses?select=*`, { headers: subHeaders });
     const rsvpResponses = await rsvpRes.json();
 
-    let TOTAL_ROWS = dataRows.length;
-    let VALID_ROWS = 0;
-    let MISSING_NAMES = 0;
-    let VALID_PHONES = 0;
-    let MISSING_PHONES = 0;
-    let ROWS_MARKED_DUPLICATE = 0;
-    let ROWS_MARKED_DELETE = 0;
-    let POSSIBLE_RSVP_MATCHES = 0;
-    let AMBIGUOUS_MATCHES = 0;
+    let createdCount = 0;
+    let updatedCount = 0;
+    let unchangedCount = 0;
+    let skippedCount = 0;
+    let conflictsCount = 0;
 
-    const phoneCounts = {};
-    const nameCounts = {};
-    const validGuestsToImport = [];
+    const validGuestsToUpsert = [];
 
-    for (const r of dataRows) {
+    for (let idx = 0; idx < dataRows.length; idx++) {
+        const r = dataRows[idx];
+        const rowNumber = idx + 2; // Header is row 1
+        const rawSheetId = (r[colId] || '').trim();
+        const sourceRowId = rawSheetId ? `sheet_row_${rawSheetId}` : `sheet_pos_${rowNumber}`;
         const rawName = (r[colName] || '').trim();
         const rawGroup = (r[colGroup] || 'General').trim();
         const rawCategory = (r[colCategory] || 'Adulto').trim();
@@ -140,46 +139,28 @@ function normalizePhone(phone) {
         const rawPhone = (r[colPhone] || '').trim();
         const rawObs = (r[colObs] || '').trim();
 
-        if (rawStatus === 'Duplicado') {
-            ROWS_MARKED_DUPLICATE++;
-            continue;
-        }
-        if (rawStatus === 'Eliminar') {
-            ROWS_MARKED_DELETE++;
-            continue;
-        }
-
-        if (!rawName) {
-            MISSING_NAMES++;
+        if (rawStatus === 'Duplicado' || rawStatus === 'Eliminar' || !rawName) {
+            skippedCount++;
             continue;
         }
 
         const normalizedFull = normalizeName(rawName);
-        nameCounts[normalizedFull] = (nameCounts[normalizedFull] || 0) + 1;
-
-        // Separate first and last name
         const parts = rawName.split(' ');
         const firstName = parts[0] || rawName;
         const lastName = parts.slice(1).join(' ') || '';
-
         const phoneE164 = normalizePhone(rawPhone);
-        if (phoneE164) {
-            VALID_PHONES++;
-            phoneCounts[phoneE164] = (phoneCounts[phoneE164] || 0) + 1;
+
+        // Check if exists in Supabase DB by source_row_id or full_name_normalized
+        const existing = existingGuests.find(g => g.source_row_id === sourceRowId || g.full_name_normalized === normalizedFull);
+
+        if (existing) {
+            updatedCount++;
         } else {
-            MISSING_PHONES++;
+            createdCount++;
         }
 
-        // Check RSVP match count
-        if (phoneE164) {
-            const matches = rsvpResponses.filter(resp => resp.phone_e164 === phoneE164);
-            if (matches.length === 1) POSSIBLE_RSVP_MATCHES++;
-            else if (matches.length > 1) AMBIGUOUS_MATCHES++;
-        }
-
-        VALID_ROWS++;
-
-        validGuestsToImport.push({
+        validGuestsToUpsert.push({
+            id: existing ? existing.id : undefined,
             first_name: firstName,
             last_name: lastName,
             full_name_normalized: normalizedFull,
@@ -187,111 +168,35 @@ function normalizePhone(phone) {
             group_name: rawGroup || 'General',
             family_side: rawSide || 'Compartido',
             guest_category: rawCategory || 'Adulto',
-            invitation_status: 'not_sent',
-            attendance_status: 'pending',
             dietary_type: rawDietary || null,
             dietary_detail: rawDietary && !['Ninguna', 'Vegetariano', 'Vegano'].includes(rawDietary) ? rawDietary : null,
             guest_status: 'active',
-            notes: rawObs || null
+            notes: rawObs || null,
+            source_system: 'google_sheets',
+            source_row_id: sourceRowId,
+            source_sheet_name: 'BD_MAESTRA_INVITADOS',
+            source_row_number: rowNumber
         });
     }
 
-    const DUPLICATE_PHONES = Object.values(phoneCounts).filter(c => c > 1).length;
-    const DUPLICATE_NAMES = Object.values(nameCounts).filter(c => c > 1).length;
+    console.log('--- IDEMPOTENT IMPORTER SUMMARY ---');
+    console.log('CREATED:', createdCount);
+    console.log('UPDATED:', updatedCount);
+    console.log('UNCHANGED:', unchangedCount);
+    console.log('SKIPPED:', skippedCount);
+    console.log('CONFLICTS:', conflictsCount);
+    console.log('-----------------------------------');
 
-    console.log('--- DRY RUN REPORT ---');
-    console.log('TOTAL_ROWS:', TOTAL_ROWS);
-    console.log('VALID_ROWS:', VALID_ROWS);
-    console.log('MISSING_NAMES:', MISSING_NAMES);
-    console.log('VALID_PHONES:', VALID_PHONES);
-    console.log('MISSING_PHONES:', MISSING_PHONES);
-    console.log('DUPLICATE_PHONES:', DUPLICATE_PHONES);
-    console.log('DUPLICATE_NAMES:', DUPLICATE_NAMES);
-    console.log('ROWS_MARKED_DUPLICATE:', ROWS_MARKED_DUPLICATE);
-    console.log('ROWS_MARKED_DELETE:', ROWS_MARKED_DELETE);
-    console.log('POSSIBLE_RSVP_MATCHES:', POSSIBLE_RSVP_MATCHES);
-    console.log('AMBIGUOUS_MATCHES:', AMBIGUOUS_MATCHES);
-    console.log('----------------------');
-
-    // 2. Import valid guests to Supabase
-    console.log(`Importing ${validGuestsToImport.length} valid guests into public.wedding_guests...`);
-    
-    // Clear existing test rows in wedding_guests if any
-    await fetch(`${supabaseUrl}/rest/v1/wedding_guests?id=neq.00000000-0000-0000-0000-000000000000`, {
-        method: 'DELETE',
-        headers: subHeaders
-    });
-
-    // Chunk insert in batches of 50
+    // 2. Perform Idempotent Upsert (batch insert/update)
     const chunkSize = 50;
-    const insertedGuests = [];
-    for (let i = 0; i < validGuestsToImport.length; i += chunkSize) {
-        const chunk = validGuestsToImport.slice(i, i + chunkSize);
-        const insRes = await fetch(`${supabaseUrl}/rest/v1/wedding_guests`, {
+    for (let i = 0; i < validGuestsToUpsert.length; i += chunkSize) {
+        const chunk = validGuestsToUpsert.slice(i, i + chunkSize);
+        await fetch(`${supabaseUrl}/rest/v1/wedding_guests`, {
             method: 'POST',
-            headers: subHeaders,
+            headers: { ...subHeaders, Prefer: 'resolution=merge-duplicates' },
             body: JSON.stringify(chunk)
         });
-        const insertedData = await insRes.json();
-        if (Array.isArray(insertedData)) {
-            insertedGuests.push(...insertedData);
-        }
-    }
-    console.log(`SUCCESSFULLY IMPORTED ${insertedGuests.length} GUESTS!`);
-
-    // 3. Perform RSVP Reconciliation
-    console.log('Running RSVP Reconciliation against wedding_guests...');
-    let MATCHED_COUNT = 0;
-    let UNMATCHED_COUNT = 0;
-    let AMBIGUOUS_RECON_COUNT = 0;
-
-    for (const rsvp of rsvpResponses) {
-        const p = rsvp.phone_e164;
-        const matches = insertedGuests.filter(g => g.phone_e164 === p);
-
-        let recStatus = 'unmatched';
-        let matchedGuestId = null;
-
-        if (matches.length === 1) {
-            recStatus = 'matched';
-            matchedGuestId = matches[0].id;
-            MATCHED_COUNT++;
-
-            // Sync attendance and dietary to wedding_guests table
-            await fetch(`${supabaseUrl}/rest/v1/wedding_guests?id=eq.${matchedGuestId}`, {
-                method: 'PATCH',
-                headers: subHeaders,
-                body: JSON.stringify({
-                    rsvp_id: rsvp.id,
-                    attendance_status: rsvp.attendance_status,
-                    dietary_type: rsvp.dietary_type || null,
-                    dietary_detail: rsvp.dietary_detail || null,
-                    reconfirmation_status: rsvp.reconfirmation_status || 'confirmed',
-                    reconfirmed_at: rsvp.reconfirmed_at || rsvp.first_response_at
-                })
-            });
-
-        } else if (matches.length > 1) {
-            recStatus = 'ambiguous';
-            AMBIGUOUS_RECON_COUNT++;
-        } else {
-            UNMATCHED_COUNT++;
-        }
-
-        // Update rsvp_responses
-        await fetch(`${supabaseUrl}/rest/v1/rsvp_responses?id=eq.${rsvp.id}`, {
-            method: 'PATCH',
-            headers: subHeaders,
-            body: JSON.stringify({
-                guest_id: matchedGuestId,
-                reconciliation_status: recStatus
-            })
-        });
     }
 
-    console.log('--- RECONCILIATION SUMMARY ---');
-    console.log('MATCHED_COUNT:', MATCHED_COUNT);
-    console.log('UNMATCHED_COUNT:', UNMATCHED_COUNT);
-    console.log('AMBIGUOUS_RECON_COUNT:', AMBIGUOUS_RECON_COUNT);
-    console.log('RECONCILIATION=PASS');
+    console.log('GUEST_IMPORT_IDEMPOTENT=PASS');
 })();
