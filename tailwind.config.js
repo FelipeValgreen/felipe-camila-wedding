@@ -3,10 +3,12 @@ module.exports = {
   content: [
     './index.html',
     './galeria/**/*.html',
-    './js/**/*.js',
-    './fotos/**/*.html'
+    './fotos/**/*.html',
+    './js/**/*.js'
   ],
   safelist: [
+    'bg-[#5C1D24]',
+    'bg-[#C5A059]',
     'bg-red-700',
     'bg-dark',
     'bg-[#25D366]',
@@ -24,12 +26,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        dark: '#11110F',
+        dark: '#0F0C0B',
         cream: '#F3EFE7',
         light: '#FAF8F3',
         muted: '#918D85',
-        wine: '#4A222A',
-        gold: '#B99B71',
+        wine: '#5C1D24',
+        gold: '#C5A059',
       },
       fontFamily: {
         serif: ['Newsreader', 'Georgia', 'serif'],
