@@ -6,25 +6,27 @@ import os from 'os';
 (async () => {
   console.log('--- STARTING AUTHENTIC E2E TEST (PREVIEW DEPLOYED API V4.1) ---');
 
-  const authFile = path.join(os.homedir(), 'Library/Application Support/com.vercel.cli/auth.json');
-  const authData = JSON.parse(fs.readFileSync(authFile, 'utf-8'));
-  const token = authData.token;
+  const envPath = path.join(process.cwd(), 'gestion/.env.local');
+  const envText = fs.readFileSync(envPath, 'utf-8');
+  const envVars = {};
+  envText.split('\n').forEach(line => {
+    const match = line.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      let val = match[2].trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      envVars[match[1].trim()] = val;
+    }
+  });
 
-  async function getEnvVal(eid) {
-    const res = await fetch(`https://api.vercel.com/v9/projects/prj_CnQR6nh0a1lwcHpN1F3vLq1IWNHT/env/${eid}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const d = await res.json();
-    return (d.value || '').trim();
-  }
-
-  const saEmail = await getEnvVal('JwOVODGkkSW6ZY62');
-  const saKey = await getEnvVal('fEgjSAksFUWsv8NL');
-  const spreadsheetId = await getEnvVal('nOwry9xceJ90LLgb');
-  const supabaseKey = await getEnvVal('tIdPJeHjqlNaqtMn');
-  const supabasePublishableKey = await getEnvVal('5w2r2UoWkC5fFexf');
-  const supabaseUrl = 'https://mwumnywbvjxekskfrlms.supabase.co';
-  const previewBaseUrl = 'http://localhost:3001';
+  const saEmail = envVars.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const saKey = envVars.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
+  const spreadsheetId = envVars.GOOGLE_SHEETS_SPREADSHEET_ID;
+  const supabaseKey = envVars.SUPABASE_SECRET_KEY;
+  const supabasePublishableKey = envVars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const supabaseUrl = envVars.NEXT_PUBLIC_SUPABASE_URL || 'https://mwumnywbvjxekskfrlms.supabase.co';
+  const previewBaseUrl = process.env.PREVIEW_BASE_URL || 'http://localhost:3001';
 
   // 1. Authenticate owner user filipo.valverde@gmail.com by creating magic link / session
   const userRes = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
