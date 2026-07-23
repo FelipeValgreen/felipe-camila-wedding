@@ -2,11 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
-const felipePassword = process.env.FELIPE_ADMIN_PASSWORD || process.env.ADMIN_TEMP_PASSWORD;
-const camilaPassword = process.env.CAMILA_ADMIN_PASSWORD || process.env.ADMIN_TEMP_PASSWORD;
+const felipePassword = process.env.FELIPE_ADMIN_PASSWORD;
+const camilaPassword = process.env.CAMILA_ADMIN_PASSWORD;
 
 if (!felipePassword || felipePassword.length < 10 || !camilaPassword || camilaPassword.length < 10) {
   console.error('FELIPE_ADMIN_PASSWORD and CAMILA_ADMIN_PASSWORD are required and must contain at least 10 characters.');
+  process.exit(1);
+}
+
+if (felipePassword === camilaPassword) {
+  console.error('FELIPE_ADMIN_PASSWORD and CAMILA_ADMIN_PASSWORD must be distinct for security.');
   process.exit(1);
 }
 
