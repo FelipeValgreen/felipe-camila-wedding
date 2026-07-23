@@ -2,10 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
-const password = process.env.ADMIN_TEMP_PASSWORD;
+const felipePassword = process.env.FELIPE_ADMIN_PASSWORD || process.env.ADMIN_TEMP_PASSWORD;
+const camilaPassword = process.env.CAMILA_ADMIN_PASSWORD || process.env.ADMIN_TEMP_PASSWORD;
 
-if (!password || password.length < 10) {
-  console.error('ADMIN_TEMP_PASSWORD is required and must contain at least 10 characters.');
+if (!felipePassword || felipePassword.length < 10 || !camilaPassword || camilaPassword.length < 10) {
+  console.error('FELIPE_ADMIN_PASSWORD and CAMILA_ADMIN_PASSWORD are required and must contain at least 10 characters.');
   process.exit(1);
 }
 
@@ -48,9 +49,9 @@ const admin = createClient(supabaseUrl, serviceKey, {
   },
 });
 
-const authorizedEmails = [
-  'filipo.valverde@gmail.com',
-  'cavargask@gmail.com',
+const authorizedAccounts = [
+  { email: 'filipo.valverde@gmail.com', password: felipePassword },
+  { email: 'cavargask@gmail.com', password: camilaPassword },
 ];
 
 const { data, error: listError } = await admin.auth.admin.listUsers({
@@ -63,25 +64,25 @@ if (listError) {
   process.exit(1);
 }
 
-for (const email of authorizedEmails) {
-  const user = data.users.find((candidate) => candidate.email?.toLowerCase() === email);
+for (const account of authorizedAccounts) {
+  const user = data.users.find((candidate) => candidate.email?.toLowerCase() === account.email);
 
   if (!user) {
-    console.error(`Authorized user not found: ${email}`);
+    console.error(`Authorized user not found: ${account.email}`);
     process.exit(1);
   }
 
   const { error } = await admin.auth.admin.updateUserById(user.id, {
-    password,
+    password: account.password,
     email_confirm: true,
   });
 
   if (error) {
-    console.error(`Unable to update ${email}: ${error.message}`);
+    console.error(`Unable to update ${account.email}: ${error.message}`);
     process.exit(1);
   }
 
-  console.log(`PASSWORD_CONFIGURED=${email}`);
+  console.log(`PASSWORD_CONFIGURED=${account.email}`);
 }
 
 console.log('ADMIN_PASSWORD_BOOTSTRAP=PASS');
