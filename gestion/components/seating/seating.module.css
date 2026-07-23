@@ -1,0 +1,274 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.modeBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background-color: var(--bg-card, rgba(255, 255, 255, 0.9));
+  border: 1px solid var(--border-color, rgba(17, 17, 15, 0.14));
+  border-radius: 4px;
+}
+
+.modeToggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-secondary, #f1ede5);
+  padding: 3px;
+  border-radius: 4px;
+}
+
+.modeButton {
+  border: none;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary, #777168);
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.modeButtonActive {
+  background: var(--bg-dark, #11110f);
+  color: #ffffff;
+}
+
+.saveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.saveBadgeIdle {
+  background: rgba(185, 155, 113, 0.15);
+  color: #80653e;
+}
+
+.saveBadgeSaving {
+  background: rgba(17, 17, 15, 0.1);
+  color: #11110f;
+}
+
+.saveBadgeSuccess {
+  background: rgba(45, 90, 39, 0.12);
+  color: #2d5a27;
+}
+
+.saveBadgeError {
+  background: rgba(168, 50, 50, 0.12);
+  color: #a83232;
+}
+
+.mainLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+.canvasWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 620px;
+  background-color: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, rgba(17, 17, 15, 0.14));
+  border-radius: 4px;
+  box-shadow: var(--shadow-card, 0 10px 32px rgba(17, 17, 15, 0.055));
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.canvasGrid {
+  background-image:
+    linear-gradient(to right, rgba(17, 17, 15, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(17, 17, 15, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.landmark {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.landmarkStage {
+  top: 4%;
+  left: 3%;
+  width: 15%;
+  height: 26%;
+  background: var(--bg-dark, #11110f);
+  color: #f3efe7;
+  border: 1px solid rgba(243, 239, 231, 0.2);
+}
+
+.landmarkDancefloor {
+  top: 4%;
+  left: 22%;
+  width: 24%;
+  height: 26%;
+  background: rgba(185, 155, 113, 0.12);
+  border: 2px dashed rgba(185, 155, 113, 0.6);
+  color: #80653e;
+}
+
+.landmarkBrideGroom {
+  top: 4%;
+  right: 3%;
+  width: 20%;
+  height: 14%;
+  background: rgba(45, 90, 39, 0.12);
+  border: 1.5px solid #2d5a27;
+  color: #2d5a27;
+}
+
+.landmarkDesserts {
+  bottom: 4%;
+  left: 34%;
+  width: 32%;
+  height: 10%;
+  background: var(--bg-secondary, #f1ede5);
+  border: 1px solid var(--border-color, rgba(17, 17, 15, 0.14));
+  color: var(--text-primary, #11110f);
+}
+
+.landmarkEntrance {
+  bottom: 4%;
+  left: 3%;
+  width: 14%;
+  height: 10%;
+  background: rgba(17, 17, 15, 0.05);
+  border: 1px dashed rgba(17, 17, 15, 0.25);
+  color: var(--text-secondary, #777168);
+}
+
+.tableElement {
+  position: absolute;
+  z-index: 10;
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  border: 2px solid var(--border-color, rgba(17, 17, 15, 0.2));
+  background-color: var(--bg-card, #ffffff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  padding: 6px;
+  box-shadow: 0 4px 14px rgba(17, 17, 15, 0.08);
+  transition: box-shadow 150ms ease, border-color 150ms ease, transform 150ms ease;
+  user-select: none;
+}
+
+.tableElementHover:hover {
+  box-shadow: 0 8px 24px rgba(17, 17, 15, 0.16);
+  border-color: var(--gold, #b99b71);
+}
+
+.tableSelected {
+  border-color: var(--gold, #b99b71) !important;
+  border-width: 3px !important;
+  background-color: rgba(185, 155, 113, 0.08) !important;
+  box-shadow: 0 0 0 4px rgba(185, 155, 113, 0.25) !important;
+}
+
+.tableComplete {
+  border-color: #2d5a27 !important;
+  background-color: rgba(45, 90, 39, 0.05) !important;
+}
+
+.tableOverCapacity {
+  border-color: #a83232 !important;
+  background-color: rgba(168, 50, 50, 0.08) !important;
+  animation: pulse 1.5s infinite;
+}
+
+.tableLocked {
+  border-style: dashed !important;
+  opacity: 0.85;
+}
+
+.tableNumber {
+  font-family: var(--font-serif, serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-primary, #11110f);
+}
+
+.tableName {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary, #777168);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 86px;
+}
+
+.tableOccupancy {
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.inspectorPanel {
+  background-color: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, rgba(17, 17, 15, 0.14));
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-card, 0 10px 32px rgba(17, 17, 15, 0.055));
+}
+
+.unassignedSection {
+  background-color: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, rgba(17, 17, 15, 0.14));
+  border-radius: 4px;
+  padding: 20px;
+  margin-top: 10px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+@media (max-width: 1024px) {
+  .mainLayout {
+    grid-template-columns: 1fr;
+  }
+  .canvasWrapper {
+    min-height: 480px;
+  }
+}
