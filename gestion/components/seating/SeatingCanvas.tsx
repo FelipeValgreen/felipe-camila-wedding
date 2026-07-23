@@ -11,8 +11,8 @@ interface SeatingCanvasProps {
   selectedTableId: string | null;
   isEditMode: boolean;
   onSelectTable: (table: TableModel) => void;
-  onTablePositionChange: (table: TableModel, nextX: number, nextY: number) => void;
-  onGuestDropOnTable?: (tableId: string, guestId: string) => void;
+  onTablePositionChange: (table: TableModel, nextX: number, nextY: number) => Promise<void>;
+  onGuestDropOnTable?: (guestId: string, tableId: string) => void;
 }
 
 export default function SeatingCanvas({

@@ -25,7 +25,7 @@ export interface GuestData {
 interface GuestEditDrawerProps {
   guest: GuestData;
   onClose: () => void;
-  onSuccess: (updatedGuest: GuestData) => void;
+  onSuccess: (updatedGuest: GuestData, warnings?: string[]) => void;
 }
 
 export default function GuestEditDrawer({ guest, onClose, onSuccess }: GuestEditDrawerProps) {
@@ -115,11 +115,12 @@ export default function GuestEditDrawer({ guest, onClose, onSuccess }: GuestEdit
 
       setSaveSuccess(true);
       const finalGuest = result.guest as GuestData;
+      const warnings = result.warnings || [];
       
       // Allow user to see "Cambios guardados" before closing
       setTimeout(() => {
-        onSuccess(finalGuest);
-      }, 750);
+        onSuccess(finalGuest, warnings);
+      }, 650);
     } catch (err: any) {
       setSaveError(err.message || 'Error inesperado al guardar los cambios.');
     } finally {
@@ -204,7 +205,7 @@ export default function GuestEditDrawer({ guest, onClose, onSuccess }: GuestEdit
                   value={formData.group_name || ''}
                   onChange={(e) => setFormData({ ...formData, group_name: e.target.value })}
                   className={styles.input}
-                  placeholder="Ej: Familia Valverde"
+                  placeholder="Ej: Familia Garay"
                 />
               </div>
 
@@ -215,8 +216,8 @@ export default function GuestEditDrawer({ guest, onClose, onSuccess }: GuestEdit
                   onChange={(e) => setFormData({ ...formData, family_side: e.target.value })}
                   className={styles.select}
                 >
-                  <option value="Novio">Felipe (Novio)</option>
-                  <option value="Novia">Camila (Novia)</option>
+                  <option value="Felipe">Felipe</option>
+                  <option value="Camila">Camila</option>
                   <option value="Compartido">Compartido</option>
                   <option value="Por clasificar">Por clasificar</option>
                 </select>

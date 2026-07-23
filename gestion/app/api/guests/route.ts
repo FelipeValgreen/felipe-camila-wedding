@@ -89,33 +89,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: `Error insertando invitado: ${insertErr?.message || 'Error desconocido'}` }, { status: 500 });
     }
 
-    // Safe Audit Log
-    try {
-      await supabase.from('audit_log').insert({
-        entity_type: 'wedding_guests',
-        entity_id: guest.id,
-        action: 'CREATE_GUEST',
-        after_data: insertData,
-        actor: auth.user.email,
-        origin: 'dashboard'
-      });
-    } catch (auditErr) {
-      console.warn('Audit log notice:', auditErr);
+    const warnings: string[] = [];
+
+    // Explicit audit_log error check
+    const { error: auditErr } = await supabase.from('audit_log').insert({
+      entity_type: 'wedding_guests',
+      entity_id: guest.id,
+      action: 'CREATE_GUEST',
+      after_data: insertData,
+      actor: auth.user.email,
+      origin: 'dashboard'
+    });
+    if (auditErr) {
+      console.error('Audit log failed:', auditErr.message);
+      warnings.push('AUDIT_INSERT_FAILED');
     }
 
-    // Safe Outbox Sync
-    try {
-      await supabase.from('sync_outbox').insert({
-        entity_type: 'wedding_guests',
-        entity_id: guest.id,
-        operation: 'INSERT',
-        payload: guest
-      });
-    } catch (outboxErr) {
-      console.warn('Sync outbox notice:', outboxErr);
+    // Explicit sync_outbox error check
+    const { error: outboxErr } = await supabase.from('sync_outbox').insert({
+      entity_type: 'wedding_guests',
+      entity_id: guest.id,
+      operation: 'INSERT',
+      payload: guest
+    });
+    if (outboxErr) {
+      console.error('Sync outbox failed:', outboxErr.message);
+      warnings.push('OUTBOX_INSERT_FAILED');
     }
 
-    return NextResponse.json({ ok: true, guest });
+    return NextResponse.json({ ok: true, guest, warnings });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
@@ -186,34 +188,36 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ ok: false, error: `Error actualizando invitado: ${updateErr?.message || 'Error desconocido'}` }, { status: 500 });
     }
 
-    // Audit log
-    try {
-      await supabase.from('audit_log').insert({
-        entity_type: 'wedding_guests',
-        entity_id: id,
-        action: 'UPDATE_GUEST',
-        before_data: beforeGuest,
-        after_data: updates,
-        actor: auth.user.email,
-        origin: 'dashboard'
-      });
-    } catch (auditErr) {
-      console.warn('Audit log notice:', auditErr);
+    const warnings: string[] = [];
+
+    // Explicit audit log check
+    const { error: auditErr } = await supabase.from('audit_log').insert({
+      entity_type: 'wedding_guests',
+      entity_id: id,
+      action: 'UPDATE_GUEST',
+      before_data: beforeGuest,
+      after_data: updates,
+      actor: auth.user.email,
+      origin: 'dashboard'
+    });
+    if (auditErr) {
+      console.error('Audit log failed:', auditErr.message);
+      warnings.push('AUDIT_INSERT_FAILED');
     }
 
-    // Sync outbox
-    try {
-      await supabase.from('sync_outbox').insert({
-        entity_type: 'wedding_guests',
-        entity_id: id,
-        operation: 'UPDATE',
-        payload: guest
-      });
-    } catch (outboxErr) {
-      console.warn('Sync outbox notice:', outboxErr);
+    // Explicit sync outbox check
+    const { error: outboxErr } = await supabase.from('sync_outbox').insert({
+      entity_type: 'wedding_guests',
+      entity_id: id,
+      operation: 'UPDATE',
+      payload: guest
+    });
+    if (outboxErr) {
+      console.error('Sync outbox failed:', outboxErr.message);
+      warnings.push('OUTBOX_INSERT_FAILED');
     }
 
-    return NextResponse.json({ ok: true, guest });
+    return NextResponse.json({ ok: true, guest, warnings });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
@@ -243,31 +247,33 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: false, error: `Error eliminando invitado: ${deleteErr.message}` }, { status: 500 });
     }
 
-    try {
-      await supabase.from('audit_log').insert({
-        entity_type: 'wedding_guests',
-        entity_id: id,
-        action: 'DELETE_GUEST',
-        before_data: beforeGuest,
-        actor: auth.user.email,
-        origin: 'dashboard'
-      });
-    } catch (auditErr) {
-      console.warn('Audit log notice:', auditErr);
+    const warnings: string[] = [];
+
+    const { error: auditErr } = await supabase.from('audit_log').insert({
+      entity_type: 'wedding_guests',
+      entity_id: id,
+      action: 'DELETE_GUEST',
+      before_data: beforeGuest,
+      actor: auth.user.email,
+      origin: 'dashboard'
+    });
+    if (auditErr) {
+      console.error('Audit log failed:', auditErr.message);
+      warnings.push('AUDIT_INSERT_FAILED');
     }
 
-    try {
-      await supabase.from('sync_outbox').insert({
-        entity_type: 'wedding_guests',
-        entity_id: id,
-        operation: 'DELETE',
-        payload: beforeGuest
-      });
-    } catch (outboxErr) {
-      console.warn('Sync outbox notice:', outboxErr);
+    const { error: outboxErr } = await supabase.from('sync_outbox').insert({
+      entity_type: 'wedding_guests',
+      entity_id: id,
+      operation: 'DELETE',
+      payload: beforeGuest
+    });
+    if (outboxErr) {
+      console.error('Sync outbox failed:', outboxErr.message);
+      warnings.push('OUTBOX_INSERT_FAILED');
     }
 
-    return NextResponse.json({ ok: true, deleted: true });
+    return NextResponse.json({ ok: true, deleted: true, warnings });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }

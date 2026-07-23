@@ -109,7 +109,7 @@ export default function TablesPage() {
     }
   };
 
-  // Optimistic table drag position save with rollback
+  // Single optimistic table drag position save with rollback on drag completion
   const handleTablePositionChange = async (table: TableModel, nextX: number, nextY: number) => {
     const previousTable = { ...table };
 
@@ -162,6 +162,9 @@ export default function TablesPage() {
 
       setSaveStatus('saved');
       setSaveMessage('Posición guardada');
+      if (result.warnings && result.warnings.length > 0) {
+        setToast({ message: 'Posición guardada, pero la sincronización outbox quedó pendiente.', type: 'info' });
+      }
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (err: any) {
       setSaveStatus('error');
@@ -209,7 +212,7 @@ export default function TablesPage() {
     }
   };
 
-  // Assign Guest to Table
+  // Assign Guest to Table: unified contract (guestId, tableId)
   const handleAssignGuestToTable = async (guestId: string, tableId: string) => {
     try {
       const res = await fetch('/api/seating', {

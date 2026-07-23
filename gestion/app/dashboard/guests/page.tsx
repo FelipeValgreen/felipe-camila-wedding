@@ -75,11 +75,15 @@ export default function GuestsPage() {
     setSelectedGuest(null);
   };
 
-  const handleGuestSaveSuccess = (updatedGuest: GuestData) => {
+  const handleGuestSaveSuccess = (updatedGuest: GuestData, warnings?: string[]) => {
     // Optimistic update of local guest list
     setGuests(prev => prev.map(g => (g.id === updatedGuest.id ? updatedGuest : g)));
     setSelectedGuest(null);
-    setToast({ message: `Ficha de ${updatedGuest.first_name} ${updatedGuest.last_name} actualizada correctamente.`, type: 'success' });
+    if (warnings && warnings.length > 0) {
+      setToast({ message: `Ficha de ${updatedGuest.first_name} guardada, pero la sincronización outbox quedó pendiente.`, type: 'info' });
+    } else {
+      setToast({ message: `Ficha de ${updatedGuest.first_name} ${updatedGuest.last_name} actualizada correctamente.`, type: 'success' });
+    }
   };
 
   async function handleManualReconcile(guestId: string, rsvpId: string) {
@@ -464,8 +468,8 @@ export default function GuestsPage() {
                       onChange={(e) => setFormData({ ...formData, family_side: e.target.value })}
                       className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
                     >
-                      <option value="Novio">Novio (Felipe)</option>
-                      <option value="Novia">Novia (Camila)</option>
+                      <option value="Felipe">Felipe</option>
+                      <option value="Camila">Camila</option>
                       <option value="Compartido">Compartido</option>
                       <option value="Por clasificar">Por clasificar</option>
                     </select>
