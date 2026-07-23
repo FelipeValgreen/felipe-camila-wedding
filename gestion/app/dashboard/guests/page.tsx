@@ -221,6 +221,7 @@ export default function GuestsPage() {
       case 'no_table': return g.attendance_status === 'attending' && !g.table_id && g.guest_status === 'active';
       case 'dietary': return Boolean(g.dietary_type) && g.dietary_type !== 'Ninguna' && g.guest_status === 'active';
       case 'replaced': return g.guest_status === 'replaced';
+      case 'por_clasificar': return g.family_side === 'Por clasificar' && g.guest_status === 'active';
       default: return g.guest_status === 'active';
     }
   });
@@ -316,6 +317,12 @@ export default function GuestsPage() {
               className={`px-3 py-1.5 border rounded ${viewFilter === 'replaced' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
             >
               Reemplazados
+            </button>
+            <button
+              onClick={() => setViewFilter('por_clasificar')}
+              className={`px-3 py-1.5 border rounded ${viewFilter === 'por_clasificar' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
+            >
+              Por Clasificar ({guests.filter(g => g.family_side === 'Por clasificar').length})
             </button>
           </div>
         </div>

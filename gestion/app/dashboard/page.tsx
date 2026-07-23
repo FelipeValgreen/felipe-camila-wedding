@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { supabase } from '@/lib/supabase';
-import { Users, CheckCircle2, XCircle, Clock, AlertTriangle, Armchair, DollarSign } from 'lucide-react';
+import { Users, CheckCircle2, XCircle, Clock, AlertTriangle, Armchair, DollarSign, Calendar, AlertCircle } from 'lucide-react';
 
 export default function DashboardResumen() {
   const [loading, setLoading] = useState(true);
@@ -18,22 +18,24 @@ export default function DashboardResumen() {
     pending: 0,
     unmatchedRsvp: 0,
     confirmedNoTable: 0,
-    totalCapacity: 250,
+    configuredCapacity: 0,
+    estimatedCapacity: 250,
     dietaryFlagsCount: 0,
     reconfirmationPending: 0,
-    totalCommitted: 500000,
-    totalPaid: 500000,
-    balance: 0,
-    upcomingPaymentsCount: 2
+    totalContracted: 0,
+    totalPaid: 0,
+    hasIncompleteAmounts: true,
+    upcomingPaymentsCount: 0,
+    overduePaymentsCount: 0
   });
 
   useEffect(() => {
     async function loadStats() {
       try {
-        // Fetch Guests
         const { data: guests } = await supabase.from('wedding_guests').select('*');
         const { data: rsvps } = await supabase.from('rsvp_responses').select('*');
         const { data: tables } = await supabase.from('wedding_tables').select('*');
+        const { data: expenses } = await supabase.from('expenses').select('*');
         const { data: payments } = await supabase.from('expense_payments').select('*');
 
         const activeGuests = (guests || []).filter(g => g.guest_status === 'active');
@@ -47,9 +49,37 @@ export default function DashboardResumen() {
 
         const unmatchedRsvp = (rsvps || []).filter(r => r.reconciliation_status === 'unmatched').length;
 
-        let totalPaidSum = (payments || [])
+        const configuredCapacity = (tables || []).reduce((sum, t) => sum + (t.capacity || 10), 0);
+
+        const totalPaid = (payments || [])
           .filter(p => p.status === 'Pagado')
           .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+        const incompleteExpenses = (expenses || []).filter(e => e.total_amount === null || e.total_amount === undefined);
+        const hasIncompleteAmounts = incompleteExpenses.length > 0;
+
+        const totalContracted = (expenses || [])
+          .filter(e => e.total_amount !== null && e.total_amount !== undefined)
+          .reduce((sum, e) => sum + (Number(e.total_amount) || 0), 0);
+
+        const now = new Date();
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+        let upcomingPaymentsCount = 0;
+        let overduePaymentsCount = 0;
+
+        (expenses || []).forEach(e => {
+          if (e.due_date) {
+            const dueDate = new Date(e.due_date);
+            if (dueDate > now && dueDate <= thirtyDaysFromNow && e.payment_status !== 'Pagado') {
+              upcomingPaymentsCount++;
+            }
+            if (dueDate < now && e.payment_status !== 'Pagado') {
+              overduePaymentsCount++;
+            }
+          }
+        });
 
         setStats({
           activeGuests: activeGuests.length,
@@ -60,16 +90,18 @@ export default function DashboardResumen() {
           pending,
           unmatchedRsvp,
           confirmedNoTable,
-          totalCapacity: (tables || []).reduce((sum, t) => sum + (t.capacity || 10), 0) || 250,
+          configuredCapacity,
+          estimatedCapacity: 250,
           dietaryFlagsCount,
           reconfirmationPending,
-          totalCommitted: 500000,
-          totalPaid: totalPaidSum,
-          balance: 0,
-          upcomingPaymentsCount: 2
+          totalContracted,
+          totalPaid,
+          hasIncompleteAmounts,
+          upcomingPaymentsCount,
+          overduePaymentsCount
         });
       } catch (err) {
-        console.error('Error loading stats:', err);
+        console.error('Error loading dynamic stats:', err);
       } finally {
         setLoading(false);
       }
@@ -78,6 +110,8 @@ export default function DashboardResumen() {
     loadStats();
   }, []);
 
+  const balanceKnown = stats.totalContracted - stats.totalPaid;
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -85,7 +119,7 @@ export default function DashboardResumen() {
         <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
           <div>
             <span className="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-semibold block">
-              Resumen Operativo
+              Resumen Operativo Dinámico
             </span>
             <h1 className="font-serif text-3xl text-[var(--text-primary)] mt-1">
               Centro de Comandos F&C
@@ -109,7 +143,7 @@ export default function DashboardResumen() {
               </span>
               <div className="kpi-value">{loading ? '...' : stats.activeGuests}</div>
               <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                {stats.invitationsSent} invitaciones enviadas
+                {stats.invitationsSent} enviadas · {stats.responsesReceived} respuestas
               </span>
             </div>
 
@@ -148,7 +182,7 @@ export default function DashboardResumen() {
         {/* Section 2: Conciliación & Mesas */}
         <div>
           <h2 className="text-xs uppercase tracking-[0.2em] font-semibold text-[var(--text-secondary)] mb-4">
-            Alertas de Conciliación & Mesas
+            Alertas de Conciliación & Capacidad
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="kpi-card border-l-4 border-l-[#8E703E]">
@@ -173,49 +207,67 @@ export default function DashboardResumen() {
 
             <div className="kpi-card">
               <span className="kpi-title flex items-center gap-2">
-                Capacidad del Centro
+                Capacidad de Mesas
               </span>
-              <div className="kpi-value">{loading ? '...' : `${stats.confirmed} / ${stats.totalCapacity}`}</div>
+              <div className="kpi-value">
+                {loading ? '...' : `Configurada: ${stats.configuredCapacity}`}
+              </div>
               <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                {stats.totalCapacity - stats.confirmed} cupos disponibles
+                Capacidad estimada recinto: {stats.estimatedCapacity} personas
               </span>
             </div>
           </div>
         </div>
 
-        {/* Section 3: Resumen Financiero */}
+        {/* Section 3: Resumen Financiero Dinámico */}
         <div>
           <h2 className="text-xs uppercase tracking-[0.2em] font-semibold text-[var(--text-secondary)] mb-4">
-            Resumen Financiero & Vencimientos
+            Resumen Financiero & Vencimientos Dinámicos
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2">
+              <span className="kpi-title flex items-center gap-2 text-[#2D5A27]">
                 <DollarSign size={14} /> Total Pagado
               </span>
-              <div className="kpi-value">${loading ? '...' : stats.totalPaid.toLocaleString('es-CL')} CLP</div>
+              <div className="kpi-value text-[#2D5A27]">${loading ? '...' : stats.totalPaid.toLocaleString('es-CL')} CLP</div>
               <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                Reserva banquetería registrada
+                Pagos confirmados en base de datos
               </span>
             </div>
 
             <div className="kpi-card">
               <span className="kpi-title flex items-center gap-2">
-                Monto Comprometido
+                Contratado Conocido
               </span>
-              <div className="kpi-value">${loading ? '...' : stats.totalCommitted.toLocaleString('es-CL')} CLP</div>
+              <div className="kpi-value">${loading ? '...' : stats.totalContracted.toLocaleString('es-CL')} CLP</div>
               <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                3 proveedores registrados
+                Gastos con monto definido
+              </span>
+            </div>
+
+            <div className="kpi-card">
+              <span className="kpi-title flex items-center gap-2 text-[#8E703E]">
+                Saldo Total
+              </span>
+              <div className="kpi-value text-[#8E703E]">
+                {stats.hasIncompleteAmounts ? (
+                  <span className="text-[#A83232] font-semibold italic text-xl">POR COMPLETAR</span>
+                ) : (
+                  `$${balanceKnown.toLocaleString('es-CL')} CLP`
+                )}
+              </div>
+              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
+                {stats.hasIncompleteAmounts ? 'Existen contratos con monto desconocido' : 'Saldo exacto calculado'}
               </span>
             </div>
 
             <div className="kpi-card">
               <span className="kpi-title flex items-center gap-2">
-                Próximos Vencimientos
+                <Calendar size={14} /> Vencimientos (30 días)
               </span>
               <div className="kpi-value">{loading ? '...' : stats.upcomingPaymentsCount}</div>
               <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                Locación Arboleda & Banquetería
+                {stats.overduePaymentsCount} pagos vencidos
               </span>
             </div>
           </div>

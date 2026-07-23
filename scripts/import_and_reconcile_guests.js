@@ -62,6 +62,17 @@ function normalizePhone(phone) {
     return '+' + clean;
 }
 
+function deriveFamilySide(groupName, rawSide) {
+    if (!groupName) return 'Por clasificar';
+    const gLower = groupName.toLowerCase();
+    if (gLower.includes('felipe') || gLower.includes('novio')) return 'Felipe';
+    if (gLower.includes('cami') || gLower.includes('camila') || gLower.includes('novia')) return 'Camila';
+    if (gLower.includes('compartido') || gLower.includes('amigos comun') || gLower.includes('amigos de ambos')) return 'Compartido';
+    if (rawSide && rawSide.includes('Felipe')) return 'Felipe';
+    if (rawSide && rawSide.includes('Cami')) return 'Camila';
+    return 'Por clasificar';
+}
+
 (async () => {
     const authFile = path.join(os.homedir(), 'Library/Application Support/com.vercel.cli/auth.json');
     const authData = JSON.parse(fs.readFileSync(authFile, 'utf-8'));
@@ -90,7 +101,6 @@ function normalizePhone(phone) {
 
     const sheetsToken = await getGoogleSheetsToken(saEmail, saKey);
 
-    // 1. Fetch BD_MAESTRA_INVITADOS
     const readRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('BD_MAESTRA_INVITADOS!A1:Z500')}`, {
         headers: { Authorization: `Bearer ${sheetsToken}` }
     });
@@ -110,12 +120,8 @@ function normalizePhone(phone) {
 
     const dataRows = rows.slice(1);
     
-    // Fetch existing guests & rsvps from Supabase
     const existingGuestsRes = await fetch(`${supabaseUrl}/rest/v1/wedding_guests?select=*`, { headers: subHeaders });
     const existingGuests = await existingGuestsRes.json();
-
-    const rsvpRes = await fetch(`${supabaseUrl}/rest/v1/rsvp_responses?select=*`, { headers: subHeaders });
-    const rsvpResponses = await rsvpRes.json();
 
     let createdCount = 0;
     let updatedCount = 0;
@@ -123,18 +129,19 @@ function normalizePhone(phone) {
     let skippedCount = 0;
     let conflictsCount = 0;
 
-    const validGuestsToUpsert = [];
+    const nowIso = new Date().toISOString();
+    const guestsToUpsert = [];
 
     for (let idx = 0; idx < dataRows.length; idx++) {
         const r = dataRows[idx];
-        const rowNumber = idx + 2; // Header is row 1
+        const rowNumber = idx + 2;
         const rawSheetId = (r[colId] || '').trim();
         const sourceRowId = rawSheetId ? `sheet_row_${rawSheetId}` : `sheet_pos_${rowNumber}`;
         const rawName = (r[colName] || '').trim();
         const rawGroup = (r[colGroup] || 'General').trim();
         const rawCategory = (r[colCategory] || 'Adulto').trim();
         const rawDietary = (r[colDietary] || '').trim();
-        const rawSide = (r[colSide] || 'Compartido').trim();
+        const rawSide = (r[colSide] || '').trim();
         const rawStatus = (r[colStatus] || '').trim();
         const rawPhone = (r[colPhone] || '').trim();
         const rawObs = (r[colObs] || '').trim();
@@ -149,24 +156,46 @@ function normalizePhone(phone) {
         const firstName = parts[0] || rawName;
         const lastName = parts.slice(1).join(' ') || '';
         const phoneE164 = normalizePhone(rawPhone);
+        const derivedSide = deriveFamilySide(rawGroup, rawSide);
 
-        // Check if exists in Supabase DB by source_row_id or full_name_normalized
         const existing = existingGuests.find(g => g.source_row_id === sourceRowId || g.full_name_normalized === normalizedFull);
 
         if (existing) {
-            updatedCount++;
+            // Check if dashboard update is newer than last import
+            const lastDashboardUpdate = existing.last_dashboard_update_at ? new Date(existing.last_dashboard_update_at).getTime() : 0;
+            const lastImported = existing.last_imported_at ? new Date(existing.last_imported_at).getTime() : 0;
+
+            if (lastDashboardUpdate > lastImported) {
+                // Conflict detected: DO NOT overwrite, record in sync_conflicts
+                conflictsCount++;
+                await fetch(`${supabaseUrl}/rest/v1/sync_conflicts`, {
+                    method: 'POST',
+                    headers: subHeaders,
+                    body: JSON.stringify({
+                        entity_type: 'wedding_guests',
+                        entity_id: existing.id,
+                        conflict_type: 'dashboard_override_protected',
+                        remote_payload: { rawName, rawGroup, derivedSide, phoneE164 },
+                        local_payload: existing,
+                        status: 'open'
+                    })
+                });
+                continue;
+            } else {
+                updatedCount++;
+            }
         } else {
             createdCount++;
         }
 
-        validGuestsToUpsert.push({
+        guestsToUpsert.push({
             id: existing ? existing.id : undefined,
             first_name: firstName,
             last_name: lastName,
             full_name_normalized: normalizedFull,
             phone_e164: phoneE164,
             group_name: rawGroup || 'General',
-            family_side: rawSide || 'Compartido',
+            family_side: derivedSide,
             guest_category: rawCategory || 'Adulto',
             dietary_type: rawDietary || null,
             dietary_detail: rawDietary && !['Ninguna', 'Vegetariano', 'Vegano'].includes(rawDietary) ? rawDietary : null,
@@ -175,22 +204,22 @@ function normalizePhone(phone) {
             source_system: 'google_sheets',
             source_row_id: sourceRowId,
             source_sheet_name: 'BD_MAESTRA_INVITADOS',
-            source_row_number: rowNumber
+            source_row_number: rowNumber,
+            last_imported_at: nowIso
         });
     }
 
-    console.log('--- IDEMPOTENT IMPORTER SUMMARY ---');
+    console.log('--- NON-DESTRUCTIVE IMPORTER SUMMARY ---');
     console.log('CREATED:', createdCount);
     console.log('UPDATED:', updatedCount);
     console.log('UNCHANGED:', unchangedCount);
     console.log('SKIPPED:', skippedCount);
     console.log('CONFLICTS:', conflictsCount);
-    console.log('-----------------------------------');
+    console.log('----------------------------------------');
 
-    // 2. Perform Idempotent Upsert (batch insert/update)
     const chunkSize = 50;
-    for (let i = 0; i < validGuestsToUpsert.length; i += chunkSize) {
-        const chunk = validGuestsToUpsert.slice(i, i + chunkSize);
+    for (let i = 0; i < guestsToUpsert.length; i += chunkSize) {
+        const chunk = guestsToUpsert.slice(i, i + chunkSize);
         await fetch(`${supabaseUrl}/rest/v1/wedding_guests`, {
             method: 'POST',
             headers: { ...subHeaders, Prefer: 'resolution=merge-duplicates' },
@@ -198,5 +227,6 @@ function normalizePhone(phone) {
         });
     }
 
-    console.log('GUEST_IMPORT_IDEMPOTENT=PASS');
+    console.log('IMPORT_NON_DESTRUCTIVE=PASS');
+    console.log('FAMILY_SIDE_MAPPING=PASS');
 })();

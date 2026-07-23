@@ -8,7 +8,8 @@ node_modules/
 dist/
 build/
 
-# Temp & Secrets
+# Backups & Temp
+backups/
 supabase/.temp/
 .env.local
 .env*.local
