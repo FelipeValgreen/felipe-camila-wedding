@@ -84,34 +84,17 @@
     </script>
 
 
-    <!-- Google Fonts: Newsreader & Inter -->
+    <!-- Preconnect & Responsive Preload -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://mwumnywbvjxekskfrlms.supabase.co" crossorigin>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        dark: '#11110F',
-                        cream: '#F3EFE7',
-                        light: '#FAF8F3',
-                        muted: '#918D85',
-                        wine: '#4A222A',
-                        gold: '#B99B71',
-                    },
-                    fontFamily: {
-                        serif: ['Newsreader', 'Georgia', 'serif'],
-                        sans: ['Inter', '-apple-system', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="preload" as="image" fetchpriority="high" imagesrcset="/images/responsive/hero_1_480w.jpg 480w, /images/responsive/hero_1_768w.jpg 768w, /images/responsive/hero_1_1080w.jpg 1080w, /images/responsive/hero_1_1440w.jpg 1440w" imagesizes="100vw">
+
+    <!-- Fonts & CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+
     <style>
         :root {
             --bg-dark: #11110F;
@@ -243,7 +226,7 @@
         <section id="hero" class="min-h-[85vh] flex items-center justify-center relative bg-dark text-cream py-20 px-6 overflow-hidden">
             <!-- Background Hero Image -->
             <div class="absolute inset-0 z-0">
-                <img id="hero-img" src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_8fbfeb8c-7473-43a0-86f4-de866d1518cd.jpeg?source=qr" alt="Felipe y Camila" fetchpriority="high" decoding="async" class="w-full h-full object-cover object-center opacity-40">
+                <img id="hero-img" src="/images/responsive/hero_1_1080w.jpg" srcset="/images/responsive/hero_1_480w.jpg 480w, /images/responsive/hero_1_768w.jpg 768w, /images/responsive/hero_1_1080w.jpg 1080w, /images/responsive/hero_1_1440w.jpg 1440w" sizes="100vw" width="1440" height="1920" alt="Felipe y Camila" fetchpriority="high" loading="eager" decoding="async" class="w-full h-full object-cover object-center opacity-40">
                 <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/60 to-dark/40"></div>
             </div>
 

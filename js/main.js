@@ -510,15 +510,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    // Safe Image Creation Helper with error fallback & objectPosition
+    // Safe Image Creation Helper with error fallback & objectPosition (Section 9 compliant)
     function createSafeImage(item, fallbackAlt, extraClasses = '') {
         const img = document.createElement('img');
-        img.src = item.src;
         img.alt = item.alt || fallbackAlt;
-        img.loading = 'lazy';
+        img.loading = item.loading || 'lazy';
         img.decoding = 'async';
-        img.style.objectPosition = item.objectPosition || 'center center';
-        img.className = `w-full h-full object-cover ${extraClasses}`;
+        if (item.fetchPriority) img.fetchPriority = item.fetchPriority;
+        if (item.width) img.width = item.width;
+        if (item.height) img.height = item.height;
+        if (item.srcset) img.srcset = item.srcset;
+        if (item.sizes) img.sizes = item.sizes || '(max-width: 768px) 84vw, (max-width: 1024px) 65vw, 440px';
+        if (item.objectPosition) img.style.objectPosition = item.objectPosition;
+        img.className = `w-full h-full object-cover transition-opacity duration-300 ${extraClasses}`;
         
         img.onerror = () => {
             console.warn('Image failed to load in category:', fallbackAlt);
@@ -532,32 +536,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        // Assign src as the very last property
+        img.src = item.src;
         return img;
     }
 
-    // 6. Curated Photo Loading Logic
-    async function loadCuratedPhotos() {
-        try {
-            // Load Hero & Historia
-            const heroStoryRes = await fetch('js/hero_story.json');
-            if (heroStoryRes.ok) {
-                const heroStoryData = await heroStoryRes.json();
-                
-                // Set Hero image if present
-                if (heroStoryData.hero && heroStoryData.hero.length > 0) {
-                    const heroImg = document.getElementById('hero-img');
-                    if (heroImg) {
-                        heroImg.src = heroStoryData.hero[0].src;
-                        heroImg.alt = heroStoryData.hero[0].alt || 'Retrato de la pareja';
-                        heroImg.style.objectPosition = heroStoryData.hero[0].objectPosition || 'center center';
-                    }
-                }
+    // Progressive Gallery Loading using IntersectionObserver
+    let historiaLoaded = false;
+    let civilLoaded = false;
+    let sharedLoaded = false;
 
-                // Render Historia images (4 photos)
+    async function loadHistoriaSection() {
+        if (historiaLoaded) return;
+        historiaLoaded = true;
+        try {
+            const res = await fetch('js/hero_story.json');
+            if (res.ok) {
+                const data = await res.json();
                 const historiaGrid = document.getElementById('historia-grid');
-                if (historiaGrid && heroStoryData.historia) {
+                if (historiaGrid && data.historia) {
                     historiaGrid.innerHTML = '';
-                    heroStoryData.historia.forEach((item) => {
+                    data.historia.forEach((item) => {
                         const div = document.createElement('div');
                         div.className = 'aspect-[4/3] overflow-hidden bg-cream border border-dark/10 shadow-sm rounded-sm';
                         const img = createSafeImage(item, 'Recuerdo de nuestra historia');
@@ -565,18 +564,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         historiaGrid.appendChild(div);
                     });
                 }
-            } else {
-                console.error('Failed to load hero_story.json');
             }
+        } catch (e) {
+            console.error('Error loading historia section:', e);
+        }
+    }
 
-            // Load Civil Rail (8 photos)
-            const civilRes = await fetch('js/civil_featured.json');
-            if (civilRes.ok) {
-                const civilData = await civilRes.json();
+    async function loadCivilSection() {
+        if (civilLoaded) return;
+        civilLoaded = true;
+        try {
+            const res = await fetch('js/civil_featured.json');
+            if (res.ok) {
+                const data = await res.json();
                 const civilRail = document.getElementById('civil-rail');
-                if (civilRail && Array.isArray(civilData)) {
+                if (civilRail && Array.isArray(data)) {
                     civilRail.innerHTML = '';
-                    civilData.forEach((item) => {
+                    data.forEach((item) => {
                         const div = document.createElement('div');
                         div.className = 'rail-item overflow-hidden bg-light border border-dark/10 rounded-sm';
                         const img = createSafeImage(item, 'Momento del matrimonio civil');
@@ -586,15 +590,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     setupRail('civil-rail', 'civil-prev-btn', 'civil-next-btn', 'civil-counter');
                 }
             }
+        } catch (e) {
+            console.error('Error loading civil section:', e);
+        }
+    }
 
-            // Load Shared Rail (8 photos)
-            const sharedRes = await fetch('js/guest_shared.json');
-            if (sharedRes.ok) {
-                const sharedData = await sharedRes.json();
+    async function loadSharedSection() {
+        if (sharedLoaded) return;
+        sharedLoaded = true;
+        try {
+            const res = await fetch('js/guest_shared.json');
+            if (res.ok) {
+                const data = await res.json();
                 const sharedRail = document.getElementById('shared-rail');
-                if (sharedRail && Array.isArray(sharedData)) {
+                if (sharedRail && Array.isArray(data)) {
                     sharedRail.innerHTML = '';
-                    sharedData.forEach((item) => {
+                    data.forEach((item) => {
                         const div = document.createElement('div');
                         div.className = 'rail-item overflow-hidden bg-cream border border-dark/10 rounded-sm';
                         const img = createSafeImage(item, 'Fotografía compartida durante la celebración');
@@ -605,8 +616,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (e) {
-            console.error('Error loading curated photos:', e);
+            console.error('Error loading shared section:', e);
         }
+    }
+
+    function initLazyGalleryObservers() {
+        if (!('IntersectionObserver' in window)) {
+            // Fallback for browsers without IntersectionObserver
+            loadHistoriaSection();
+            loadCivilSection();
+            loadSharedSection();
+            return;
+        }
+
+        const observerOptions = { rootMargin: '300px 0px', threshold: 0.01 };
+
+        const historiaElem = document.getElementById('historia');
+        if (historiaElem) {
+            const obs = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    loadHistoriaSection();
+                    obs.disconnect();
+                }
+            }, observerOptions);
+            obs.observe(historiaElem);
+        }
+
+        const civilElem = document.getElementById('nuestro-civil');
+        if (civilElem) {
+            const obs = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    loadCivilSection();
+                    obs.disconnect();
+                }
+            }, observerOptions);
+            obs.observe(civilElem);
+        }
+
+        const sharedElem = document.getElementById('galeria-compartidas');
+        if (sharedElem) {
+            const obs = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    loadSharedSection();
+                    obs.disconnect();
+                }
+            }, observerOptions);
+            obs.observe(sharedElem);
+        }
+    }
+
+    // Attach IntersectionObservers only after DOM is ready
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(initLazyGalleryObservers);
+    } else {
+        setTimeout(initLazyGalleryObservers, 1500);
     }
 
     // 7. Setup Rail Helper
@@ -621,12 +684,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalItems = rail.children.length;
 
         function updateCounter() {
+            if (!rail.children[0]) return;
             const itemWidth = rail.children[0].getBoundingClientRect().width + 24;
             const currentIndex = Math.min(Math.round(rail.scrollLeft / itemWidth) + 1, totalItems);
             if (counter) counter.textContent = `${String(currentIndex).padStart(2, '0')} / ${String(totalItems).padStart(2, '0')}`;
         }
 
-        rail.addEventListener('scroll', updateCounter);
+        rail.addEventListener('scroll', updateCounter, { passive: true });
 
         if (nextBtn) {
             nextBtn.onclick = () => {
@@ -643,6 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         rail.addEventListener('keydown', (e) => {
+            if (!rail.children[0]) return;
             const itemWidth = rail.children[0].getBoundingClientRect().width + 24;
             if (e.key === 'ArrowRight') {
                 rail.scrollBy({ left: itemWidth, behavior: 'smooth' });
@@ -654,6 +719,5 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCounter();
     }
 
-    loadCuratedPhotos();
-
 });
+
