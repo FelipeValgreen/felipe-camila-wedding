@@ -1,20 +1,30 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 export function createClient() {
   const cookieStore = cookies();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabasePublishableKey) {
-    console.error('[CONFIGURATION_ERROR] Required Supabase server environment variables are missing.');
+    console.error('[CONFIGURATION_ERROR] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is missing.');
     throw new Error('CONFIGURATION_ERROR: Required Supabase server environment variables are missing.');
+  }
+
+  const reqHeaders = headers();
+  const authHeader = reqHeaders.get('authorization');
+  const globalHeaders: Record<string, string> = {};
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    globalHeaders['Authorization'] = authHeader;
   }
 
   return createServerClient(
     supabaseUrl,
     supabasePublishableKey,
     {
+      global: {
+        headers: globalHeaders
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -25,7 +35,7 @@ export function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // The `setAll` method was called from a Server Component.
+            // Called from Server Component
           }
         },
       },

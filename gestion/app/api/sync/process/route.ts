@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createClient } from '@/lib/supabase-server';
+import { createAdminClient } from '@/lib/supabase-admin';
 
 function formatPrivateKey(key: string) {
   if (!key) return '';
@@ -39,7 +40,15 @@ async function getGoogleSheetsToken(email: string, privateKey: string) {
     })
   });
 
+  if (!res.ok) {
+    throw new Error(`Google OAuth token retrieval failed with status ${res.status}`);
+  }
+
   const data = await res.json();
+  if (!data.access_token) {
+    throw new Error('Google OAuth token response missing access_token');
+  }
+
   return data.access_token;
 }
 
@@ -58,30 +67,30 @@ export async function POST() {
       return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
     }
 
+    // Exclusively require standard environment variable names
     const saEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
-    const saKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_KEY || '';
-    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || '';
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
-    const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+    const saKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '';
+    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '';
 
     if (!saEmail || !saKey || !spreadsheetId) {
-      return NextResponse.json({ ok: false, error: 'CONFIGURATION_ERROR: Missing Google Sheets credentials' }, { status: 500 });
+      return NextResponse.json({ ok: false, error: 'CONFIGURATION_ERROR: Missing required Google Sheets environment variables' }, { status: 500 });
     }
 
-    const subHeaders = {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-      'Content-Type': 'application/json'
-    };
+    // Use admin client for internal outbox processing
+    const adminSupabase = createAdminClient();
 
-    // 1. Query sync_outbox WHERE status = 'pending' ORDER BY created_at ASC
-    const outboxRes = await fetch(`${supabaseUrl}/rest/v1/sync_outbox?status=eq.pending&order=created_at.asc`, { headers: subHeaders });
-    if (!outboxRes.ok) {
-      return NextResponse.json({ ok: false, error: 'Failed to read sync_outbox' }, { status: 500 });
+    // Query pending sync_outbox items
+    const { data: pendingItems, error: outboxQueryErr } = await adminSupabase
+      .from('sync_outbox')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true });
+
+    if (outboxQueryErr) {
+      return NextResponse.json({ ok: false, error: `Failed to read sync_outbox: ${outboxQueryErr.message}` }, { status: 500 });
     }
-    const pendingItems = await outboxRes.json();
 
-    if (!Array.isArray(pendingItems) || pendingItems.length === 0) {
+    if (!pendingItems || pendingItems.length === 0) {
       return NextResponse.json({ ok: true, processed: 0, failed: 0, pending: 0, errors_sanitized: [] });
     }
 
@@ -114,8 +123,8 @@ export async function POST() {
         const payload = item.payload || {};
         const operation = item.operation || 'UPDATE';
 
-        // Read Column A UUIDs from Google Sheets tab
-        const readRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A1:A500')}`, {
+        // Read all Column A UUIDs dynamically (no arbitrary range limit like A1:A500)
+        const readRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A:A')}`, {
           headers: { Authorization: `Bearer ${sheetsToken}` }
         });
         
@@ -129,14 +138,13 @@ export async function POST() {
         let rowIndex = -1;
         for (let i = 0; i < rows.length; i++) {
           if (rows[i][0] === entityId) {
-            rowIndex = i + 1; // 1-based index
+            rowIndex = i + 1;
             break;
           }
         }
 
         if (operation === 'DELETE') {
           if (rowIndex > 0) {
-            // Clear row in Google Sheets
             const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A' + rowIndex + ':Z' + rowIndex)}:clear`, {
               method: 'POST',
               headers: { Authorization: `Bearer ${sheetsToken}` }
@@ -144,7 +152,7 @@ export async function POST() {
             if (!clearRes.ok) throw new Error(`Google Sheets clear failed with HTTP ${clearRes.status}`);
           }
         } else {
-          // Explicit Serializers per entity type
+          // Serializers per entity type
           let rowValues: any[] = [];
           if (item.entity_type === 'wedding_guests') {
             rowValues = [entityId, payload.first_name || '', payload.last_name || '', payload.phone_e164 || '', payload.group_name || '', payload.family_side || '', payload.guest_category || 'Adulto', payload.attendance_status || 'pending', payload.dietary_type || '', payload.reconfirmation_status || 'pending', payload.guest_status || 'active', payload.version || 1, new Date().toISOString(), 'synced'];
@@ -163,7 +171,6 @@ export async function POST() {
           }
 
           if (rowIndex > 0) {
-            // Update row
             const updateRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A' + rowIndex)}?valueInputOption=USER_ENTERED`, {
               method: 'PUT',
               headers: {
@@ -174,7 +181,6 @@ export async function POST() {
             });
             if (!updateRes.ok) throw new Error(`Google Sheets update failed with HTTP ${updateRes.status}`);
           } else {
-            // Append row
             const appendRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A1')}:append?valueInputOption=USER_ENTERED`, {
               method: 'POST',
               headers: {
@@ -187,31 +193,34 @@ export async function POST() {
           }
         }
 
-        // Mark processed in Supabase DB ONLY when Google Sheets API calls succeeded
-        await fetch(`${supabaseUrl}/rest/v1/sync_outbox?id=eq.${item.id}`, {
-          method: 'PATCH',
-          headers: subHeaders,
-          body: JSON.stringify({
+        // Mark processed in Supabase DB
+        const { error: markProcErr } = await adminSupabase
+          .from('sync_outbox')
+          .update({
             status: 'processed',
             processed_at: new Date().toISOString(),
             attempts: (item.attempts || 0) + 1
           })
-        });
+          .eq('id', item.id);
+
+        if (markProcErr) {
+          throw new Error(`Failed to mark processed in DB: ${markProcErr.message}`);
+        }
 
         processedCount++;
       } catch (err: any) {
         failedCount++;
         const sanitizedErr = err.message || 'Processing error';
         errorsSanitized.push(sanitizedErr);
-        await fetch(`${supabaseUrl}/rest/v1/sync_outbox?id=eq.${item.id}`, {
-          method: 'PATCH',
-          headers: subHeaders,
-          body: JSON.stringify({
+
+        await adminSupabase
+          .from('sync_outbox')
+          .update({
             status: 'failed',
             attempts: (item.attempts || 0) + 1,
             last_error: sanitizedErr
           })
-        });
+          .eq('id', item.id);
       }
     }
 

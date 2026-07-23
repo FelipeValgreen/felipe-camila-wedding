@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    const { data: guest, error } = await supabase
+    const { data: guest, error: insertErr } = await supabase
       .from('wedding_guests')
       .insert({
         ...body,
@@ -22,9 +22,11 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    if (insertErr || !guest) {
+      return NextResponse.json({ ok: false, error: `Insert guest failed: ${insertErr?.message || 'Unknown error'}` }, { status: 500 });
+    }
 
-    await supabase.from('audit_log').insert({
+    const { error: auditErr } = await supabase.from('audit_log').insert({
       entity_type: 'wedding_guests',
       entity_id: guest.id,
       action: 'CREATE_GUEST',
@@ -33,12 +35,20 @@ export async function POST(request: Request) {
       origin: 'dashboard'
     });
 
-    await supabase.from('sync_outbox').insert({
+    if (auditErr) {
+      return NextResponse.json({ ok: false, error: `Audit log failed: ${auditErr.message}` }, { status: 500 });
+    }
+
+    const { error: outboxErr } = await supabase.from('sync_outbox').insert({
       entity_type: 'wedding_guests',
       entity_id: guest.id,
       operation: 'INSERT',
       payload: guest
     });
+
+    if (outboxErr) {
+      return NextResponse.json({ ok: false, error: `Sync outbox failed: ${outboxErr.message}` }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true, guest });
   } catch (err: any) {
@@ -63,7 +73,7 @@ export async function PATCH(request: Request) {
 
     const { data: beforeGuest } = await supabase.from('wedding_guests').select('*').eq('id', id).single();
 
-    const { data: guest, error } = await supabase
+    const { data: guest, error: updateErr } = await supabase
       .from('wedding_guests')
       .update({
         ...updates,
@@ -73,9 +83,11 @@ export async function PATCH(request: Request) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    if (updateErr || !guest) {
+      return NextResponse.json({ ok: false, error: `Update guest failed: ${updateErr?.message || 'Unknown error'}` }, { status: 500 });
+    }
 
-    await supabase.from('audit_log').insert({
+    const { error: auditErr } = await supabase.from('audit_log').insert({
       entity_type: 'wedding_guests',
       entity_id: id,
       action: 'UPDATE_GUEST',
@@ -85,12 +97,20 @@ export async function PATCH(request: Request) {
       origin: 'dashboard'
     });
 
-    await supabase.from('sync_outbox').insert({
+    if (auditErr) {
+      return NextResponse.json({ ok: false, error: `Audit log failed: ${auditErr.message}` }, { status: 500 });
+    }
+
+    const { error: outboxErr } = await supabase.from('sync_outbox').insert({
       entity_type: 'wedding_guests',
       entity_id: id,
       operation: 'UPDATE',
       payload: guest
     });
+
+    if (outboxErr) {
+      return NextResponse.json({ ok: false, error: `Sync outbox failed: ${outboxErr.message}` }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true, guest });
   } catch (err: any) {
@@ -115,10 +135,12 @@ export async function DELETE(request: Request) {
 
     const { data: beforeGuest } = await supabase.from('wedding_guests').select('*').eq('id', id).single();
 
-    const { error } = await supabase.from('wedding_guests').delete().eq('id', id);
-    if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    const { error: deleteErr } = await supabase.from('wedding_guests').delete().eq('id', id);
+    if (deleteErr) {
+      return NextResponse.json({ ok: false, error: `Delete guest failed: ${deleteErr.message}` }, { status: 500 });
+    }
 
-    await supabase.from('audit_log').insert({
+    const { error: auditErr } = await supabase.from('audit_log').insert({
       entity_type: 'wedding_guests',
       entity_id: id,
       action: 'DELETE_GUEST',
@@ -127,12 +149,20 @@ export async function DELETE(request: Request) {
       origin: 'dashboard'
     });
 
-    await supabase.from('sync_outbox').insert({
+    if (auditErr) {
+      return NextResponse.json({ ok: false, error: `Audit log failed: ${auditErr.message}` }, { status: 500 });
+    }
+
+    const { error: outboxErr } = await supabase.from('sync_outbox').insert({
       entity_type: 'wedding_guests',
       entity_id: id,
       operation: 'DELETE',
       payload: beforeGuest
     });
+
+    if (outboxErr) {
+      return NextResponse.json({ ok: false, error: `Sync outbox failed: ${outboxErr.message}` }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true, deleted: true });
   } catch (err: any) {
