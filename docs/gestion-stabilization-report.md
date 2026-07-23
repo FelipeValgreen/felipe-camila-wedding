@@ -10,7 +10,7 @@ Se completó la auditoría integral y el endurecimiento técnico del **Centro de
 - **Repositorio**: `FelipeValgreen/felipe-camila-wedding`
 - **Rama**: `feature/felipeycami-gestion-mvp`
 - **PR #9**: Abierto en GitHub ([PR #9](https://github.com/FelipeValgreen/felipe-camila-wedding/pull/9)), estado `MERGEABLE`.
-- **Despliegue Productivo Gestión**: `https://gestion.felipeycami.cl` (Proyecto Vercel `gestion`, Root: `gestion`).
+- **Despliegue Productivo Gestión**: `https://gestion.felipeycami.cl` (Proyecto Vercel `gestion`, Root: `gestion`, Deployment ID: `dpl_BbcdRBZmkM113xREN2f8BpLz2R2B`, Target: `production`, readyState: `READY`).
 - **Despliegue Productivo Público**: `https://felipeycami.cl` (Proyecto Vercel `felipeycamila`, Root: `.`, intacto).
 
 ---
@@ -22,6 +22,7 @@ Se completó la auditoría integral y el endurecimiento técnico del **Centro de
 3. `supabase/migrations/20260723020000_felipeycami_cleanup_permissive_policies.sql`
 4. `supabase/migrations/20260723030000_felipeycami_deny_anon_storage_list.sql`
 5. `supabase/migrations/20260723040000_felipeycami_finalize_storage_and_policy_cleanup.sql`
+6. `supabase/migrations/20260723050000_felipeycami_remove_legacy_storage_upload_policy.sql`
 
 ---
 
@@ -39,21 +40,20 @@ Se completó la auditoría integral y el endurecimiento técnico del **Centro de
 - **Trigger `update_updated_at_column()`**: Se cambió a `SECURITY INVOKER` y se revocaron sus permisos a `PUBLIC` y `anon`.
 - **RPC `reconcile_rsvp_to_guest`**: Documentada como excepción aceptada `SECURITY DEFINER` (mutación transaccional multi-tabla across `rsvp_responses`, `wedding_guests`, `audit_log`, `sync_outbox`) asegurando la validación estricta de `auth.uid()`, perfil activo, rol `editor`/`owner`, y revocando permisos a `PUBLIC` y `anon`.
 
-### 4.3 Consolidación RLS y Eliminación de Políticas Permisivas (P0/P1)
-- **Eliminación de `auth_rls_initplan`**: Se actualizaron las políticas RLS en todas las tablas de gestión utilizando la expresión `( (SELECT security.get_my_role()) ... )` evaluada una sola vez por consulta.
-- **Depuración de Políticas Permisivas**: Se ejecutó `DROP POLICY` para eliminar políticas antiguas con `WITH CHECK (true)` en `guest_photos`, `rsvp_guests`, `song_requests` y `admin_profiles`.
-- **Políticas Públicas Acotadas**:
-  - `guest_photos`: Restricción `WITH CHECK` para validar formato URL y longitud de nombre.
-  - `rsvp_guests`: Restricción `WITH CHECK` para validar formato de nombre.
-  - `song_requests`: Restricción `WITH CHECK` para validar longitud de título de canción y remitente.
-- **Storage Bucket `wedding-photos`**: Se revocaron las políticas públicas broad de listado en `storage.objects`, configurando límites de archivo (10MB) y MIME types permitidos (JPEG, PNG, WebP). La gestión se acotó a la política `Admin Manage storage wedding-photos` para administradores autenticados y uploads acotados a `guest_uploads/`. Se comprobó la carga activa de las fotografías históricas del matrimonio civil (HTTP 200).
+### 4.3 Consolidación RLS y Depuración de Storage Upload Policies (P0/P1)
+- **Migración 20260723050000**: Se ejecutó `DROP POLICY IF EXISTS "Anyone can upload to Wedding Photos" ON storage.objects;` eliminando la política antigua permisiva de INSERT.
+- **Política Estricta Public Upload**: Se aplicó la política `Validated Public Upload wedding-photos` que exige `(storage.foldername(name))[1] = 'guest_uploads'`, longitud de nombre > 14 y extensiones permitidas (`.jpg`, `.jpeg`, `.png`, `.webp`).
+- **Resultados de la Matriz de Pruebas de Storage**:
+  - `DIRECT_PUBLIC_URL_STATUS`: **200 (Permitido)**
+  - `ANON_LIST_STATUS`: **200 (OBJECTS_COUNT: 0)**
+  - `VALID_JPEG_UPLOAD_STATUS`: **200 (Permitido)**
+  - `VALID_PNG_UPLOAD_STATUS`: **200 (Permitido)**
+  - `EXECUTABLE_UPLOAD_STATUS`: **400 (Rechazado)**
+  - `ROOT_FOLDER_UPLOAD_STATUS`: **400 (Rechazado)**
+  - `OTHER_FOLDER_UPLOAD_STATUS`: **400 (Rechazado)**
 
 ### 4.4 Rendimiento e Índices de Claves Foráneas (P1)
-- Se crearon los índices faltantes:
-  - `idx_expenses_vendor_id` en `public.expenses(vendor_id)`
-  - `idx_guest_contact_events_guest_id` en `public.guest_contact_events(guest_id)`
-  - `idx_rsvp_events_rsvp_id` en `public.rsvp_events(rsvp_id)`
-  - `idx_wedding_guests_replacement_for` en `public.wedding_guests(replacement_for_guest_id)`
+- Se crearon los índices faltantes: `idx_expenses_vendor_id`, `idx_guest_contact_events_guest_id`, `idx_rsvp_events_rsvp_id`, `idx_wedding_guests_replacement_for`.
 - Se eliminó el índice duplicado `idx_wedding_guests_table` manteniendo `idx_wedding_guests_table_id`.
 
 ### 4.5 RSVP Individual y Reconciliación de Datos (P0/P1)
@@ -73,6 +73,6 @@ Se completó la auditoría integral y el endurecimiento técnico del **Centro de
 ## 6. Procedimiento de Rollback y Runbook de Restauración
 
 En caso de requerir reversión inmediata:
-1. **Script SQL de Reversión**: Documentado en `supabase/migrations/rollback/20260723020000_rollback_security_hardening.sql`.
-2. **Infraestructura Vercel**: Re-promover el deployment anterior en Vercel Dashboard -> Project `gestion` -> Deployments -> Promote to Production.
+1. **Runbook de Restauración**: Documentado en `docs/gestion-restoration-runbook.md`.
+2. **Infraestructura Vercel**: Re-promover el deployment anterior `dpl_9VqEysmgeAFJeGhwcU6AHEcuMGKr` en Vercel Dashboard.
 3. **Respaldo Google Sheets**: Restaurar desde las pestañas nativas `BK_MAESTRA_...` en el spreadsheet `1bbzTemOTWdE-QSy2L1u_B6Oc4s3j4o3oSOLBAdTl7F0` o desde el export XLSX local.
