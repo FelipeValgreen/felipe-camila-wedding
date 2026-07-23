@@ -84,42 +84,26 @@
     </script>
 
 
-    <!-- Google Fonts: Newsreader & Inter -->
+    <!-- Preconnect & Responsive Preload -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://mwumnywbvjxekskfrlms.supabase.co" crossorigin>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        dark: '#11110F',
-                        cream: '#F3EFE7',
-                        light: '#FAF8F3',
-                        muted: '#918D85',
-                        wine: '#4A222A',
-                        gold: '#B99B71',
-                    },
-                    fontFamily: {
-                        serif: ['Newsreader', 'Georgia', 'serif'],
-                        sans: ['Inter', '-apple-system', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="preload" as="image" fetchpriority="high" imagesrcset="/images/responsive/hero_1_480w.jpg 480w, /images/responsive/hero_1_768w.jpg 768w, /images/responsive/hero_1_1080w.jpg 1080w, /images/responsive/hero_1_1440w.jpg 1440w" imagesizes="100vw">
+
+    <!-- Fonts & CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <link rel="stylesheet" href="/css/icons.css">
+
     <style>
         :root {
-            --bg-dark: #11110F;
+            --bg-dark: #0F0C0B;
             --bg-cream: #F3EFE7;
             --bg-light: #FAF8F3;
             --text-muted: #918D85;
-            --wine: #4A222A;
-            --gold: #B99B71;
+            --wine: #5C1D24;
+            --gold: #C5A059;
         }
         body {
             font-size: 16px;
@@ -193,13 +177,18 @@
 
     <!-- 01 EL UMBRAL -->
     <div id="envelope-overlay" class="fixed inset-0 z-[100] transition-all duration-[1000ms] ease-[cubic-bezier(0.77,0,0.175,1)] flex flex-col items-center justify-center px-6 bg-dark text-cream">
-        <div class="max-w-md w-full text-center space-y-8">
+        <div class="max-w-md w-full text-center space-y-6">
+            <div class="flex justify-center mb-2">
+                <div class="w-24 h-24 md:w-28 md:h-28 rounded-full border-2 border-gold/40 p-1 shadow-xl overflow-hidden bg-dark transition-transform duration-700 hover:scale-105">
+                    <img src="/images/isotype-fc-200w.png" alt="Isotipo Felipe & Camila" class="w-full h-full object-cover rounded-full">
+                </div>
+            </div>
             <span class="font-sans text-[11px] uppercase tracking-[0.4em] text-gold block">23 · 10 · 26</span>
             <div class="space-y-2">
                 <h1 class="font-serif text-5xl md:text-6xl tracking-wide font-normal">Felipe & Camila</h1>
                 <p class="font-serif italic text-lg text-muted">El Umbral Vivo</p>
             </div>
-            <div class="pt-6">
+            <div class="pt-4">
                 <button id="open-btn" class="inline-flex items-center gap-3 border border-gold/40 text-cream text-xs uppercase tracking-[0.3em] px-8 py-4 hover:bg-gold hover:text-dark transition-all duration-500 font-medium cursor-pointer">
                     <span>Entrar a la invitación</span>
                     <i class="fa-solid fa-arrow-right text-[10px]"></i>
@@ -209,9 +198,11 @@
     </div>
 
     <!-- NAVIGATION -->
-    <nav id="main-nav" class="fixed top-0 w-full z-50 transition-all duration-500 bg-light/95 backdrop-blur-md border-b border-dark/5 py-4 opacity-0 -translate-y-full">
+    <nav id="main-nav" class="fixed top-0 w-full z-50 transition-all duration-500 bg-light/95 backdrop-blur-md border-b border-dark/5 py-3.5 opacity-0 -translate-y-full">
         <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
-            <a href="#hero" class="font-serif text-2xl tracking-widest text-dark hover:text-gold transition-colors">F&C</a>
+            <a href="#hero" class="flex items-center hover:opacity-85 transition-opacity" aria-label="Felipe & Camila — Inicio">
+                <img src="/images/isotype-fc-200w.png" alt="Monograma Felipe & Camila" class="h-9 w-9 md:h-10 md:w-10 object-contain rounded-full border border-gold/40 shadow-sm">
+            </a>
             
             <!-- Desktop Links (md and above) -->
             <div class="hidden md:flex space-x-8 text-[11px] uppercase tracking-[0.25em] items-center">
@@ -243,7 +234,7 @@
         <section id="hero" class="min-h-[85vh] flex items-center justify-center relative bg-dark text-cream py-20 px-6 overflow-hidden">
             <!-- Background Hero Image -->
             <div class="absolute inset-0 z-0">
-                <img id="hero-img" src="https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_8fbfeb8c-7473-43a0-86f4-de866d1518cd.jpeg?source=qr" alt="Felipe y Camila" fetchpriority="high" decoding="async" class="w-full h-full object-cover object-center opacity-40">
+                <img id="hero-img" src="/images/responsive/hero_1_1080w.jpg" srcset="/images/responsive/hero_1_480w.jpg 480w, /images/responsive/hero_1_768w.jpg 768w, /images/responsive/hero_1_1080w.jpg 1080w, /images/responsive/hero_1_1440w.jpg 1440w" sizes="100vw" width="1440" height="1920" alt="Felipe y Camila" fetchpriority="high" loading="eager" decoding="async" class="w-full h-full object-cover object-center opacity-40">
                 <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/60 to-dark/40"></div>
             </div>
 
@@ -535,7 +526,7 @@
         <section id="dresscode" class="py-24 bg-dark text-cream text-center border-b border-cream/10">
             <div class="max-w-2xl mx-auto px-6 space-y-6">
                 <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Dress Code</span>
-                <h2 class="font-serif text-4xl md:text-5xl text-cream font-normal">Black Tie</h2>
+                <h2 class="font-serif text-4xl md:text-5xl text-cream font-normal">Formal</h2>
                 <div class="w-12 h-[1px] bg-gold/40 mx-auto"></div>
                 <p class="font-sans text-base text-cream/70 font-light italic leading-relaxed">
                     Una noche formal, elegante y celebratoria.
@@ -584,14 +575,18 @@
         <!-- 08 FOTOS COMPARTIDAS POR USTEDES (GALERÍA HORIZONTAL 2) -->
         <section id="galeria-compartidas" class="py-24 bg-light border-b border-dark/5">
             <div class="max-w-6xl mx-auto px-6 space-y-8">
-                <div class="flex justify-between items-end">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                     <div>
                         <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block mb-2">Comunidad</span>
                         <h2 class="font-serif text-3xl md:text-4xl text-dark font-normal">Fotos compartidas por ustedes</h2>
                         <p class="font-sans text-sm text-muted font-light mt-1">Momentos capturados por quienes han sido parte de nuestra celebración.</p>
                     </div>
-                    <div class="flex items-center gap-6">
-                        <span id="shared-counter" class="font-sans text-xs tracking-widest text-muted">01 / 08</span>
+                    <div class="flex items-center gap-4">
+                        <a href="/fotos" id="open-upload-modal-btn" class="inline-flex items-center gap-2 bg-gold hover:bg-wine text-cream font-sans text-xs uppercase tracking-[0.2em] font-semibold px-5 py-3 rounded-full shadow-md transition-all duration-300 transform hover:scale-[1.02] cursor-pointer">
+                            <i class="fa-solid fa-camera text-sm"></i>
+                            <span>Subir mis fotos del matri</span>
+                        </a>
+                        <span id="shared-counter" class="font-sans text-xs tracking-widest text-muted hidden sm:inline">01 / 08</span>
                         <div class="hidden md:flex gap-2">
                             <button id="shared-prev-btn" aria-label="Fotografía anterior" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
                                 <i class="fa-solid fa-chevron-left text-xs"></i>
@@ -610,10 +605,10 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center pt-2">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-dark/10">
                     <span class="md:hidden font-sans text-xs text-muted italic">Desliza para ver más →</span>
-                    <a href="/galeria/" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1 ml-auto">
-                        Ver fotos compartidas
+                    <a href="/galeria/" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1 ml-auto sm:ml-0">
+                        Ver todas las fotos compartidas →
                     </a>
                 </div>
             </div>
@@ -662,7 +657,12 @@
 
         <!-- 10 CIERRE -->
         <section id="cierre" class="py-32 bg-dark text-cream text-center">
-            <div class="max-w-2xl mx-auto px-6 space-y-8">
+            <div class="max-w-2xl mx-auto px-6 space-y-6">
+                <div class="flex justify-center mb-2">
+                    <div class="w-16 h-16 rounded-full border border-gold/40 p-1 bg-dark shadow-md">
+                        <img src="/images/isotype-fc-200w.png" alt="Isotipo F&C" class="w-full h-full object-cover rounded-full">
+                    </div>
+                </div>
                 <span class="font-sans text-xs uppercase tracking-[0.4em] text-gold block">23 · 10 · 26</span>
                 <h2 class="font-serif text-4xl md:text-5xl text-cream font-normal">Nos vemos muy pronto.</h2>
                 <div class="w-12 h-[1px] bg-gold/40 mx-auto"></div>

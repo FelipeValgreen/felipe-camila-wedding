@@ -1,0 +1,13 @@
+{
+  "name": "felipe-camila-wedding-public",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:images": "node scripts/build_responsive_images.js",
+    "build:css": "npx tailwindcss -i ./css/input.css -o ./css/tailwind.min.css -m"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
+  }
+}

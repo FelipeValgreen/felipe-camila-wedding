@@ -1,0 +1,192 @@
+[
+  {
+    "id": "hero_1",
+    "cat": "hero",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_8fbfeb8c-7473-43a0-86f4-de866d1518cd.jpeg?source=qr",
+    "format": "JPEG",
+    "sizeBytes": 658349,
+    "width": 1440,
+    "height": 1920,
+    "aspectRatio": "0.75"
+  },
+  {
+    "id": "historia_1",
+    "cat": "historia",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1764651969303_IMG_0475.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 2167803,
+    "width": 3024,
+    "height": 4032,
+    "aspectRatio": "0.75"
+  },
+  {
+    "id": "historia_2",
+    "cat": "historia",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1764852196538_IMG_4168.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 2242225,
+    "width": 4032,
+    "height": 3024,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "historia_3",
+    "cat": "historia",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765423098101_IMG_2787.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 3168497,
+    "width": 4284,
+    "height": 5712,
+    "aspectRatio": "0.75"
+  },
+  {
+    "id": "historia_4",
+    "cat": "historia",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765837504689_CD20FBA5_0F4E_4F2C_9525_9AEDFEFBAC6B.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 2247105,
+    "width": 3664,
+    "height": 2062,
+    "aspectRatio": "1.78"
+  },
+  {
+    "id": "civil_1",
+    "cat": "civil",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_91b6e59f-a483-4606-b8e2-c8b379664aa2.jpeg?source=qr",
+    "format": "JPEG",
+    "sizeBytes": 980373,
+    "width": 1440,
+    "height": 1920,
+    "aspectRatio": "0.75"
+  },
+  {
+    "id": "civil_2",
+    "cat": "civil",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_e72a9c48-aaed-4414-85a7-8fa4b120463a.jpg?source=qr",
+    "format": "JPG",
+    "sizeBytes": 664965,
+    "width": 1920,
+    "height": 1440,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "civil_3",
+    "cat": "civil",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_e680d673-4ed6-49ca-a949-10120e1a26f5.jpg?source=qr",
+    "format": "JPG",
+    "sizeBytes": 459667,
+    "width": 1920,
+    "height": 1440,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "civil_4",
+    "cat": "civil",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_c96daf0b-5572-4757-8e00-ddcc4f2bc3f5.jpeg?source=qr",
+    "format": "JPEG",
+    "sizeBytes": 1075432,
+    "width": 1920,
+    "height": 1440,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "civil_5",
+    "cat": "civil",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_360d4597-b4c4-4a9c-80b9-8df32f2dde12.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 1048264,
+    "width": 750,
+    "height": 984,
+    "aspectRatio": "0.76"
+  },
+  {
+    "id": "civil_6",
+    "cat": "civil",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_07940307-055c-4529-9b89-f74b41537849.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 503521,
+    "width": 750,
+    "height": 536,
+    "aspectRatio": "1.40"
+  },
+  {
+    "id": "civil_7",
+    "cat": "civil",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_381f0999-3ca1-438b-a77c-3c77c9deba47.jpeg?source=qr",
+    "format": "JPEG",
+    "sizeBytes": 657272,
+    "width": 1440,
+    "height": 1920,
+    "aspectRatio": "0.75"
+  },
+  {
+    "id": "shared_1",
+    "cat": "shared",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_2294c427-618a-4288-9561-ac44d2297edb.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 1177033,
+    "width": 4032,
+    "height": 3024,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "shared_2",
+    "cat": "shared",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_93a2462f-9d16-43b6-a7b9-c9c771ef1fbe.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 3578240,
+    "width": 4032,
+    "height": 3024,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "shared_3",
+    "cat": "shared",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_ff25b3b7-9c61-4721-bf7a-3a3457134cca.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 3241607,
+    "width": 4032,
+    "height": 3024,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "shared_4",
+    "cat": "shared",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_f33f9d8e-cf41-422a-ba6b-54cf9dc03335.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 2392613,
+    "width": 4032,
+    "height": 3024,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "shared_5",
+    "cat": "shared",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_ebd87dd9-bdc1-47d3-987b-808c490c95b9.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 3010164,
+    "width": 4032,
+    "height": 3024,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "shared_6",
+    "cat": "shared",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_6d2582da-998a-49ee-a36c-c91a8c987208.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 2657310,
+    "width": 4032,
+    "height": 3024,
+    "aspectRatio": "1.33"
+  },
+  {
+    "id": "shared_7",
+    "cat": "shared",
+    "url": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_4c175869-774e-4668-b84f-756848f64455.jpeg",
+    "format": "JPEG",
+    "sizeBytes": 5199281,
+    "width": 4032,
+    "height": 3024,
+    "aspectRatio": "1.33"
+  }
+]

@@ -2,36 +2,106 @@
   {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_91b6e59f-a483-4606-b8e2-c8b379664aa2.jpeg?source=qr",
     "alt": "Felipe y Camila celebrando su matrimonio civil",
-    "objectPosition": "center center"
+    "objectPosition": "center center",
+    "width": 1440,
+    "height": 1920,
+    "variants": {
+      "480w": "/images/responsive/civil_1_480w.jpg",
+      "768w": "/images/responsive/civil_1_768w.jpg",
+      "1080w": "/images/responsive/civil_1_1080w.jpg"
+    },
+    "srcset": "/images/responsive/civil_1_480w.webp 480w, /images/responsive/civil_1_768w.webp 768w, /images/responsive/civil_1_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/civil_1_480w.jpg 480w, /images/responsive/civil_1_768w.jpg 768w, /images/responsive/civil_1_1080w.jpg 1080w",
+    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_e72a9c48-aaed-4414-85a7-8fa4b120463a.jpg?source=qr",
     "alt": "Ceremonia de matrimonio civil de Felipe y Camila",
-    "objectPosition": "center center"
+    "objectPosition": "center center",
+    "width": 1920,
+    "height": 1440,
+    "variants": {
+      "480w": "/images/responsive/civil_2_480w.jpg",
+      "768w": "/images/responsive/civil_2_768w.jpg",
+      "1080w": "/images/responsive/civil_2_1080w.jpg"
+    },
+    "srcset": "/images/responsive/civil_2_480w.webp 480w, /images/responsive/civil_2_768w.webp 768w, /images/responsive/civil_2_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/civil_2_480w.jpg 480w, /images/responsive/civil_2_768w.jpg 768w, /images/responsive/civil_2_1080w.jpg 1080w",
+    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_e680d673-4ed6-49ca-a949-10120e1a26f5.jpg?source=qr",
     "alt": "Firma del acta de matrimonio civil",
-    "objectPosition": "center center"
+    "objectPosition": "center center",
+    "width": 1920,
+    "height": 1440,
+    "variants": {
+      "480w": "/images/responsive/civil_3_480w.jpg",
+      "768w": "/images/responsive/civil_3_768w.jpg",
+      "1080w": "/images/responsive/civil_3_1080w.jpg"
+    },
+    "srcset": "/images/responsive/civil_3_480w.webp 480w, /images/responsive/civil_3_768w.webp 768w, /images/responsive/civil_3_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/civil_3_480w.jpg 480w, /images/responsive/civil_3_768w.jpg 768w, /images/responsive/civil_3_1080w.jpg 1080w",
+    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_c96daf0b-5572-4757-8e00-ddcc4f2bc3f5.jpeg?source=qr",
     "alt": "Momento emotivo durante la ceremonia civil",
-    "objectPosition": "center center"
+    "objectPosition": "center center",
+    "width": 1920,
+    "height": 1440,
+    "variants": {
+      "480w": "/images/responsive/civil_4_480w.jpg",
+      "768w": "/images/responsive/civil_4_768w.jpg",
+      "1080w": "/images/responsive/civil_4_1080w.jpg"
+    },
+    "srcset": "/images/responsive/civil_4_480w.webp 480w, /images/responsive/civil_4_768w.webp 768w, /images/responsive/civil_4_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/civil_4_480w.jpg 480w, /images/responsive/civil_4_768w.jpg 768w, /images/responsive/civil_4_1080w.jpg 1080w",
+    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_360d4597-b4c4-4a9c-80b9-8df32f2dde12.jpeg",
     "alt": "Celebración con familia y amigos en el matrimonio civil",
-    "objectPosition": "center center"
+    "objectPosition": "center center",
+    "width": 750,
+    "height": 984,
+    "variants": {
+      "480w": "/images/responsive/civil_5_480w.jpg",
+      "768w": "/images/responsive/civil_5_768w.jpg",
+      "1080w": "/images/responsive/civil_5_1080w.jpg"
+    },
+    "srcset": "/images/responsive/civil_5_480w.webp 480w",
+    "srcsetJpg": "/images/responsive/civil_5_480w.jpg 480w",
+    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_07940307-055c-4529-9b89-f74b41537849.jpeg",
     "alt": "Abrazo de novios tras firmar el matrimonio civil",
-    "objectPosition": "center center"
+    "objectPosition": "center center",
+    "width": 750,
+    "height": 536,
+    "variants": {
+      "480w": "/images/responsive/civil_6_480w.jpg",
+      "768w": "/images/responsive/civil_6_768w.jpg",
+      "1080w": "/images/responsive/civil_6_1080w.jpg"
+    },
+    "srcset": "/images/responsive/civil_6_480w.webp 480w",
+    "srcsetJpg": "/images/responsive/civil_6_480w.jpg 480w",
+    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_381f0999-3ca1-438b-a77c-3c77c9deba47.jpeg?source=qr",
     "alt": "Felipe y Camila felices en su día de civil",
-    "objectPosition": "center center"
+    "objectPosition": "center center",
+    "width": 1440,
+    "height": 1920,
+    "variants": {
+      "480w": "/images/responsive/civil_7_480w.jpg",
+      "768w": "/images/responsive/civil_7_768w.jpg",
+      "1080w": "/images/responsive/civil_7_1080w.jpg"
+    },
+    "srcset": "/images/responsive/civil_7_480w.webp 480w, /images/responsive/civil_7_768w.webp 768w, /images/responsive/civil_7_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/civil_7_480w.jpg 480w, /images/responsive/civil_7_768w.jpg 768w, /images/responsive/civil_7_1080w.jpg 1080w",
+    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   }
 ]

@@ -16,29 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        dark: '#11110F',
-                        cream: '#F3EFE7',
-                        light: '#FAF8F3',
-                        muted: '#918D85',
-                        wine: '#4A222A',
-                        gold: '#B99B71',
-                    },
-                    fontFamily: {
-                        serif: ['Newsreader', 'Georgia', 'serif'],
-                        sans: ['Inter', '-apple-system', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <link rel="stylesheet" href="/css/icons.css">
 </head>
 <body class="font-sans text-dark bg-light antialiased min-h-screen flex flex-col">
 
@@ -48,7 +27,9 @@
             <a href="/" class="text-xs uppercase tracking-[0.25em] text-muted hover:text-dark transition-colors flex items-center gap-2">
                 <i class="fa-solid fa-arrow-left text-[10px]"></i> Volver a la invitación
             </a>
-            <a href="/" class="font-serif text-2xl tracking-widest text-dark font-normal">F&C</a>
+            <a href="/" class="flex items-center hover:opacity-85 transition-opacity" aria-label="Felipe & Camila — Inicio">
+                <img src="/images/isotype-fc-200w.png" alt="Monograma Felipe & Camila" class="h-9 w-9 md:h-10 md:w-10 object-contain rounded-full border border-gold/40 shadow-sm">
+            </a>
             <div class="w-24"></div>
         </div>
     </nav>
