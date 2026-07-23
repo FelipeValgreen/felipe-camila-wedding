@@ -19,11 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3500);
     }
 
-    // 2. Umbral Opening Interaction
+    // 2. Umbral Opening Interaction & Idempotent Gallery Observer Trigger
     const openBtn = document.getElementById('open-btn');
     const overlay = document.getElementById('envelope-overlay');
     const nav = document.getElementById('main-nav');
     const body = document.body;
+
+    let galleryObserversInitialized = false;
+
+    function startGalleryLoading() {
+        if (galleryObserversInitialized) return;
+        galleryObserversInitialized = true;
+        initLazyGalleryObservers();
+    }
 
     function revealNav() {
         if (nav) {
@@ -36,11 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
         openBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             overlay.style.transform = 'translateY(-100%)';
+            startGalleryLoading();
             setTimeout(() => {
                 body.classList.remove('locked');
                 revealNav();
             }, 800);
         });
+    }
+
+    // Direct hash or reduced motion fallbacks
+    if (window.location.hash || !overlay || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+        startGalleryLoading();
     }
 
     // Mobile Navigation Drawer Toggle & Accessibility Controls
@@ -510,8 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    // Safe Image Creation Helper with error fallback & objectPosition (Section 9 compliant)
-    function createSafeImage(item, fallbackAlt, extraClasses = '') {
+    // Safe Image Creation Helper with error fallback & objectPosition (Section 3 & 9 compliant)
+    function createSafeImage(item, fallbackAlt, extraClasses = '', lazyAssign = false) {
         const img = document.createElement('img');
         img.alt = item.alt || fallbackAlt;
         img.loading = item.loading || 'lazy';
@@ -519,8 +533,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (item.fetchPriority) img.fetchPriority = item.fetchPriority;
         if (item.width) img.width = item.width;
         if (item.height) img.height = item.height;
-        if (item.srcset) img.srcset = item.srcset;
-        if (item.sizes) img.sizes = item.sizes || '(max-width: 768px) 84vw, (max-width: 1024px) 65vw, 440px';
+        
+        // Exact sizes rule as per prompt requirements
+        img.sizes = item.sizes || '(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px';
         if (item.objectPosition) img.style.objectPosition = item.objectPosition;
         img.className = `w-full h-full object-cover transition-opacity duration-300 ${extraClasses}`;
         
@@ -536,9 +551,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Assign src as the very last property
-        img.src = item.src;
+        if (lazyAssign) {
+            img.dataset.srcset = item.srcset || item.srcsetJpg || '';
+            img.dataset.src = item.src;
+        } else {
+            if (item.srcset) img.srcset = item.srcset;
+            img.src = item.src;
+        }
         return img;
+    }
+
+    // Helper to lazy-hydrate remaining carousel slides horizontally
+    function setupRailHorizontalLazyLoading(railElem) {
+        if (!railElem || !('IntersectionObserver' in window)) return;
+        const items = railElem.querySelectorAll('.rail-item');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const img = entry.target.querySelector('img[data-src]');
+                    if (img) {
+                        if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                        img.removeAttribute('data-srcset');
+                    }
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { root: railElem, rootMargin: '200px', threshold: 0.01 });
+
+        items.forEach((item, idx) => {
+            if (idx >= 2) observer.observe(item);
+        });
     }
 
     // Progressive Gallery Loading using IntersectionObserver
@@ -580,14 +624,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const civilRail = document.getElementById('civil-rail');
                 if (civilRail && Array.isArray(data)) {
                     civilRail.innerHTML = '';
-                    data.forEach((item) => {
+                    data.forEach((item, index) => {
                         const div = document.createElement('div');
                         div.className = 'rail-item overflow-hidden bg-light border border-dark/10 rounded-sm';
-                        const img = createSafeImage(item, 'Momento del matrimonio civil');
+                        // Initial 2 slides load immediately, remaining slides hydrate horizontally on scroll
+                        const lazyAssign = index >= 2;
+                        const img = createSafeImage(item, 'Momento del matrimonio civil', '', lazyAssign);
                         div.appendChild(img);
                         civilRail.appendChild(div);
                     });
                     setupRail('civil-rail', 'civil-prev-btn', 'civil-next-btn', 'civil-counter');
+                    setupRailHorizontalLazyLoading(civilRail);
                 }
             }
         } catch (e) {
@@ -605,14 +652,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sharedRail = document.getElementById('shared-rail');
                 if (sharedRail && Array.isArray(data)) {
                     sharedRail.innerHTML = '';
-                    data.forEach((item) => {
+                    data.forEach((item, index) => {
                         const div = document.createElement('div');
                         div.className = 'rail-item overflow-hidden bg-cream border border-dark/10 rounded-sm';
-                        const img = createSafeImage(item, 'Fotografía compartida durante la celebración');
+                        // Initial 2 slides load immediately, remaining slides hydrate horizontally on scroll
+                        const lazyAssign = index >= 2;
+                        const img = createSafeImage(item, 'Fotografía compartida durante la celebración', '', lazyAssign);
                         div.appendChild(img);
                         sharedRail.appendChild(div);
                     });
                     setupRail('shared-rail', 'shared-prev-btn', 'shared-next-btn', 'shared-counter');
+                    setupRailHorizontalLazyLoading(sharedRail);
                 }
             }
         } catch (e) {
@@ -642,7 +692,8 @@ document.addEventListener('DOMContentLoaded', () => {
             obs.observe(historiaElem);
         }
 
-        const civilElem = document.getElementById('nuestro-civil');
+        // Exact ID repair as per prompt requirement
+        const civilElem = document.getElementById('galeria-civil');
         if (civilElem) {
             const obs = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting) {

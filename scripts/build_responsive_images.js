@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import sharp from 'sharp';
 
 const rootDir = process.cwd();
 const origDir = path.join(rootDir, 'images', 'originals');
@@ -18,13 +18,13 @@ const allPhotos = [];
 // Hero
 heroStory.hero.forEach((h, i) => allPhotos.push({ cat: 'hero', id: `hero_${i + 1}`, src: h.src, item: h }));
 // Historia
-heroStory.historia.forEach((h, i) => allPhotos.push({ cat: 'historia', id: `historia_${i + 1}`, src: h.src, item: h }));
+heroStory.historia.forEach((h, i) => allPhotos.push({ cat: 'historia', id: `historia_${i + 1}`, src: h.src, item: h, sizes: '(max-width: 767px) calc(100vw - 48px), 480px' }));
 // Civil
-civil.forEach((c, i) => allPhotos.push({ cat: 'civil', id: `civil_${i + 1}`, src: c.src, item: c }));
+civil.forEach((c, i) => allPhotos.push({ cat: 'civil', id: `civil_${i + 1}`, src: c.src, item: c, sizes: '(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px' }));
 // Shared
-shared.forEach((s, i) => allPhotos.push({ cat: 'shared', id: `shared_${i + 1}`, src: s.src, item: s }));
+shared.forEach((s, i) => allPhotos.push({ cat: 'shared', id: `shared_${i + 1}`, src: s.src, item: s, sizes: '(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px' }));
 
-console.log('Total remote photos to process:', allPhotos.length);
+console.log('Processing photos via Sharp:', allPhotos.length);
 
 async function downloadAndProcess() {
   const beforeTable = [];
@@ -39,81 +39,68 @@ async function downloadAndProcess() {
     if (!fs.existsSync(localOrigPath)) {
       console.log(`Downloading: ${p.id} (${p.src})`);
       const res = await fetch(p.src);
+      if (!res.ok) {
+        console.error(`HTTP Error ${res.status} downloading ${p.id}`);
+        continue;
+      }
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('image')) {
+        console.error(`Invalid Content-Type "${contentType}" for ${p.id}`);
+        continue;
+      }
       const buffer = Buffer.from(await res.arrayBuffer());
       fs.writeFileSync(localOrigPath, buffer);
     }
 
     const origStats = fs.statSync(localOrigPath);
-    
-    // Get dimensions via sips
-    let width = 0;
-    let height = 0;
-    try {
-      const sipsOut = execSync(`sips -g pixelWidth -g pixelHeight "${localOrigPath}"`, { encoding: 'utf8' });
-      const wMatch = sipsOut.match(/pixelWidth:\s*(\d+)/);
-      const hMatch = sipsOut.match(/pixelHeight:\s*(\d+)/);
-      if (wMatch) width = parseInt(wMatch[1], 10);
-      if (hMatch) height = parseInt(hMatch[1], 10);
-    } catch (e) {
-      console.warn(`sips error on ${p.id}:`, e.message);
-    }
+    const meta = await sharp(localOrigPath).metadata();
+    const width = meta.width || 1200;
+    const height = meta.height || 900;
 
     beforeTable.push({
       id: p.id,
       cat: p.cat,
       url: p.src,
-      format: ext.replace('.', '').toUpperCase(),
+      format: (meta.format || ext.replace('.', '')).toUpperCase(),
       sizeBytes: origStats.size,
       width,
       height,
-      aspectRatio: (width && height) ? (width / height).toFixed(2) : '1.33'
+      aspectRatio: (width / height).toFixed(2)
     });
 
-    // Target widths
     const targetWidths = p.cat === 'hero' ? [480, 768, 1080, 1440] : [480, 768, 1080];
-    const variants = {};
+    const webpVariants = [];
+    const jpgVariants = [];
 
     for (const tw of targetWidths) {
-      const outName = `${p.id}_${tw}w.jpg`;
-      const outPath = path.join(respDir, outName);
+      if (width && tw > width) continue; // DO NOT upscale above original width
 
-      try {
-        execSync(`sips --resampleWidth ${tw} "${localOrigPath}" --out "${outPath}"`, { stdio: 'ignore' });
-        variants[`${tw}w`] = `/images/responsive/${outName}`;
-      } catch (e) {
-        console.warn(`Error resizing ${p.id} to ${tw}w:`, e.message);
-      }
+      const outWebpName = `${p.id}_${tw}w.webp`;
+      const outJpgName = `${p.id}_${tw}w.jpg`;
+      const outWebpPath = path.join(respDir, outWebpName);
+      const outJpgPath = path.join(respDir, outJpgName);
+
+      // Generate WebP
+      await sharp(localOrigPath)
+        .resize({ width: tw, withoutEnlargement: true })
+        .webp({ quality: 82 })
+        .toFile(outWebpPath);
+
+      // Generate JPG
+      await sharp(localOrigPath)
+        .resize({ width: tw, withoutEnlargement: true })
+        .jpeg({ quality: 82, progressive: true })
+        .toFile(outJpgPath);
+
+      webpVariants.push(`/images/responsive/${outWebpName} ${tw}w`);
+      jpgVariants.push(`/images/responsive/${outJpgName} ${tw}w`);
     }
 
-    p.item.width = width || 1200;
-    p.item.height = height || 900;
-    p.item.variants = variants;
-    p.item.srcset = Object.entries(variants).map(([w, url]) => `${url} ${w}`).join(', ');
-  }
-
-  // Also process key local images in /images/
-  const localImagesToProcess = [
-    { name: 'santuario_divina_misericordia.jpg', id: 'santuario' },
-    { name: 'arboleda_main.jpg', id: 'arboleda_main' },
-    { name: 'arboleda_jardin.jpg', id: 'arboleda_jardin' },
-    { name: 'arboleda_coctel.jpg', id: 'arboleda_coctel' },
-    { name: 'iglesia_bw.jpg', id: 'iglesia_bw' }
-  ];
-
-  for (const loc of localImagesToProcess) {
-    const locPath = path.join(rootDir, 'images', loc.name);
-    if (fs.existsSync(locPath)) {
-      const targetWidths = [480, 768, 1080];
-      for (const tw of targetWidths) {
-        const outName = `${loc.id}_${tw}w.jpg`;
-        const outPath = path.join(respDir, outName);
-        try {
-          execSync(`sips --resampleWidth ${tw} "${locPath}" --out "${outPath}"`, { stdio: 'ignore' });
-        } catch (e) {
-          console.warn(`Error resizing local image ${loc.name}:`, e.message);
-        }
-      }
-    }
+    p.item.width = width;
+    p.item.height = height;
+    p.item.srcset = webpVariants.join(', ');
+    p.item.srcsetJpg = jpgVariants.join(', ');
+    if (p.sizes) p.item.sizes = p.sizes;
   }
 
   // Save updated JSON manifests
@@ -121,9 +108,9 @@ async function downloadAndProcess() {
   fs.writeFileSync('js/civil_featured.json', JSON.stringify(civil, null, 2));
   fs.writeFileSync('js/guest_shared.json', JSON.stringify(shared, null, 2));
 
-  console.log('Manifests updated with responsive variants and dimensions!');
-  fs.writeFileSync('images/before_inventory.json', JSON.stringify(beforeTable, null, 2));
-  console.log('Saved images/before_inventory.json');
+  console.log('Manifests successfully updated with WebP & JPG responsive variants!');
 }
 
-downloadAndProcess();
+downloadAndProcess().catch(err => {
+  console.error('Error processing images:', err);
+});
