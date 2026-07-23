@@ -1,14 +1,16 @@
-.vercel
-.DS_Store
+# Dependencies
+node_modules/
+.pnpm-store/
 
-# Environment files
-.env
-.env.*
-!.env.example
+# Builds
+.next/
+.vercel/
+dist/
+build/
 
-# Credentials and Keys
-*.pem
-*.key
-*service*account*.json
-credentials*.json
-secrets*.json
+# Backups & Temp
+backups/
+supabase/.temp/
+.env.local
+.env*.local
+*.log
