@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import { Users, CheckCircle2, XCircle, Clock, AlertTriangle, Armchair, DollarSign, Calendar, AlertCircle } from 'lucide-react';
 
 export default function DashboardResumen() {
@@ -32,6 +32,7 @@ export default function DashboardResumen() {
   useEffect(() => {
     async function loadStats() {
       try {
+        const supabase = createClient();
         const { data: guests } = await supabase.from('wedding_guests').select('*');
         const { data: rsvps } = await supabase.from('rsvp_responses').select('*');
         const { data: tables } = await supabase.from('wedding_tables').select('*');

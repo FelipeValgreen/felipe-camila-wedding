@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Users, Grid, DollarSign, Activity, LogOut, RefreshCw } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,22 +19,30 @@ export default function DashboardLayout({ children }: LayoutProps) {
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        setUserEmail(session.user.email);
-        const { data: profile } = await supabase
-          .from('admin_profiles')
-          .select('role')
-          .eq('email', session.user.email)
-          .single();
-        if (profile?.role) setUserRole(profile.role);
+      try {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) {
+          setUserEmail(session.user.email);
+          const { data: profile } = await supabase
+            .from('admin_profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          if (profile?.role) setUserRole(profile.role);
+        }
+      } catch (err) {
+        console.error('Error checking auth:', err);
       }
     }
     checkAuth();
   }, []);
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {}
     window.location.href = '/login';
   }
 

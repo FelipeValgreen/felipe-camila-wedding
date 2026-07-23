@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import { Search, Filter, MessageSquare, Edit, UserCheck, UserX, RotateCcw, Plus, X, PhoneOff, Link as LinkIcon, Save } from 'lucide-react';
 
 interface Guest {
@@ -65,6 +65,7 @@ export default function GuestsPage() {
   async function loadData() {
     setLoading(true);
     try {
+      const supabase = createClient();
       const { data: gData } = await supabase.from('wedding_guests').select('*').order('first_name', { ascending: true });
       const { data: rData } = await supabase.from('rsvp_responses').select('*').eq('reconciliation_status', 'unmatched');
 
@@ -90,6 +91,7 @@ export default function GuestsPage() {
     if (!selectedGuest || !editForm.first_name) return;
     try {
       const updatedData = {
+        id: selectedGuest.id,
         first_name: editForm.first_name,
         last_name: editForm.last_name || '',
         full_name_normalized: `${editForm.first_name} ${editForm.last_name || ''}`.trim().toLowerCase(),
@@ -107,28 +109,16 @@ export default function GuestsPage() {
         version: (selectedGuest as any).version ? (selectedGuest as any).version + 1 : 1
       };
 
-      await supabase.from('wedding_guests').update(updatedData).eq('id', selectedGuest.id);
-
-      // Audit Log
-      await supabase.from('audit_log').insert({
-        entity_type: 'wedding_guests',
-        entity_id: selectedGuest.id,
-        action: 'UPDATE_GUEST_PROFILE',
-        before_data: selectedGuest,
-        after_data: updatedData,
-        origin: 'dashboard'
+      const res = await fetch('/api/guests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
       });
 
-      // Sync Outbox
-      await supabase.from('sync_outbox').insert({
-        entity_type: 'wedding_guests',
-        entity_id: selectedGuest.id,
-        operation: 'UPDATE',
-        payload: updatedData
-      });
-
-      loadData();
-      setSelectedGuest(null);
+      if (res.ok) {
+        loadData();
+        setSelectedGuest(null);
+      }
     } catch (err) {
       console.error('Error saving guest edit:', err);
     }
@@ -136,34 +126,16 @@ export default function GuestsPage() {
 
   async function handleManualReconcile(guestId: string, rsvpId: string) {
     try {
-      const rsvp = unmatchedRSVPs.find(r => r.id === rsvpId);
-      if (!rsvp) return;
-
-      // Link guest
-      await supabase.from('rsvp_responses').update({
-        guest_id: guestId,
-        reconciliation_status: 'matched'
-      }).eq('id', rsvpId);
-
-      // Update guest attendance
-      await supabase.from('wedding_guests').update({
-        rsvp_id: rsvpId,
-        attendance_status: rsvp.attendance_status,
-        dietary_type: rsvp.dietary_type || null,
-        dietary_detail: rsvp.dietary_detail || null
-      }).eq('id', guestId);
-
-      // Audit Log
-      await supabase.from('audit_log').insert({
-        entity_type: 'rsvp_responses',
-        entity_id: rsvpId,
-        action: 'MANUAL_RECONCILE',
-        after_data: { matched_guest_id: guestId },
-        origin: 'dashboard'
+      const res = await fetch('/api/rsvp/reconcile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guest_id: guestId, rsvp_id: rsvpId })
       });
 
-      setReconcileRsvp(null);
-      loadData();
+      if (res.ok) {
+        setReconcileRsvp(null);
+        loadData();
+      }
     } catch (err) {
       console.error('Error in manual reconcile:', err);
     }
@@ -185,20 +157,17 @@ export default function GuestsPage() {
         guest_status: 'active'
       };
 
-      const { data } = await supabase.from('wedding_guests').insert(newGuest).select();
-      
-      if (data && data[0]) {
-        await supabase.from('sync_outbox').insert({
-          entity_type: 'wedding_guests',
-          entity_id: data[0].id,
-          operation: 'INSERT',
-          payload: newGuest
-        });
-      }
+      const res = await fetch('/api/guests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newGuest)
+      });
 
-      setShowAddModal(false);
-      setFormData({ first_name: '', last_name: '', phone_e164: '', group_name: 'General', family_side: 'Compartido', guest_category: 'Adulto', notes: '' });
-      loadData();
+      if (res.ok) {
+        setShowAddModal(false);
+        setFormData({ first_name: '', last_name: '', phone_e164: '', group_name: 'General', family_side: 'Compartido', guest_category: 'Adulto', notes: '' });
+        loadData();
+      }
     } catch (err) {
       console.error('Error adding guest:', err);
     }

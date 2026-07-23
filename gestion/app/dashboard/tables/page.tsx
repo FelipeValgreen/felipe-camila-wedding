@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import { Plus, Lock, Unlock, AlertTriangle, Users, Move, Trash2, Edit, Save, X } from 'lucide-react';
 
 interface TableItem {
@@ -49,6 +49,7 @@ export default function TablesPage() {
   async function loadData() {
     setLoading(true);
     try {
+      const supabase = createClient();
       const { data: tData } = await supabase.from('wedding_tables').select('*').order('table_number', { ascending: true });
       const { data: gData } = await supabase.from('wedding_guests').select('*').eq('attendance_status', 'attending');
       const { data: sData } = await supabase.from('seating_assignments').select('*');
@@ -86,18 +87,15 @@ export default function TablesPage() {
         locked: false
       };
 
-      const { data } = await supabase.from('wedding_tables').insert(newTable).select();
-      
-      if (data && data[0]) {
-        await supabase.from('sync_outbox').insert({
-          entity_type: 'wedding_tables',
-          entity_id: data[0].id,
-          operation: 'INSERT',
-          payload: newTable
-        });
-      }
+      const res = await fetch('/api/tables', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTable)
+      });
 
-      loadData();
+      if (res.ok) {
+        loadData();
+      }
     } catch (err) {
       console.error('Error creating table:', err);
     }
@@ -107,6 +105,7 @@ export default function TablesPage() {
     if (!selectedTable || !editTableForm.name) return;
     try {
       const updatedData = {
+        id: selectedTable.id,
         table_number: editTableForm.table_number || selectedTable.table_number,
         name: editTableForm.name,
         capacity: Number(editTableForm.capacity) || 10,
@@ -115,17 +114,16 @@ export default function TablesPage() {
         locked: Boolean(editTableForm.locked)
       };
 
-      await supabase.from('wedding_tables').update(updatedData).eq('id', selectedTable.id);
-
-      await supabase.from('sync_outbox').insert({
-        entity_type: 'wedding_tables',
-        entity_id: selectedTable.id,
-        operation: 'UPDATE',
-        payload: updatedData
+      const res = await fetch('/api/tables', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
       });
 
-      loadData();
-      setSelectedTable(null);
+      if (res.ok) {
+        loadData();
+        setSelectedTable(null);
+      }
     } catch (err) {
       console.error('Error updating table:', err);
     }
@@ -134,20 +132,13 @@ export default function TablesPage() {
   async function handleAssignGuest(guestId: string, tableId: string | null) {
     try {
       if (tableId) {
-        // Delete any existing assignment for this guest
-        await supabase.from('seating_assignments').delete().eq('guest_id', guestId);
-        
-        // Insert new primary assignment
-        await supabase.from('seating_assignments').insert({
-          guest_id: guestId,
-          table_id: tableId
+        await fetch('/api/seating', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ guest_id: guestId, table_id: tableId })
         });
-
-        // Sync helper column on guest
-        await supabase.from('wedding_guests').update({ table_id: tableId }).eq('id', guestId);
       } else {
-        await supabase.from('seating_assignments').delete().eq('guest_id', guestId);
-        await supabase.from('wedding_guests').update({ table_id: null }).eq('id', guestId);
+        await fetch(`/api/seating?guest_id=${guestId}`, { method: 'DELETE' });
       }
 
       loadData();
@@ -158,7 +149,11 @@ export default function TablesPage() {
 
   async function handleToggleLock(table: TableItem) {
     try {
-      await supabase.from('wedding_tables').update({ locked: !table.locked }).eq('id', table.id);
+      await fetch('/api/tables', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: table.id, locked: !table.locked })
+      });
       loadData();
     } catch (err) {
       console.error('Error toggling lock:', err);
@@ -176,10 +171,15 @@ export default function TablesPage() {
     const targetTable = tables.find(t => t.id === movingTableId);
     if (targetTable && !targetTable.locked) {
       try {
-        await supabase.from('wedding_tables').update({
-          position_x: Math.max(5, Math.min(90, xPct)),
-          position_y: Math.max(5, Math.min(90, yPct))
-        }).eq('id', movingTableId);
+        await fetch('/api/tables', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: movingTableId,
+            position_x: Math.max(5, Math.min(90, xPct)),
+            position_y: Math.max(5, Math.min(90, yPct))
+          })
+        });
 
         loadData();
       } catch (err) {

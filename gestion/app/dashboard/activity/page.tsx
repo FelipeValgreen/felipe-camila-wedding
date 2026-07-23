@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import { Activity as ActivityIcon, Filter, Clock, User, ShieldCheck } from 'lucide-react';
 
 interface AuditItem {
@@ -27,6 +27,7 @@ export default function ActivityPage() {
   async function loadLogs() {
     setLoading(true);
     try {
+      const supabase = createClient();
       const { data, error } = await supabase.from('audit_log').select('*').order('created_at', { ascending: false }).limit(100);
       if (!error && data) {
         setLogs(data as AuditItem[]);

@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import { createClient } from '@/lib/supabase-server';
 
 function formatPrivateKey(key: string) {
   if (!key) return '';
@@ -47,34 +45,27 @@ async function getGoogleSheetsToken(email: string, privateKey: string) {
 
 export async function POST() {
   try {
-    let saEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
-    let saKey = process.env.GOOGLE_PRIVATE_KEY || '';
-    let spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID || '';
-    let supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mwumnywbvjxekskfrlms.supabase.co';
+    const supabase = createClient();
+    
+    // Authenticate owner or editor session
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+    }
 
-    // Fallback fetching from Vercel CLI auth if running in development environment
+    const { data: profile } = await supabase.from('admin_profiles').select('role, active').eq('id', user.id).single();
+    if (!profile || !profile.active || profile.role === 'viewer') {
+      return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
+    }
+
+    const saEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
+    const saKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_KEY || '';
+    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || '';
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
+    const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+
     if (!saEmail || !saKey || !spreadsheetId) {
-      try {
-        const authFile = path.join(os.homedir(), 'Library/Application Support/com.vercel.cli/auth.json');
-        if (fs.existsSync(authFile)) {
-          const authData = JSON.parse(fs.readFileSync(authFile, 'utf-8'));
-          const token = authData.token;
-          const getEnvVal = async (eid: string) => {
-            const res = await fetch(`https://api.vercel.com/v9/projects/prj_CnQR6nh0a1lwcHpN1F3vLq1IWNHT/env/${eid}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const d = await res.json();
-            return (d.value || '').trim();
-          };
-          if (!saEmail) saEmail = await getEnvVal('JwOVODGkkSW6ZY62');
-          if (!saKey) saKey = await getEnvVal('fEgjSAksFUWsv8NL');
-          if (!spreadsheetId) spreadsheetId = await getEnvVal('nOwry9xceJ90LLgb');
-          if (!supabaseKey) supabaseKey = await getEnvVal('tIdPJeHjqlNaqtMn');
-        }
-      } catch (err) {
-        console.error('Error fetching Vercel env fallback:', err);
-      }
+      return NextResponse.json({ ok: false, error: 'CONFIGURATION_ERROR: Missing Google Sheets credentials' }, { status: 500 });
     }
 
     const subHeaders = {
@@ -83,12 +74,15 @@ export async function POST() {
       'Content-Type': 'application/json'
     };
 
-    // 1. Fetch pending sync_outbox items
+    // 1. Query sync_outbox WHERE status = 'pending' ORDER BY created_at ASC
     const outboxRes = await fetch(`${supabaseUrl}/rest/v1/sync_outbox?status=eq.pending&order=created_at.asc`, { headers: subHeaders });
+    if (!outboxRes.ok) {
+      return NextResponse.json({ ok: false, error: 'Failed to read sync_outbox' }, { status: 500 });
+    }
     const pendingItems = await outboxRes.json();
 
     if (!Array.isArray(pendingItems) || pendingItems.length === 0) {
-      return NextResponse.json({ ok: true, processed: 0, failed: 0, pending: 0, message: 'No pending items to sync.' });
+      return NextResponse.json({ ok: true, processed: 0, failed: 0, pending: 0, errors_sanitized: [] });
     }
 
     const sheetsToken = await getGoogleSheetsToken(saEmail, saKey);
@@ -105,22 +99,30 @@ export async function POST() {
 
     let processedCount = 0;
     let failedCount = 0;
+    const errorsSanitized: string[] = [];
 
     for (const item of pendingItems) {
       const tabName = entityTabMap[item.entity_type];
       if (!tabName) {
         failedCount++;
+        errorsSanitized.push(`Unknown entity_type: ${item.entity_type}`);
         continue;
       }
 
       try {
         const entityId = item.entity_id;
         const payload = item.payload || {};
+        const operation = item.operation || 'UPDATE';
 
-        // Fetch Column A UUIDs from Google Sheets tab
+        // Read Column A UUIDs from Google Sheets tab
         const readRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A1:A500')}`, {
           headers: { Authorization: `Bearer ${sheetsToken}` }
         });
+        
+        if (!readRes.ok) {
+          throw new Error(`Google Sheets API read failed with HTTP ${readRes.status}`);
+        }
+
         const readData = await readRes.json();
         const rows = readData.values || [];
 
@@ -132,45 +134,60 @@ export async function POST() {
           }
         }
 
-        // Format row array depending on entity_type
-        let rowValues: any[] = [];
-        if (item.entity_type === 'wedding_guests') {
-          rowValues = [entityId, payload.first_name || '', payload.last_name || '', payload.phone_e164 || '', payload.group_name || '', payload.family_side || '', payload.guest_category || 'Adulto', payload.attendance_status || 'pending', payload.dietary_type || '', payload.reconfirmation_status || 'pending', payload.guest_status || 'active', payload.version || 1, new Date().toISOString(), 'synced'];
-        } else if (item.entity_type === 'wedding_tables') {
-          rowValues = [entityId, payload.table_number || '', payload.name || '', payload.capacity || 10, payload.table_type || 'round_guest', payload.zone || 'Principal', payload.locked ? 'YES' : 'NO', payload.version || 1, new Date().toISOString(), 'synced'];
-        } else if (item.entity_type === 'vendors') {
-          rowValues = [entityId, payload.name || '', payload.category || '', payload.contact_name || '', payload.phone || '', payload.status || '', new Date().toISOString(), 'synced'];
-        } else if (item.entity_type === 'expenses') {
-          rowValues = [entityId, payload.vendor_id || '', payload.concept || '', payload.category || '', payload.currency || 'CLP', payload.total_amount || '', payload.payment_status || 'Pendiente', payload.due_date || '', payload.responsible || '', new Date().toISOString(), 'synced'];
-        } else if (item.entity_type === 'expense_payments') {
-          rowValues = [entityId, payload.expense_id || '', payload.amount || '', payload.currency || 'CLP', payload.payment_date || '', payload.payment_type || '', payload.status || 'Pagado', new Date().toISOString(), 'synced'];
+        if (operation === 'DELETE') {
+          if (rowIndex > 0) {
+            // Clear row in Google Sheets
+            const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A' + rowIndex + ':Z' + rowIndex)}:clear`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${sheetsToken}` }
+            });
+            if (!clearRes.ok) throw new Error(`Google Sheets clear failed with HTTP ${clearRes.status}`);
+          }
         } else {
-          rowValues = [entityId, JSON.stringify(payload), new Date().toISOString(), 'synced'];
+          // Explicit Serializers per entity type
+          let rowValues: any[] = [];
+          if (item.entity_type === 'wedding_guests') {
+            rowValues = [entityId, payload.first_name || '', payload.last_name || '', payload.phone_e164 || '', payload.group_name || '', payload.family_side || '', payload.guest_category || 'Adulto', payload.attendance_status || 'pending', payload.dietary_type || '', payload.reconfirmation_status || 'pending', payload.guest_status || 'active', payload.version || 1, new Date().toISOString(), 'synced'];
+          } else if (item.entity_type === 'wedding_tables') {
+            rowValues = [entityId, payload.table_number || '', payload.name || '', payload.capacity || 10, payload.table_type || 'round_guest', payload.zone || 'Principal', payload.locked ? 'YES' : 'NO', payload.version || 1, new Date().toISOString(), 'synced'];
+          } else if (item.entity_type === 'seating_assignments') {
+            rowValues = [entityId, payload.guest_id || '', payload.table_id || '', payload.seat_number || '', payload.version || 1, new Date().toISOString(), 'synced'];
+          } else if (item.entity_type === 'vendors') {
+            rowValues = [entityId, payload.name || '', payload.category || '', payload.contact_name || '', payload.phone || '', payload.status || '', new Date().toISOString(), 'synced'];
+          } else if (item.entity_type === 'expenses') {
+            rowValues = [entityId, payload.vendor_id || '', payload.concept || '', payload.category || '', payload.currency || 'CLP', payload.total_amount || '', payload.payment_status || 'Pendiente', payload.due_date || '', payload.responsible || '', new Date().toISOString(), 'synced'];
+          } else if (item.entity_type === 'expense_payments') {
+            rowValues = [entityId, payload.expense_id || '', payload.amount || '', payload.currency || 'CLP', payload.payment_date || '', payload.payment_type || '', payload.status || 'Pagado', new Date().toISOString(), 'synced'];
+          } else if (item.entity_type === 'rsvp_responses') {
+            rowValues = [entityId, payload.first_name || '', payload.last_name || '', payload.phone_e164 || '', payload.attendance_status || '', payload.dietary_type || '', payload.dietary_detail || '', payload.source || 'web', payload.reconciliation_status || 'matched', payload.guest_id || '', payload.version || 1, new Date().toISOString(), 'synced'];
+          }
+
+          if (rowIndex > 0) {
+            // Update row
+            const updateRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A' + rowIndex)}?valueInputOption=USER_ENTERED`, {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${sheetsToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ values: [rowValues] })
+            });
+            if (!updateRes.ok) throw new Error(`Google Sheets update failed with HTTP ${updateRes.status}`);
+          } else {
+            // Append row
+            const appendRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A1')}:append?valueInputOption=USER_ENTERED`, {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${sheetsToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ values: [rowValues] })
+            });
+            if (!appendRes.ok) throw new Error(`Google Sheets append failed with HTTP ${appendRes.status}`);
+          }
         }
 
-        if (rowIndex > 0) {
-          // Update existing row
-          await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A' + rowIndex)}?valueInputOption=USER_ENTERED`, {
-            method: 'PUT',
-            headers: {
-              Authorization: `Bearer ${sheetsToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ values: [rowValues] })
-          });
-        } else {
-          // Append new row
-          await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName + '!A1')}:append?valueInputOption=USER_ENTERED`, {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${sheetsToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ values: [rowValues] })
-          });
-        }
-
-        // Mark processed in Supabase DB
+        // Mark processed in Supabase DB ONLY when Google Sheets API calls succeeded
         await fetch(`${supabaseUrl}/rest/v1/sync_outbox?id=eq.${item.id}`, {
           method: 'PATCH',
           headers: subHeaders,
@@ -184,13 +201,15 @@ export async function POST() {
         processedCount++;
       } catch (err: any) {
         failedCount++;
+        const sanitizedErr = err.message || 'Processing error';
+        errorsSanitized.push(sanitizedErr);
         await fetch(`${supabaseUrl}/rest/v1/sync_outbox?id=eq.${item.id}`, {
           method: 'PATCH',
           headers: subHeaders,
           body: JSON.stringify({
             status: 'failed',
             attempts: (item.attempts || 0) + 1,
-            last_error: err.message
+            last_error: sanitizedErr
           })
         });
       }
@@ -200,7 +219,8 @@ export async function POST() {
       ok: true,
       processed: processedCount,
       failed: failedCount,
-      pending: pendingItems.length - processedCount - failedCount
+      pending: pendingItems.length - processedCount - failedCount,
+      errors_sanitized: errorsSanitized
     });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });

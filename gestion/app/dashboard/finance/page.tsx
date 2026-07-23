@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import { Plus, DollarSign, Calendar, Tag, UserCheck, CreditCard, Building2, AlertCircle, Trash2, Edit, Save, X } from 'lucide-react';
 
 interface Vendor {
@@ -64,6 +64,7 @@ export default function FinancePage() {
   async function loadFinanceData() {
     setLoading(true);
     try {
+      const supabase = createClient();
       const { data: vData } = await supabase.from('vendors').select('*').order('name');
       const { data: eData } = await supabase.from('expenses').select('*').order('created_at', { ascending: false });
       const { data: pData } = await supabase.from('expense_payments').select('*').order('created_at', { ascending: false });
@@ -82,37 +83,45 @@ export default function FinancePage() {
     loadFinanceData();
   }, []);
 
-  // Financial Calculations
-  const totalPaid = payments.filter(p => p.status === 'Pagado').reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-  const totalContracted = expenses.reduce((sum, e) => sum + (Number(e.total_amount) || 0), 0);
-  const itemsWithoutAmount = expenses.filter(e => e.total_amount === null).length;
-  const isBalanceCertain = itemsWithoutAmount === 0;
-  const totalBalance = totalContracted - totalPaid;
+  // Financial Calculations Separated by Currency (CLP vs UF)
+  const paymentsCLP = payments.filter(p => p.currency === 'CLP' && p.status === 'Pagado');
+  const paymentsUF = payments.filter(p => p.currency === 'UF' && p.status === 'Pagado');
+
+  const totalPaidCLP = paymentsCLP.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const totalPaidUF = paymentsUF.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+  const expensesCLP = expenses.filter(e => e.currency === 'CLP');
+  const expensesUF = expenses.filter(e => e.currency === 'UF');
+
+  const totalContractedCLP = expensesCLP.reduce((sum, e) => sum + (Number(e.total_amount) || 0), 0);
+  const totalContractedUF = expensesUF.reduce((sum, e) => sum + (Number(e.total_amount) || 0), 0);
+
+  const itemsWithoutAmountCLP = expensesCLP.filter(e => e.total_amount === null || e.total_amount === undefined).length;
+  const itemsWithoutAmountUF = expensesUF.filter(e => e.total_amount === null || e.total_amount === undefined).length;
+
+  const totalBalanceCLP = totalContractedCLP - totalPaidCLP;
+  const totalBalanceUF = totalContractedUF - totalPaidUF;
 
   async function handleAddVendor(e: React.FormEvent) {
     e.preventDefault();
     if (!vForm.name) return;
     try {
-      const newVendor = {
-        name: vForm.name,
-        category: vForm.category,
-        status: vForm.status,
-        notes: vForm.notes || null
-      };
-      const { data } = await supabase.from('vendors').insert(newVendor).select();
+      const res = await fetch('/api/vendors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: vForm.name,
+          category: vForm.category,
+          status: vForm.status,
+          notes: vForm.notes || null
+        })
+      });
 
-      if (data && data[0]) {
-        await supabase.from('sync_outbox').insert({
-          entity_type: 'vendors',
-          entity_id: data[0].id,
-          operation: 'INSERT',
-          payload: newVendor
-        });
+      if (res.ok) {
+        setShowAddVendor(false);
+        setVForm({ name: '', category: 'Locación', status: 'Contratado', notes: '' });
+        loadFinanceData();
       }
-
-      setShowAddVendor(false);
-      setVForm({ name: '', category: 'Locación', status: 'Contratado', notes: '' });
-      loadFinanceData();
     } catch (err) {
       console.error('Error adding vendor:', err);
     }
@@ -122,30 +131,25 @@ export default function FinancePage() {
     e.preventDefault();
     if (!eForm.concept) return;
     try {
-      const newExpense = {
-        concept: eForm.concept,
-        category: eForm.category,
-        vendor_id: eForm.vendor_id || null,
-        total_amount: eForm.total_amount ? Number(eForm.total_amount) : null,
-        due_date: eForm.due_date || null,
-        responsible: eForm.responsible || null,
-        payment_status: 'Pendiente'
-      };
+      const res = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          concept: eForm.concept,
+          category: eForm.category,
+          vendor_id: eForm.vendor_id || null,
+          total_amount: eForm.total_amount ? Number(eForm.total_amount) : null,
+          due_date: eForm.due_date || null,
+          responsible: eForm.responsible || null,
+          payment_status: 'Pendiente'
+        })
+      });
 
-      const { data } = await supabase.from('expenses').insert(newExpense).select();
-
-      if (data && data[0]) {
-        await supabase.from('sync_outbox').insert({
-          entity_type: 'expenses',
-          entity_id: data[0].id,
-          operation: 'INSERT',
-          payload: newExpense
-        });
+      if (res.ok) {
+        setShowAddExpense(false);
+        setEForm({ concept: '', category: 'Locación', vendor_id: '', total_amount: '', due_date: '', responsible: 'Felipe & Camila' });
+        loadFinanceData();
       }
-
-      setShowAddExpense(false);
-      setEForm({ concept: '', category: 'Locación', vendor_id: '', total_amount: '', due_date: '', responsible: 'Felipe & Camila' });
-      loadFinanceData();
     } catch (err) {
       console.error('Error adding expense:', err);
     }
@@ -155,30 +159,25 @@ export default function FinancePage() {
     e.preventDefault();
     if (!pForm.expense_id || !pForm.amount) return;
     try {
-      const newPayment = {
-        expense_id: pForm.expense_id,
-        amount: Number(pForm.amount),
-        currency: 'CLP',
-        payment_date: new Date().toISOString().substring(0, 10),
-        payment_type: pForm.payment_type,
-        status: pForm.status,
-        notes: pForm.notes || null
-      };
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expense_id: pForm.expense_id,
+          amount: Number(pForm.amount),
+          currency: 'CLP',
+          payment_date: new Date().toISOString().substring(0, 10),
+          payment_type: pForm.payment_type,
+          status: pForm.status,
+          notes: pForm.notes || null
+        })
+      });
 
-      const { data } = await supabase.from('expense_payments').insert(newPayment).select();
-
-      if (data && data[0]) {
-        await supabase.from('sync_outbox').insert({
-          entity_type: 'expense_payments',
-          entity_id: data[0].id,
-          operation: 'INSERT',
-          payload: newPayment
-        });
+      if (res.ok) {
+        setShowAddPayment(false);
+        setPForm({ expense_id: '', amount: '', payment_type: 'Transferencia', status: 'Pagado', notes: '' });
+        loadFinanceData();
       }
-
-      setShowAddPayment(false);
-      setPForm({ expense_id: '', amount: '', payment_type: 'Transferencia', status: 'Pagado', notes: '' });
-      loadFinanceData();
     } catch (err) {
       console.error('Error adding payment:', err);
     }
@@ -187,16 +186,10 @@ export default function FinancePage() {
   async function handleDeletePayment(paymentId: string) {
     if (!confirm('¿Confirmas que deseas eliminar este registro de pago?')) return;
     try {
-      await supabase.from('expense_payments').delete().eq('id', paymentId);
-      
-      await supabase.from('audit_log').insert({
-        entity_type: 'expense_payments',
-        entity_id: paymentId,
-        action: 'DELETE_PAYMENT',
-        origin: 'dashboard'
-      });
-
-      loadFinanceData();
+      const res = await fetch(`/api/payments?id=${paymentId}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadFinanceData();
+      }
     } catch (err) {
       console.error('Error deleting payment:', err);
     }
@@ -209,7 +202,7 @@ export default function FinancePage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
           <div>
             <span className="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-semibold block">
-              Control de Presupuesto & Pagos
+              Control de Presupuesto & Pagos Multi-moneda
             </span>
             <h1 className="font-serif text-3xl text-[var(--text-primary)] mt-1">
               Finanzas & Proveedores
@@ -228,40 +221,50 @@ export default function FinancePage() {
           </div>
         </div>
 
-        {/* Financial KPI Cards */}
+        {/* Financial KPI Cards - Separated by Currency */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="kpi-card">
             <span className="kpi-title flex items-center gap-2 text-[#2D5A27]">
-              <DollarSign size={14} /> Total Pagado
+              <DollarSign size={14} /> Pagado (CLP / UF)
             </span>
-            <div className="kpi-value text-[#2D5A27]">${totalPaid.toLocaleString('es-CL')} CLP</div>
-            <span className="text-xs text-[var(--text-secondary)] mt-2 block">Pagos verificados</span>
+            <div className="kpi-value text-[#2D5A27] text-2xl">${totalPaidCLP.toLocaleString('es-CL')} CLP</div>
+            <span className="text-xs text-[var(--text-secondary)] mt-1 block">
+              {totalPaidUF > 0 ? `${totalPaidUF} UF pagadas` : '0 UF pagadas'}
+            </span>
           </div>
 
           <div className="kpi-card">
             <span className="kpi-title flex items-center gap-2">
-              Contratado / Comprometido
+              Contratado CLP
             </span>
-            <div className="kpi-value">${totalContracted.toLocaleString('es-CL')} CLP</div>
-            <span className="text-xs text-[var(--text-secondary)] mt-2 block">{expenses.length} conceptos registrados</span>
+            <div className="kpi-value text-2xl">${totalContractedCLP.toLocaleString('es-CL')} CLP</div>
+            <span className="text-xs text-[var(--text-secondary)] mt-1 block">
+              {totalContractedUF > 0 ? `${totalContractedUF} UF contratadas` : 'Sin contratos en UF'}
+            </span>
           </div>
 
           <div className="kpi-card">
             <span className="kpi-title flex items-center gap-2 text-[#8E703E]">
-              Saldo Calculado
+              Saldo CLP
             </span>
-            <div className="kpi-value text-[#8E703E]">
-              {isBalanceCertain ? `$${totalBalance.toLocaleString('es-CL')} CLP` : <span className="text-[#A83232] italic text-xl">POR COMPLETAR</span>}
+            <div className="kpi-value text-[#8E703E] text-2xl">
+              {itemsWithoutAmountCLP > 0 ? (
+                <span className="text-[#A83232] font-semibold italic text-lg">POR COMPLETAR</span>
+              ) : (
+                `$${totalBalanceCLP.toLocaleString('es-CL')} CLP`
+              )}
             </div>
-            <span className="text-xs text-[var(--text-secondary)] mt-2 block">Sujeto a contratos por definir</span>
+            <span className="text-xs text-[var(--text-secondary)] mt-1 block">
+              {totalBalanceUF > 0 ? `Saldo UF: ${totalBalanceUF} UF` : 'Saldo UF: 0 UF'}
+            </span>
           </div>
 
           <div className="kpi-card border-l-4 border-l-[#A83232]">
             <span className="kpi-title flex items-center gap-2 text-[#A83232]">
-              <AlertCircle size={14} /> Sin Monto / Por Confirmar
+              <AlertCircle size={14} /> Montos Por Confirmar
             </span>
-            <div className="kpi-value text-[#A83232]">{itemsWithoutAmount}</div>
-            <span className="text-xs text-[var(--text-secondary)] mt-2 block">Arboleda & DJ por completar</span>
+            <div className="kpi-value text-[#A83232]">{itemsWithoutAmountCLP + itemsWithoutAmountUF}</div>
+            <span className="text-xs text-[var(--text-secondary)] mt-1 block">Conceptos sin monto total</span>
           </div>
         </div>
 
@@ -317,7 +320,7 @@ export default function FinancePage() {
                       <td className="font-semibold text-[var(--text-primary)]">{e.concept}</td>
                       <td>{e.category}</td>
                       <td>{vendor?.name || 'No asignado'}</td>
-                      <td>{e.total_amount ? `$${e.total_amount.toLocaleString('es-CL')} CLP` : <span className="text-[#A83232] font-semibold italic text-xs">POR COMPLETAR</span>}</td>
+                      <td>{e.total_amount ? `$${e.total_amount.toLocaleString('es-CL')} ${e.currency}` : <span className="text-[#A83232] font-semibold italic text-xs">POR COMPLETAR</span>}</td>
                       <td>
                         <span className="badge badge-pending">{e.payment_status}</span>
                       </td>

@@ -3,8 +3,13 @@ import { cookies } from 'next/headers';
 
 export function createClient() {
   const cookieStore = cookies();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mwumnywbvjxekskfrlms.supabase.co';
-  const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_SECRET_KEY;
+
+  if (!supabaseUrl || !supabasePublishableKey) {
+    console.error('[CONFIGURATION_ERROR] Required Supabase server environment variables are missing.');
+    throw new Error('CONFIGURATION_ERROR: Required Supabase server environment variables are missing.');
+  }
 
   return createServerClient(
     supabaseUrl,
