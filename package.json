@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "verify:public": "node scripts/verify_public_regressions.mjs",
     "build:images": "node scripts/build_responsive_images.js",
     "build:css": "npx tailwindcss -i ./css/input.css -o ./css/tailwind.min.css -m"
   },

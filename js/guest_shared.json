@@ -51,12 +51,12 @@
     "width": 3024,
     "height": 4032,
     "variants": {
-      "480w": "/images/responsive/shared_4_v2_480w.jpg",
-      "768w": "/images/responsive/shared_4_v2_768w.jpg",
-      "1080w": "/images/responsive/shared_4_v2_1080w.jpg"
+      "480w": "/images/responsive/shared_4_v3_480w.jpg",
+      "768w": "/images/responsive/shared_4_v3_768w.jpg",
+      "1080w": "/images/responsive/shared_4_v3_1080w.jpg"
     },
-    "srcset": "/images/responsive/shared_4_v2_480w.webp 480w, /images/responsive/shared_4_v2_768w.webp 768w, /images/responsive/shared_4_v2_1080w.webp 1080w",
-    "srcsetJpg": "/images/responsive/shared_4_v2_480w.jpg 480w, /images/responsive/shared_4_v2_768w.jpg 768w, /images/responsive/shared_4_v2_1080w.jpg 1080w",
+    "srcset": "/images/responsive/shared_4_v3_480w.webp 480w, /images/responsive/shared_4_v3_768w.webp 768w, /images/responsive/shared_4_v3_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/shared_4_v3_480w.jpg 480w, /images/responsive/shared_4_v3_768w.jpg 768w, /images/responsive/shared_4_v3_1080w.jpg 1080w",
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
@@ -66,12 +66,12 @@
     "width": 3024,
     "height": 4032,
     "variants": {
-      "480w": "/images/responsive/shared_5_v2_480w.jpg",
-      "768w": "/images/responsive/shared_5_v2_768w.jpg",
-      "1080w": "/images/responsive/shared_5_v2_1080w.jpg"
+      "480w": "/images/responsive/shared_5_v3_480w.jpg",
+      "768w": "/images/responsive/shared_5_v3_768w.jpg",
+      "1080w": "/images/responsive/shared_5_v3_1080w.jpg"
     },
-    "srcset": "/images/responsive/shared_5_v2_480w.webp 480w, /images/responsive/shared_5_v2_768w.webp 768w, /images/responsive/shared_5_v2_1080w.webp 1080w",
-    "srcsetJpg": "/images/responsive/shared_5_v2_480w.jpg 480w, /images/responsive/shared_5_v2_768w.jpg 768w, /images/responsive/shared_5_v2_1080w.jpg 1080w",
+    "srcset": "/images/responsive/shared_5_v3_480w.webp 480w, /images/responsive/shared_5_v3_768w.webp 768w, /images/responsive/shared_5_v3_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/shared_5_v3_480w.jpg 480w, /images/responsive/shared_5_v3_768w.jpg 768w, /images/responsive/shared_5_v3_1080w.jpg 1080w",
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
@@ -81,12 +81,12 @@
     "width": 3024,
     "height": 4032,
     "variants": {
-      "480w": "/images/responsive/shared_6_v2_480w.jpg",
-      "768w": "/images/responsive/shared_6_v2_768w.jpg",
-      "1080w": "/images/responsive/shared_6_v2_1080w.jpg"
+      "480w": "/images/responsive/shared_6_v3_480w.jpg",
+      "768w": "/images/responsive/shared_6_v3_768w.jpg",
+      "1080w": "/images/responsive/shared_6_v3_1080w.jpg"
     },
-    "srcset": "/images/responsive/shared_6_v2_480w.webp 480w, /images/responsive/shared_6_v2_768w.webp 768w, /images/responsive/shared_6_v2_1080w.webp 1080w",
-    "srcsetJpg": "/images/responsive/shared_6_v2_480w.jpg 480w, /images/responsive/shared_6_v2_768w.jpg 768w, /images/responsive/shared_6_v2_1080w.jpg 1080w",
+    "srcset": "/images/responsive/shared_6_v3_480w.webp 480w, /images/responsive/shared_6_v3_768w.webp 768w, /images/responsive/shared_6_v3_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/shared_6_v3_480w.jpg 480w, /images/responsive/shared_6_v3_768w.jpg 768w, /images/responsive/shared_6_v3_1080w.jpg 1080w",
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
