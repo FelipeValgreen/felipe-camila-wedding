@@ -5,26 +5,9 @@ export const dynamic = 'force-dynamic';
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { createClient } from '@/lib/supabase-browser';
-import { Search, Filter, MessageSquare, Edit, UserCheck, UserX, RotateCcw, Plus, X, PhoneOff, Link as LinkIcon, Save } from 'lucide-react';
-
-interface Guest {
-  id: string;
-  first_name: string;
-  last_name: string;
-  full_name_normalized: string;
-  phone_e164: string | null;
-  group_name: string;
-  family_side: string;
-  guest_category: string;
-  invitation_status: string;
-  attendance_status: string;
-  dietary_type: string | null;
-  dietary_detail: string | null;
-  reconfirmation_status: string;
-  table_id: string | null;
-  guest_status: string;
-  notes: string | null;
-}
+import GuestEditDrawer, { GuestData } from '@/components/GuestEditDrawer';
+import Toast from '@/components/Toast';
+import { Search, Plus, PhoneOff, Link as LinkIcon, Edit, X } from 'lucide-react';
 
 interface RSVPResponse {
   id: string;
@@ -39,19 +22,21 @@ interface RSVPResponse {
 }
 
 export default function GuestsPage() {
-  const [guests, setGuests] = useState<Guest[]>([]);
+  const [guests, setGuests] = useState<GuestData[]>([]);
   const [unmatchedRSVPs, setUnmatchedRSVPs] = useState<RSVPResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewFilter, setViewFilter] = useState<string>('all');
 
-  // Drawer / Form state
-  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Guest>>({});
+  // Active drawer & modals
+  const [selectedGuest, setSelectedGuest] = useState<GuestData | null>(null);
   const [reconcileRsvp, setReconcileRsvp] = useState<RSVPResponse | null>(null);
-
-  // Add guest modal
   const [showAddModal, setShowAddModal] = useState(false);
+  
+  // Toast notifications
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Add guest form
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -69,7 +54,7 @@ export default function GuestsPage() {
       const { data: gData } = await supabase.from('wedding_guests').select('*').order('first_name', { ascending: true });
       const { data: rData } = await supabase.from('rsvp_responses').select('*').eq('reconciliation_status', 'unmatched');
 
-      if (gData) setGuests(gData as Guest[]);
+      if (gData) setGuests(gData as GuestData[]);
       if (rData) setUnmatchedRSVPs(rData as RSVPResponse[]);
     } catch (err) {
       console.error('Error loading guests:', err);
@@ -82,47 +67,24 @@ export default function GuestsPage() {
     loadData();
   }, []);
 
-  function handleSelectGuest(g: Guest) {
+  const handleOpenDrawer = (g: GuestData) => {
     setSelectedGuest(g);
-    setEditForm({ ...g });
-  }
+  };
 
-  async function handleSaveGuestEdit() {
-    if (!selectedGuest || !editForm.first_name) return;
-    try {
-      const updatedData = {
-        id: selectedGuest.id,
-        first_name: editForm.first_name,
-        last_name: editForm.last_name || '',
-        full_name_normalized: `${editForm.first_name} ${editForm.last_name || ''}`.trim().toLowerCase(),
-        phone_e164: editForm.phone_e164 || null,
-        group_name: editForm.group_name || 'General',
-        family_side: editForm.family_side || 'Compartido',
-        guest_category: editForm.guest_category || 'Adulto',
-        invitation_status: editForm.invitation_status || 'not_sent',
-        attendance_status: editForm.attendance_status || 'pending',
-        dietary_type: editForm.dietary_type || null,
-        dietary_detail: editForm.dietary_detail || null,
-        reconfirmation_status: editForm.reconfirmation_status || 'pending',
-        guest_status: editForm.guest_status || 'active',
-        notes: editForm.notes || null,
-        version: (selectedGuest as any).version ? (selectedGuest as any).version + 1 : 1
-      };
+  const handleCloseDrawer = () => {
+    setSelectedGuest(null);
+  };
 
-      const res = await fetch('/api/guests', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData)
-      });
-
-      if (res.ok) {
-        loadData();
-        setSelectedGuest(null);
-      }
-    } catch (err) {
-      console.error('Error saving guest edit:', err);
+  const handleGuestSaveSuccess = (updatedGuest: GuestData, warnings?: string[]) => {
+    // Optimistic update of local guest list
+    setGuests(prev => prev.map(g => (g.id === updatedGuest.id ? updatedGuest : g)));
+    setSelectedGuest(null);
+    if (warnings && warnings.length > 0) {
+      setToast({ message: `Ficha de ${updatedGuest.first_name} guardada, pero la sincronización outbox quedó pendiente.`, type: 'info' });
+    } else {
+      setToast({ message: `Ficha de ${updatedGuest.first_name} ${updatedGuest.last_name} actualizada correctamente.`, type: 'success' });
     }
-  }
+  };
 
   async function handleManualReconcile(guestId: string, rsvpId: string) {
     try {
@@ -132,12 +94,16 @@ export default function GuestsPage() {
         body: JSON.stringify({ guest_id: guestId, rsvp_id: rsvpId })
       });
 
-      if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.ok) {
         setReconcileRsvp(null);
+        setToast({ message: 'RSVP conciliado correctamente con la lista de invitados.', type: 'success' });
         loadData();
+      } else {
+        setToast({ message: data?.error || 'No se pudo conciliar el RSVP.', type: 'error' });
       }
-    } catch (err) {
-      console.error('Error in manual reconcile:', err);
+    } catch (err: any) {
+      setToast({ message: err.message || 'Error al conciliar RSVP.', type: 'error' });
     }
   }
 
@@ -145,10 +111,9 @@ export default function GuestsPage() {
     e.preventDefault();
     if (!formData.first_name) return;
     try {
-      const newGuest = {
+      const newGuestPayload = {
         first_name: formData.first_name,
         last_name: formData.last_name,
-        full_name_normalized: `${formData.first_name} ${formData.last_name}`.toLowerCase(),
         phone_e164: formData.phone_e164 || null,
         group_name: formData.group_name,
         family_side: formData.family_side,
@@ -160,16 +125,20 @@ export default function GuestsPage() {
       const res = await fetch('/api/guests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newGuest)
+        body: JSON.stringify(newGuestPayload)
       });
 
-      if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.ok) {
         setShowAddModal(false);
         setFormData({ first_name: '', last_name: '', phone_e164: '', group_name: 'General', family_side: 'Compartido', guest_category: 'Adulto', notes: '' });
+        setToast({ message: `Invitado ${data.guest.first_name} agregado correctamente.`, type: 'success' });
         loadData();
+      } else {
+        setToast({ message: data?.error || 'No se pudo crear el invitado.', type: 'error' });
       }
-    } catch (err) {
-      console.error('Error adding guest:', err);
+    } catch (err: any) {
+      setToast({ message: err.message || 'Error creando nuevo invitado.', type: 'error' });
     }
   }
 
@@ -187,7 +156,6 @@ export default function GuestsPage() {
       case 'attending': return g.attendance_status === 'attending' && g.guest_status === 'active';
       case 'not_attending': return g.attendance_status === 'not_attending' && g.guest_status === 'active';
       case 'pending': return g.attendance_status === 'pending' && g.guest_status === 'active';
-      case 'no_table': return g.attendance_status === 'attending' && !g.table_id && g.guest_status === 'active';
       case 'dietary': return Boolean(g.dietary_type) && g.dietary_type !== 'Ninguna' && g.guest_status === 'active';
       case 'replaced': return g.guest_status === 'replaced';
       case 'por_clasificar': return g.family_side === 'Por clasificar' && g.guest_status === 'active';
@@ -195,9 +163,34 @@ export default function GuestsPage() {
     }
   });
 
+  const mapAttendanceLabel = (status: string) => {
+    switch (status) {
+      case 'attending': return { label: 'Confirmado', style: 'badge-confirmed' };
+      case 'not_attending': return { label: 'No asistirá', style: 'badge-declined' };
+      default: return { label: 'Pendiente', style: 'badge-pending' };
+    }
+  };
+
+  const mapReconfirmationLabel = (status: string) => {
+    switch (status) {
+      case 'confirmed': return 'Confirmado';
+      case 'changed': return 'Cambió respuesta';
+      default: return 'Pendiente';
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Toast feedback */}
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
           <div>
@@ -211,7 +204,7 @@ export default function GuestsPage() {
           <div className="flex items-center gap-3">
             <div className="bg-[var(--status-pending-bg)] border border-[var(--border-color)] px-3 py-1.5 rounded flex items-center gap-2 text-xs">
               <PhoneOff size={14} className="text-[#8E703E]" />
-              <span>Invitados sin teléfono: <strong>{missingPhoneCount}</strong></span>
+              <span>Sin teléfono: <strong>{missingPhoneCount}</strong></span>
             </div>
             <button onClick={() => setShowAddModal(true)} className="btn-primary flex items-center gap-2">
               <Plus size={14} /> Nuevo Invitado
@@ -219,7 +212,7 @@ export default function GuestsPage() {
           </div>
         </div>
 
-        {/* Unmatched RSVP Alert Banner if present */}
+        {/* Unmatched RSVP Alert Banner */}
         {unmatchedRSVPs.length > 0 && (
           <div className="bg-[#8E703E]/10 border border-[#8E703E] p-4 rounded-sm flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -253,43 +246,37 @@ export default function GuestsPage() {
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto text-xs">
             <button
               onClick={() => setViewFilter('all')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'all' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
+              className={`px-3 py-1.5 border rounded transition-colors ${viewFilter === 'all' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
             >
               Todos Activos ({guests.filter(g => g.guest_status === 'active').length})
             </button>
             <button
               onClick={() => setViewFilter('no_phone')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'no_phone' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
+              className={`px-3 py-1.5 border rounded transition-colors ${viewFilter === 'no_phone' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
             >
               Sin Teléfono ({missingPhoneCount})
             </button>
             <button
               onClick={() => setViewFilter('attending')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'attending' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
+              className={`px-3 py-1.5 border rounded transition-colors ${viewFilter === 'attending' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
             >
               Confirmados
             </button>
             <button
               onClick={() => setViewFilter('not_attending')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'not_attending' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
+              className={`px-3 py-1.5 border rounded transition-colors ${viewFilter === 'not_attending' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
             >
               No Asisten
             </button>
             <button
               onClick={() => setViewFilter('dietary')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'dietary' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
+              className={`px-3 py-1.5 border rounded transition-colors ${viewFilter === 'dietary' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
             >
               Con Restricciones
             </button>
             <button
-              onClick={() => setViewFilter('replaced')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'replaced' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              Reemplazados
-            </button>
-            <button
               onClick={() => setViewFilter('por_clasificar')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'por_clasificar' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
+              className={`px-3 py-1.5 border rounded transition-colors ${viewFilter === 'por_clasificar' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
             >
               Por Clasificar ({guests.filter(g => g.family_side === 'Por clasificar').length})
             </button>
@@ -309,7 +296,7 @@ export default function GuestsPage() {
                 <th>Asistencia</th>
                 <th>Restricción</th>
                 <th>Reconfirmación</th>
-                <th>Ficha</th>
+                <th className="text-right">Ficha</th>
               </tr>
             </thead>
             <tbody>
@@ -322,180 +309,66 @@ export default function GuestsPage() {
                   <td colSpan={9} className="text-center py-8 text-[var(--text-secondary)]">No hay invitados en esta vista.</td>
                 </tr>
               ) : (
-                filteredGuests.map((g) => (
-                  <tr key={g.id} className="cursor-pointer" onClick={() => handleSelectGuest(g)}>
-                    <td className="font-semibold text-[var(--text-primary)]">{g.first_name} {g.last_name}</td>
-                    <td>{g.group_name}</td>
-                    <td>{g.family_side}</td>
-                    <td>{g.guest_category}</td>
-                    <td>
-                      {g.phone_e164 ? (
-                        <span className="font-mono text-xs">{g.phone_e164}</span>
-                      ) : (
-                        <span className="text-[#A83232] italic text-xs">Sin teléfono</span>
-                      )}
-                    </td>
-                    <td>
-                      <span className={`badge ${g.attendance_status === 'attending' ? 'badge-confirmed' : g.attendance_status === 'not_attending' ? 'badge-declined' : 'badge-pending'}`}>
-                        {g.attendance_status}
-                      </span>
-                    </td>
-                    <td>{g.dietary_type || 'Ninguna'}</td>
-                    <td><span className="text-xs">{g.reconfirmation_status}</span></td>
-                    <td>
-                      <button onClick={() => handleSelectGuest(g)} className="p-1 hover:bg-[var(--bg-secondary)] rounded">
-                        <Edit size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filteredGuests.map((g) => {
+                  const attInfo = mapAttendanceLabel(g.attendance_status);
+                  return (
+                    <tr
+                      key={g.id}
+                      className="cursor-pointer hover:bg-[var(--bg-secondary)] transition-colors"
+                      onClick={() => handleOpenDrawer(g)}
+                    >
+                      <td className="font-semibold text-[var(--text-primary)]">{g.first_name} {g.last_name}</td>
+                      <td>{g.group_name}</td>
+                      <td>{g.family_side}</td>
+                      <td>{g.guest_category}</td>
+                      <td>
+                        {g.phone_e164 ? (
+                          <span className="font-mono text-xs">{g.phone_e164}</span>
+                        ) : (
+                          <span className="text-[#A83232] italic text-xs font-semibold">Sin teléfono</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`badge ${attInfo.style}`}>
+                          {attInfo.label}
+                        </span>
+                      </td>
+                      <td>{g.dietary_type || 'Ninguna'}</td>
+                      <td><span className="text-xs">{mapReconfirmationLabel(g.reconfirmation_status)}</span></td>
+                      <td className="text-right">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDrawer(g);
+                          }}
+                          className="p-1.5 hover:bg-[var(--border-color)] rounded transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                          aria-label={`Editar ficha de ${g.first_name} ${g.last_name}`}
+                        >
+                          <Edit size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Drawer Editar Ficha Completa */}
+        {/* Guest Edit Drawer Component */}
         {selectedGuest && (
-          <div className="fixed inset-y-0 right-0 w-96 bg-[var(--bg-card)] border-l border-[var(--border-color)] shadow-2xl p-6 z-50 overflow-y-auto space-y-6">
-            <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-gold)] font-bold">Edición de Ficha</span>
-                <h3 className="font-serif text-2xl text-[var(--text-primary)] mt-0.5">{selectedGuest.first_name} {selectedGuest.last_name}</h3>
-              </div>
-              <button onClick={() => setSelectedGuest(null)} className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Nombre</label>
-                <input
-                  type="text"
-                  value={editForm.first_name || ''}
-                  onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Apellido</label>
-                <input
-                  type="text"
-                  value={editForm.last_name || ''}
-                  onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Teléfono E.164 (+569...)</label>
-                <input
-                  type="tel"
-                  value={editForm.phone_e164 || ''}
-                  onChange={(e) => setEditForm({ ...editForm, phone_e164: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Grupo</label>
-                  <input
-                    type="text"
-                    value={editForm.group_name || ''}
-                    onChange={(e) => setEditForm({ ...editForm, group_name: e.target.value })}
-                    className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Familia</label>
-                  <select
-                    value={editForm.family_side || 'Compartido'}
-                    onChange={(e) => setEditForm({ ...editForm, family_side: e.target.value })}
-                    className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                  >
-                    <option value="Novio">Novio (Felipe)</option>
-                    <option value="Novia">Novia (Camila)</option>
-                    <option value="Compartido">Compartido</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Asistencia RSVP (Separado)</label>
-                <select
-                  value={editForm.attendance_status || 'pending'}
-                  onChange={(e) => setEditForm({ ...editForm, attendance_status: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none font-semibold"
-                >
-                  <option value="attending">attending (Confirmado)</option>
-                  <option value="not_attending">not_attending (No Asiste)</option>
-                  <option value="pending">pending (Pendiente)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Estado Reconfirmación</label>
-                <select
-                  value={editForm.reconfirmation_status || 'pending'}
-                  onChange={(e) => setEditForm({ ...editForm, reconfirmation_status: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                >
-                  <option value="pending">pending</option>
-                  <option value="confirmed">confirmed</option>
-                  <option value="changed">changed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Restricción Alimentaria</label>
-                <select
-                  value={editForm.dietary_type || 'Ninguna'}
-                  onChange={(e) => setEditForm({ ...editForm, dietary_type: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                >
-                  <option value="Ninguna">Ninguna</option>
-                  <option value="Vegetariano">Vegetariano</option>
-                  <option value="Vegano">Vegano</option>
-                  <option value="Celíaco / libre de gluten">Celíaco / libre de gluten</option>
-                  <option value="Alergias">Alergias</option>
-                  <option value="Otra">Otra</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Detalle Restricción</label>
-                <input
-                  type="text"
-                  value={editForm.dietary_detail || ''}
-                  onChange={(e) => setEditForm({ ...editForm, dietary_detail: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Observaciones</label>
-                <textarea
-                  value={editForm.notes || ''}
-                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="border-t border-[var(--border-color)] pt-4 space-y-2">
-              <button onClick={handleSaveGuestEdit} className="w-full btn-primary flex items-center justify-center gap-2">
-                <Save size={14} /> Guardar Cambios
-              </button>
-            </div>
-          </div>
+          <GuestEditDrawer
+            guest={selectedGuest}
+            onClose={handleCloseDrawer}
+            onSuccess={handleGuestSaveSuccess}
+          />
         )}
 
         {/* Modal Conciliación Manual RSVP */}
         {reconcileRsvp && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 w-full max-w-lg space-y-4">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 w-full max-w-lg space-y-4 shadow-2xl">
               <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                 <h3 className="font-serif text-xl">Conciliación Manual de RSVP</h3>
                 <button onClick={() => setReconcileRsvp(null)}><X size={16} /></button>
@@ -541,8 +414,8 @@ export default function GuestsPage() {
 
         {/* Modal Nuevo Invitado */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 w-full max-w-md space-y-4">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 w-full max-w-md space-y-4 shadow-2xl">
               <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                 <h3 className="font-serif text-xl">Agregar Nuevo Invitado</h3>
                 <button onClick={() => setShowAddModal(false)}><X size={16} /></button>
@@ -550,7 +423,7 @@ export default function GuestsPage() {
 
               <form onSubmit={handleAddGuest} className="space-y-4 text-xs">
                 <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Nombre</label>
+                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Nombre *</label>
                   <input
                     type="text"
                     required
@@ -575,6 +448,7 @@ export default function GuestsPage() {
                     value={formData.phone_e164}
                     onChange={(e) => setFormData({ ...formData, phone_e164: e.target.value })}
                     className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
+                    placeholder="Ej: +56912345678"
                   />
                 </div>
                 <div className="flex gap-4">
@@ -594,9 +468,10 @@ export default function GuestsPage() {
                       onChange={(e) => setFormData({ ...formData, family_side: e.target.value })}
                       className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
                     >
-                      <option value="Novio">Novio (Felipe)</option>
-                      <option value="Novia">Novia (Camila)</option>
+                      <option value="Felipe">Felipe</option>
+                      <option value="Camila">Camila</option>
                       <option value="Compartido">Compartido</option>
+                      <option value="Por clasificar">Por clasificar</option>
                     </select>
                   </div>
                 </div>
