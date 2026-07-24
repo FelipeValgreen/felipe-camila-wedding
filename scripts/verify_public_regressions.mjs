@@ -31,10 +31,16 @@ assertInvariant(indexHtml.includes('18:30') && indexHtml.includes('19:30'), 'ind
 assertInvariant(!indexHtml.includes('Una noche formal, elegante y celebratoria'), 'Old dress code phrase does not exist');
 assertInvariant(indexHtml.includes('Una noche para celebrar con elegancia y estilo.'), 'New dress code phrase exists in index.html');
 
-// 3. Layout structure checks
+// 3. Layout structure & WhatsApp block checks
 const rsvpWaPos = indexHtml.indexOf('id="rsvp-tab-wa"');
 const noviosBlockPos = indexHtml.indexOf('id="codigo-novios-block"');
 assertInvariant(rsvpWaPos !== -1 && noviosBlockPos !== -1 && noviosBlockPos > rsvpWaPos, 'codigo-novios-block appears after rsvp-tab-wa in index.html');
+
+assertInvariant(!indexHtml.includes('¿Ya habías confirmado y necesitas modificar tu respuesta?'), 'Old redundant WhatsApp text in form is removed');
+assertInvariant(indexHtml.includes('O CONFIRMA POR WHATSAPP'), 'WhatsApp separator text O CONFIRMA POR WHATSAPP exists');
+assertInvariant(indexHtml.includes('CONFIRMAR POR WHATSAPP'), 'WhatsApp card title CONFIRMAR POR WHATSAPP exists');
+assertInvariant(indexHtml.includes('Abriremos una conversación para registrar tu respuesta personalmente.'), 'WhatsApp card subtitle exists');
+assertInvariant(indexHtml.includes('ABRIR WHATSAPP →'), 'WhatsApp card action ABRIR WHATSAPP → exists');
 
 const historiaSectionPos = indexHtml.indexOf('id="historia"');
 const rsvpSectionPos = indexHtml.indexOf('id="rsvp"');
