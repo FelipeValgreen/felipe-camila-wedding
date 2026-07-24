@@ -41,6 +41,10 @@ assertInvariant(indexHtml.includes('O CONFIRMA POR WHATSAPP'), 'WhatsApp separat
 assertInvariant(indexHtml.includes('CONFIRMAR POR WHATSAPP'), 'WhatsApp card title CONFIRMAR POR WHATSAPP exists');
 assertInvariant(indexHtml.includes('Abriremos una conversación para registrar tu respuesta personalmente.'), 'WhatsApp card subtitle exists');
 assertInvariant(indexHtml.includes('ABRIR WHATSAPP →'), 'WhatsApp card action ABRIR WHATSAPP → exists');
+assertInvariant(indexHtml.includes('id="rsvp-whatsapp-alternative-block"'), 'rsvp-whatsapp-alternative-block wrapper exists in index.html');
+assertInvariant(indexHtml.includes('¿Necesitas ayuda? Escríbenos por WhatsApp.'), 'Discrete support link text exists in index.html');
+assertInvariant(!indexHtml.includes('ESCRIBIR AL WHATSAPP DEL MATRIMONIO'), 'Old full-width green WhatsApp support button is removed');
+assertInvariant(mainJs.includes('syncWhatsAppAlternativeBlock'), 'js/main.js contains syncWhatsAppAlternativeBlock function');
 
 const historiaSectionPos = indexHtml.indexOf('id="historia"');
 const rsvpSectionPos = indexHtml.indexOf('id="rsvp"');
