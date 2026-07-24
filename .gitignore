@@ -10,6 +10,7 @@ build/
 
 # Backups & Temp
 backups/
+legacy-backup/
 supabase/.temp/
 .env.local
 .env*.local

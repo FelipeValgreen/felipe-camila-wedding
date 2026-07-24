@@ -68,21 +68,7 @@ async function uploadGuestPhoto(file, uploaderName, email, whatsapp) {
     }
 }
 
-// Helper function to save RSVP
-async function saveRSVP(rsvpData) {
-    if (!supabaseClient) return { error: 'Supabase not initialized' };
 
-    const { data, error } = await supabaseClient
-        .from('rsvp_guests')
-        .insert([rsvpData]);
-
-    if (error) {
-        console.error('Error saving RSVP:', error);
-        return { error };
-    }
-
-    return { data };
-}
 
 // Helper function to look up guest by invitation code
 async function getGuestByCode(code) {
@@ -182,55 +168,10 @@ async function sendPhotoUploadNotification(uploaderName, email) {
     }
 }
 
-// Helper function to save Song Request
-async function saveSongRequest(songName, artistName, requesterName) {
-    // Only check client if not simulating (although current codebase doesn't have simulation toggle here)
-    if (!supabaseClient) return { error: 'Supabase not initialized' };
-
-    const { data, error } = await supabaseClient
-        .from('song_requests')
-        .insert([
-            {
-                song_name: songName,
-                // Changed from 'artist' to 'artist_name' to be safe/standard
-                artist_name: artistName || '',
-                requester_name: requesterName
-            }
-        ]);
-
-    if (error) {
-        console.error('Error saving song request (Supabase):', error);
-        return { error };
-    }
-
-    return { data };
-}
-
-// Helper function to fetch song requests
-async function fetchSongRequests() {
-    if (!supabaseClient) return { error: 'Supabase not initialized' };
-
-    const { data, error } = await supabaseClient
-        .from('song_requests')
-        .select('*')
-        .order('created_at', { ascending: false }) // Newest first
-        .limit(50);
-
-    if (error) {
-        console.error('Error fetching song requests:', error);
-        return { error };
-    }
-
-    return { data };
-}
-
 // Expose functions globally
 window.uploadGuestPhoto = uploadGuestPhoto;
-window.saveRSVP = saveRSVP;
 window.getGuestByCode = getGuestByCode;
 window.fetchGuestPhotos = fetchGuestPhotos;
-window.saveSongRequest = saveSongRequest;
-window.fetchSongRequests = fetchSongRequests;
 window.signInWithGoogle = signInWithGoogle;
 window.signInWithEmail = signInWithEmail;
 window.getCurrentUser = getCurrentUser;
