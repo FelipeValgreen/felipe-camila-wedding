@@ -60,18 +60,18 @@
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
-    "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_360d4597-b4c4-4a9c-80b9-8df32f2dde12.jpeg",
-    "alt": "Celebración con familia y amigos en el matrimonio civil",
+    "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_540688d7-62a4-43a4-9308-0471a05155d6.jpeg?source=qr",
+    "alt": "Celebración con invitados en el matrimonio civil",
     "objectPosition": "center center",
-    "width": 750,
-    "height": 984,
+    "width": 1920,
+    "height": 1440,
     "variants": {
       "480w": "/images/responsive/civil_5_480w.jpg",
       "768w": "/images/responsive/civil_5_768w.jpg",
       "1080w": "/images/responsive/civil_5_1080w.jpg"
     },
-    "srcset": "/images/responsive/civil_5_480w.webp 480w",
-    "srcsetJpg": "/images/responsive/civil_5_480w.jpg 480w",
+    "srcset": "/images/responsive/civil_5_480w.webp 480w, /images/responsive/civil_5_768w.webp 768w, /images/responsive/civil_5_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/civil_5_480w.jpg 480w, /images/responsive/civil_5_768w.jpg 768w, /images/responsive/civil_5_1080w.jpg 1080w",
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
