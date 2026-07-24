@@ -21,13 +21,19 @@ export default async function handler(req, res) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        const response = await fetch(endpoint, {
+        const isRefresh = Boolean(req.query.refresh || req.query._t);
+        const fetchOptions = {
             headers: {
                 'apikey': SUPABASE_PUBLISHABLE_KEY,
                 'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
             },
             signal: controller.signal
-        });
+        };
+        if (isRefresh) {
+            fetchOptions.cache = 'no-store';
+        }
+
+        const response = await fetch(endpoint, fetchOptions);
 
         clearTimeout(timeoutId);
 
@@ -73,7 +79,12 @@ export default async function handler(req, res) {
 
         const has_more = rawData.length === limit;
 
-        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+        if (isRefresh) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        } else {
+            res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+        }
+
         return res.status(200).json({
             items: items,
             page: page,

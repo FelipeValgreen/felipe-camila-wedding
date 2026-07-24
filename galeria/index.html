@@ -154,6 +154,9 @@
                 statusBox.classList.remove('hidden');
                 statusText.textContent = 'Cargando fotografías...';
                 
+                const urlParams = new URLSearchParams(window.location.search);
+                const isRefreshRequest = urlParams.get('refresh') === '1';
+
                 let fetchedItems = [];
                 let page = 0;
                 let hasMore = true;
@@ -163,9 +166,18 @@
                         const controller = new AbortController();
                         const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-                        const response = await fetch(`/api/gallery?page=${page}&limit=100`, {
+                        const apiUrl = isRefreshRequest
+                            ? `/api/gallery?page=${page}&limit=100&refresh=${Date.now()}`
+                            : `/api/gallery?page=${page}&limit=100`;
+
+                        const fetchOptions = {
                             signal: controller.signal
-                        });
+                        };
+                        if (isRefreshRequest) {
+                            fetchOptions.cache = 'no-store';
+                        }
+
+                        const response = await fetch(apiUrl, fetchOptions);
 
                         clearTimeout(timeoutId);
 
@@ -203,6 +215,14 @@
 
                     statusBox.classList.add('hidden');
                     applyFilter(currentFilter, false);
+
+                    if (isRefreshRequest) {
+                        try {
+                            const cleanUrl = new URL(window.location.href);
+                            cleanUrl.searchParams.delete('refresh');
+                            window.history.replaceState(history.state, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+                        } catch (e) {}
+                    }
 
                 } catch (err) {
                     console.error('Error fetching gallery archive:', err);
