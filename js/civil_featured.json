@@ -45,8 +45,38 @@
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
+    "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_6caf15a4-0b3c-4493-b5a6-ffc2edc7f866.jpeg",
+    "alt": "Felipe y Camila con la libreta de matrimonio civil celebrando",
+    "objectPosition": "center center",
+    "width": 1200,
+    "height": 1600,
+    "variants": {
+      "480w": "/images/responsive/civil_4_v4_480w.jpg",
+      "768w": "/images/responsive/civil_4_v4_768w.jpg",
+      "1080w": "/images/responsive/civil_4_v4_1080w.jpg"
+    },
+    "srcset": "/images/responsive/civil_4_v4_480w.webp 480w, /images/responsive/civil_4_v4_768w.webp 768w, /images/responsive/civil_4_v4_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/civil_4_v4_480w.jpg 480w, /images/responsive/civil_4_v4_768w.jpg 768w, /images/responsive/civil_4_v4_1080w.jpg 1080w",
+    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
+  },
+  {
+    "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_8fbfeb8c-7473-43a0-86f4-de866d1518cd.jpeg",
+    "alt": "Felipe y Camila en el altar tomados de la mano durante sus votos",
+    "objectPosition": "center center",
+    "width": 1440,
+    "height": 1920,
+    "variants": {
+      "480w": "/images/responsive/civil_5_v4_480w.jpg",
+      "768w": "/images/responsive/civil_5_v4_768w.jpg",
+      "1080w": "/images/responsive/civil_5_v4_1080w.jpg"
+    },
+    "srcset": "/images/responsive/civil_5_v4_480w.webp 480w, /images/responsive/civil_5_v4_768w.webp 768w, /images/responsive/civil_5_v4_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/civil_5_v4_480w.jpg 480w, /images/responsive/civil_5_v4_768w.jpg 768w, /images/responsive/civil_5_v4_1080w.jpg 1080w",
+    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
+  },
+  {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_c96daf0b-5572-4757-8e00-ddcc4f2bc3f5.jpeg?source=qr",
-    "alt": "Momento emotivo durante la ceremonia civil",
+    "alt": "Invitados compartiendo en el matrimonio civil",
     "objectPosition": "center center",
     "width": 1920,
     "height": 1440,
@@ -57,36 +87,6 @@
     },
     "srcset": "/images/responsive/civil_4_480w.webp 480w, /images/responsive/civil_4_768w.webp 768w, /images/responsive/civil_4_1080w.webp 1080w",
     "srcsetJpg": "/images/responsive/civil_4_480w.jpg 480w, /images/responsive/civil_4_768w.jpg 768w, /images/responsive/civil_4_1080w.jpg 1080w",
-    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
-  },
-  {
-    "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_803abb01-f60a-4136-82de-0621ac183099.jpeg",
-    "alt": "Momento de celebración durante el matrimonio civil de Felipe y Camila",
-    "objectPosition": "center center",
-    "width": 4032,
-    "height": 3024,
-    "variants": {
-      "480w": "/images/responsive/civil_5_v3_480w.jpg",
-      "768w": "/images/responsive/civil_5_v3_768w.jpg",
-      "1080w": "/images/responsive/civil_5_v3_1080w.jpg"
-    },
-    "srcset": "/images/responsive/civil_5_v3_480w.webp 480w, /images/responsive/civil_5_v3_768w.webp 768w, /images/responsive/civil_5_v3_1080w.webp 1080w",
-    "srcsetJpg": "/images/responsive/civil_5_v3_480w.jpg 480w, /images/responsive/civil_5_v3_768w.jpg 768w, /images/responsive/civil_5_v3_1080w.jpg 1080w",
-    "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
-  },
-  {
-    "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_07940307-055c-4529-9b89-f74b41537849.jpeg",
-    "alt": "Abrazo de novios tras firmar el matrimonio civil",
-    "objectPosition": "center center",
-    "width": 750,
-    "height": 536,
-    "variants": {
-      "480w": "/images/responsive/civil_6_480w.jpg",
-      "768w": "/images/responsive/civil_6_768w.jpg",
-      "1080w": "/images/responsive/civil_6_1080w.jpg"
-    },
-    "srcset": "/images/responsive/civil_6_480w.webp 480w",
-    "srcsetJpg": "/images/responsive/civil_6_480w.jpg 480w",
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {

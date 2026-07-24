@@ -72,19 +72,33 @@ assertInvariant(guestSharedJson.includes('shared_4_v3') && guestSharedJson.inclu
 assertInvariant(!galleryApi.includes('ROTATION_MAP'), 'api/gallery.js does not contain ROTATION_MAP');
 assertInvariant(!galeriaHtml.includes('rotate(${photo.rotation}deg)'), 'galeria/index.html does not apply CSS rotate to images');
 
-// 7. Removed civil photo check
-assertInvariant(!civilFeaturedJson.includes('guest_540688d7-62a4-43a4-9308-0471a05155d6'), 'Removed photo is absent from civil_featured.json');
+// 7. Sensitive civil photo removal & blocking checks
+assertInvariant(!civilFeaturedJson.includes('guest_540688d7-62a4-43a4-9308-0471a05155d6'), 'Old removed photo is absent from civil_featured.json');
+assertInvariant(!civilFeaturedJson.includes('guest_803abb01-f60a-4136-82de-0621ac183099'), 'Sensitive photo 1 (guest_803abb01) is absent from civil_featured.json');
+assertInvariant(!civilFeaturedJson.includes('guest_07940307-055c-4529-9b89-f74b41537849'), 'Sensitive photo 2 (guest_07940307) is absent from civil_featured.json');
+assertInvariant(galleryApi.includes('BLOCKED_PHOTO_FILES'), 'api/gallery.js contains BLOCKED_PHOTO_FILES set');
+assertInvariant(galleryApi.includes('guest_803abb01-f60a-4136-82de-0621ac183099.jpeg'), 'api/gallery.js explicitly blocks guest_803abb01');
+assertInvariant(galleryApi.includes('guest_07940307-055c-4529-9b89-f74b41537849.jpeg'), 'api/gallery.js explicitly blocks guest_07940307');
 
-// 8. Disk existence of v3 image variants
-const v3Files = [
+// 8. Disk existence of v3/v4 image variants
+const requiredImageFiles = [
   'images/responsive/shared_4_v3_768w.jpg',
   'images/responsive/shared_5_v3_768w.jpg',
   'images/responsive/shared_6_v3_768w.jpg',
-  'images/responsive/civil_5_v3_768w.jpg',
+  'images/responsive/civil_4_v4_768w.jpg',
+  'images/responsive/civil_5_v4_768w.jpg',
   'images/normalized/shared_4_v3_1600w.jpg'
 ];
-for (const f of v3Files) {
-  assertInvariant(fs.existsSync(f), `Required v3 image file exists on disk: ${f}`);
+for (const f of requiredImageFiles) {
+  assertInvariant(fs.existsSync(f), `Required image file exists on disk: ${f}`);
+}
+
+const deletedSensitiveFiles = [
+  'images/responsive/civil_5_v3_768w.jpg',
+  'images/responsive/civil_6_768w.jpg'
+];
+for (const f of deletedSensitiveFiles) {
+  assertInvariant(!fs.existsSync(f), `Sensitive image file is absent from disk: ${f}`);
 }
 
 // 9. Favicons check

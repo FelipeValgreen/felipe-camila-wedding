@@ -43,9 +43,15 @@ export default async function handler(req, res) {
 
         const rawData = await response.json();
 
-        if (!Array.isArray(rawData)) {
-            return res.status(502).json({ error: 'GALLERY_UNAVAILABLE' });
-        }
+        const BLOCKED_PHOTO_FILES = new Set([
+            'guest_803abb01-f60a-4136-82de-0621ac183099.jpeg',
+            'guest_07940307-055c-4529-9b89-f74b41537849.jpeg'
+        ]);
+
+        const visibleData = rawData.filter(item => {
+            const fileName = (item.url || '').split('/').pop()?.split('?')[0] || '';
+            return !BLOCKED_PHOTO_FILES.has(fileName);
+        });
 
         const NORMALIZED_MAP = {
             'guest_f33f9d8e-cf41-422a-ba6b-54cf9dc03335.jpeg': '/images/normalized/shared_4_v3_1600w.jpg',
@@ -53,7 +59,7 @@ export default async function handler(req, res) {
             'guest_6d2582da-998a-49ee-a36c-c91a8c987208.jpeg': '/images/normalized/shared_6_v3_1600w.jpg'
         };
 
-        const items = rawData.map(item => {
+        const items = visibleData.map(item => {
             const createdAt = item.created_at || '';
             let category = 'historia';
             let alt = 'Recuerdo de nuestra historia';
