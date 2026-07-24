@@ -52,8 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Direct hash or reduced motion fallbacks
-    if (window.location.hash || !overlay || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    if (window.location.search.includes('open=1')) {
+        if (overlay) overlay.style.display = 'none';
+        body.classList.remove('locked');
+        revealNav();
+        startGalleryLoading();
+        try {
+            const cleanUrl = window.location.pathname + (window.location.hash || '#hero');
+            window.history.replaceState(null, '', cleanUrl);
+        } catch (e) {}
+    } else if (window.location.hash || !overlay || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
         startGalleryLoading();
     }
 
@@ -109,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cdSeconds = document.getElementById('cd-seconds');
     const countdownContainer = document.getElementById('countdown-container');
 
-    const eventDate = new Date('2026-10-23T17:50:00-03:00').getTime();
+    const eventDate = new Date('2026-10-23T17:30:00-03:00').getTime();
 
     function updateCountdown() {
         const now = new Date().getTime();
@@ -486,25 +494,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
+    // Dynamic WhatsApp RSVP Message Generator & Name Validation
+    const waTab = document.getElementById('rsvp-tab-wa');
+    if (waTab) {
+        waTab.addEventListener('click', (e) => {
+            const firstNameInput = document.getElementById('first_name');
+            const lastNameInput = document.getElementById('last_name');
+            const firstName = (firstNameInput?.value || '').trim();
+            const lastName = (lastNameInput?.value || '').trim();
+
+            if (!firstName || !lastName) {
+                e.preventDefault();
+                showToast('Por favor ingresa tu nombre y apellido en el formulario antes de confirmar por WhatsApp.', 'error');
+                if (!firstName && firstNameInput) firstNameInput.classList.add('border-red-500');
+                if (!lastName && lastNameInput) lastNameInput.classList.add('border-red-500');
+                const rsvpForm = document.getElementById('rsvp-form');
+                if (rsvpForm) rsvpForm.scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
+            const fullName = `${firstName} ${lastName}`;
+            const dietarySelect = document.getElementById('dietary_requirements');
+            const dietaryDetailsInput = document.getElementById('dietary_details');
+            const dietary = (dietarySelect?.value || 'Ninguna').trim();
+            const details = (dietaryDetailsInput?.value || '').trim();
+
+            let waText = '';
+            if (dietary === 'Ninguna' || !dietary) {
+                waText = `Hola, soy ${fullName}. Quiero confirmar mi asistencia al matrimonio y no tengo restricción alimentaria.`;
+            } else {
+                const detailText = details ? `${dietary} (${details})` : dietary;
+                waText = `Hola, soy ${fullName}. Quiero confirmar mi asistencia al matrimonio y tengo restricción alimentaria: ${detailText}.`;
+            }
+
+            const targetNumber = window.weddingWhatsappNumber || '56981393436';
+            waTab.href = `https://wa.me/${targetNumber}?text=${encodeURIComponent(waText)}`;
+        });
+    }
+
+    const fnInput = document.getElementById('first_name');
+    const lnInput = document.getElementById('last_name');
+    if (fnInput) fnInput.addEventListener('input', () => fnInput.classList.remove('border-red-500'));
+    if (lnInput) lnInput.addEventListener('input', () => lnInput.classList.remove('border-red-500'));
+
     // Fetch Public Config for WhatsApp option
     async function loadPublicConfig() {
         try {
             const res = await fetch('/api/public-config');
             if (res.ok) {
                 const cfg = await res.json();
-                const waTab = document.getElementById('rsvp-tab-wa');
+                window.weddingWhatsappNumber = cfg.wedding_whatsapp_number || '56981393436';
                 const waSuccessSupport = document.getElementById('rsvp-success-wa-support');
                 const footerWaSupport = document.getElementById('footer-wa-support');
 
-                const targetNumber = cfg.wedding_whatsapp_number || '56981393436';
-                const confirmUrl = `https://wa.me/${targetNumber}?text=${encodeURIComponent('Hola, soy [nombre y apellido]. Quiero confirmar mi asistencia al matrimonio de Felipe y Camila del 23 de octubre de 2026.')}`;
-                const supportUrl = `https://wa.me/${targetNumber}`;
+                const supportUrl = `https://wa.me/${window.weddingWhatsappNumber}`;
 
-                if (waTab) {
-                    waTab.href = confirmUrl;
-                    waTab.target = '_blank';
-                    waTab.rel = 'noopener noreferrer';
-                }
                 if (waSuccessSupport) {
                     waSuccessSupport.href = supportUrl;
                     waSuccessSupport.target = '_blank';

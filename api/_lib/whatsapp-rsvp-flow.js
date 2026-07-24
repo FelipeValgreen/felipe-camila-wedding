@@ -14,7 +14,7 @@ import { sendWhatsAppMessage as defaultSendWhatsAppMessage } from './whatsapp-cl
 
 const FAQ_MAP = {
     'fecha': 'El matrimonio de Felipe y Camila se celebrará el viernes 23 de octubre de 2026.',
-    'hora': 'La ceremonia comienza a las 17:50 hrs. Recomendamos llegar a las 17:25 hrs.',
+    'hora': 'La ceremonia religiosa comenzará a las 17:30 hrs. Te recomendamos llegar con anticipación.',
     'ceremonia': 'La ceremonia religiosa será en el Santuario de la Divina Misericordia, Chicureo. Ubicación: https://maps.app.goo.gl/R8GLmxvNC2KLagVL9',
     'arboleda': 'La celebración será en Centro de Eventos Arboleda, Chicureo. Cóctel a las 18:30 hrs y cena a las 19:30 hrs. Ubicación: https://maps.app.goo.gl/kRdvXmbtHmYXUaB49',
     'dress code': 'El código de vestimenta es Formal.',

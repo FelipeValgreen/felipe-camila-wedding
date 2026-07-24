@@ -22,6 +22,24 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4">
     <link rel="manifest" href="/site.webmanifest?v=4">
 
+    <script>
+        if (window.location.search.includes('open=1')) {
+            document.documentElement.classList.add('direct-open');
+        }
+    </script>
+    <style>
+        html.direct-open #envelope-overlay {
+            display: none !important;
+        }
+        html.direct-open body {
+            overflow: auto !important;
+        }
+        html.direct-open #main-nav {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+    </style>
+
     <!-- OpenGraph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:locale" content="es_CL">
@@ -49,7 +67,7 @@
       "@context": "https://schema.org",
       "@type": "Event",
       "name": "Matrimonio de Felipe & Camila",
-      "startDate": "2026-10-23T17:50:00-03:00",
+      "startDate": "2026-10-23T17:30:00-03:00",
       "endDate": "2026-10-24T05:00:00-03:00",
       "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
       "eventStatus": "https://schema.org/EventScheduled",
@@ -251,7 +269,7 @@
                 <a href="#historia" class="text-muted hover:text-dark transition-colors">Historia</a>
                 <a href="#ceremonia" class="text-muted hover:text-dark transition-colors">Información</a>
                 <a href="#rsvp" class="text-dark font-semibold hover:text-gold transition-colors">Confirmar</a>
-                <a href="/galeria/?filtro=todas" target="_blank" rel="noopener noreferrer" class="text-muted hover:text-dark transition-colors">Galería</a>
+                <a href="/galeria/?filtro=todas" class="text-muted hover:text-dark transition-colors">Galería</a>
             </div>
 
             <!-- Mobile Hamburger Button (< md) -->
@@ -265,7 +283,7 @@
             <a href="#historia" class="block py-2 text-dark border-b border-dark/5 nav-mobile-link">Historia</a>
             <a href="#ceremonia" class="block py-2 text-dark border-b border-dark/5 nav-mobile-link">Información</a>
             <a href="#rsvp" class="block py-2 text-gold font-bold border-b border-dark/5 nav-mobile-link">Confirmar</a>
-            <a href="/galeria/?filtro=todas" target="_blank" rel="noopener noreferrer" class="block py-2 text-dark nav-mobile-link">Galería</a>
+            <a href="/galeria/?filtro=todas" class="block py-2 text-dark nav-mobile-link">Galería</a>
         </div>
     </nav>
 
@@ -350,7 +368,7 @@
                 </div>
 
                 <div class="text-center pt-6">
-                    <a href="/galeria/?filtro=historia" target="_blank" rel="noopener noreferrer" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1">
+                    <a href="/galeria/?filtro=historia" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1">
                         Ver todas las fotos de nuestra historia →
                     </a>
                 </div>
@@ -525,11 +543,11 @@
                         <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">La Ceremonia</span>
                         <h2 class="font-serif text-4xl text-dark font-normal">Santuario de la Divina Misericordia</h2>
                         <div class="space-y-1">
-                            <p class="font-serif text-3xl text-wine font-light">17:50</p>
-                            <p class="font-sans text-xs text-muted uppercase tracking-widest">Santuario de la Divina Misericordia, Chicureo</p>
+                            <p class="font-serif text-3xl text-wine font-light">17:30</p>
+                            <h3 class="font-sans text-xs uppercase tracking-[0.25em] font-semibold text-dark">Ceremonia Religiosa</h3>
                         </div>
-                        <p class="font-sans text-base text-muted font-light leading-relaxed">
-                            La ceremonia religiosa comenzará a las 17:50. Te recomendamos llegar a las 17:25 para vivir este momento con calma.
+                        <p class="font-sans text-sm text-muted font-light leading-relaxed">
+                            La ceremonia religiosa comenzará a las 17:30. Te recomendamos llegar con anticipación para vivir este momento con calma.
                         </p>
                         <div class="flex flex-wrap gap-4 pt-2">
                             <a href="https://maps.app.goo.gl/R8GLmxvNC2KLagVL9" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 border border-dark/30 text-dark text-xs uppercase tracking-[0.2em] px-5 py-3 hover:bg-dark hover:text-light transition-all">
@@ -614,7 +632,7 @@
                         <p class="font-sans text-sm text-muted font-light mt-1">Algunos recuerdos del día en que comenzó esta nueva etapa.</p>
                     </div>
                     <div class="flex items-center gap-6">
-                        <span id="civil-counter" class="font-sans text-xs tracking-widest text-muted">01 / 08</span>
+                        <span id="civil-counter" class="font-sans text-xs tracking-widest text-muted">01 / 07</span>
                         <div class="hidden md:flex gap-2">
                             <button id="civil-prev-btn" aria-label="Fotografía anterior" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
                                 <i class="fa-solid fa-chevron-left text-xs"></i>
@@ -635,7 +653,7 @@
 
                 <div class="flex justify-between items-center pt-2">
                     <span class="md:hidden font-sans text-xs text-muted italic">Desliza para ver más →</span>
-                    <a href="/galeria/?filtro=civil" target="_blank" rel="noopener noreferrer" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1 ml-auto">
+                    <a href="/galeria/?filtro=civil" class="font-sans text-xs uppercase tracking-[0.25em] text-dark hover:text-gold transition-colors font-semibold border-b border-dark pb-1 ml-auto">
                         Ver todas las fotos del civil →
                     </a>
                 </div>
@@ -656,7 +674,7 @@
                             <i class="fa-solid fa-camera text-sm"></i>
                             <span>Subir mis fotos del matri</span>
                         </a>
-                        <span id="shared-counter" class="font-sans text-xs tracking-widest text-muted hidden sm:inline">01 / 08</span>
+                        <span id="shared-counter" class="font-sans text-xs tracking-widest text-muted hidden sm:inline">01 / 07</span>
                         <div class="hidden md:flex gap-2">
                             <button id="shared-prev-btn" aria-label="Fotografía anterior" class="w-10 h-10 border border-dark/20 hover:border-dark text-dark flex items-center justify-center transition-colors">
                                 <i class="fa-solid fa-chevron-left text-xs"></i>

@@ -140,7 +140,7 @@ gh pr view 6 --repo FelipeValgreen/felipe-camila-wedding --json baseRefName,base
 - **Pareja**: Felipe & Camila
 - **Fecha del Matrimonio**: Viernes 23 de Octubre de 2026
 - **Zona Horaria Canónica**: `America/Santiago`
-- **Ceremonia**: Santuario de la Divina Misericordia (Llegada recomendada: 17:25 | Inicio ceremonia: 17:50)
+- **Ceremonia**: Santuario de la Divina Misericordia (Inicio ceremonia: 17:30)
 - **Celebración**: Centro de Eventos Arboleda, Chicureo (Cóctel: 18:30 | Cena: 19:30)
 - **Dress Code**: Formal / Black Tie
 - **Lista de Regalos**: Paris (Código `21030724`)
