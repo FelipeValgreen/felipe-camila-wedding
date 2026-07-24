@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (civilLoaded) return;
         civilLoaded = true;
         try {
-            const res = await fetch('js/civil_featured.json?v=4');
+            const res = await fetch('js/civil_featured.json?v=5');
             if (res.ok) {
                 const data = await res.json();
                 const civilRail = document.getElementById('civil-rail');
@@ -690,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sharedLoaded) return;
         sharedLoaded = true;
         try {
-            const res = await fetch('js/guest_shared.json?v=4');
+            const res = await fetch('js/guest_shared.json?v=5');
             if (res.ok) {
                 const data = await res.json();
                 const sharedRail = document.getElementById('shared-rail');
