@@ -7,11 +7,11 @@
     <title>Galería Completa de Fotos — Felipe & Camila</title>
     
     <!-- Favicons -->
-    <link rel="icon" href="/favicon.ico?v=3" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3">
-    <link rel="manifest" href="/site.webmanifest?v=3">
+    <link rel="icon" href="/favicon.ico?v=4" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=4">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=4">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4">
+    <link rel="manifest" href="/site.webmanifest?v=4">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -187,7 +187,8 @@
                         src: p.src,
                         category: p.category,
                         label: getCategoryLabel(p.category),
-                        alt: p.alt
+                        alt: p.alt,
+                        rotation: p.rotation || 0
                     }));
 
                     // Dynamic Live Counts
@@ -272,6 +273,9 @@
                     img.loading = 'lazy';
                     img.decoding = 'async';
                     img.className = 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-105';
+                    if (photo.rotation) {
+                        img.style.transform = `rotate(${photo.rotation}deg) scale(1.35)`;
+                    }
                     img.onerror = () => {
                         img.style.display = 'none';
                         const fallback = document.createElement('div');
@@ -334,6 +338,13 @@
                 if (!photo) return;
                 lightboxImg.src = photo.src;
                 lightboxImg.alt = photo.alt;
+                if (photo.rotation) {
+                    lightboxImg.style.transform = `rotate(${photo.rotation}deg) scale(0.8)`;
+                    lightboxImg.style.maxHeight = '75vh';
+                } else {
+                    lightboxImg.style.transform = 'none';
+                    lightboxImg.style.maxHeight = '85vh';
+                }
                 lightboxCaption.textContent = `${photo.label} (${currentIndex + 1} de ${activeFilteredPhotos.length})`;
             }
 

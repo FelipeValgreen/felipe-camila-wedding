@@ -41,6 +41,12 @@ export default async function handler(req, res) {
             return res.status(502).json({ error: 'GALLERY_UNAVAILABLE' });
         }
 
+        const ROTATION_MAP = {
+            'guest_f33f9d8e-cf41-422a-ba6b-54cf9dc03335.jpeg': 90,
+            'guest_ebd87dd9-bdc1-47d3-987b-808c490c95b9.jpeg': 90,
+            'guest_6d2582da-998a-49ee-a36c-c91a8c987208.jpeg': 90
+        };
+
         const items = rawData.map(item => {
             const createdAt = item.created_at || '';
             let category = 'historia';
@@ -54,10 +60,14 @@ export default async function handler(req, res) {
                 alt = 'Fotografía compartida después de la celebración';
             }
 
+            const fileName = (item.url || '').split('/').pop()?.split('?')[0] || '';
+            const rotation = ROTATION_MAP[fileName] || 0;
+
             return {
                 src: item.url,
                 category: category,
-                alt: alt
+                alt: alt,
+                rotation: rotation
             };
         });
 
