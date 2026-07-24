@@ -162,6 +162,48 @@
                 width: 60px;
             }
         }
+        @media (max-width: 767px) {
+            #hero {
+                min-height: calc(100svh + 180px);
+                align-items: flex-start;
+                padding-top: 6.5rem;
+                padding-bottom: 3.5rem;
+                padding-left: 1.25rem;
+                padding-right: 1.25rem;
+            }
+
+            #hero-img {
+                object-position: 50% 43%;
+                opacity: 0.62;
+            }
+
+            #hero .hero-overlay {
+                background: linear-gradient(
+                    to bottom,
+                    rgba(15, 12, 11, 0.78) 0%,
+                    rgba(15, 12, 11, 0.42) 27%,
+                    rgba(15, 12, 11, 0.16) 42%,
+                    rgba(15, 12, 11, 0.18) 58%,
+                    rgba(15, 12, 11, 0.72) 76%,
+                    rgba(15, 12, 11, 0.92) 100%
+                ) !important;
+            }
+
+            #hero .hero-content {
+                width: 100%;
+                max-width: 100%;
+                padding-top: 0;
+            }
+
+            #hero .hero-photo-window {
+                height: clamp(150px, 21svh, 220px);
+            }
+
+            #hero .hero-title {
+                font-size: clamp(3.1rem, 13vw, 4.25rem);
+                line-height: 0.94;
+            }
+        }
         @media (prefers-reduced-motion: reduce) {
             *, ::before, ::after {
                 animation-duration: 0.01ms !important;
@@ -235,48 +277,57 @@
             <!-- Background Hero Image -->
             <div class="absolute inset-0 z-0">
                 <img id="hero-img" src="/images/responsive/hero_1_1080w.jpg" srcset="/images/responsive/hero_1_480w.jpg 480w, /images/responsive/hero_1_768w.jpg 768w, /images/responsive/hero_1_1080w.jpg 1080w, /images/responsive/hero_1_1440w.jpg 1440w" sizes="100vw" width="1440" height="1920" alt="Felipe y Camila" fetchpriority="high" loading="eager" decoding="async" class="w-full h-full object-cover object-center opacity-40">
-                <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/60 to-dark/40"></div>
+                <div class="hero-overlay absolute inset-0 bg-gradient-to-t from-dark via-dark/60 to-dark/40"></div>
             </div>
 
-            <div class="relative z-10 max-w-2xl mx-auto text-center space-y-6 pt-12">
-                <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Matrimonio Religioso</span>
-                
-                <h1 class="font-serif text-5xl md:text-7xl text-cream tracking-wide font-normal">
-                    Felipe & Camila
-                </h1>
+            <div class="hero-content relative z-10 max-w-2xl mx-auto text-center space-y-6 pt-12">
+                <!-- Part A: Top Content -->
+                <div class="hero-top-content space-y-6">
+                    <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Matrimonio Religioso</span>
+                    
+                    <h1 class="hero-title font-serif text-5xl md:text-7xl text-cream tracking-wide font-normal">
+                        Felipe & Camila
+                    </h1>
 
-                <div class="w-12 h-[1px] bg-gold/40 mx-auto my-3"></div>
+                    <div class="w-12 h-[1px] bg-gold/40 mx-auto my-3"></div>
 
-                <p class="font-serif text-2xl md:text-3xl text-cream italic font-light">
-                    Viernes 23 de octubre de 2026
-                </p>
-
-                <p class="font-sans text-base text-cream/80 font-light leading-relaxed max-w-lg mx-auto pt-2">
-                    Después de nuestro civil, llega el momento de celebrar por la iglesia y reunirnos con ustedes para vivir una noche inolvidable.
-                </p>
-
-                <!-- Countdown Timer -->
-                <div id="countdown-container" class="pt-4 pb-2">
-                    <div id="countdown" class="flex justify-center gap-6 text-center font-sans">
-                        <div class="space-y-1"><span id="cd-days" class="font-serif text-3xl md:text-4xl text-gold block font-normal">--</span><span class="text-[10px] uppercase tracking-widest text-cream/60">Días</span></div>
-                        <div class="text-gold font-serif text-2xl pt-1">:</div>
-                        <div class="space-y-1"><span id="cd-hours" class="font-serif text-3xl md:text-4xl text-gold block font-normal">--</span><span class="text-[10px] uppercase tracking-widest text-cream/60">Horas</span></div>
-                        <div class="text-gold font-serif text-2xl pt-1">:</div>
-                        <div class="space-y-1"><span id="cd-minutes" class="font-serif text-3xl md:text-4xl text-gold block font-normal">--</span><span class="text-[10px] uppercase tracking-widest text-cream/60">Minutos</span></div>
-                        <div class="text-gold font-serif text-2xl pt-1">:</div>
-                        <div class="space-y-1"><span id="cd-seconds" class="font-serif text-3xl md:text-4xl text-gold block font-normal">--</span><span class="text-[10px] uppercase tracking-widest text-cream/60">Segundos</span></div>
-                    </div>
+                    <p class="font-serif text-2xl md:text-3xl text-cream italic font-light">
+                        Viernes 23 de octubre de 2026
+                    </p>
                 </div>
 
-                <!-- Hero CTAs -->
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                    <a href="#rsvp" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gold text-dark text-xs uppercase tracking-[0.25em] px-8 py-4 hover:bg-cream transition-all font-semibold">
-                        <span>Confirmar asistencia</span>
-                        <i class="fa-solid fa-arrow-down text-[10px]"></i>
-                    </a>
-                    <a href="#ceremonia" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 border border-cream/30 text-cream text-xs uppercase tracking-[0.25em] px-8 py-4 hover:bg-cream hover:text-dark transition-all font-medium">
-                        <span>Ver información del día</span>
-                    </a>
+                <!-- Part B: Clear Focal Photo Window for Mobile -->
+                <div class="hero-photo-window md:hidden" aria-hidden="true"></div>
+
+                <!-- Part C: Bottom Content -->
+                <div class="hero-bottom-content space-y-6">
+                    <p class="font-sans text-base text-cream/80 font-light leading-relaxed max-w-lg mx-auto pt-2">
+                        Después de nuestro civil, llega el momento de celebrar por la iglesia y reunirnos con ustedes para vivir una noche inolvidable.
+                    </p>
+
+                    <!-- Countdown Timer -->
+                    <div id="countdown-container" class="pt-4 pb-2">
+                        <div id="countdown" class="flex justify-center gap-6 text-center font-sans">
+                            <div class="space-y-1"><span id="cd-days" class="font-serif text-3xl md:text-4xl text-gold block font-normal">--</span><span class="text-[10px] uppercase tracking-widest text-cream/60">Días</span></div>
+                            <div class="text-gold font-serif text-2xl pt-1">:</div>
+                            <div class="space-y-1"><span id="cd-hours" class="font-serif text-3xl md:text-4xl text-gold block font-normal">--</span><span class="text-[10px] uppercase tracking-widest text-cream/60">Horas</span></div>
+                            <div class="text-gold font-serif text-2xl pt-1">:</div>
+                            <div class="space-y-1"><span id="cd-minutes" class="font-serif text-3xl md:text-4xl text-gold block font-normal">--</span><span class="text-[10px] uppercase tracking-widest text-cream/60">Minutos</span></div>
+                            <div class="text-gold font-serif text-2xl pt-1">:</div>
+                            <div class="space-y-1"><span id="cd-seconds" class="font-serif text-3xl md:text-4xl text-gold block font-normal">--</span><span class="text-[10px] uppercase tracking-widest text-cream/60">Segundos</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Hero CTAs -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                        <a href="#rsvp" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gold text-dark text-xs uppercase tracking-[0.25em] px-8 py-4 hover:bg-cream transition-all font-semibold">
+                            <span>Confirmar asistencia</span>
+                            <i class="fa-solid fa-arrow-down text-[10px]"></i>
+                        </a>
+                        <a href="#ceremonia" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 border border-cream/30 text-cream text-xs uppercase tracking-[0.25em] px-8 py-4 hover:bg-cream hover:text-dark transition-all font-medium">
+                            <span>Ver información del día</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
