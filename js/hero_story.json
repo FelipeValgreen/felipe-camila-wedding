@@ -63,18 +63,18 @@
       "sizes": "(max-width: 767px) calc(100vw - 48px), 480px"
     },
     {
-      "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_1765837504689_CD20FBA5_0F4E_4F2C_9525_9AEDFEFBAC6B.jpeg",
+      "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_75a1caa7-1d47-4332-81e3-1a820c865f7e.jpeg?source=qr",
       "alt": "Recuerdo de nuestra historia",
       "objectPosition": "center center",
-      "width": 3664,
-      "height": 2062,
+      "width": 1440,
+      "height": 1920,
       "variants": {
-        "480w": "/images/responsive/historia_4_480w.jpg",
-        "768w": "/images/responsive/historia_4_768w.jpg",
-        "1080w": "/images/responsive/historia_4_1080w.jpg"
+        "480w": "/images/responsive/historia_4_v2_480w.jpg",
+        "768w": "/images/responsive/historia_4_v2_768w.jpg",
+        "1080w": "/images/responsive/historia_4_v2_1080w.jpg"
       },
-      "srcset": "/images/responsive/historia_4_480w.webp 480w, /images/responsive/historia_4_768w.webp 768w, /images/responsive/historia_4_1080w.webp 1080w",
-      "srcsetJpg": "/images/responsive/historia_4_480w.jpg 480w, /images/responsive/historia_4_768w.jpg 768w, /images/responsive/historia_4_1080w.jpg 1080w",
+      "srcset": "/images/responsive/historia_4_v2_480w.webp 480w, /images/responsive/historia_4_v2_768w.webp 768w, /images/responsive/historia_4_v2_1080w.webp 1080w",
+      "srcsetJpg": "/images/responsive/historia_4_v2_480w.jpg 480w, /images/responsive/historia_4_v2_768w.jpg 768w, /images/responsive/historia_4_v2_1080w.jpg 1080w",
       "sizes": "(max-width: 767px) calc(100vw - 48px), 480px"
     }
   ]

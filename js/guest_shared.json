@@ -48,45 +48,45 @@
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_f33f9d8e-cf41-422a-ba6b-54cf9dc03335.jpeg",
     "alt": "Celebración en el ambiente festivo del matrimonio",
     "objectPosition": "center center",
-    "width": 4032,
-    "height": 3024,
+    "width": 3024,
+    "height": 4032,
     "variants": {
-      "480w": "/images/responsive/shared_4_480w.jpg",
-      "768w": "/images/responsive/shared_4_768w.jpg",
-      "1080w": "/images/responsive/shared_4_1080w.jpg"
+      "480w": "/images/responsive/shared_4_v2_480w.jpg",
+      "768w": "/images/responsive/shared_4_v2_768w.jpg",
+      "1080w": "/images/responsive/shared_4_v2_1080w.jpg"
     },
-    "srcset": "/images/responsive/shared_4_480w.webp 480w, /images/responsive/shared_4_768w.webp 768w, /images/responsive/shared_4_1080w.webp 1080w",
-    "srcsetJpg": "/images/responsive/shared_4_480w.jpg 480w, /images/responsive/shared_4_768w.jpg 768w, /images/responsive/shared_4_1080w.jpg 1080w",
+    "srcset": "/images/responsive/shared_4_v2_480w.webp 480w, /images/responsive/shared_4_v2_768w.webp 768w, /images/responsive/shared_4_v2_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/shared_4_v2_480w.jpg 480w, /images/responsive/shared_4_v2_768w.jpg 768w, /images/responsive/shared_4_v2_1080w.jpg 1080w",
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_ebd87dd9-bdc1-47d3-987b-808c490c95b9.jpeg",
     "alt": "Fotografía compartida de invitados celebrando",
     "objectPosition": "center center",
-    "width": 4032,
-    "height": 3024,
+    "width": 3024,
+    "height": 4032,
     "variants": {
-      "480w": "/images/responsive/shared_5_480w.jpg",
-      "768w": "/images/responsive/shared_5_768w.jpg",
-      "1080w": "/images/responsive/shared_5_1080w.jpg"
+      "480w": "/images/responsive/shared_5_v2_480w.jpg",
+      "768w": "/images/responsive/shared_5_v2_768w.jpg",
+      "1080w": "/images/responsive/shared_5_v2_1080w.jpg"
     },
-    "srcset": "/images/responsive/shared_5_480w.webp 480w, /images/responsive/shared_5_768w.webp 768w, /images/responsive/shared_5_1080w.webp 1080w",
-    "srcsetJpg": "/images/responsive/shared_5_480w.jpg 480w, /images/responsive/shared_5_768w.jpg 768w, /images/responsive/shared_5_1080w.jpg 1080w",
+    "srcset": "/images/responsive/shared_5_v2_480w.webp 480w, /images/responsive/shared_5_v2_768w.webp 768w, /images/responsive/shared_5_v2_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/shared_5_v2_480w.jpg 480w, /images/responsive/shared_5_v2_768w.jpg 768w, /images/responsive/shared_5_v2_1080w.jpg 1080w",
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {
     "src": "https://mwumnywbvjxekskfrlms.supabase.co/storage/v1/object/public/wedding-photos/guest_uploads/guest_6d2582da-998a-49ee-a36c-c91a8c987208.jpeg",
     "alt": "Recuerdo especial en la fiesta de Felipe y Camila",
     "objectPosition": "center center",
-    "width": 4032,
-    "height": 3024,
+    "width": 3024,
+    "height": 4032,
     "variants": {
-      "480w": "/images/responsive/shared_6_480w.jpg",
-      "768w": "/images/responsive/shared_6_768w.jpg",
-      "1080w": "/images/responsive/shared_6_1080w.jpg"
+      "480w": "/images/responsive/shared_6_v2_480w.jpg",
+      "768w": "/images/responsive/shared_6_v2_768w.jpg",
+      "1080w": "/images/responsive/shared_6_v2_1080w.jpg"
     },
-    "srcset": "/images/responsive/shared_6_480w.webp 480w, /images/responsive/shared_6_768w.webp 768w, /images/responsive/shared_6_1080w.webp 1080w",
-    "srcsetJpg": "/images/responsive/shared_6_480w.jpg 480w, /images/responsive/shared_6_768w.jpg 768w, /images/responsive/shared_6_1080w.jpg 1080w",
+    "srcset": "/images/responsive/shared_6_v2_480w.webp 480w, /images/responsive/shared_6_v2_768w.webp 768w, /images/responsive/shared_6_v2_1080w.webp 1080w",
+    "srcsetJpg": "/images/responsive/shared_6_v2_480w.jpg 480w, /images/responsive/shared_6_v2_768w.jpg 768w, /images/responsive/shared_6_v2_1080w.jpg 1080w",
     "sizes": "(max-width: 767px) 84vw, (max-width: 1023px) 65vw, 440px"
   },
   {

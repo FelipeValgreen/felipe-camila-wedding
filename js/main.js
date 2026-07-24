@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (historiaLoaded) return;
         historiaLoaded = true;
         try {
-            const res = await fetch('js/hero_story.json');
+            const res = await fetch('js/hero_story.json?v=4');
             if (res.ok) {
                 const data = await res.json();
                 const historiaGrid = document.getElementById('historia-grid');
@@ -618,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (civilLoaded) return;
         civilLoaded = true;
         try {
-            const res = await fetch('js/civil_featured.json');
+            const res = await fetch('js/civil_featured.json?v=4');
             if (res.ok) {
                 const data = await res.json();
                 const civilRail = document.getElementById('civil-rail');
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sharedLoaded) return;
         sharedLoaded = true;
         try {
-            const res = await fetch('js/guest_shared.json');
+            const res = await fetch('js/guest_shared.json?v=4');
             if (res.ok) {
                 const data = await res.json();
                 const sharedRail = document.getElementById('shared-rail');
