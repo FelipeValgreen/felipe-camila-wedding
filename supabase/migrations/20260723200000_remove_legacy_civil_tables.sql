@@ -1,0 +1,6 @@
+BEGIN;
+
+DROP TABLE IF EXISTS public.rsvp_guests RESTRICT;
+DROP TABLE IF EXISTS public.song_requests RESTRICT;
+
+COMMIT;
