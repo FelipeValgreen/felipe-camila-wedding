@@ -16,11 +16,11 @@
     <link rel="canonical" href="https://felipeycami.cl/">
 
     <!-- Favicons -->
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-fc-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-fc-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-fc.png">
-    <link rel="manifest" href="/site.webmanifest?v=2">
+    <link rel="icon" href="/favicon.ico?v=3" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3">
+    <link rel="manifest" href="/site.webmanifest?v=3">
 
     <!-- OpenGraph / Facebook -->
     <meta property="og:type" content="website">
@@ -303,12 +303,10 @@
                         Ver todas las fotos de nuestra historia →
                     </a>
                 </div>
-            </div>
-        </section>
-
-        <!-- 04 RSVP / CONFIRMACIÓN UNIFICADA -->
+            <!-- 04 RSVP / CONFIRMACIÓN UNIFICADA -->
         <section id="rsvp" class="py-20 md:py-28 bg-cream border-b border-dark/5">
             <div class="max-w-2xl mx-auto px-6 space-y-8">
+                <!-- 1. Título e Introducción -->
                 <div class="text-center space-y-4">
                     <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">RSVP</span>
                     <h2 class="font-serif text-4xl text-dark font-normal">Confirmar asistencia</h2>
@@ -318,25 +316,7 @@
                     </p>
                 </div>
 
-                <!-- Compact WhatsApp Alternative Banner -->
-                <a href="https://wa.me/56981393436?text=Hola%2C%20soy%20%5Bnombre%20y%20apellido%5D.%20Quiero%20confirmar%20mi%20asistencia%20al%20matrimonio%20de%20Felipe%20y%20Camila%20del%2023%20de%20octubre%20de%202026." target="_blank" rel="noopener noreferrer" id="rsvp-tab-wa" class="p-5 bg-light text-dark border border-dark/15 rounded-sm hover:border-dark transition-all flex flex-col sm:flex-row items-center justify-between gap-4 group shadow-sm">
-                    <div class="flex items-center gap-3 text-center sm:text-left">
-                        <i class="fa-brands fa-whatsapp text-2xl text-[#25D366] shrink-0"></i>
-                        <div>
-                            <span class="block text-xs uppercase tracking-[0.2em] font-bold text-dark">Confirmar por WhatsApp</span>
-                            <span class="block text-xs text-muted font-light mt-0.5">Se abrirá una conversación con nosotros para confirmar personalmente.</span>
-                        </div>
-                    </div>
-                    <span class="text-xs uppercase tracking-[0.2em] font-semibold text-[#25D366] group-hover:underline whitespace-nowrap shrink-0">Abrir WhatsApp →</span>
-                </a>
-
-                <!-- Editorial Visual Separator -->
-                <div class="flex items-center gap-4 py-1">
-                    <div class="h-[1px] bg-dark/15 flex-1"></div>
-                    <span class="font-sans text-[11px] uppercase tracking-[0.25em] text-muted font-semibold">O CONFIRMA AQUÍ</span>
-                    <div class="h-[1px] bg-dark/15 flex-1"></div>
-                </div>
-
+                <!-- 2. Formulario RSVP -->
                 <div class="bg-light p-8 md:p-12 border border-dark/10 shadow-sm">
                     <!-- Form Step -->
                     <div id="rsvp-form-step">
@@ -441,6 +421,42 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 3. Botón / Bloque de WhatsApp -->
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-center gap-4 py-1">
+                        <div class="h-[1px] bg-dark/15 flex-1"></div>
+                        <span class="font-sans text-[11px] uppercase tracking-[0.25em] text-muted font-semibold">O CONFIRMA VÍA WHATSAPP</span>
+                        <div class="h-[1px] bg-dark/15 flex-1"></div>
+                    </div>
+                    <a href="https://wa.me/56981393436?text=Hola%2C%20soy%20%5Bnombre%20y%20apellido%5D.%20Quiero%20confirmar%20mi%20asistencia%20al%20matrimonio%20de%20Felipe%20y%20Camila%20del%2023%20de%20octubre%20de%202026." target="_blank" rel="noopener noreferrer" id="rsvp-tab-wa" class="p-5 bg-light text-dark border border-dark/15 rounded-sm hover:border-dark transition-all flex flex-col sm:flex-row items-center justify-between gap-4 group shadow-sm">
+                        <div class="flex items-center gap-3 text-center sm:text-left">
+                            <i class="fa-brands fa-whatsapp text-2xl text-[#25D366] shrink-0"></i>
+                            <div>
+                                <span class="block text-xs uppercase tracking-[0.2em] font-bold text-dark">Confirmar por WhatsApp</span>
+                                <span class="block text-xs text-muted font-light mt-0.5">Se abrirá una conversación con nosotros para confirmar personalmente.</span>
+                            </div>
+                        </div>
+                        <span class="text-xs uppercase tracking-[0.2em] font-semibold text-[#25D366] group-hover:underline whitespace-nowrap shrink-0">Abrir WhatsApp →</span>
+                    </a>
+                </div>
+
+                <!-- 4. Bloque "Código de Novios" -->
+                <div id="codigo-novios-block" class="space-y-6 p-8 bg-light border border-dark/10 shadow-sm rounded-sm">
+                    <div class="space-y-3">
+                        <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block font-semibold">Regalos</span>
+                        <h3 class="font-serif text-3xl text-dark font-normal">Lista de novios</h3>
+                        <p class="font-sans text-sm text-muted font-light leading-relaxed">
+                            Tu presencia es lo más importante para nosotros. Si además quieres acompañarnos con un regalo, dejamos aquí nuestra lista.
+                        </p>
+                        <p class="font-sans text-xs text-dark/80 font-bold uppercase tracking-wider bg-cream inline-block px-3 py-1 border border-dark/10 rounded-sm">Código 21030724</p>
+                    </div>
+                    <div class="pt-2">
+                        <a href="https://club.noviosparis.cl/home/couple-catalog/21030724" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-3 border border-dark text-dark text-xs uppercase tracking-[0.25em] px-6 py-4 hover:bg-dark hover:text-light transition-all font-semibold w-full justify-center">
+                            <span>Ver lista de novios en Paris</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -491,7 +507,7 @@
                         </div>
                         <div class="border-t border-gold/30 pt-4 flex justify-between items-center font-serif text-lg text-gold">
                             <span>18:30 · Cóctel</span>
-                            <span>21:00 · Cena</span>
+                            <span>19:30 · Cena</span>
                         </div>
                     </div>
                     <div class="space-y-6 order-1 md:order-2">
@@ -506,7 +522,7 @@
                         </p>
                         <div class="space-y-2 pt-2 text-sm font-sans text-dark/80">
                             <p><strong>18:30</strong> · Cóctel</p>
-                            <p><strong>21:00</strong> · Cena y celebración</p>
+                            <p><strong>19:30</strong> · Cena y celebración</p>
                         </div>
                         <div class="flex flex-wrap gap-4 pt-2">
                             <a href="https://maps.app.goo.gl/kRdvXmbtHmYXUaB49" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 border border-dark/30 text-dark text-xs uppercase tracking-[0.2em] px-5 py-3 hover:bg-dark hover:text-light transition-all">
@@ -614,44 +630,25 @@
             </div>
         </section>
 
-        <!-- 09 LISTA DE NOVIOS + AYUDA -->
+        <!-- 09 AYUDA Y ATENCIÓN DIRECTA -->
         <section id="novios-ayuda" class="py-24 bg-cream border-b border-dark/5">
-            <div class="max-w-4xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12">
-                
-                <!-- LISTA DE NOVIOS -->
-                <div class="space-y-6 p-8 bg-light border border-dark/10 flex flex-col justify-between">
-                    <div class="space-y-4">
-                        <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Regalos</span>
-                        <h3 class="font-serif text-3xl text-dark font-normal">Lista de novios</h3>
-                        <p class="font-sans text-sm text-muted font-light leading-relaxed">
-                            Tu presencia es lo más importante para nosotros. Si además quieres acompañarnos con un regalo, dejamos aquí nuestra lista.
-                        </p>
-                        <p class="font-sans text-xs text-dark/70 font-semibold uppercase tracking-wider">Código 21030724</p>
-                    </div>
-                    <div class="pt-4">
-                        <a href="https://club.noviosparis.cl/home/couple-catalog/21030724" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-3 border border-dark text-dark text-xs uppercase tracking-[0.25em] px-6 py-4 hover:bg-dark hover:text-light transition-all font-semibold w-full justify-center">
-                            <span>Ver lista de novios en Paris</span>
-                        </a>
-                    </div>
-                </div>
-
+            <div class="max-w-2xl mx-auto px-6">
                 <!-- AYUDA POR WHATSAPP -->
-                <div class="space-y-6 p-8 bg-light border border-dark/10 flex flex-col justify-between">
-                    <div class="space-y-4">
-                        <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block">Atención Directa</span>
+                <div class="space-y-6 p-8 md:p-10 bg-light border border-dark/10 shadow-sm rounded-sm text-center">
+                    <div class="space-y-3">
+                        <span class="font-sans text-xs uppercase tracking-[0.35em] text-gold block font-semibold">Atención Directa</span>
                         <h3 class="font-serif text-3xl text-dark font-normal">¿Necesitas ayuda?</h3>
-                        <p class="font-sans text-sm text-muted font-light leading-relaxed">
+                        <p class="font-sans text-sm text-muted font-light leading-relaxed max-w-md mx-auto">
                             Si tienes dudas sobre horarios, ubicación, dress code o confirmación, escríbenos directamente.
                         </p>
                     </div>
-                    <div class="pt-4">
-                        <a href="https://wa.me/56981393436" target="_blank" rel="noopener noreferrer" id="footer-wa-support" class="inline-flex items-center gap-3 bg-[#25D366] text-white text-xs uppercase tracking-[0.25em] px-6 py-4 hover:bg-[#20ba5a] transition-all font-semibold w-full justify-center">
+                    <div class="pt-2">
+                        <a href="https://wa.me/56981393436" target="_blank" rel="noopener noreferrer" id="footer-wa-support" class="inline-flex items-center justify-center gap-3 bg-[#25D366] text-white text-xs uppercase tracking-[0.25em] px-8 py-4 hover:bg-[#20ba5a] transition-all font-semibold w-full sm:w-auto">
                             <i class="fa-brands fa-whatsapp text-base"></i>
                             <span>Escribir al WhatsApp del matrimonio</span>
                         </a>
                     </div>
                 </div>
-
             </div>
         </section>
 
