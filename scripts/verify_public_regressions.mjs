@@ -104,6 +104,10 @@ for (const f of deletedSensitiveFiles) {
 // 9. Favicons check
 assertInvariant(indexHtml.includes('favicon.ico?v=4'), 'Favicons in index.html use ?v=4');
 
+// 10. Cache busting version checks
+assertInvariant(indexHtml.includes('js/main.js?v=5'), 'index.html references js/main.js?v=5');
+assertInvariant(mainJs.includes('js/civil_featured.json?v=5'), 'js/main.js fetches js/civil_featured.json?v=5');
+
 if (failures > 0) {
   console.error(`\n❌ REGRESSION GUARD AUDIT FAILED WITH ${failures} FAILURE(S).`);
   process.exit(1);
