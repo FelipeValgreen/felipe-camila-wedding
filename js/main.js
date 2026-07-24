@@ -246,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
                 if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
-                syncWhatsAppAlternativeBlock();
                 rsvpCompleted = true;
                 isExplicitUpdateMode = true;
                 updateCtaVisibility();
@@ -441,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
                 if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
-                syncWhatsAppAlternativeBlock();
 
                 showToast(isUpdate ? 'Tu respuesta fue actualizada.' : 'Tu respuesta quedó registrada.', 'success');
 
@@ -461,16 +459,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const rsvpWaAltBlock = document.getElementById('rsvp-whatsapp-alternative-block');
-    function syncWhatsAppAlternativeBlock() {
-        if (!rsvpWaAltBlock) return;
-        if (rsvpSuccess && !rsvpSuccess.classList.contains('hidden')) {
-            rsvpWaAltBlock.classList.add('hidden');
-        } else {
-            rsvpWaAltBlock.classList.remove('hidden');
-        }
-    }
-
     // RSVP Edit Button
     const editBtn = document.getElementById('rsvp-edit-btn');
     if (editBtn) {
@@ -480,7 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rsvpSubmitBtn) rsvpSubmitBtn.textContent = 'Guardar cambios';
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
-            syncWhatsAppAlternativeBlock();
             updateCtaVisibility();
         });
     }
@@ -501,7 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rsvpSubmitBtn) rsvpSubmitBtn.textContent = 'Registrar mi respuesta';
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
-            syncWhatsAppAlternativeBlock();
             if (rsvpForm) rsvpForm.scrollIntoView({ behavior: 'smooth' });
             updateCtaVisibility();
         });
