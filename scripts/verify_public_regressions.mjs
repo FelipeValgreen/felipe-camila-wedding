@@ -59,6 +59,14 @@ assertInvariant(!indexHtml.includes('href="/galeria/?filtro=todas" target="_blan
 assertInvariant(galeriaHtml.includes('href="/?open=1#hero"'), 'galeria/index.html back links point to /?open=1#hero');
 assertInvariant(fotosHtml.includes('href="/?open=1#hero"'), 'fotos/index.html back links point to /?open=1#hero');
 
+// 5b. Post-upload view photos button & instant refresh checks
+assertInvariant(fotosHtml.includes('href="/galeria/?filtro=despues&refresh=1"'), 'fotos/index.html view-photos-btn points to /galeria/?filtro=despues&refresh=1');
+assertInvariant(fotosHtml.includes('VER FOTOS EN LA GALERÍA'), 'fotos/index.html view-photos-btn displays VER FOTOS EN LA GALERÍA');
+assertInvariant(!fotosHtml.includes('href="/#galeria-compartidas"'), 'fotos/index.html no longer points to old /#galeria-compartidas');
+assertInvariant(!fotosHtml.includes('target="_blank"'), 'fotos/index.html contains no target="_blank" links');
+assertInvariant(galeriaHtml.includes('isRefreshRequest'), 'galeria/index.html contains isRefreshRequest cache bypass logic');
+assertInvariant(galleryApi.includes('isRefresh'), 'api/gallery.js supports isRefresh no-store cache header');
+
 // 6. Photo orientation & clean architecture checks
 assertInvariant(guestSharedJson.includes('shared_4_v3') && guestSharedJson.includes('shared_5_v3') && guestSharedJson.includes('shared_6_v3'), 'guest_shared.json items 4, 5, 6 use v3 variants');
 assertInvariant(!galleryApi.includes('ROTATION_MAP'), 'api/gallery.js does not contain ROTATION_MAP');

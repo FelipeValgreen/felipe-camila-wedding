@@ -44,6 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let pendingCount = 0;
+    let successfulCount = 0;
+    let failedCount = 0;
+
     // Handle File Selection
     function handleFiles(files) {
         if (!files || files.length === 0) return;
@@ -57,6 +61,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+        if (validFiles.length === 0) {
+            showUploadToast("Ninguno de los archivos seleccionados es una imagen válida.");
+            return;
+        }
+
+        pendingCount += validFiles.length;
+
         const queueTitle = document.getElementById('queue-title');
         if (queueTitle) queueTitle.innerHTML = 'Subiendo...';
         const viewBtn = document.getElementById('view-photos-btn');
@@ -64,12 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         queueContainer.classList.remove('hidden');
 
-        Array.from(files).forEach((file, index) => {
-            if (!file.type.startsWith('image/')) {
-                showUploadToast(`El archivo ${file.name} no es una imagen válida.`);
-                return;
-            }
-
+        validFiles.forEach((file, index) => {
             // Create UI Item
             const itemId = `upload-${Date.now()}-${index}`;
             const itemHtml = `
@@ -90,7 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Set Preview
             const reader = new FileReader();
-            reader.onload = (e) => document.getElementById(`preview-${itemId}`).src = e.target.result;
+            reader.onload = (e) => {
+                const prev = document.getElementById(`preview-${itemId}`);
+                if (prev) prev.src = e.target.result;
+            };
             reader.readAsDataURL(file);
 
             // Compress and Upload
@@ -103,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 error(err) {
                     console.error('Compression error:', err);
-                    document.getElementById(`status-${itemId}`).innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i>`;
+                    onUploadFinished(itemId, false);
                 },
             });
         });
@@ -113,28 +123,55 @@ document.addEventListener('DOMContentLoaded', () => {
         galleryInput.value = '';
     }
 
+    function onUploadFinished(itemId, isSuccess) {
+        pendingCount = Math.max(0, pendingCount - 1);
+        if (isSuccess) {
+            successfulCount++;
+        } else {
+            failedCount++;
+            const statusIcon = document.getElementById(`status-${itemId}`);
+            const progressBar = document.getElementById(`progress-${itemId}`);
+            if (progressBar) progressBar.classList.replace('bg-sage', 'bg-red-500');
+            if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i>`;
+        }
+
+        if (pendingCount === 0) {
+            const queueTitle = document.getElementById('queue-title');
+            const viewBtn = document.getElementById('view-photos-btn');
+
+            if (failedCount > 0 && successfulCount === 0) {
+                if (queueTitle) queueTitle.innerHTML = 'Error en la subida. Revisa los detalles arriba.';
+                if (viewBtn) viewBtn.classList.add('hidden');
+            } else if (failedCount > 0 && successfulCount > 0) {
+                if (queueTitle) queueTitle.innerHTML = 'Subida completada con algunas observaciones.';
+                if (viewBtn) viewBtn.classList.remove('hidden');
+            } else {
+                if (queueTitle) queueTitle.innerHTML = '¡Subida Exitosa! 🎉';
+                if (viewBtn) viewBtn.classList.remove('hidden');
+            }
+        }
+    }
+
     async function uploadToSupabase(fileBlob, originalFilename, guestName, itemId) {
         const progressBar = document.getElementById(`progress-${itemId}`);
         const statusIcon = document.getElementById(`status-${itemId}`);
 
         if (typeof supabaseClient === 'undefined' && !window.supabaseClient) {
-            statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i>`;
             console.error("Supabase client is not loaded or missing.");
+            onUploadFinished(itemId, false);
             return;
         }
         
         const client = typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient;
 
         try {
-            progressBar.style.width = '30%';
+            if (progressBar) progressBar.style.width = '30%';
 
             const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now();
             const extension = originalFilename.split('.').pop() || 'jpg';
-            // Added 'guest_' prefix to match original codebase strictly, in case RLS relies on it.
             const storagePath = `guest_uploads/guest_${uniqueId}.${extension}`;
 
             // 1. Storage Upload
-            // Using 'wedding-photos' as bucket. Passing contentType explicitly for Blobs.
             const { data: storageData, error: storageError } = await client.storage
                 .from('wedding-photos')
                 .upload(storagePath, fileBlob, {
@@ -143,15 +180,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
             if (storageError) throw storageError;
-            progressBar.style.width = '70%';
+            if (progressBar) progressBar.style.width = '70%';
 
             // 2. Get Public URL
             const { data: { publicUrl } } = client.storage
                 .from('wedding-photos')
                 .getPublicUrl(storagePath);
 
-            // 3. Save to ORIGINAL Table: guest_photos (guaranteed to work)
-            // We append '?source=qr' to the URL so that the gallery logic can distinguish these from standard uploads
+            // 3. Save to guest_photos
             const finalUrl = publicUrl.includes('?') ? publicUrl + '&source=qr' : publicUrl + '?source=qr';
 
             const { error: dbError } = await client
@@ -164,15 +200,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dbError) throw dbError;
 
             // Success Updates
-            progressBar.style.width = '100%';
-            progressBar.classList.replace('bg-sage', 'bg-green-500');
-            statusIcon.innerHTML = `<i class="fa-solid fa-check-circle text-green-500"></i>`;
+            if (progressBar) {
+                progressBar.style.width = '100%';
+                progressBar.classList.replace('bg-sage', 'bg-green-500');
+            }
+            if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-check-circle text-green-500"></i>`;
             
-            const queueTitle = document.getElementById('queue-title');
-            if (queueTitle) queueTitle.innerHTML = '¡Subida Exitosa! 🎉';
-            
-            const viewBtn = document.getElementById('view-photos-btn');
-            if (viewBtn) viewBtn.classList.remove('hidden');
+            onUploadFinished(itemId, true);
 
             // Auto hide after 5 seconds to keep queue clean
             setTimeout(() => {
@@ -185,8 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Upload Failed:', error);
-            progressBar.classList.replace('bg-sage', 'bg-red-500');
-            statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i>`;
+            onUploadFinished(itemId, false);
         }
     }
 
