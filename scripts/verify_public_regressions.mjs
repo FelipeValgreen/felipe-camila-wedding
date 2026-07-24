@@ -37,14 +37,15 @@ const noviosBlockPos = indexHtml.indexOf('id="codigo-novios-block"');
 assertInvariant(rsvpWaPos !== -1 && noviosBlockPos !== -1 && noviosBlockPos > rsvpWaPos, 'codigo-novios-block appears after rsvp-tab-wa in index.html');
 
 assertInvariant(!indexHtml.includes('¿Ya habías confirmado y necesitas modificar tu respuesta?'), 'Old redundant WhatsApp text in form is removed');
+assertInvariant(!indexHtml.includes('¿Necesitas ayuda? Escríbenos por WhatsApp.'), 'Discrete support phrase is removed from index.html');
+assertInvariant(!indexHtml.includes('ESCRIBIR AL WHATSAPP DEL MATRIMONIO'), 'Old full-width green WhatsApp button is removed');
 assertInvariant(indexHtml.includes('O CONFIRMA POR WHATSAPP'), 'WhatsApp separator text O CONFIRMA POR WHATSAPP exists');
 assertInvariant(indexHtml.includes('CONFIRMAR POR WHATSAPP'), 'WhatsApp card title CONFIRMAR POR WHATSAPP exists');
 assertInvariant(indexHtml.includes('Abriremos una conversación para registrar tu respuesta personalmente.'), 'WhatsApp card subtitle exists');
 assertInvariant(indexHtml.includes('ABRIR WHATSAPP →'), 'WhatsApp card action ABRIR WHATSAPP → exists');
 assertInvariant(indexHtml.includes('id="rsvp-whatsapp-alternative-block"'), 'rsvp-whatsapp-alternative-block wrapper exists in index.html');
-assertInvariant(!indexHtml.includes('¿Necesitas ayuda? Escríbenos por WhatsApp.'), 'Discrete support phrase is removed from index.html');
-assertInvariant(indexHtml.includes('ESCRIBIR AL WHATSAPP DEL MATRIMONIO'), 'Full-width green WhatsApp CTA button exists in index.html');
-assertInvariant(mainJs.includes('syncWhatsAppAlternativeBlock'), 'js/main.js contains syncWhatsAppAlternativeBlock function');
+const waCardCount = (indexHtml.match(/id="rsvp-tab-wa"/g) || []).length;
+assertInvariant(waCardCount === 1, `Exactly 1 WhatsApp card exists in index.html (found ${waCardCount})`);
 
 const historiaSectionPos = indexHtml.indexOf('id="historia"');
 const rsvpSectionPos = indexHtml.indexOf('id="rsvp"');
