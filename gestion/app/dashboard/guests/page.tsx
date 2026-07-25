@@ -2,16 +2,30 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { createClient } from '@/lib/supabase-browser';
-import { Search, Filter, MessageSquare, Edit, UserCheck, UserX, RotateCcw, Plus, X, PhoneOff, Link as LinkIcon, Save } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Edit,
+  Link2,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Save,
+  Search,
+  UserCheck,
+  Users,
+  X,
+  XCircle
+} from 'lucide-react';
 
 interface Guest {
   id: string;
   first_name: string;
   last_name: string;
-  full_name_normalized: string;
   phone_e164: string | null;
   group_name: string;
   family_side: string;
@@ -22,739 +36,447 @@ interface Guest {
   dietary_detail: string | null;
   reconfirmation_status: string;
   table_id: string | null;
+  rsvp_id: string | null;
   guest_status: string;
   notes: string | null;
 }
 
-interface RSVPResponse {
+interface RsvpMember {
   id: string;
-  first_name: string;
-  last_name: string;
+  display_name: string;
+  guest_id: string | null;
+  resolution_status: string;
+  attendance_status: string;
+  dietary_type: string | null;
+  dietary_detail: string | null;
+  notes: string | null;
+}
+
+interface RsvpSummary {
+  rsvp_id: string;
+  response_name: string;
   phone_e164: string;
   attendance_status: string;
   dietary_type: string | null;
   dietary_detail: string | null;
   reconciliation_status: string;
-  reconciliation_notes: string | null;
-  sheet_sync_status: string | null;
-  source: string;
-  guest_id: string | null;
+  sheet_sync_status: string;
   created_at: string;
+  member_count: number;
+  matched_member_count: number;
+  pending_member_count: number;
+  members: RsvpMember[] | null;
 }
 
-function maskPhone(phone: string | null): string {
-  if (!phone) return 'Sin teléfono';
-  const clean = phone.trim();
-  if (clean.length < 8) return clean;
-  const start = clean.slice(0, 4);
-  const end = clean.slice(-4);
-  return `${start} **** ${end}`;
+type GuestFilter = 'all' | 'attending' | 'pending' | 'not_attending' | 'no_phone' | 'no_table' | 'dietary';
+type Notice = { type: 'success' | 'error' | 'info'; text: string };
+
+const EMPTY_GUEST: Partial<Guest> = {
+  first_name: '',
+  last_name: '',
+  phone_e164: '',
+  group_name: 'General',
+  family_side: 'Compartido',
+  guest_category: 'Adulto',
+  invitation_status: 'not_sent',
+  attendance_status: 'pending',
+  dietary_type: 'Ninguna',
+  dietary_detail: '',
+  reconfirmation_status: 'pending',
+  guest_status: 'active',
+  notes: ''
+};
+
+function fullName(guest: Pick<Guest, 'first_name' | 'last_name'>): string {
+  return `${guest.first_name} ${guest.last_name || ''}`.trim();
+}
+
+function statusLabel(status: string): string {
+  if (status === 'attending') return 'Asiste';
+  if (status === 'not_attending') return 'No asiste';
+  if (status === 'split_matched') return 'Conjunta conciliada';
+  if (status === 'partially_matched') return 'Conciliación parcial';
+  if (status === 'matched') return 'Conciliada';
+  if (status === 'unmatched') return 'Sin vincular';
+  return status || 'Pendiente';
 }
 
 export default function GuestsPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
-  const [allRSVPs, setAllRSVPs] = useState<RSVPResponse[]>([]);
+  const [rsvps, setRsvps] = useState<RsvpSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [tab, setTab] = useState<'guests' | 'rsvps'>('guests');
+  const [filter, setFilter] = useState<GuestFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewFilter, setViewFilter] = useState<string>('all');
-  const [showRsvpTable, setShowRsvpTable] = useState(true);
-
-  // Drawer / Form state
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [editForm, setEditForm] = useState<Partial<Guest>>({});
-  const [reconcileRsvp, setReconcileRsvp] = useState<RSVPResponse | null>(null);
+  const [creatingGuest, setCreatingGuest] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Add guest modal
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    phone_e164: '',
-    group_name: 'General',
-    family_side: 'Compartido',
-    guest_category: 'Adulto',
-    notes: ''
-  });
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const supabase = createClient();
-      const { data: gData } = await supabase.from('wedding_guests').select('*').order('first_name', { ascending: true });
-      const { data: rData } = await supabase.from('rsvp_responses').select('*').order('created_at', { ascending: false });
+      const [guestsResult, rsvpResult] = await Promise.all([
+        supabase.from('wedding_guests').select('*').order('first_name', { ascending: true }),
+        supabase.from('rsvp_management_summary').select('*').order('created_at', { ascending: false })
+      ]);
 
-      if (gData) setGuests(gData as Guest[]);
-      if (rData) setAllRSVPs(rData as RSVPResponse[]);
-    } catch (err) {
-      console.error('Error loading guests:', err);
+      const errors = [guestsResult.error, rsvpResult.error].filter(Boolean);
+      if (errors.length > 0) throw new Error(errors.map(error => error?.message).join(' · '));
+
+      setGuests((guestsResult.data || []) as Guest[]);
+      setRsvps((rsvpResult.data || []) as RsvpSummary[]);
+    } catch (error: any) {
+      setNotice({ type: 'error', text: error?.message || 'No fue posible cargar invitados y RSVP.' });
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  function handleSelectGuest(g: Guest) {
-    setSelectedGuest(g);
-    setEditForm({ ...g });
+  const activeGuests = useMemo(() => guests.filter(guest => guest.guest_status === 'active'), [guests]);
+
+  const stats = useMemo(() => ({
+    active: activeGuests.length,
+    attending: activeGuests.filter(guest => guest.attendance_status === 'attending').length,
+    pending: activeGuests.filter(guest => guest.attendance_status === 'pending').length,
+    declined: activeGuests.filter(guest => guest.attendance_status === 'not_attending').length,
+    noTable: activeGuests.filter(guest => guest.attendance_status === 'attending' && !guest.table_id).length,
+    dietary: activeGuests.filter(guest => guest.dietary_type && guest.dietary_type !== 'Ninguna').length,
+    rsvpReview: rsvps.filter(rsvp => ['unmatched', 'partially_matched'].includes(rsvp.reconciliation_status) || rsvp.pending_member_count > 0).length,
+    joint: rsvps.filter(rsvp => rsvp.member_count > 1).length
+  }), [activeGuests, rsvps]);
+
+  const filteredGuests = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return activeGuests.filter(guest => {
+      const matchesSearch = !term || `${fullName(guest)} ${guest.group_name} ${guest.phone_e164 || ''}`.toLowerCase().includes(term);
+      if (!matchesSearch) return false;
+      if (filter === 'attending') return guest.attendance_status === 'attending';
+      if (filter === 'pending') return guest.attendance_status === 'pending';
+      if (filter === 'not_attending') return guest.attendance_status === 'not_attending';
+      if (filter === 'no_phone') return !guest.phone_e164;
+      if (filter === 'no_table') return guest.attendance_status === 'attending' && !guest.table_id;
+      if (filter === 'dietary') return Boolean(guest.dietary_type && guest.dietary_type !== 'Ninguna');
+      return true;
+    });
+  }, [activeGuests, searchTerm, filter]);
+
+  const filteredRsvps = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return rsvps.filter(rsvp => !term || `${rsvp.response_name} ${rsvp.phone_e164}`.toLowerCase().includes(term));
+  }, [rsvps, searchTerm]);
+
+  function openEdit(guest: Guest) {
+    setCreatingGuest(false);
+    setSelectedGuest(guest);
+    setEditForm({ ...guest });
+    setNotice(null);
   }
 
-  async function handleSaveGuestEdit() {
-    if (!selectedGuest || !editForm.first_name) return;
-    try {
-      const updatedData = {
-        id: selectedGuest.id,
-        first_name: editForm.first_name,
-        last_name: editForm.last_name || '',
-        full_name_normalized: `${editForm.first_name} ${editForm.last_name || ''}`.trim().toLowerCase(),
-        phone_e164: editForm.phone_e164 || null,
-        group_name: editForm.group_name || 'General',
-        family_side: editForm.family_side || 'Compartido',
-        guest_category: editForm.guest_category || 'Adulto',
-        invitation_status: editForm.invitation_status || 'not_sent',
-        attendance_status: editForm.attendance_status || 'pending',
-        dietary_type: editForm.dietary_type || null,
-        dietary_detail: editForm.dietary_detail || null,
-        reconfirmation_status: editForm.reconfirmation_status || 'pending',
-        guest_status: editForm.guest_status || 'active',
-        notes: editForm.notes || null,
-        version: (selectedGuest as any).version ? (selectedGuest as any).version + 1 : 1
-      };
+  function openCreate() {
+    setCreatingGuest(true);
+    setSelectedGuest(null);
+    setEditForm({ ...EMPTY_GUEST });
+    setNotice(null);
+  }
 
-      const res = await fetch('/api/guests', {
-        method: 'PATCH',
+  function closeDrawer() {
+    if (saving) return;
+    setSelectedGuest(null);
+    setCreatingGuest(false);
+    setEditForm({});
+  }
+
+  async function saveGuest() {
+    const firstName = String(editForm.first_name || '').trim();
+    if (!firstName) {
+      setNotice({ type: 'error', text: 'El nombre es obligatorio.' });
+      return;
+    }
+
+    setSaving(true);
+    setNotice(null);
+    try {
+      const isCreate = creatingGuest;
+      const response = await fetch('/api/guests', {
+        method: isCreate ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData)
+        body: JSON.stringify({
+          ...(isCreate ? {} : { id: selectedGuest?.id }),
+          first_name: firstName,
+          last_name: String(editForm.last_name || '').trim(),
+          phone_e164: editForm.phone_e164 || null,
+          group_name: String(editForm.group_name || 'General').trim(),
+          family_side: editForm.family_side || 'Compartido',
+          guest_category: editForm.guest_category || 'Adulto',
+          invitation_status: editForm.invitation_status || 'not_sent',
+          attendance_status: editForm.attendance_status || 'pending',
+          dietary_type: editForm.dietary_type || 'Ninguna',
+          dietary_detail: editForm.dietary_detail || null,
+          reconfirmation_status: editForm.reconfirmation_status || 'pending',
+          guest_status: editForm.guest_status || 'active',
+          notes: editForm.notes || null
+        })
       });
 
-      if (res.ok) {
-        loadData();
-        setSelectedGuest(null);
-      }
-    } catch (err) {
-      console.error('Error saving guest edit:', err);
-    }
-  }
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) throw new Error(payload.error || 'No fue posible guardar la ficha.');
 
-  async function handleManualReconcile(guestId: string, rsvpId: string) {
-    try {
-      const res = await fetch('/api/rsvp/reconcile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guest_id: guestId, rsvp_id: rsvpId })
+      await loadData();
+      closeDrawer();
+      const warningText = payload.warnings?.length
+        ? ' La ficha quedó guardada, pero existen advertencias de auditoría o sincronización.'
+        : '';
+      setNotice({
+        type: payload.warnings?.length ? 'info' : 'success',
+        text: `${isCreate ? 'Invitado creado' : 'Ficha actualizada'} correctamente.${warningText}`
       });
-
-      if (res.ok) {
-        setReconcileRsvp(null);
-        loadData();
-      }
-    } catch (err) {
-      console.error('Error in manual reconcile:', err);
+    } catch (error: any) {
+      setNotice({ type: 'error', text: error?.message || 'No fue posible guardar la ficha.' });
+    } finally {
+      setSaving(false);
     }
   }
-
-  async function handleAddGuest(e: React.FormEvent) {
-    e.preventDefault();
-    if (!formData.first_name) return;
-    try {
-      const newGuest = {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        full_name_normalized: `${formData.first_name} ${formData.last_name}`.toLowerCase(),
-        phone_e164: formData.phone_e164 || null,
-        group_name: formData.group_name,
-        family_side: formData.family_side,
-        guest_category: formData.guest_category,
-        notes: formData.notes || null,
-        guest_status: 'active'
-      };
-
-      const res = await fetch('/api/guests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newGuest)
-      });
-
-      if (res.ok) {
-        setShowAddModal(false);
-        setFormData({ first_name: '', last_name: '', phone_e164: '', group_name: 'General', family_side: 'Compartido', guest_category: 'Adulto', notes: '' });
-        loadData();
-      }
-    } catch (err) {
-      console.error('Error adding guest:', err);
-    }
-  }
-
-  // Filtered views logic
-  const missingPhoneCount = guests.filter(g => !g.phone_e164 && g.guest_status === 'active').length;
-
-  const filteredGuests = guests.filter(g => {
-    const matchesSearch = `${g.first_name} ${g.last_name} ${g.phone_e164 || ''} ${g.group_name}`.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (!matchesSearch) return false;
-
-    switch (viewFilter) {
-      case 'no_phone': return !g.phone_e164 && g.guest_status === 'active';
-      case 'no_response': return g.attendance_status === 'pending' && g.guest_status === 'active';
-      case 'attending': return g.attendance_status === 'attending' && g.guest_status === 'active';
-      case 'not_attending': return g.attendance_status === 'not_attending' && g.guest_status === 'active';
-      case 'pending': return g.attendance_status === 'pending' && g.guest_status === 'active';
-      case 'no_table': return g.attendance_status === 'attending' && !g.table_id && g.guest_status === 'active';
-      case 'dietary': return Boolean(g.dietary_type) && g.dietary_type !== 'Ninguna' && g.guest_status === 'active';
-      case 'replaced': return g.guest_status === 'replaced';
-      case 'por_clasificar': return g.family_side === 'Por clasificar' && g.guest_status === 'active';
-      default: return g.guest_status === 'active';
-    }
-  });
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
+        <div className="flex flex-col gap-4 border-b border-[var(--border-color)] pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <span className="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-semibold block">
-              Directorio Interactivo de Invitados
+            <span className="block text-xs font-semibold uppercase tracking-[0.25em] text-[var(--accent-gold)]">
+              Directorio canónico de personas
             </span>
-            <h1 className="font-serif text-3xl text-[var(--text-primary)] mt-1">
-              Invitados & RSVP
-            </h1>
+            <h1 className="mt-1 font-serif text-3xl text-[var(--text-primary)]">Invitados y RSVP</h1>
+            <p className="mt-1 max-w-3xl text-xs text-[var(--text-secondary)]">
+              Cada invitado tiene una ficha individual. Las respuestas conjuntas se conservan como evidencia, pero sus integrantes se administran por separado.
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-[var(--status-pending-bg)] border border-[var(--border-color)] px-3 py-1.5 rounded flex items-center gap-2 text-xs">
-              <PhoneOff size={14} className="text-[#8E703E]" />
-              <span>Invitados sin teléfono: <strong>{missingPhoneCount}</strong></span>
-            </div>
-            <button onClick={() => setShowAddModal(true)} className="btn-primary flex items-center gap-2">
-              <Plus size={14} /> Nuevo Invitado
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => loadData()} className="btn-secondary flex items-center gap-2">
+              <RefreshCw size={14} /> Actualizar
+            </button>
+            <button type="button" onClick={openCreate} className="btn-primary flex items-center gap-2">
+              <Plus size={14} /> Nuevo invitado
             </button>
           </div>
         </div>
 
-        {/* SECTION: RESPUESTAS WEB RSVP */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-3">
-            <div>
-              <span className="text-[10px] uppercase tracking-[0.25em] text-[var(--accent-gold)] font-bold block">
-                Auditoría Completa de Registro Web & WhatsApp
-              </span>
-              <h2 className="font-serif text-xl text-[var(--text-primary)]">
-                RESPUESTAS WEB RSVP ({allRSVPs.length})
-              </h2>
+        {notice && (
+          <div className={`flex items-start gap-2 border p-3 text-sm ${
+            notice.type === 'success'
+              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800'
+              : notice.type === 'error'
+              ? 'border-rose-500/40 bg-rose-500/10 text-rose-800'
+              : 'border-amber-500/40 bg-amber-500/10 text-amber-800'
+          }`}>
+            {notice.type === 'success' ? <CheckCircle2 size={17} /> : notice.type === 'error' ? <XCircle size={17} /> : <AlertTriangle size={17} />}
+            <span>{notice.text}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+          {[
+            ['Activos', stats.active],
+            ['Confirmados', stats.attending],
+            ['Pendientes', stats.pending],
+            ['No asisten', stats.declined],
+            ['Sin mesa', stats.noTable],
+            ['Restricciones', stats.dietary],
+            ['RSVP por revisar', stats.rsvpReview],
+            ['Respuestas conjuntas', stats.joint]
+          ].map(([label, value]) => (
+            <div key={String(label)} className="border border-[var(--border-color)] bg-[var(--bg-card)] p-3 text-center">
+              <span className="block text-[9px] uppercase tracking-wider text-[var(--text-muted)]">{label}</span>
+              <strong className="text-xl text-[var(--text-primary)]">{value}</strong>
             </div>
-            <button
-              onClick={() => setShowRsvpTable(!showRsvpTable)}
-              className="btn-secondary text-xs px-3 py-1.5"
-            >
-              {showRsvpTable ? 'Ocultar Respuestas' : 'Ver Todas las Respuestas'}
+          ))}
+        </div>
+
+        {stats.rsvpReview > 0 && (
+          <div className="flex flex-col gap-3 border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3 text-sm text-amber-800">
+              <AlertTriangle className="shrink-0" size={18} />
+              <div>
+                <strong className="block">Hay {stats.rsvpReview} respuestas que requieren revisión.</strong>
+                <span>Resuélvelas antes de cerrar cantidades para banquetera o asignar las mesas definitivas.</span>
+              </div>
+            </div>
+            <Link href="/dashboard/issues" className="btn-primary flex items-center justify-center gap-2 whitespace-nowrap text-xs">
+              <Link2 size={13} /> Abrir incidencias
+            </Link>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3 border-b border-[var(--border-color)] pb-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-2 text-xs">
+            <button type="button" onClick={() => setTab('guests')} className={`flex items-center gap-2 border px-3 py-2 ${tab === 'guests' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}>
+              <Users size={14} /> Personas individuales
+            </button>
+            <button type="button" onClick={() => setTab('rsvps')} className={`flex items-center gap-2 border px-3 py-2 ${tab === 'rsvps' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}>
+              <UserCheck size={14} /> Respuestas originales
             </button>
           </div>
-
-          {/* Indicators Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] p-2.5 rounded text-center">
-              <span className="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Total</span>
-              <strong className="text-base text-[var(--text-primary)]">{allRSVPs.length}</strong>
-            </div>
-            <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded text-center">
-              <span className="block text-[10px] text-emerald-700 uppercase tracking-wider font-semibold">Conciliadas</span>
-              <strong className="text-base text-emerald-700">{allRSVPs.filter(r => r.reconciliation_status === 'matched').length}</strong>
-            </div>
-            <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded text-center">
-              <span className="block text-[10px] text-amber-700 uppercase tracking-wider font-semibold">Sin coincidencia</span>
-              <strong className="text-base text-amber-700">{allRSVPs.filter(r => r.reconciliation_status === 'unmatched').length}</strong>
-            </div>
-            <div className="bg-rose-500/10 border border-rose-500/30 p-2.5 rounded text-center">
-              <span className="block text-[10px] text-rose-700 uppercase tracking-wider font-semibold">Ambiguas</span>
-              <strong className="text-base text-rose-700">{allRSVPs.filter(r => r.reconciliation_status === 'ambiguous').length}</strong>
-            </div>
-            <div className="bg-purple-500/10 border border-purple-500/30 p-2.5 rounded text-center">
-              <span className="block text-[10px] text-purple-700 uppercase tracking-wider font-semibold">Con Conflicto</span>
-              <strong className="text-base text-purple-700">{allRSVPs.filter(r => r.reconciliation_status === 'conflict').length}</strong>
-            </div>
-            <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded text-center">
-              <span className="block text-[10px] text-amber-700 uppercase tracking-wider font-semibold">Fallos Sheets</span>
-              <strong className="text-base text-amber-700">{allRSVPs.filter(r => r.sheet_sync_status === 'failed').length}</strong>
-            </div>
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] p-2.5 rounded text-center">
-              <span className="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Últimas 24h</span>
-              <strong className="text-base text-[var(--text-primary)]">
-                {allRSVPs.filter(r => (Date.now() - new Date(r.created_at).getTime()) <= 24 * 60 * 60 * 1000).length}
-              </strong>
-            </div>
+          <div className="relative w-full sm:w-80">
+            <Search size={14} className="absolute left-3 top-3 text-[var(--text-muted)]" />
+            <input value={searchTerm} onChange={event => setSearchTerm(event.target.value)} placeholder="Buscar nombre, grupo o teléfono…" className="w-full border border-[var(--border-color)] bg-[var(--bg-card)] py-2 pl-9 pr-3 text-xs" />
           </div>
+        </div>
 
-          {/* Full Table of rsvp_responses */}
-          {showRsvpTable && (
-            <div className="overflow-x-auto border border-[var(--border-color)] rounded mt-3">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-[var(--bg-secondary)] uppercase tracking-wider border-b border-[var(--border-color)] text-[10px] text-[var(--text-muted)] font-semibold">
+        {loading ? (
+          <div className="border border-[var(--border-color)] bg-[var(--bg-card)] p-10 text-center text-sm text-[var(--text-secondary)]">
+            <Loader2 className="mx-auto mb-2 animate-spin" size={22} /> Cargando información…
+          </div>
+        ) : tab === 'guests' ? (
+          <>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {[
+                ['all', `Todos (${stats.active})`],
+                ['attending', `Confirmados (${stats.attending})`],
+                ['pending', `Pendientes (${stats.pending})`],
+                ['not_attending', `No asisten (${stats.declined})`],
+                ['no_phone', 'Sin teléfono'],
+                ['no_table', `Sin mesa (${stats.noTable})`],
+                ['dietary', `Restricciones (${stats.dietary})`]
+              ].map(([value, label]) => (
+                <button key={value} type="button" onClick={() => setFilter(value as GuestFilter)} className={`border px-3 py-1.5 ${filter === value ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="overflow-x-auto border border-[var(--border-color)] bg-[var(--bg-card)]">
+              <table className="w-full min-w-[1050px] text-left text-xs">
+                <thead className="border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
                   <tr>
-                    <th className="p-2.5">Fecha y Hora</th>
-                    <th className="p-2.5">Nombre Registrado</th>
-                    <th className="p-2.5">Teléfono</th>
-                    <th className="p-2.5">Asistencia</th>
-                    <th className="p-2.5">Restricción Alimentaria</th>
-                    <th className="p-2.5">Fuente</th>
-                    <th className="p-2.5">Estado Conciliación</th>
-                    <th className="p-2.5">Sync Sheets</th>
-                    <th className="p-2.5">Invitado Vinculado</th>
-                    <th className="p-2.5">Acción</th>
+                    <th className="p-3">Nombre</th>
+                    <th className="p-3">Grupo</th>
+                    <th className="p-3">Familia</th>
+                    <th className="p-3">Categoría</th>
+                    <th className="p-3">Teléfono</th>
+                    <th className="p-3">Asistencia</th>
+                    <th className="p-3">Restricción</th>
+                    <th className="p-3">Reconfirmación</th>
+                    <th className="p-3">Mesa</th>
+                    <th className="p-3">Editar</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border-color)] font-sans">
-                  {allRSVPs.length === 0 ? (
-                    <tr>
-                      <td colSpan={10} className="p-4 text-center text-[var(--text-secondary)]">No hay respuestas registadas aún.</td>
+                <tbody className="divide-y divide-[var(--border-color)]">
+                  {filteredGuests.length === 0 ? (
+                    <tr><td colSpan={10} className="p-8 text-center text-[var(--text-secondary)]">No hay invitados en esta vista.</td></tr>
+                  ) : filteredGuests.map(guest => (
+                    <tr key={guest.id} className="hover:bg-[var(--bg-secondary)]/50">
+                      <td className="p-3 font-semibold">{fullName(guest)}</td>
+                      <td className="p-3">{guest.group_name}</td>
+                      <td className="p-3">{guest.family_side}</td>
+                      <td className="p-3">{guest.guest_category}</td>
+                      <td className="p-3 font-mono">{guest.phone_e164 || <span className="font-sans text-rose-700">Sin teléfono</span>}</td>
+                      <td className="p-3"><span className={`px-2 py-1 text-[10px] font-semibold uppercase ${guest.attendance_status === 'attending' ? 'bg-emerald-500/15 text-emerald-800' : guest.attendance_status === 'not_attending' ? 'bg-rose-500/15 text-rose-800' : 'bg-amber-500/15 text-amber-800'}`}>{statusLabel(guest.attendance_status)}</span></td>
+                      <td className="p-3">{guest.dietary_type && guest.dietary_type !== 'Ninguna' ? <span className="text-rose-700">{guest.dietary_type}{guest.dietary_detail ? ` · ${guest.dietary_detail}` : ''}</span> : 'Ninguna'}</td>
+                      <td className="p-3">{guest.reconfirmation_status}</td>
+                      <td className="p-3">{guest.table_id ? 'Asignada' : guest.attendance_status === 'attending' ? <span className="text-amber-700">Sin mesa</span> : '—'}</td>
+                      <td className="p-3"><button type="button" onClick={() => openEdit(guest)} className="btn-secondary flex items-center gap-1 px-2 py-1 text-[10px]"><Edit size={12} /> Editar</button></td>
                     </tr>
-                  ) : (
-                    allRSVPs.map(r => {
-                      const linkedGuest = guests.find(g => g.id === r.guest_id);
-                      return (
-                        <tr key={r.id} className="hover:bg-[var(--bg-secondary)]/50 transition-colors">
-                          <td className="p-2.5 text-[11px] text-[var(--text-muted)] whitespace-nowrap">
-                            {new Date(r.created_at).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                          </td>
-                          <td className="p-2.5 font-semibold text-[var(--text-primary)] whitespace-nowrap">
-                            {r.first_name} {r.last_name}
-                          </td>
-                          <td className="p-2.5 font-mono text-[11px] whitespace-nowrap">
-                            {maskPhone(r.phone_e164)}
-                          </td>
-                          <td className="p-2.5">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                              r.attendance_status === 'attending' ? 'bg-emerald-500/15 text-emerald-700' :
-                              r.attendance_status === 'not_attending' ? 'bg-rose-500/15 text-rose-700' :
-                              'bg-amber-500/15 text-amber-700'
-                            }`}>
-                              {r.attendance_status === 'attending' ? 'Confirmada' : r.attendance_status === 'not_attending' ? 'No asiste' : 'Pendiente'}
-                            </span>
-                          </td>
-                          <td className="p-2.5 text-[11px]">
-                            {r.dietary_type || 'Ninguna'}
-                            {r.dietary_detail ? ` (${r.dietary_detail})` : ''}
-                          </td>
-                          <td className="p-2.5 text-[11px] uppercase tracking-wider font-mono text-[var(--text-muted)]">
-                            {r.source || 'web'}
-                          </td>
-                          <td className="p-2.5">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                              r.reconciliation_status === 'matched' ? 'bg-emerald-500/20 text-emerald-800' :
-                              r.reconciliation_status === 'unmatched' ? 'bg-amber-500/20 text-amber-800' :
-                              'bg-rose-500/20 text-rose-800'
-                            }`}>
-                              {r.reconciliation_status}
-                            </span>
-                          </td>
-                          <td className="p-2.5">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                              r.sheet_sync_status === 'synced' ? 'bg-emerald-500/15 text-emerald-700' :
-                              r.sheet_sync_status === 'failed' ? 'bg-rose-500/15 text-rose-700' :
-                              'bg-amber-500/15 text-amber-700'
-                            }`}>
-                              {r.sheet_sync_status || 'pending'}
-                            </span>
-                          </td>
-                          <td className="p-2.5 text-[11px]">
-                            {linkedGuest ? (
-                              <span className="font-semibold text-emerald-700">{linkedGuest.first_name} {linkedGuest.last_name}</span>
-                            ) : (
-                              <span className="text-amber-700 italic">Sin vincular</span>
-                            )}
-                          </td>
-                          <td className="p-2.5">
-                            {r.reconciliation_status !== 'matched' && (
-                              <button
-                                onClick={() => setReconcileRsvp(r)}
-                                className="px-2.5 py-1 bg-[#8E703E] text-white hover:bg-black rounded text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap"
-                              >
-                                REVISAR Y VINCULAR
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
-
-        {/* Filters & Views Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[var(--bg-secondary)] p-4 border border-[var(--border-color)]">
-          <div className="relative w-full sm:w-72">
-            <Search size={14} className="absolute left-3 top-3 text-[var(--text-muted)]" />
-            <input
-              type="text"
-              placeholder="Buscar invitado..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] pl-9 pr-3 py-2 text-xs focus:outline-none"
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto text-xs">
-            <button
-              onClick={() => setViewFilter('all')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'all' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              Todos Activos ({guests.filter(g => g.guest_status === 'active').length})
-            </button>
-            <button
-              onClick={() => setViewFilter('no_phone')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'no_phone' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              Sin Teléfono ({missingPhoneCount})
-            </button>
-            <button
-              onClick={() => setViewFilter('attending')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'attending' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              Confirmados
-            </button>
-            <button
-              onClick={() => setViewFilter('not_attending')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'not_attending' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              No Asisten
-            </button>
-            <button
-              onClick={() => setViewFilter('dietary')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'dietary' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              Con Restricciones
-            </button>
-            <button
-              onClick={() => setViewFilter('replaced')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'replaced' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              Reemplazados
-            </button>
-            <button
-              onClick={() => setViewFilter('por_clasificar')}
-              className={`px-3 py-1.5 border rounded ${viewFilter === 'por_clasificar' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              Por Clasificar ({guests.filter(g => g.family_side === 'Por clasificar').length})
-            </button>
-          </div>
-        </div>
-
-        {/* Data Table */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Grupo</th>
-                <th>Familia</th>
-                <th>Categoría</th>
-                <th>Teléfono</th>
-                <th>Asistencia</th>
-                <th>Restricción</th>
-                <th>Reconfirmación</th>
-                <th>Ficha</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+          </>
+        ) : (
+          <div className="overflow-x-auto border border-[var(--border-color)] bg-[var(--bg-card)]">
+            <table className="w-full min-w-[1000px] text-left text-xs">
+              <thead className="border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-[var(--text-secondary)]">Cargando directorio...</td>
+                  <th className="p-3">Fecha</th>
+                  <th className="p-3">Nombre escrito</th>
+                  <th className="p-3">Asistencia</th>
+                  <th className="p-3">Personas detectadas</th>
+                  <th className="p-3">Estado</th>
+                  <th className="p-3">Sheets</th>
+                  <th className="p-3">Revisión</th>
                 </tr>
-              ) : filteredGuests.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="text-center py-8 text-[var(--text-secondary)]">No hay invitados en esta vista.</td>
-                </tr>
-              ) : (
-                filteredGuests.map((g) => (
-                  <tr key={g.id} className="cursor-pointer" onClick={() => handleSelectGuest(g)}>
-                    <td className="font-semibold text-[var(--text-primary)]">{g.first_name} {g.last_name}</td>
-                    <td>{g.group_name}</td>
-                    <td>{g.family_side}</td>
-                    <td>{g.guest_category}</td>
-                    <td>
-                      {g.phone_e164 ? (
-                        <span className="font-mono text-xs">{g.phone_e164}</span>
-                      ) : (
-                        <span className="text-[#A83232] italic text-xs">Sin teléfono</span>
-                      )}
+              </thead>
+              <tbody className="divide-y divide-[var(--border-color)]">
+                {filteredRsvps.map(rsvp => (
+                  <tr key={rsvp.rsvp_id} className="align-top hover:bg-[var(--bg-secondary)]/50">
+                    <td className="p-3 whitespace-nowrap">{new Date(rsvp.created_at).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="p-3"><strong className="block">{rsvp.response_name}</strong><span className="font-mono text-[10px] text-[var(--text-muted)]">{rsvp.phone_e164}</span></td>
+                    <td className="p-3">{statusLabel(rsvp.attendance_status)}</td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-1">
+                        {(rsvp.members || []).map(member => (
+                          <span key={member.id} className={`border px-2 py-1 text-[10px] ${member.resolution_status === 'matched' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800' : 'border-amber-500/40 bg-amber-500/10 text-amber-800'}`}>
+                            {member.display_name} · {member.resolution_status}
+                          </span>
+                        ))}
+                      </div>
                     </td>
-                    <td>
-                      <span className={`badge ${g.attendance_status === 'attending' ? 'badge-confirmed' : g.attendance_status === 'not_attending' ? 'badge-declined' : 'badge-pending'}`}>
-                        {g.attendance_status}
-                      </span>
-                    </td>
-                    <td>{g.dietary_type || 'Ninguna'}</td>
-                    <td><span className="text-xs">{g.reconfirmation_status}</span></td>
-                    <td>
-                      <button onClick={() => handleSelectGuest(g)} className="p-1 hover:bg-[var(--bg-secondary)] rounded">
-                        <Edit size={14} />
-                      </button>
+                    <td className="p-3"><span className={`px-2 py-1 text-[10px] font-semibold uppercase ${['matched', 'split_matched'].includes(rsvp.reconciliation_status) ? 'bg-emerald-500/15 text-emerald-800' : rsvp.reconciliation_status === 'partially_matched' ? 'bg-rose-500/15 text-rose-800' : 'bg-amber-500/15 text-amber-800'}`}>{statusLabel(rsvp.reconciliation_status)} · {rsvp.matched_member_count}/{rsvp.member_count}</span></td>
+                    <td className="p-3"><span className={rsvp.sheet_sync_status === 'synced' ? 'text-emerald-700' : 'text-rose-700'}>{rsvp.sheet_sync_status}</span></td>
+                    <td className="p-3">
+                      {rsvp.pending_member_count > 0 || !['matched', 'split_matched'].includes(rsvp.reconciliation_status) ? (
+                        <Link href="/dashboard/issues" className="btn-primary flex items-center justify-center gap-1 px-2 py-1 text-[10px]"><Link2 size={12} /> Resolver</Link>
+                      ) : <CheckCircle2 size={16} className="text-emerald-700" />}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Drawer Editar Ficha Completa */}
-        {selectedGuest && (
-          <div className="fixed inset-y-0 right-0 w-96 bg-[var(--bg-card)] border-l border-[var(--border-color)] shadow-2xl p-6 z-50 overflow-y-auto space-y-6">
-            <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-gold)] font-bold">Edición de Ficha</span>
-                <h3 className="font-serif text-2xl text-[var(--text-primary)] mt-0.5">{selectedGuest.first_name} {selectedGuest.last_name}</h3>
-              </div>
-              <button onClick={() => setSelectedGuest(null)} className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Nombre</label>
-                <input
-                  type="text"
-                  value={editForm.first_name || ''}
-                  onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Apellido</label>
-                <input
-                  type="text"
-                  value={editForm.last_name || ''}
-                  onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Teléfono E.164 (+569...)</label>
-                <input
-                  type="tel"
-                  value={editForm.phone_e164 || ''}
-                  onChange={(e) => setEditForm({ ...editForm, phone_e164: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Grupo</label>
-                  <input
-                    type="text"
-                    value={editForm.group_name || ''}
-                    onChange={(e) => setEditForm({ ...editForm, group_name: e.target.value })}
-                    className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Familia</label>
-                  <select
-                    value={editForm.family_side || 'Compartido'}
-                    onChange={(e) => setEditForm({ ...editForm, family_side: e.target.value })}
-                    className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                  >
-                    <option value="Novio">Novio (Felipe)</option>
-                    <option value="Novia">Novia (Camila)</option>
-                    <option value="Compartido">Compartido</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Asistencia RSVP (Separado)</label>
-                <select
-                  value={editForm.attendance_status || 'pending'}
-                  onChange={(e) => setEditForm({ ...editForm, attendance_status: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none font-semibold"
-                >
-                  <option value="attending">attending (Confirmado)</option>
-                  <option value="not_attending">not_attending (No Asiste)</option>
-                  <option value="pending">pending (Pendiente)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Estado Reconfirmación</label>
-                <select
-                  value={editForm.reconfirmation_status || 'pending'}
-                  onChange={(e) => setEditForm({ ...editForm, reconfirmation_status: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                >
-                  <option value="pending">pending</option>
-                  <option value="confirmed">confirmed</option>
-                  <option value="changed">changed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Restricción Alimentaria</label>
-                <select
-                  value={editForm.dietary_type || 'Ninguna'}
-                  onChange={(e) => setEditForm({ ...editForm, dietary_type: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                >
-                  <option value="Ninguna">Ninguna</option>
-                  <option value="Vegetariano">Vegetariano</option>
-                  <option value="Vegano">Vegano</option>
-                  <option value="Celíaco / libre de gluten">Celíaco / libre de gluten</option>
-                  <option value="Alergias">Alergias</option>
-                  <option value="Otra">Otra</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Detalle Restricción</label>
-                <input
-                  type="text"
-                  value={editForm.dietary_detail || ''}
-                  onChange={(e) => setEditForm({ ...editForm, dietary_detail: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Observaciones</label>
-                <textarea
-                  value={editForm.notes || ''}
-                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] p-2 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="border-t border-[var(--border-color)] pt-4 space-y-2">
-              <button onClick={handleSaveGuestEdit} className="w-full btn-primary flex items-center justify-center gap-2">
-                <Save size={14} /> Guardar Cambios
-              </button>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
-        {/* Modal Conciliación Manual RSVP */}
-        {reconcileRsvp && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 w-full max-w-lg space-y-4">
-              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
-                <h3 className="font-serif text-xl">Conciliación Manual de RSVP</h3>
-                <button onClick={() => setReconcileRsvp(null)}><X size={16} /></button>
+        {(selectedGuest || creatingGuest) && (
+          <>
+            <button type="button" aria-label="Cerrar edición" onClick={closeDrawer} className="fixed inset-0 z-40 bg-black/25" />
+            <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-xl overflow-y-auto border-l border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-2xl">
+              <div className="mb-6 flex items-start justify-between border-b border-[var(--border-color)] pb-4">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">{creatingGuest ? 'Nueva persona' : 'Edición de ficha'}</span>
+                  <h2 className="font-serif text-2xl">{creatingGuest ? 'Crear invitado' : fullName(selectedGuest!)}</h2>
+                </div>
+                <button type="button" onClick={closeDrawer} disabled={saving}><X size={19} /></button>
               </div>
 
-              <div className="p-3 bg-[var(--bg-secondary)] text-xs space-y-1">
-                <p><strong>Confirmado Web:</strong> {reconcileRsvp.first_name} {reconcileRsvp.last_name}</p>
-                <p><strong>Teléfono:</strong> {reconcileRsvp.phone_e164}</p>
-                <p><strong>Asistencia:</strong> {reconcileRsvp.attendance_status}</p>
-              </div>
+              <div className="space-y-5">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Nombre *</span><input value={editForm.first_name || ''} onChange={event => setEditForm({ ...editForm, first_name: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Apellido</span><input value={editForm.last_name || ''} onChange={event => setEditForm({ ...editForm, last_name: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
+                </div>
 
-              <div className="space-y-2 text-xs">
-                <label className="block font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                  Selecciona el invitado correspondiente de la lista maestra:
-                </label>
-                <select
-                  id="reconcile-target-select"
-                  className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                >
-                  {guests.map(g => (
-                    <option key={g.id} value={g.id}>
-                      {g.first_name} {g.last_name} ({g.group_name} · {g.family_side})
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <label className="block text-xs"><span className="mb-1 block font-semibold uppercase">Teléfono E.164</span><input value={editForm.phone_e164 || ''} onChange={event => setEditForm({ ...editForm, phone_e164: event.target.value })} placeholder="+56 9 1234 5678" className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
 
-              <div className="pt-2 flex justify-end gap-2">
-                <button onClick={() => setReconcileRsvp(null)} className="btn-secondary">Cancelar</button>
-                <button
-                  onClick={() => {
-                    const sel = document.getElementById('reconcile-target-select') as HTMLSelectElement;
-                    if (sel) handleManualReconcile(sel.value, reconcileRsvp.id);
-                  }}
-                  className="btn-primary"
-                >
-                  Vincular RSVP
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Grupo</span><input value={editForm.group_name || ''} onChange={event => setEditForm({ ...editForm, group_name: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Familia</span><select value={editForm.family_side || 'Compartido'} onChange={event => setEditForm({ ...editForm, family_side: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option>Felipe</option><option>Camila</option><option>Compartido</option><option>Por clasificar</option></select></label>
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Categoría</span><select value={editForm.guest_category || 'Adulto'} onChange={event => setEditForm({ ...editForm, guest_category: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option>Adulto</option><option>Niño</option><option>Proveedor-Staff</option><option>After 11</option></select></label>
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Asistencia</span><select value={editForm.attendance_status || 'pending'} onChange={event => setEditForm({ ...editForm, attendance_status: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option value="pending">Pendiente</option><option value="attending">Asiste</option><option value="not_attending">No asiste</option></select></label>
+                </div>
+
+                <div className="border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-800">
+                  Cambiar asistencia no modifica automáticamente la reconfirmación. Ambos estados se administran por separado.
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Restricción alimentaria</span><select value={editForm.dietary_type || 'Ninguna'} onChange={event => setEditForm({ ...editForm, dietary_type: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option>Ninguna</option><option>Vegetariano</option><option>Vegano</option><option>Celíaco / libre de gluten</option><option>Alergias</option><option>Otra</option></select></label>
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Detalle</span><input value={editForm.dietary_detail || ''} onChange={event => setEditForm({ ...editForm, dietary_detail: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Reconfirmación</span><select value={editForm.reconfirmation_status || 'pending'} onChange={event => setEditForm({ ...editForm, reconfirmation_status: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option value="pending">Pendiente</option><option value="confirmed">Confirmada</option><option value="changed">Cambió</option><option value="not_required">No requerida</option></select></label>
+                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Estado ficha</span><select value={editForm.guest_status || 'active'} onChange={event => setEditForm({ ...editForm, guest_status: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option value="active">Activa</option><option value="replaced">Reemplazada</option><option value="inactive">Inactiva</option></select></label>
+                </div>
+
+                <label className="block text-xs"><span className="mb-1 block font-semibold uppercase">Notas internas</span><textarea value={editForm.notes || ''} onChange={event => setEditForm({ ...editForm, notes: event.target.value })} rows={4} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
+
+                <button type="button" onClick={saveGuest} disabled={saving} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
+                  {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                  {saving ? 'Guardando ficha…' : creatingGuest ? 'Crear invitado' : 'Guardar cambios'}
                 </button>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal Nuevo Invitado */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 w-full max-w-md space-y-4">
-              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
-                <h3 className="font-serif text-xl">Agregar Nuevo Invitado</h3>
-                <button onClick={() => setShowAddModal(false)}><X size={16} /></button>
-              </div>
-
-              <form onSubmit={handleAddGuest} className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Nombre</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.first_name}
-                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                    className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Apellido</label>
-                  <input
-                    type="text"
-                    value={formData.last_name}
-                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                    className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Teléfono (+569...)</label>
-                  <input
-                    type="tel"
-                    value={formData.phone_e164}
-                    onChange={(e) => setFormData({ ...formData, phone_e164: e.target.value })}
-                    className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Grupo</label>
-                    <input
-                      type="text"
-                      value={formData.group_name}
-                      onChange={(e) => setFormData({ ...formData, group_name: e.target.value })}
-                      className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Origen</label>
-                    <select
-                      value={formData.family_side}
-                      onChange={(e) => setFormData({ ...formData, family_side: e.target.value })}
-                      className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                    >
-                      <option value="Novio">Novio (Felipe)</option>
-                      <option value="Novia">Novia (Camila)</option>
-                      <option value="Compartido">Compartido</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex justify-end gap-2">
-                  <button type="button" onClick={() => setShowAddModal(false)} className="btn-secondary">Cancelar</button>
-                  <button type="submit" className="btn-primary">Guardar</button>
-                </div>
-              </form>
-            </div>
-          </div>
+            </aside>
+          </>
         )}
       </div>
     </DashboardLayout>
