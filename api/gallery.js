@@ -45,7 +45,8 @@ export default async function handler(req, res) {
 
         const BLOCKED_PHOTO_FILES = new Set([
             'guest_803abb01-f60a-4136-82de-0621ac183099.jpeg',
-            'guest_07940307-055c-4529-9b89-f74b41537849.jpeg'
+            'guest_07940307-055c-4529-9b89-f74b41537849.jpeg',
+            'guest_239b82c0-b11c-4716-8b1b-ca59ef005ff0.jpeg'
         ]);
 
         const visibleData = rawData.filter(item => {
@@ -64,12 +65,9 @@ export default async function handler(req, res) {
             let category = 'historia';
             let alt = 'Recuerdo de nuestra historia';
 
-            if (createdAt >= '2026-03-28' && createdAt < '2026-03-30') {
+            if (createdAt >= '2026-03-28') {
                 category = 'civil';
-                alt = 'Momento de nuestro matrimonio civil';
-            } else if (createdAt >= '2026-03-30') {
-                category = 'despues';
-                alt = 'Fotografía compartida después de la celebración';
+                alt = 'Recuerdo de nuestro matrimonio civil';
             }
 
             const fileName = (item.url || '').split('/').pop()?.split('?')[0] || '';
