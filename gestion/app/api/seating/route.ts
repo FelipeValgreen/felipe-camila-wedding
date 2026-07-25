@@ -1,84 +1,105 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 
+async function checkAdminAuth(supabase: any) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { authorized: false, status: 401, error: 'UNAUTHORIZED' };
+
+  const { data: profile } = await supabase
+    .from('admin_profiles')
+    .select('role, active')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || !profile.active) {
+    return { authorized: false, status: 403, error: 'FORBIDDEN' };
+  }
+
+  return { authorized: true, user, profile };
+}
+
+function seatingError(message: string): { status: number; text: string } {
+  if (message.includes('TABLE_FULL')) {
+    return { status: 409, text: 'La mesa ya alcanzó su capacidad máxima.' };
+  }
+  if (message.includes('ONLY_ATTENDING_GUESTS_CAN_BE_SEATED')) {
+    return { status: 409, text: 'Solo se pueden asignar a mesa personas confirmadas como asistentes.' };
+  }
+  if (message.includes('GUEST_NOT_FOUND_OR_INACTIVE')) {
+    return { status: 404, text: 'El invitado no existe o está inactivo.' };
+  }
+  if (message.includes('TABLE_NOT_FOUND')) {
+    return { status: 404, text: 'La mesa seleccionada no existe.' };
+  }
+  if (message.includes('FORBIDDEN')) {
+    return { status: 403, text: 'No tienes permisos para modificar las mesas.' };
+  }
+  return { status: 500, text: message || 'No fue posible guardar la asignación.' };
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
-    const { data: profile } = await supabase.from('admin_profiles').select('role, active').eq('id', user.id).single();
-    if (!profile || !profile.active) return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
-    if (profile.role === 'viewer') return NextResponse.json({ ok: false, error: 'VIEWER_MUTATION_DENIED' }, { status: 403 });
+    const auth = await checkAdminAuth(supabase);
+    if (!auth.authorized) {
+      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
+    }
+    if (auth.profile.role === 'viewer') {
+      return NextResponse.json({ ok: false, error: 'VIEWER_MUTATION_DENIED' }, { status: 403 });
+    }
 
     const body = await request.json();
-    const { guest_id, table_id } = body;
+    const guestId = body.guest_id;
+    const tableId = body.table_id;
+    if (!guestId || !tableId) {
+      return NextResponse.json({ ok: false, error: 'Debes indicar invitado y mesa.' }, { status: 400 });
+    }
 
-    // Delete existing assignment for this guest
-    await supabase.from('seating_assignments').delete().eq('guest_id', guest_id);
-
-    // Insert new assignment
-    const { data: seating, error: seatErr } = await supabase
-      .from('seating_assignments')
-      .insert({ guest_id, table_id })
-      .select()
-      .single();
-
-    if (seatErr) return NextResponse.json({ ok: false, error: seatErr.message }, { status: 500 });
-
-    // Sync guest helper column
-    await supabase.from('wedding_guests').update({ table_id, last_dashboard_update_at: new Date().toISOString() }).eq('id', guest_id);
-
-    await supabase.from('audit_log').insert({
-      entity_type: 'seating_assignments',
-      entity_id: seating.id,
-      action: 'ASSIGN_SEATING',
-      after_data: body,
-      actor: user.email,
-      origin: 'dashboard'
+    const { data, error } = await supabase.rpc('assign_guest_to_table', {
+      p_guest_id: guestId,
+      p_table_id: tableId
     });
 
-    await supabase.from('sync_outbox').insert({
-      entity_type: 'seating_assignments',
-      entity_id: seating.id,
-      operation: 'INSERT',
-      payload: seating
-    });
+    if (error) {
+      const parsed = seatingError(error.message);
+      return NextResponse.json({ ok: false, error: parsed.text }, { status: parsed.status });
+    }
 
-    return NextResponse.json({ ok: true, seating });
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    return NextResponse.json(data);
+  } catch (error: any) {
+    const parsed = seatingError(error?.message || '');
+    return NextResponse.json({ ok: false, error: parsed.text }, { status: parsed.status });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const auth = await checkAdminAuth(supabase);
+    if (!auth.authorized) {
+      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
+    }
+    if (auth.profile.role === 'viewer') {
+      return NextResponse.json({ ok: false, error: 'VIEWER_MUTATION_DENIED' }, { status: 403 });
+    }
 
-    if (!user) return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
-    const { data: profile } = await supabase.from('admin_profiles').select('role, active').eq('id', user.id).single();
-    if (!profile || !profile.active) return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
-    if (profile.role === 'viewer') return NextResponse.json({ ok: false, error: 'VIEWER_MUTATION_DENIED' }, { status: 403 });
+    const guestId = new URL(request.url).searchParams.get('guest_id');
+    if (!guestId) {
+      return NextResponse.json({ ok: false, error: 'Falta el invitado que deseas quitar de la mesa.' }, { status: 400 });
+    }
 
-    const { searchParams } = new URL(request.url);
-    const guest_id = searchParams.get('guest_id');
-
-    if (!guest_id) return NextResponse.json({ ok: false, error: 'Missing guest_id' }, { status: 400 });
-
-    await supabase.from('seating_assignments').delete().eq('guest_id', guest_id);
-    await supabase.from('wedding_guests').update({ table_id: null, last_dashboard_update_at: new Date().toISOString() }).eq('id', guest_id);
-
-    await supabase.from('audit_log').insert({
-      entity_type: 'seating_assignments',
-      entity_id: guest_id,
-      action: 'UNASSIGN_SEATING',
-      actor: user.email,
-      origin: 'dashboard'
+    const { data, error } = await supabase.rpc('unassign_guest_from_table', {
+      p_guest_id: guestId
     });
 
-    return NextResponse.json({ ok: true, unassigned: true });
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    if (error) {
+      const parsed = seatingError(error.message);
+      return NextResponse.json({ ok: false, error: parsed.text }, { status: parsed.status });
+    }
+
+    return NextResponse.json(data);
+  } catch (error: any) {
+    const parsed = seatingError(error?.message || '');
+    return NextResponse.json({ ok: false, error: parsed.text }, { status: parsed.status });
   }
 }
