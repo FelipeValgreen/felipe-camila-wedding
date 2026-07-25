@@ -367,10 +367,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            let isSubmitting = false;
             if (rsvpSubmitBtn) {
+                if (rsvpSubmitBtn.disabled) return;
+                isSubmitting = true;
                 rsvpSubmitBtn.disabled = true;
-                rsvpSubmitBtn.textContent = 'Guardando...';
+                rsvpSubmitBtn.textContent = 'REGISTRANDO RESPUESTA…';
             }
+
+            const rsvpError = document.getElementById('rsvp-error');
+            const rsvpWaAlternative = document.getElementById('rsvp-whatsapp-alternative-block');
 
             try {
                 const isUpdate = Boolean(isExplicitUpdateMode && currentRSVPId && currentManageToken);
@@ -391,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const timeoutId = setTimeout(() => controller.abort(), 12000);
 
                 const response = await fetch('/api/rsvp', {
                     method: 'POST',
@@ -401,15 +407,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 clearTimeout(timeoutId);
 
-                const data = await response.json();
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch (e) {}
 
-                if (!response.ok || !data.ok) {
-                    const msg = 'No pudimos guardar tu respuesta. Intenta nuevamente o escríbenos por WhatsApp.';
-                    showToast(msg, 'error');
-                    if (rsvpSubmitBtn) {
-                        rsvpSubmitBtn.disabled = false;
-                        rsvpSubmitBtn.textContent = isUpdate ? 'Guardar cambios' : 'Registrar mi respuesta';
-                    }
+                if (!response.ok || !data.ok || !data.rsvp_id) {
+                    if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
+                    if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
+                    if (rsvpError) rsvpError.classList.remove('hidden');
                     return;
                 }
 
@@ -424,24 +430,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 const summaryAttendance = document.getElementById('summary-attendance');
                 const summaryDietary = document.getElementById('summary-dietary');
                 const summaryDietaryRow = document.getElementById('summary-dietary-row');
+                const summaryDatetime = document.getElementById('summary-datetime');
+
+                const successTitle = document.getElementById('rsvp-success-title');
+                const successSubtitle = document.getElementById('rsvp-success-subtitle');
 
                 if (summaryName) summaryName.textContent = `${firstName} ${lastName}`;
-                let attendanceLabel = 'Sí, asistiré';
-                if (attendanceStatus === 'not_attending') attendanceLabel = 'No podré asistir';
-                if (attendanceStatus === 'pending') attendanceLabel = 'Aún no estoy seguro/a';
-                if (summaryAttendance) summaryAttendance.textContent = attendanceLabel;
                 
                 if (attendanceStatus === 'attending') {
+                    if (summaryAttendance) summaryAttendance.textContent = 'Confirmada';
+                    if (successTitle) successTitle.textContent = '¡RESPUESTA REGISTRADA!';
+                    if (successSubtitle) successSubtitle.innerHTML = 'Recibimos correctamente tu confirmación de asistencia.<br>Gracias por acompañarnos en este día tan importante.';
                     if (summaryDietaryRow) summaryDietaryRow.classList.remove('hidden');
                     if (summaryDietary) summaryDietary.textContent = dietary;
+                } else if (attendanceStatus === 'not_attending') {
+                    if (summaryAttendance) summaryAttendance.textContent = 'No asistirá';
+                    if (successTitle) successTitle.textContent = '¡RESPUESTA REGISTRADA!';
+                    if (successSubtitle) successSubtitle.innerHTML = 'Recibimos correctamente tu respuesta.<br>Gracias por avisarnos.';
+                    if (summaryDietaryRow) summaryDietaryRow.classList.add('hidden');
                 } else {
+                    if (summaryAttendance) summaryAttendance.textContent = 'Pendiente';
                     if (summaryDietaryRow) summaryDietaryRow.classList.add('hidden');
                 }
 
-                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
-                if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
+                if (summaryDatetime) {
+                    const now = new Date();
+                    summaryDatetime.textContent = now.toLocaleString('es-CL', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
 
-                showToast(isUpdate ? 'Tu respuesta fue actualizada.' : 'Tu respuesta quedó registrada.', 'success');
+                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
+                if (rsvpError) rsvpError.classList.add('hidden');
+                if (rsvpSuccess) rsvpSuccess.classList.remove('hidden');
+                if (rsvpWaAlternative) rsvpWaAlternative.classList.add('hidden');
 
                 rsvpCompleted = true;
                 isExplicitUpdateMode = true;
@@ -449,13 +475,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (err) {
                 console.error('RSVP API fetch error:', err);
-                showToast('No pudimos guardar tu respuesta. Intenta nuevamente o escríbenos por WhatsApp.', 'error');
+                if (rsvpFormStep) rsvpFormStep.classList.add('hidden');
+                if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
+                if (rsvpError) rsvpError.classList.remove('hidden');
             } finally {
                 if (rsvpSubmitBtn) {
                     rsvpSubmitBtn.disabled = false;
                     rsvpSubmitBtn.textContent = isExplicitUpdateMode ? 'Guardar cambios' : 'Registrar mi respuesta';
                 }
             }
+        });
+    }
+
+    // RSVP Error Retry Button
+    const retryBtn = document.getElementById('rsvp-retry-btn');
+    if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+            const rsvpError = document.getElementById('rsvp-error');
+            if (rsvpError) rsvpError.classList.add('hidden');
+            if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
         });
     }
 
@@ -468,6 +506,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rsvpSubmitBtn) rsvpSubmitBtn.textContent = 'Guardar cambios';
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
+            const rsvpWaAlternative = document.getElementById('rsvp-whatsapp-alternative-block');
+            if (rsvpWaAlternative) rsvpWaAlternative.classList.remove('hidden');
             updateCtaVisibility();
         });
     }
@@ -488,6 +528,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rsvpSubmitBtn) rsvpSubmitBtn.textContent = 'Registrar mi respuesta';
             if (rsvpSuccess) rsvpSuccess.classList.add('hidden');
             if (rsvpFormStep) rsvpFormStep.classList.remove('hidden');
+            const rsvpWaAlternative = document.getElementById('rsvp-whatsapp-alternative-block');
+            if (rsvpWaAlternative) rsvpWaAlternative.classList.remove('hidden');
             if (rsvpForm) rsvpForm.scrollIntoView({ behavior: 'smooth' });
             updateCtaVisibility();
         });

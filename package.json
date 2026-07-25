@@ -9,6 +9,7 @@
     "build:css": "npx tailwindcss -i ./css/input.css -o ./css/tailwind.min.css -m"
   },
   "dependencies": {
+    "pg": "^8.22.0",
     "sharp": "^0.33.5"
   }
 }

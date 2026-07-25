@@ -463,24 +463,38 @@
                     <!-- Success Step -->
                     <div id="rsvp-success" class="hidden text-center space-y-6">
                         <div class="space-y-2">
-                            <h3 class="font-serif text-3xl text-dark">Tu respuesta quedó registrada</h3>
-                            <p class="text-muted text-sm font-light">Gracias por acompañarnos en este momento.</p>
+                            <h3 id="rsvp-success-title" class="font-serif text-3xl text-dark">¡RESPUESTA REGISTRADA!</h3>
+                            <p id="rsvp-success-subtitle" class="text-muted text-sm font-light leading-relaxed">Recibimos correctamente tu confirmación de asistencia.<br>Gracias por acompañarnos en este día tan importante.</p>
                         </div>
 
                         <!-- Response Summary -->
                         <div class="bg-cream p-6 text-left border border-dark/10 space-y-2 font-sans text-sm text-dark">
-                            <p class="text-xs uppercase tracking-wider text-gold font-bold border-b border-dark/10 pb-2">Resumen de tu confirmación</p>
+                            <p class="text-xs uppercase tracking-wider text-gold font-bold border-b border-dark/10 pb-2">Resumen de tu respuesta</p>
                             <p><strong>Invitado:</strong> <span id="summary-name">-</span></p>
                             <p><strong>Asistencia:</strong> <span id="summary-attendance">-</span></p>
-                            <p id="summary-dietary-row"><strong>Restricción:</strong> <span id="summary-dietary">-</span></p>
+                            <p id="summary-dietary-row"><strong>Restricción alimentaria:</strong> <span id="summary-dietary">-</span></p>
+                            <p><strong>Fecha de registro:</strong> <span id="summary-datetime">-</span></p>
                         </div>
 
                         <div class="flex flex-col gap-3 pt-2">
                             <button type="button" id="rsvp-edit-btn" class="w-full border border-dark/30 text-dark text-xs uppercase tracking-[0.2em] py-4 hover:bg-dark hover:text-light transition-all font-semibold bg-light cursor-pointer">
-                                <i class="fa-solid fa-pen-to-square"></i> Modificar mi respuesta
+                                <i class="fa-solid fa-pen-to-square"></i> MODIFICAR MI RESPUESTA
                             </button>
                             <button type="button" id="rsvp-another-btn" class="w-full border border-dark/20 text-dark text-xs uppercase tracking-[0.2em] py-3.5 hover:bg-dark hover:text-light transition-all font-semibold bg-light cursor-pointer">
-                                Confirmar otra persona
+                                CONFIRMAR OTRA PERSONA
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Error Step -->
+                    <div id="rsvp-error" class="hidden text-center space-y-6">
+                        <div class="space-y-2">
+                            <h3 class="font-serif text-3xl text-wine font-semibold">NO PUDIMOS REGISTRAR TU RESPUESTA</h3>
+                            <p class="text-muted text-sm font-light leading-relaxed">Tu información no fue guardada. Revisa tu conexión e inténtalo nuevamente.</p>
+                        </div>
+                        <div class="pt-2">
+                            <button type="button" id="rsvp-retry-btn" class="w-full bg-wine text-light font-sans text-xs uppercase tracking-[0.3em] py-5 hover:bg-dark transition-colors font-semibold cursor-pointer">
+                                REINTENTAR
                             </button>
                         </div>
                     </div>
