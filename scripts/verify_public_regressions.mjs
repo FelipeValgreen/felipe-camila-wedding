@@ -117,6 +117,20 @@ assertInvariant(indexHtml.includes('favicon.ico?v=4'), 'Favicons in index.html u
 assertInvariant(indexHtml.includes('js/main.js?v=5'), 'index.html references js/main.js?v=5');
 assertInvariant(mainJs.includes('js/civil_featured.json?v=5'), 'js/main.js fetches js/civil_featured.json?v=5');
 
+// 11. RSVP Reconciliation & Health Monitoring checks
+const rsvpServiceJs = fs.readFileSync('api/_lib/rsvp-service.js', 'utf8');
+const rsvpHealthCron = fs.readFileSync('api/cron/rsvp-health.js', 'utf8');
+const vercelJson = fs.readFileSync('vercel.json', 'utf8');
+const migrationSql = fs.readFileSync('supabase/migrations/20260725000000_felipeycami_auto_reconcile_system.sql', 'utf8');
+
+assertInvariant(indexHtml.includes('id="rsvp-error"'), 'index.html contains rsvp-error block');
+assertInvariant(indexHtml.includes('id="rsvp-retry-btn"'), 'index.html contains rsvp-retry-btn button');
+assertInvariant(indexHtml.includes('REGISTRANDO RESPUESTA…') || mainJs.includes('REGISTRANDO RESPUESTA…'), 'REGISTRANDO RESPUESTA… text present in submission lifecycle');
+assertInvariant(rsvpServiceJs.includes('reconcileRSVPSystem'), 'api/_lib/rsvp-service.js invokes reconcileRSVPSystem');
+assertInvariant(migrationSql.includes('SECURITY DEFINER') && migrationSql.includes('REVOKE ALL ON FUNCTION public.reconcile_rsvp_system'), 'Migration enforces SECURITY DEFINER and REVOKE ALL ON FUNCTION FROM PUBLIC');
+assertInvariant(rsvpHealthCron.includes('UNAUTHORIZED_CRON_REQUEST') && rsvpHealthCron.includes('CRON_HEALTH_CHECK'), 'api/cron/rsvp-health.js enforces authorization and writes health check logs');
+assertInvariant(vercelJson.includes('/api/cron/rsvp-health'), 'vercel.json configures cron for /api/cron/rsvp-health');
+
 if (failures > 0) {
   console.error(`\n❌ REGRESSION GUARD AUDIT FAILED WITH ${failures} FAILURE(S).`);
   process.exit(1);

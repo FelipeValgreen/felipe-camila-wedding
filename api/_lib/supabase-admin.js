@@ -140,6 +140,20 @@ export async function createRSVPEvent(rsvpId, eventType, source) {
     }
 }
 
+export async function reconcileRSVPSystem(rsvpId) {
+    if (!isValidUUID(rsvpId)) return null;
+    try {
+        const res = await supabaseRequest('rpc/reconcile_rsvp_system', {
+            method: 'POST',
+            body: { p_rsvp_id: rsvpId }
+        });
+        return res;
+    } catch (err) {
+        console.error('Reconciliation RPC error for RSVP', rsvpId, ':', err.message);
+        return null;
+    }
+}
+
 export async function getWhatsAppSession(phone) {
     const res = await supabaseRequest('whatsapp_sessions?phone_e164=eq.' + encodeURIComponent(phone) + '&select=*');
     return res && res[0] ? res[0] : null;

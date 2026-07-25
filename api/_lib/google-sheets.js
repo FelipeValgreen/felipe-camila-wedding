@@ -110,29 +110,27 @@ export async function syncToGoogleSheets(rsvpData, isUpdate = false, dependencie
             }
         }
 
-        if (isUpdate && !targetRowNumber) {
-            // Search column A by UUID
+        if (!targetRowNumber && rsvpData.id) {
+            // Search column A by UUID for idempotency
             const searchUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A:A';
             const searchRes = await fetchImpl(searchUrl, {
                 headers: { 'Authorization': 'Bearer ' + accessToken }
             });
 
-            if (!searchRes.ok) {
-                return { synced: false, error: 'SHEETS_SEARCH_FAILED' };
-            }
-
-            const searchData = await searchRes.json();
-            const values = searchData.values || [];
-            for (let i = 0; i < values.length; i++) {
-                if (values[i][0] === rsvpData.id) {
-                    targetRowNumber = i + 1;
-                    break;
+            if (searchRes.ok) {
+                const searchData = await searchRes.json();
+                const values = searchData.values || [];
+                for (let i = 0; i < values.length; i++) {
+                    if (values[i][0] === rsvpData.id) {
+                        targetRowNumber = i + 1;
+                        break;
+                    }
                 }
             }
         }
 
-        if (isUpdate && targetRowNumber) {
-            // Update exact row
+        if (targetRowNumber) {
+            // Update exact row idempotently
             const updateUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' + encodeURIComponent(tabName) + '!A' + targetRowNumber + ':M' + targetRowNumber + '?valueInputOption=USER_ENTERED';
             const updateRes = await fetchImpl(updateUrl, {
                 method: 'PUT',

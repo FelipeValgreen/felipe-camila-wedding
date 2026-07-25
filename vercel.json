@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/rsvp-health",
+      "schedule": "0 * * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/css/(tailwind\\.min\\.css|icons\\.css)",

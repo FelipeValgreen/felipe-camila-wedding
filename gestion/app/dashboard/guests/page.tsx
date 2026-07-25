@@ -35,15 +35,29 @@ interface RSVPResponse {
   dietary_type: string | null;
   dietary_detail: string | null;
   reconciliation_status: string;
+  reconciliation_notes: string | null;
+  sheet_sync_status: string | null;
+  source: string;
   guest_id: string | null;
+  created_at: string;
+}
+
+function maskPhone(phone: string | null): string {
+  if (!phone) return 'Sin teléfono';
+  const clean = phone.trim();
+  if (clean.length < 8) return clean;
+  const start = clean.slice(0, 4);
+  const end = clean.slice(-4);
+  return `${start} **** ${end}`;
 }
 
 export default function GuestsPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
-  const [unmatchedRSVPs, setUnmatchedRSVPs] = useState<RSVPResponse[]>([]);
+  const [allRSVPs, setAllRSVPs] = useState<RSVPResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewFilter, setViewFilter] = useState<string>('all');
+  const [showRsvpTable, setShowRsvpTable] = useState(true);
 
   // Drawer / Form state
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
@@ -67,10 +81,10 @@ export default function GuestsPage() {
     try {
       const supabase = createClient();
       const { data: gData } = await supabase.from('wedding_guests').select('*').order('first_name', { ascending: true });
-      const { data: rData } = await supabase.from('rsvp_responses').select('*').eq('reconciliation_status', 'unmatched');
+      const { data: rData } = await supabase.from('rsvp_responses').select('*').order('created_at', { ascending: false });
 
       if (gData) setGuests(gData as Guest[]);
-      if (rData) setUnmatchedRSVPs(rData as RSVPResponse[]);
+      if (rData) setAllRSVPs(rData as RSVPResponse[]);
     } catch (err) {
       console.error('Error loading guests:', err);
     } finally {
@@ -219,23 +233,156 @@ export default function GuestsPage() {
           </div>
         </div>
 
-        {/* Unmatched RSVP Alert Banner if present */}
-        {unmatchedRSVPs.length > 0 && (
-          <div className="bg-[#8E703E]/10 border border-[#8E703E] p-4 rounded-sm flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <LinkIcon size={16} className="text-[#8E703E]" />
-              <div>
-                <span className="block text-xs font-bold text-[#8E703E] uppercase tracking-wider">RSVP Pendiente por Conciliar</span>
-                <span className="block text-xs text-[var(--text-primary)]">
-                  Hay {unmatchedRSVPs.length} confirmación web sin vincular a ficha de invitado.
-                </span>
-              </div>
+        {/* SECTION: RESPUESTAS WEB RSVP */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-3">
+            <div>
+              <span className="text-[10px] uppercase tracking-[0.25em] text-[var(--accent-gold)] font-bold block">
+                Auditoría Completa de Registro Web & WhatsApp
+              </span>
+              <h2 className="font-serif text-xl text-[var(--text-primary)]">
+                RESPUESTAS WEB RSVP ({allRSVPs.length})
+              </h2>
             </div>
-            <button onClick={() => setReconcileRsvp(unmatchedRSVPs[0])} className="btn-secondary text-xs py-1.5">
-              Conciliar Manualmente
+            <button
+              onClick={() => setShowRsvpTable(!showRsvpTable)}
+              className="btn-secondary text-xs px-3 py-1.5"
+            >
+              {showRsvpTable ? 'Ocultar Respuestas' : 'Ver Todas las Respuestas'}
             </button>
           </div>
-        )}
+
+          {/* Indicators Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-xs">
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] p-2.5 rounded text-center">
+              <span className="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Total</span>
+              <strong className="text-base text-[var(--text-primary)]">{allRSVPs.length}</strong>
+            </div>
+            <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded text-center">
+              <span className="block text-[10px] text-emerald-700 uppercase tracking-wider font-semibold">Conciliadas</span>
+              <strong className="text-base text-emerald-700">{allRSVPs.filter(r => r.reconciliation_status === 'matched').length}</strong>
+            </div>
+            <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded text-center">
+              <span className="block text-[10px] text-amber-700 uppercase tracking-wider font-semibold">Sin coincidencia</span>
+              <strong className="text-base text-amber-700">{allRSVPs.filter(r => r.reconciliation_status === 'unmatched').length}</strong>
+            </div>
+            <div className="bg-rose-500/10 border border-rose-500/30 p-2.5 rounded text-center">
+              <span className="block text-[10px] text-rose-700 uppercase tracking-wider font-semibold">Ambiguas</span>
+              <strong className="text-base text-rose-700">{allRSVPs.filter(r => r.reconciliation_status === 'ambiguous').length}</strong>
+            </div>
+            <div className="bg-purple-500/10 border border-purple-500/30 p-2.5 rounded text-center">
+              <span className="block text-[10px] text-purple-700 uppercase tracking-wider font-semibold">Con Conflicto</span>
+              <strong className="text-base text-purple-700">{allRSVPs.filter(r => r.reconciliation_status === 'conflict').length}</strong>
+            </div>
+            <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded text-center">
+              <span className="block text-[10px] text-amber-700 uppercase tracking-wider font-semibold">Fallos Sheets</span>
+              <strong className="text-base text-amber-700">{allRSVPs.filter(r => r.sheet_sync_status === 'failed').length}</strong>
+            </div>
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] p-2.5 rounded text-center">
+              <span className="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Últimas 24h</span>
+              <strong className="text-base text-[var(--text-primary)]">
+                {allRSVPs.filter(r => (Date.now() - new Date(r.created_at).getTime()) <= 24 * 60 * 60 * 1000).length}
+              </strong>
+            </div>
+          </div>
+
+          {/* Full Table of rsvp_responses */}
+          {showRsvpTable && (
+            <div className="overflow-x-auto border border-[var(--border-color)] rounded mt-3">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-[var(--bg-secondary)] uppercase tracking-wider border-b border-[var(--border-color)] text-[10px] text-[var(--text-muted)] font-semibold">
+                  <tr>
+                    <th className="p-2.5">Fecha y Hora</th>
+                    <th className="p-2.5">Nombre Registrado</th>
+                    <th className="p-2.5">Teléfono</th>
+                    <th className="p-2.5">Asistencia</th>
+                    <th className="p-2.5">Restricción Alimentaria</th>
+                    <th className="p-2.5">Fuente</th>
+                    <th className="p-2.5">Estado Conciliación</th>
+                    <th className="p-2.5">Sync Sheets</th>
+                    <th className="p-2.5">Invitado Vinculado</th>
+                    <th className="p-2.5">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-color)] font-sans">
+                  {allRSVPs.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="p-4 text-center text-[var(--text-secondary)]">No hay respuestas registadas aún.</td>
+                    </tr>
+                  ) : (
+                    allRSVPs.map(r => {
+                      const linkedGuest = guests.find(g => g.id === r.guest_id);
+                      return (
+                        <tr key={r.id} className="hover:bg-[var(--bg-secondary)]/50 transition-colors">
+                          <td className="p-2.5 text-[11px] text-[var(--text-muted)] whitespace-nowrap">
+                            {new Date(r.created_at).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td className="p-2.5 font-semibold text-[var(--text-primary)] whitespace-nowrap">
+                            {r.first_name} {r.last_name}
+                          </td>
+                          <td className="p-2.5 font-mono text-[11px] whitespace-nowrap">
+                            {maskPhone(r.phone_e164)}
+                          </td>
+                          <td className="p-2.5">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                              r.attendance_status === 'attending' ? 'bg-emerald-500/15 text-emerald-700' :
+                              r.attendance_status === 'not_attending' ? 'bg-rose-500/15 text-rose-700' :
+                              'bg-amber-500/15 text-amber-700'
+                            }`}>
+                              {r.attendance_status === 'attending' ? 'Confirmada' : r.attendance_status === 'not_attending' ? 'No asiste' : 'Pendiente'}
+                            </span>
+                          </td>
+                          <td className="p-2.5 text-[11px]">
+                            {r.dietary_type || 'Ninguna'}
+                            {r.dietary_detail ? ` (${r.dietary_detail})` : ''}
+                          </td>
+                          <td className="p-2.5 text-[11px] uppercase tracking-wider font-mono text-[var(--text-muted)]">
+                            {r.source || 'web'}
+                          </td>
+                          <td className="p-2.5">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                              r.reconciliation_status === 'matched' ? 'bg-emerald-500/20 text-emerald-800' :
+                              r.reconciliation_status === 'unmatched' ? 'bg-amber-500/20 text-amber-800' :
+                              'bg-rose-500/20 text-rose-800'
+                            }`}>
+                              {r.reconciliation_status}
+                            </span>
+                          </td>
+                          <td className="p-2.5">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                              r.sheet_sync_status === 'synced' ? 'bg-emerald-500/15 text-emerald-700' :
+                              r.sheet_sync_status === 'failed' ? 'bg-rose-500/15 text-rose-700' :
+                              'bg-amber-500/15 text-amber-700'
+                            }`}>
+                              {r.sheet_sync_status || 'pending'}
+                            </span>
+                          </td>
+                          <td className="p-2.5 text-[11px]">
+                            {linkedGuest ? (
+                              <span className="font-semibold text-emerald-700">{linkedGuest.first_name} {linkedGuest.last_name}</span>
+                            ) : (
+                              <span className="text-amber-700 italic">Sin vincular</span>
+                            )}
+                          </td>
+                          <td className="p-2.5">
+                            {r.reconciliation_status !== 'matched' && (
+                              <button
+                                onClick={() => setReconcileRsvp(r)}
+                                className="px-2.5 py-1 bg-[#8E703E] text-white hover:bg-black rounded text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap"
+                              >
+                                REVISAR Y VINCULAR
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
         {/* Filters & Views Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[var(--bg-secondary)] p-4 border border-[var(--border-color)]">

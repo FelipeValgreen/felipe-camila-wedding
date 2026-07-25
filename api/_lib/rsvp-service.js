@@ -5,6 +5,7 @@ import {
     getRSVPByPhoneAndName,
     updateRSVPRecord,
     createRSVPEvent,
+    reconcileRSVPSystem,
     isValidUUID
 } from './supabase-admin.js';
 import { syncToGoogleSheets } from './google-sheets.js';
@@ -159,6 +160,16 @@ export async function createRSVP(input, source = 'web') {
 
     await createRSVPEvent(inserted.id, 'created', source);
 
+    let reconStatus = 'unmatched';
+    try {
+        const reconRes = await reconcileRSVPSystem(inserted.id);
+        if (reconRes && reconRes.reconciliation_status) {
+            reconStatus = reconRes.reconciliation_status;
+        }
+    } catch (err) {
+        console.error('Non-critical system reconciliation error:', err.message);
+    }
+
     let sheetsStatus = 'pending';
     let sheetRowNumber = null;
 
@@ -183,6 +194,7 @@ export async function createRSVP(input, source = 'web') {
         attendance_status: inserted.attendance_status,
         dietary_type: inserted.dietary_type,
         dietary_detail: inserted.dietary_detail,
+        reconciliation_status: reconStatus,
         sheet_sync_status: sheetsStatus
     };
 }
