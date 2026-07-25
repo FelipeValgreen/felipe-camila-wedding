@@ -56,9 +56,6 @@
             <button id="filter-civil" data-filter="civil" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all">
                 Nuestro civil (<span id="count-civil">--</span>)
             </button>
-            <button id="filter-despues" data-filter="despues" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all">
-                Después del civil (<span id="count-despues">--</span>)
-            </button>
         </div>
 
         <!-- Loading / Status Container -->
@@ -114,7 +111,6 @@
             const countTodas = document.getElementById('count-todas');
             const countHistoria = document.getElementById('count-historia');
             const countCivil = document.getElementById('count-civil');
-            const countDespues = document.getElementById('count-despues');
 
             const lightbox = document.getElementById('lightbox');
             const lightboxImg = document.getElementById('lightbox-img');
@@ -134,8 +130,13 @@
 
             function getFilterFromUrl() {
                 const params = new URLSearchParams(window.location.search);
+                if (params.get('filtro') === 'despues') {
+                    params.set('filtro', 'civil');
+                    window.history.replaceState(history.state, '', `${window.location.pathname}?${params.toString()}`);
+                    return 'civil';
+                }
                 const f = params.get('filtro');
-                return ['todas', 'historia', 'civil', 'despues'].includes(f) ? f : 'todas';
+                return ['todas', 'historia', 'civil'].includes(f) ? f : 'todas';
             }
 
             function updateUrlFilter(filterKey) {
@@ -206,12 +207,10 @@
                     // Dynamic Live Counts
                     const historiaCount = allArchivePhotos.filter(p => p.category === 'historia').length;
                     const civilCount = allArchivePhotos.filter(p => p.category === 'civil').length;
-                    const despuesCount = allArchivePhotos.filter(p => p.category === 'despues').length;
 
                     countTodas.textContent = allArchivePhotos.length;
                     countHistoria.textContent = historiaCount;
                     countCivil.textContent = civilCount;
-                    countDespues.textContent = despuesCount;
 
                     statusBox.classList.add('hidden');
                     applyFilter(currentFilter, false);
@@ -233,8 +232,7 @@
 
             function getCategoryLabel(cat) {
                 if (cat === 'historia') return 'Nuestra historia';
-                if (cat === 'civil') return 'Nuestro civil';
-                return 'Después del civil';
+                return 'Nuestro civil';
             }
 
             function applyFilter(filterKey, updateHistory = true) {
