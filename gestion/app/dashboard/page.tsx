@@ -2,61 +2,124 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { createClient } from '@/lib/supabase-browser';
 import {
-  Users,
-  CheckCircle2,
-  XCircle,
-  Clock,
+  AlertCircle,
   AlertTriangle,
   Armchair,
-  DollarSign,
-  Calendar,
-  AlertCircle,
+  CheckCircle2,
+  Clock,
   Database,
-  RefreshCw
+  DollarSign,
+  RefreshCw,
+  Users,
+  XCircle
 } from 'lucide-react';
 
-const INITIAL_STATS = {
+type SummaryStatus =
+  | 'matched'
+  | 'split_matched'
+  | 'partially_matched'
+  | 'unmatched'
+  | 'ambiguous'
+  | 'conflict'
+  | string;
+
+interface GuestRow {
+  guest_status: string;
+  invitation_status: string;
+  attendance_status: string;
+  dietary_type: string | null;
+  table_id: string | null;
+  reconfirmation_status: string;
+}
+
+interface RsvpSummaryRow {
+  rsvp_id: string;
+  attendance_status: string;
+  reconciliation_status: SummaryStatus;
+  sheet_sync_status: string;
+  member_count: number;
+  matched_member_count: number;
+  pending_member_count: number;
+}
+
+interface IssueRow {
+  severity: string;
+  issue_type: string;
+  status: string;
+}
+
+interface OutboxRow {
+  status: string;
+}
+
+interface TableRow {
+  capacity: number;
+}
+
+interface ExpenseRow {
+  total_amount: number | null;
+  due_date: string | null;
+  payment_status: string | null;
+}
+
+interface PaymentRow {
+  amount: number | null;
+  status: string | null;
+}
+
+const EMPTY_STATS = {
   activeGuests: 0,
   invitationsSent: 0,
   responsesReceived: 0,
-  confirmed: 0,
-  declined: 0,
-  pending: 0,
-  properlyMatchedRsvp: 0,
-  unmatchedRsvp: 0,
-  ambiguousRsvp: 0,
-  conflictRsvp: 0,
-  malformedMatchedRsvp: 0,
-  rsvpReviewTotal: 0,
+  attendingResponses: 0,
+  confirmedPeople: 0,
+  declinedPeople: 0,
+  pendingPeople: 0,
+  reconciledResponses: 0,
+  individualMatches: 0,
+  jointMatches: 0,
+  reviewResponses: 0,
+  partiallyMatched: 0,
+  openIssues: 0,
+  criticalIssues: 0,
   sheetSyncFailed: 0,
   outboxPending: 0,
   outboxFailed: 0,
   outboxProcessed: 0,
   confirmedNoTable: 0,
   configuredCapacity: 0,
-  estimatedCapacity: 250,
-  dietaryFlagsCount: 0,
+  seatingAssignments: 0,
+  dietaryFlags: 0,
   reconfirmationPending: 0,
   totalContracted: 0,
   totalPaid: 0,
-  hasIncompleteAmounts: true,
-  upcomingPaymentsCount: 0,
-  overduePaymentsCount: 0
+  incompleteAmounts: 0,
+  upcomingPayments: 0,
+  overduePayments: 0
 };
 
+function money(value: number): string {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0
+  }).format(value || 0);
+}
+
 export default function DashboardResumen() {
+  const [stats, setStats] = useState(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
-  const [stats, setStats] = useState(INITIAL_STATS);
 
-  const loadStats = useCallback(async (manualRefresh = false) => {
-    if (manualRefresh) setRefreshing(true);
+  const loadStats = useCallback(async (manual = false) => {
+    if (manual) setRefreshing(true);
     setLoadError(null);
 
     try {
@@ -64,145 +127,136 @@ export default function DashboardResumen() {
       const [
         guestsResult,
         rsvpsResult,
+        issuesResult,
+        outboxResult,
         tablesResult,
+        seatingResult,
         expensesResult,
-        paymentsResult,
-        outboxResult
+        paymentsResult
       ] = await Promise.all([
         supabase
           .from('wedding_guests')
           .select('guest_status, invitation_status, attendance_status, dietary_type, table_id, reconfirmation_status'),
         supabase
-          .from('rsvp_responses')
-          .select('id, guest_id, reconciliation_status, sheet_sync_status, created_at'),
+          .from('rsvp_management_summary')
+          .select('rsvp_id, attendance_status, reconciliation_status, sheet_sync_status, member_count, matched_member_count, pending_member_count'),
+        supabase
+          .from('management_issues')
+          .select('severity, issue_type, status')
+          .eq('status', 'open'),
+        supabase.from('sync_outbox').select('status'),
         supabase.from('wedding_tables').select('capacity'),
+        supabase.from('seating_assignments').select('id'),
         supabase.from('expenses').select('total_amount, due_date, payment_status'),
-        supabase.from('expense_payments').select('amount, status'),
-        supabase.from('sync_outbox').select('status, attempts, entity_type, created_at')
+        supabase.from('expense_payments').select('amount, status')
       ]);
 
       const queryErrors = [
         guestsResult.error,
         rsvpsResult.error,
+        issuesResult.error,
+        outboxResult.error,
         tablesResult.error,
+        seatingResult.error,
         expensesResult.error,
-        paymentsResult.error,
-        outboxResult.error
+        paymentsResult.error
       ].filter(Boolean);
 
       if (queryErrors.length > 0) {
         throw new Error(queryErrors.map(error => error?.message).join(' · '));
       }
 
-      const guests = guestsResult.data || [];
-      const rsvps = rsvpsResult.data || [];
-      const tables = tablesResult.data || [];
-      const expenses = expensesResult.data || [];
-      const payments = paymentsResult.data || [];
-      const outbox = outboxResult.data || [];
+      const guests = (guestsResult.data || []) as GuestRow[];
+      const rsvps = (rsvpsResult.data || []) as RsvpSummaryRow[];
+      const issues = (issuesResult.data || []) as IssueRow[];
+      const outbox = (outboxResult.data || []) as OutboxRow[];
+      const tables = (tablesResult.data || []) as TableRow[];
+      const expenses = (expensesResult.data || []) as ExpenseRow[];
+      const payments = (paymentsResult.data || []) as PaymentRow[];
 
       const activeGuests = guests.filter(guest => guest.guest_status === 'active');
-      const confirmed = activeGuests.filter(guest => guest.attendance_status === 'attending').length;
-      const declined = activeGuests.filter(guest => guest.attendance_status === 'not_attending').length;
-      const pending = activeGuests.filter(guest => guest.attendance_status === 'pending').length;
+      const confirmedPeople = activeGuests.filter(guest => guest.attendance_status === 'attending').length;
+      const declinedPeople = activeGuests.filter(guest => guest.attendance_status === 'not_attending').length;
+      const pendingPeople = activeGuests.filter(guest => guest.attendance_status === 'pending').length;
 
-      const dietaryFlagsCount = activeGuests.filter(
-        guest => guest.dietary_type && guest.dietary_type !== 'Ninguna'
+      const individualMatches = rsvps.filter(
+        rsvp => rsvp.reconciliation_status === 'matched' && rsvp.pending_member_count === 0
       ).length;
-      const confirmedNoTable = activeGuests.filter(
-        guest => guest.attendance_status === 'attending' && !guest.table_id
+      const jointMatches = rsvps.filter(
+        rsvp => rsvp.reconciliation_status === 'split_matched' && rsvp.pending_member_count === 0
       ).length;
-      const reconfirmationPending = activeGuests.filter(
-        guest => guest.reconfirmation_status === 'pending'
+      const partiallyMatched = rsvps.filter(
+        rsvp => rsvp.reconciliation_status === 'partially_matched'
       ).length;
-
-      const properlyMatchedRsvp = rsvps.filter(
-        rsvp => rsvp.reconciliation_status === 'matched' && Boolean(rsvp.guest_id)
+      const reviewResponses = rsvps.filter(rsvp =>
+        rsvp.pending_member_count > 0 ||
+        ['unmatched', 'partially_matched', 'ambiguous', 'conflict'].includes(rsvp.reconciliation_status)
       ).length;
-      const malformedMatchedRsvp = rsvps.filter(
-        rsvp => rsvp.reconciliation_status === 'matched' && !rsvp.guest_id
-      ).length;
-      const unmatchedRsvp = rsvps.filter(
-        rsvp => rsvp.reconciliation_status === 'unmatched' && !rsvp.guest_id
-      ).length;
-      const ambiguousRsvp = rsvps.filter(
-        rsvp => rsvp.reconciliation_status === 'ambiguous'
-      ).length;
-      const conflictRsvp = rsvps.filter(
-        rsvp => rsvp.reconciliation_status === 'conflict'
-      ).length;
-      const rsvpReviewTotal = unmatchedRsvp + ambiguousRsvp + conflictRsvp + malformedMatchedRsvp;
-      const sheetSyncFailed = rsvps.filter(rsvp => rsvp.sheet_sync_status === 'failed').length;
-
-      const outboxPending = outbox.filter(item => item.status === 'pending').length;
-      const outboxFailed = outbox.filter(item => item.status === 'failed').length;
-      const outboxProcessed = outbox.filter(item => item.status === 'processed').length;
 
       const configuredCapacity = tables.reduce(
-        (sum, table) => sum + (Number(table.capacity) || 10),
+        (sum, table) => sum + (Number(table.capacity) || 0),
         0
       );
-
+      const totalContracted = expenses.reduce(
+        (sum, expense) => sum + (Number(expense.total_amount) || 0),
+        0
+      );
       const totalPaid = payments
         .filter(payment => payment.status === 'Pagado')
         .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
 
-      const incompleteExpenses = expenses.filter(
-        expense => expense.total_amount === null || expense.total_amount === undefined
-      );
-      const hasIncompleteAmounts = incompleteExpenses.length > 0;
-
-      const totalContracted = expenses
-        .filter(expense => expense.total_amount !== null && expense.total_amount !== undefined)
-        .reduce((sum, expense) => sum + (Number(expense.total_amount) || 0), 0);
-
       const now = new Date();
-      const thirtyDaysFromNow = new Date(now);
-      thirtyDaysFromNow.setDate(now.getDate() + 30);
-
-      let upcomingPaymentsCount = 0;
-      let overduePaymentsCount = 0;
+      const inThirtyDays = new Date(now);
+      inThirtyDays.setDate(now.getDate() + 30);
+      let upcomingPayments = 0;
+      let overduePayments = 0;
 
       expenses.forEach(expense => {
         if (!expense.due_date || expense.payment_status === 'Pagado') return;
-
         const dueDate = new Date(expense.due_date);
-        if (dueDate > now && dueDate <= thirtyDaysFromNow) upcomingPaymentsCount++;
-        if (dueDate < now) overduePaymentsCount++;
+        if (dueDate < now) overduePayments++;
+        else if (dueDate <= inThirtyDays) upcomingPayments++;
       });
 
       setStats({
         activeGuests: activeGuests.length,
         invitationsSent: activeGuests.filter(guest => guest.invitation_status !== 'not_sent').length,
         responsesReceived: rsvps.length,
-        confirmed,
-        declined,
-        pending,
-        properlyMatchedRsvp,
-        unmatchedRsvp,
-        ambiguousRsvp,
-        conflictRsvp,
-        malformedMatchedRsvp,
-        rsvpReviewTotal,
-        sheetSyncFailed,
-        outboxPending,
-        outboxFailed,
-        outboxProcessed,
-        confirmedNoTable,
+        attendingResponses: rsvps.filter(rsvp => rsvp.attendance_status === 'attending').length,
+        confirmedPeople,
+        declinedPeople,
+        pendingPeople,
+        reconciledResponses: individualMatches + jointMatches,
+        individualMatches,
+        jointMatches,
+        reviewResponses,
+        partiallyMatched,
+        openIssues: issues.length,
+        criticalIssues: issues.filter(issue => issue.severity === 'critical').length,
+        sheetSyncFailed: rsvps.filter(rsvp => rsvp.sheet_sync_status === 'failed').length,
+        outboxPending: outbox.filter(item => item.status === 'pending' || item.status === 'processing').length,
+        outboxFailed: outbox.filter(item => item.status === 'failed').length,
+        outboxProcessed: outbox.filter(item => item.status === 'processed').length,
+        confirmedNoTable: activeGuests.filter(
+          guest => guest.attendance_status === 'attending' && !guest.table_id
+        ).length,
         configuredCapacity,
-        estimatedCapacity: 250,
-        dietaryFlagsCount,
-        reconfirmationPending,
+        seatingAssignments: seatingResult.data?.length || 0,
+        dietaryFlags: activeGuests.filter(
+          guest => guest.dietary_type && guest.dietary_type !== 'Ninguna'
+        ).length,
+        reconfirmationPending: activeGuests.filter(
+          guest => guest.reconfirmation_status === 'pending'
+        ).length,
         totalContracted,
         totalPaid,
-        hasIncompleteAmounts,
-        upcomingPaymentsCount,
-        overduePaymentsCount
+        incompleteAmounts: expenses.filter(expense => expense.total_amount === null).length,
+        upcomingPayments,
+        overduePayments
       });
       setLastUpdatedAt(new Date());
-    } catch (err) {
-      console.error('Error loading dynamic stats:', err);
-      setLoadError(err instanceof Error ? err.message : 'No se pudo actualizar el resumen operativo.');
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'No fue posible actualizar el resumen.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -211,42 +265,48 @@ export default function DashboardResumen() {
 
   useEffect(() => {
     loadStats();
-
-    const intervalId = window.setInterval(() => {
-      loadStats();
-    }, 30_000);
-
-    const handleVisibilityChange = () => {
+    const interval = window.setInterval(() => loadStats(), 30_000);
+    const onVisible = () => {
       if (document.visibilityState === 'visible') loadStats();
     };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
-      window.clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [loadStats]);
 
-  const balanceKnown = stats.totalContracted - stats.totalPaid;
+  const capacityDifference = stats.configuredCapacity - stats.confirmedPeople;
+  const balance = stats.totalContracted - stats.totalPaid;
+  const hasOperationalAlert =
+    stats.reviewResponses > 0 ||
+    stats.criticalIssues > 0 ||
+    stats.sheetSyncFailed > 0 ||
+    stats.outboxPending > 0 ||
+    stats.outboxFailed > 0 ||
+    stats.configuredCapacity < stats.confirmedPeople;
+
+  const reconciliationText = useMemo(() => {
+    return `${stats.individualMatches} individuales · ${stats.jointMatches} conjuntas`;
+  }, [stats.individualMatches, stats.jointMatches]);
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
+      <div className="space-y-7">
+        <header className="flex flex-col gap-4 border-b border-[var(--border-color)] pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <span className="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-semibold block">
-              Resumen Operativo en Vivo
+            <span className="block text-xs font-semibold uppercase tracking-[0.25em] text-[var(--accent-gold)]">
+              Resumen operativo en vivo
             </span>
-            <h1 className="font-serif text-3xl text-[var(--text-primary)] mt-1">
-              Centro de Comandos F&C
-            </h1>
+            <h1 className="mt-1 font-serif text-3xl text-[var(--text-primary)]">Centro de Comandos F&C</h1>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+              Supabase es la fuente canónica · Google Sheets funciona como espejo operativo.
+            </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <span className="text-xs text-[var(--text-secondary)] block">Matrimonio Felipe & Camila</span>
-              <span className="text-xs font-semibold text-[var(--text-primary)] block">23 de octubre de 2026</span>
-              <span className="text-[10px] text-[var(--text-muted)] block mt-1">
+            <div className="hidden text-right text-xs sm:block">
+              <strong className="block">23 de octubre de 2026</strong>
+              <span className="text-[var(--text-muted)]">
                 {lastUpdatedAt
                   ? `Actualizado ${lastUpdatedAt.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
                   : 'Esperando actualización'}
@@ -262,170 +322,129 @@ export default function DashboardResumen() {
               {refreshing ? 'Actualizando' : 'Actualizar'}
             </button>
           </div>
-        </div>
+        </header>
 
         {loadError && (
-          <div className="flex items-start gap-3 border border-[#A83232]/40 bg-[#A83232]/10 p-4 text-sm text-[#A83232]">
+          <div className="flex items-start gap-3 border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-800">
             <AlertCircle size={18} className="mt-0.5 shrink-0" />
-            <div>
-              <strong className="block uppercase tracking-wider text-xs">No se pudo actualizar el dashboard</strong>
-              <span className="block mt-1 text-xs">{loadError}</span>
-            </div>
+            <div><strong className="block">No se pudo actualizar el dashboard</strong>{loadError}</div>
           </div>
         )}
 
-        <div>
-          <h2 className="text-xs uppercase tracking-[0.2em] font-semibold text-[var(--text-secondary)] mb-4">
-            Gestión de Invitados & RSVP
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
+            Invitados y respuestas
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2">
-                <Users size={14} /> Invitados Activos
-              </span>
-              <div className="kpi-value">{loading ? '...' : stats.activeGuests}</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
+              <span className="kpi-title flex items-center gap-2"><Users size={14} /> Invitados activos</span>
+              <div className="kpi-value">{loading ? '…' : stats.activeGuests}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
                 {stats.invitationsSent} invitaciones enviadas · {stats.responsesReceived} respuestas web
               </span>
             </div>
-
             <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2 text-[#2D5A27]">
-                <CheckCircle2 size={14} /> Confirmados
-              </span>
-              <div className="kpi-value text-[#2D5A27]">{loading ? '...' : stats.confirmed}</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                {stats.properlyMatchedRsvp} RSVP correctamente vinculados · {stats.dietaryFlagsCount} restricciones
+              <span className="kpi-title flex items-center gap-2 text-emerald-800"><CheckCircle2 size={14} /> Personas confirmadas</span>
+              <div className="kpi-value text-emerald-800">{loading ? '…' : stats.confirmedPeople}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
+                {stats.attendingResponses} respuestas afirmativas · {stats.dietaryFlags} restricciones
               </span>
             </div>
-
             <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2 text-[#55504A]">
-                <XCircle size={14} /> No Asisten
-              </span>
-              <div className="kpi-value text-[#55504A]">{loading ? '...' : stats.declined}</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                Cupos liberados para asignación
-              </span>
+              <span className="kpi-title flex items-center gap-2"><XCircle size={14} /> No asisten</span>
+              <div className="kpi-value">{loading ? '…' : stats.declinedPeople}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">Personas individuales en la nómina canónica</span>
             </div>
-
             <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2 text-[#8E703E]">
-                <Clock size={14} /> Pendientes
-              </span>
-              <div className="kpi-value text-[#8E703E]">{loading ? '...' : stats.pending}</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                {stats.reconfirmationPending} pendientes de reconfirmación
-              </span>
+              <span className="kpi-title flex items-center gap-2 text-amber-800"><Clock size={14} /> Pendientes</span>
+              <div className="kpi-value text-amber-800">{loading ? '…' : stats.pendingPeople}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{stats.reconfirmationPending} reconfirmaciones pendientes</span>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div>
-          <h2 className="text-xs uppercase tracking-[0.2em] font-semibold text-[var(--text-secondary)] mb-4">
-            Alertas de Conciliación, Sincronización & Capacidad
+        <section>
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
+              Calidad de datos y sincronización
+            </h2>
+            <Link href="/dashboard/issues" className="text-xs font-semibold underline">Abrir incidencias</Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="kpi-card">
+              <span className="kpi-title flex items-center gap-2"><CheckCircle2 size={14} /> RSVP conciliados</span>
+              <div className="kpi-value">{loading ? '…' : stats.reconciledResponses}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{reconciliationText}</span>
+            </div>
+            <div className={`kpi-card ${stats.reviewResponses > 0 ? 'border-amber-500/50' : ''}`}>
+              <span className="kpi-title flex items-center gap-2 text-amber-800"><AlertTriangle size={14} /> Requieren revisión</span>
+              <div className="kpi-value text-amber-800">{loading ? '…' : stats.reviewResponses}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
+                {stats.partiallyMatched} parciales · {stats.criticalIssues} críticas
+              </span>
+            </div>
+            <div className={`kpi-card ${stats.sheetSyncFailed > 0 || stats.outboxPending > 0 || stats.outboxFailed > 0 ? 'border-rose-500/50' : ''}`}>
+              <span className="kpi-title flex items-center gap-2"><Database size={14} /> Sincronización</span>
+              <div className="kpi-value">{loading ? '…' : stats.outboxPending}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
+                Cola pendiente · {stats.outboxFailed} fallidas · {stats.sheetSyncFailed} RSVP sin copiar
+              </span>
+            </div>
+            <div className="kpi-card">
+              <span className="kpi-title flex items-center gap-2"><AlertCircle size={14} /> Incidencias abiertas</span>
+              <div className="kpi-value">{loading ? '…' : stats.openIssues}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{stats.criticalIssues} requieren prioridad</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
+            Mesas y operación
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            <div className="kpi-card border-l-4 border-l-[#8E703E]">
-              <span className="kpi-title flex items-center gap-2">
-                <AlertTriangle size={14} className="text-[#8E703E]" /> RSVP Por Revisar
-              </span>
-              <div className="kpi-value">{loading ? '...' : stats.rsvpReviewTotal}</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                {stats.unmatchedRsvp} sin coincidencia · {stats.ambiguousRsvp} ambiguos · {stats.conflictRsvp} conflictos
-                {stats.malformedMatchedRsvp > 0 ? ` · ${stats.malformedMatchedRsvp} matched sin ficha` : ''}
-              </span>
-            </div>
-
-            <div className={`kpi-card border-l-4 ${stats.outboxFailed > 0 ? 'border-l-[#A83232]' : 'border-l-[#8E703E]'}`}>
-              <span className="kpi-title flex items-center gap-2">
-                <Database size={14} className={stats.outboxFailed > 0 ? 'text-[#A83232]' : 'text-[#8E703E]'} /> Cola de Sincronización
-              </span>
-              <div className="kpi-value">{loading ? '...' : stats.outboxPending}</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                Pendientes en sync_outbox · {stats.outboxFailed} fallidas · {stats.outboxProcessed} procesadas
-              </span>
-              <span className="text-[10px] text-[#A83232] mt-1 block">
-                {stats.sheetSyncFailed} RSVP marcados con fallo de Google Sheets
-              </span>
-            </div>
-
-            <div className="kpi-card border-l-4 border-l-[#A83232]">
-              <span className="kpi-title flex items-center gap-2">
-                <Armchair size={14} className="text-[#A83232]" /> Confirmados Sin Mesa
-              </span>
-              <div className="kpi-value text-[#A83232]">{loading ? '...' : stats.confirmedNoTable}</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                Invitados confirmados requeridos en plano
-              </span>
-            </div>
-
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2">
-                Capacidad de Mesas
+              <span className="kpi-title flex items-center gap-2"><Armchair size={14} /> Capacidad configurada</span>
+              <div className={`kpi-value ${capacityDifference < 0 ? 'text-rose-700' : ''}`}>{loading ? '…' : stats.configuredCapacity}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
+                {capacityDifference >= 0 ? `${capacityDifference} cupos disponibles` : `Faltan ${Math.abs(capacityDifference)} cupos`}
               </span>
-              <div className="kpi-value">
-                {loading ? '...' : `Configurada: ${stats.configuredCapacity}`}
-              </div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                Capacidad estimada recinto: {stats.estimatedCapacity} personas
+            </div>
+            <div className="kpi-card">
+              <span className="kpi-title flex items-center gap-2"><Users size={14} /> Con mesa</span>
+              <div className="kpi-value">{loading ? '…' : stats.seatingAssignments}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{stats.confirmedNoTable} confirmados aún sin mesa</span>
+            </div>
+            <div className="kpi-card">
+              <span className="kpi-title flex items-center gap-2"><DollarSign size={14} /> Contratado</span>
+              <div className="text-2xl font-semibold">{loading ? '…' : money(stats.totalContracted)}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{stats.incompleteAmounts} montos incompletos</span>
+            </div>
+            <div className="kpi-card">
+              <span className="kpi-title flex items-center gap-2"><DollarSign size={14} /> Saldo conocido</span>
+              <div className="text-2xl font-semibold">{loading ? '…' : money(balance)}</div>
+              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
+                {stats.overduePayments} vencidos · {stats.upcomingPayments} próximos 30 días
               </span>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div>
-          <h2 className="text-xs uppercase tracking-[0.2em] font-semibold text-[var(--text-secondary)] mb-4">
-            Resumen Financiero & Vencimientos Dinámicos
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2 text-[#2D5A27]">
-                <DollarSign size={14} /> Total Pagado
-              </span>
-              <div className="kpi-value text-[#2D5A27]">${loading ? '...' : stats.totalPaid.toLocaleString('es-CL')} CLP</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                Pagos confirmados en base de datos
-              </span>
-            </div>
-
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2">
-                Contratado Conocido
-              </span>
-              <div className="kpi-value">${loading ? '...' : stats.totalContracted.toLocaleString('es-CL')} CLP</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                Gastos con monto definido
-              </span>
-            </div>
-
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2 text-[#8E703E]">
-                Saldo Total
-              </span>
-              <div className="kpi-value text-[#8E703E]">
-                {stats.hasIncompleteAmounts ? (
-                  <span className="text-[#A83232] font-semibold italic text-xl">POR COMPLETAR</span>
-                ) : (
-                  `$${balanceKnown.toLocaleString('es-CL')} CLP`
-                )}
+        {hasOperationalAlert && (
+          <div className="flex flex-col gap-3 border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <AlertTriangle size={19} className="mt-0.5 shrink-0" />
+              <div>
+                <strong className="block">Todavía existen tareas operativas antes del cierre final.</strong>
+                <span>Revisa incidencias y completa las mesas antes de exportar la nómina definitiva a proveedores.</span>
               </div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                {stats.hasIncompleteAmounts ? 'Existen contratos con monto desconocido' : 'Saldo exacto calculado'}
-              </span>
             </div>
-
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2">
-                <Calendar size={14} /> Vencimientos (30 días)
-              </span>
-              <div className="kpi-value">{loading ? '...' : stats.upcomingPaymentsCount}</div>
-              <span className="text-xs text-[var(--text-secondary)] mt-2 block">
-                {stats.overduePaymentsCount} pagos vencidos
-              </span>
+            <div className="flex gap-2">
+              <Link href="/dashboard/issues" className="btn-secondary text-xs">Incidencias</Link>
+              <Link href="/dashboard/tables" className="btn-primary text-xs">Mesas</Link>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </DashboardLayout>
   );
