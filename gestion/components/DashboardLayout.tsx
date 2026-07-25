@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Activity,
+  AlertTriangle,
   CalendarDays,
   DollarSign,
   ExternalLink,
@@ -26,6 +27,7 @@ interface LayoutProps {
 const navItems = [
   { label: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Invitados & RSVP', href: '/dashboard/guests', icon: Users },
+  { label: 'Incidencias', href: '/dashboard/issues', icon: AlertTriangle },
   { label: 'Mapa & Mesas', href: '/dashboard/tables', icon: Grid },
   { label: 'Finanzas & Pagos', href: '/dashboard/finance', icon: DollarSign },
   { label: 'Actividad', href: '/dashboard/activity', icon: Activity },
