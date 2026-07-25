@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { createAdminClient } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -30,10 +29,6 @@ const HEADERS = {
 type SheetName = keyof typeof HEADERS;
 type RowsBySheet = Record<SheetName, unknown[][]>;
 
-function hashToken(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex');
-}
-
 function formatPrivateKey(key: string): string {
   return key.replace(/\\n/g, '\n');
 }
@@ -43,6 +38,7 @@ function iso(value?: string | null): string {
 }
 
 async function googleAccessToken(email: string, privateKey: string): Promise<string> {
+  const crypto = await import('crypto');
   const now = Math.floor(Date.now() / 1000);
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
   const claims = Buffer.from(JSON.stringify({
@@ -73,11 +69,7 @@ async function googleAccessToken(email: string, privateKey: string): Promise<str
   return payload.access_token;
 }
 
-async function googleJson(
-  url: string,
-  accessToken: string,
-  init: RequestInit = {}
-): Promise<any> {
+async function googleJson(url: string, accessToken: string, init: RequestInit = {}): Promise<any> {
   const response = await fetch(url, {
     ...init,
     headers: {
@@ -96,11 +88,7 @@ async function googleJson(
   return response.status === 204 ? null : response.json();
 }
 
-async function rebuildSheets(
-  spreadsheetId: string,
-  accessToken: string,
-  rows: RowsBySheet
-): Promise<void> {
+async function rebuildSheets(spreadsheetId: string, accessToken: string, rows: RowsBySheet): Promise<void> {
   await googleJson(
     `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchClear`,
     accessToken,
@@ -169,9 +157,9 @@ async function verifySheets(
 }
 
 export async function GET(request: NextRequest) {
-  const suppliedToken = request.nextUrl.searchParams.get('token') || '';
-  if (!suppliedToken) {
-    return NextResponse.json({ ok: false, error: 'TOKEN_REQUIRED' }, { status: 401 });
+  const jobId = request.nextUrl.searchParams.get('job') || '';
+  if (!/^[0-9a-f-]{36}$/i.test(jobId)) {
+    return NextResponse.json({ ok: false, error: 'VALID_JOB_ID_REQUIRED' }, { status: 400 });
   }
 
   const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
@@ -183,11 +171,11 @@ export async function GET(request: NextRequest) {
   }
 
   const admin = createAdminClient();
-  let jobId: string | null = null;
+  let claimedJobId: string | null = null;
 
   try {
-    const { data: claim, error: claimError } = await admin.rpc('claim_maintenance_job', {
-      p_token_hash: hashToken(suppliedToken),
+    const { data: claim, error: claimError } = await admin.rpc('claim_maintenance_job_by_id', {
+      p_job_id: jobId,
       p_action: ACTION
     });
 
@@ -197,7 +185,7 @@ export async function GET(request: NextRequest) {
         { status: 403 }
       );
     }
-    jobId = claim.id;
+    claimedJobId = claim.id;
 
     const [guestsResult, rsvpResult, tablesResult, seatingResult] = await Promise.all([
       admin
@@ -291,7 +279,7 @@ export async function GET(request: NextRequest) {
 
     await admin.from('audit_log').insert({
       entity_type: 'maintenance_jobs',
-      entity_id: jobId,
+      entity_id: claimedJobId,
       action: 'BASELINE_SHEETS_SYNC',
       after_data: result,
       actor: 'one_time_maintenance_endpoint',
@@ -301,16 +289,16 @@ export async function GET(request: NextRequest) {
     await admin
       .from('maintenance_jobs')
       .update({ status: 'succeeded', used_at: new Date().toISOString(), result, last_error: null })
-      .eq('id', jobId);
+      .eq('id', claimedJobId);
 
     return NextResponse.json({ ok: true, counts: result });
   } catch (error: any) {
     const safeError = String(error?.message || 'BASELINE_SYNC_FAILED').slice(0, 500);
-    if (jobId) {
+    if (claimedJobId) {
       await admin
         .from('maintenance_jobs')
         .update({ status: 'failed', last_error: safeError })
-        .eq('id', jobId);
+        .eq('id', claimedJobId);
     }
     return NextResponse.json({ ok: false, error: safeError }, { status: 500 });
   }
