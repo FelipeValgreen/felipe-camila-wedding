@@ -5,6 +5,15 @@ import { createClient } from '@/lib/supabase-server';
 export const dynamic = 'force-dynamic';
 
 function formatPrivateKey(key: string) { return key.replace(/\\n/g, '\n'); }
+function normalizeName(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
 
 async function googleAccessToken(email: string, privateKey: string) {
   const now = Math.floor(Date.now() / 1000);
@@ -24,7 +33,7 @@ async function googleAccessToken(email: string, privateKey: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      grant_type: 'urn:ietf:params:oauth-grant-type:jwt-bearer'.replace('oauth-grant-type', 'oauth:grant-type'),
       assertion: `${unsigned}.${signature}`,
     }),
     cache: 'no-store',
@@ -66,10 +75,16 @@ export async function GET() {
     }
 
     const token = await googleAccessToken(serviceAccountEmail, serviceAccountKey);
-    const [confirmedRows, groupRows] = await Promise.all([
+    const [confirmedRows, groupRows, membersResult] = await Promise.all([
       readRange(spreadsheetId, token, 'CONFIRMADOS_ACTUALES!A1:J200'),
       readRange(spreadsheetId, token, 'GRUPOS_MESA!A1:H200'),
+      supabase
+        .from('rsvp_response_members')
+        .select('id, rsvp_id, display_name, guest_id, resolution_status, attendance_status, updated_at')
+        .order('updated_at', { ascending: true }),
     ]);
+
+    if (membersResult.error) throw membersResult.error;
 
     const people = confirmedRows.slice(1).filter((row) => row[0]).map((row, index) => ({
       rowNumber: index + 2,
@@ -83,14 +98,43 @@ export async function GET() {
       confirmedAt: row[7] || null,
       syncStatus: row[8] || '',
       phone: row[9] || '',
+      source: 'confirmed_sheet' as const,
     }));
 
     const attending = people.filter((person) => person.attendance === 'Asiste');
     const declined = people.filter((person) => person.attendance === 'No asiste');
+    const sheetAttendingNames = new Set(attending.map((person) => normalizeName(person.name)));
+    const sheetDeclinedNames = new Set(declined.map((person) => normalizeName(person.name)));
+
+    const incomingAttending = (membersResult.data || [])
+      .filter((member) => member.attendance_status === 'attending' && !sheetAttendingNames.has(normalizeName(member.display_name || '')))
+      .map((member) => ({
+        id: member.id,
+        rsvpId: member.rsvp_id,
+        name: member.display_name || '',
+        guestId: member.guest_id || null,
+        resolutionStatus: member.resolution_status || 'unmatched',
+        updatedAt: member.updated_at || null,
+        source: 'supabase_pending_sheet' as const,
+      }));
+
+    const incomingDeclined = (membersResult.data || [])
+      .filter((member) => member.attendance_status === 'not_attending' && !sheetDeclinedNames.has(normalizeName(member.display_name || '')))
+      .map((member) => ({
+        id: member.id,
+        rsvpId: member.rsvp_id,
+        name: member.display_name || '',
+        guestId: member.guest_id || null,
+        resolutionStatus: member.resolution_status || 'unmatched',
+        updatedAt: member.updated_at || null,
+        source: 'supabase_pending_sheet' as const,
+      }));
+
     const associated = attending.filter((person) => person.recordStatus === 'Ficha asociada');
     const withoutMasterRecord = attending.filter((person) => person.recordStatus === 'Sin ficha maestra');
     const dietary = attending.filter((person) => person.dietaryType && person.dietaryType !== 'Ninguna');
-    const latest = attending[attending.length - 1] || null;
+    const latestSheet = attending[attending.length - 1] || null;
+    const latestIncoming = incomingAttending[incomingAttending.length - 1] || null;
 
     const groupMembers = groupRows.slice(1).filter((row) => row[0] && row[2]).map((row, index) => ({
       rowNumber: index + 2,
@@ -123,18 +167,25 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       source: 'F&C Centro Comandos · CONFIRMADOS_ACTUALES',
+      liveSource: 'Supabase · rsvp_response_members',
       groupsSource: 'F&C Centro Comandos · GRUPOS_MESA',
       summary: {
         attending: attending.length,
         declined: declined.length,
+        currentKnownAttending: attending.length + incomingAttending.length,
+        currentKnownDeclined: declined.length + incomingDeclined.length,
+        incomingAttending: incomingAttending.length,
+        incomingDeclined: incomingDeclined.length,
         totalResponsesPeople: people.length,
         associated: associated.length,
         withoutMasterRecord: withoutMasterRecord.length,
         dietary: dietary.length,
-        latestConfirmationName: latest?.name || null,
-        latestConfirmationAt: latest?.confirmedAt || null,
+        latestConfirmationName: latestIncoming?.name || latestSheet?.name || null,
+        latestConfirmationAt: latestIncoming?.updatedAt || latestSheet?.confirmedAt || null,
       },
       people,
+      incomingAttending,
+      incomingDeclined,
       groups: grouped,
       fetchedAt: new Date().toISOString(),
     });
