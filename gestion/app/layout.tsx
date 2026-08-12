@@ -1,4 +1,5 @@
 import './globals.css';
+import './workspace-shell.css';
 import React from 'react';
 
 export const metadata = {
