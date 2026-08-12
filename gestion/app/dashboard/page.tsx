@@ -8,443 +8,205 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { createClient } from '@/lib/supabase-browser';
 import {
   AlertCircle,
-  AlertTriangle,
   Armchair,
+  ArrowRight,
   CheckCircle2,
-  Clock,
-  Database,
+  Clock3,
   DollarSign,
+  Loader2,
   RefreshCw,
   Users,
-  XCircle
+  Utensils,
+  WalletCards,
 } from 'lucide-react';
+import './home-v2.css';
 
-type SummaryStatus =
-  | 'matched'
-  | 'split_matched'
-  | 'partially_matched'
-  | 'unmatched'
-  | 'ambiguous'
-  | 'conflict'
-  | string;
-
-interface GuestRow {
-  guest_status: string;
-  invitation_status: string;
-  attendance_status: string;
-  dietary_type: string | null;
-  table_id: string | null;
-  reconfirmation_status: string;
+interface ManagementSummary {
+  rsvpAttending: number;
+  rsvpDeclined: number;
+  rsvpPending: number;
+  rsvpPeopleIntegrated: number;
+  rsvpMatched: number;
+  rsvpNeedsReview: number;
+  rsvpUnmatched: number;
+  reconciliationPending: number;
+  rsvpResponses: number;
+  sheetSynced: number;
+  sheetPending: number;
+  activeGuests: number;
+  activeAttendingGuests: number;
+  activeDeclinedGuests: number;
+  activePendingGuests: number;
+  openIssues: number;
+  lastRsvpUpdateAt: string | null;
+  lastResponseAt: string | null;
+  countSemantics: string;
 }
 
-interface RsvpSummaryRow {
-  rsvp_id: string;
-  attendance_status: string;
-  reconciliation_status: SummaryStatus;
-  sheet_sync_status: string;
-  member_count: number;
-  matched_member_count: number;
-  pending_member_count: number;
+interface TableRow { id: string; capacity: number; }
+interface SeatingRow { id: string; }
+interface GuestRow { attendance_status: string; guest_status: string; dietary_type: string | null; table_id: string | null; }
+interface ExpenseRow { total_amount: number | null; due_date: string | null; payment_status: string | null; }
+interface PaymentRow { amount: number | null; status: string | null; }
+interface IssueRow { id: string; severity: string; issue_type: string; title: string | null; created_at: string; resolved_at: string | null; }
+
+function money(value: number) {
+  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(value || 0);
 }
 
-interface IssueRow {
-  severity: string;
-  issue_type: string;
-  status: string;
+function shortMoney(value: number) {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toLocaleString('es-CL', { maximumFractionDigits: 1 })}M`;
+  return money(value);
 }
 
-interface OutboxRow {
-  status: string;
+function formatDate(value: string | null) {
+  if (!value) return 'Sin dato';
+  try {
+    return new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' }).format(new Date(value));
+  } catch { return 'Actualizado'; }
 }
 
-interface TableRow {
-  capacity: number;
-}
-
-interface ExpenseRow {
-  total_amount: number | null;
-  due_date: string | null;
-  payment_status: string | null;
-}
-
-interface PaymentRow {
-  amount: number | null;
-  status: string | null;
-}
-
-const EMPTY_STATS = {
-  activeGuests: 0,
-  invitationsSent: 0,
-  responsesReceived: 0,
-  attendingResponses: 0,
-  confirmedPeople: 0,
-  declinedPeople: 0,
-  pendingPeople: 0,
-  reconciledResponses: 0,
-  individualMatches: 0,
-  jointMatches: 0,
-  reviewResponses: 0,
-  partiallyMatched: 0,
-  openIssues: 0,
-  criticalIssues: 0,
-  sheetSyncFailed: 0,
-  outboxPending: 0,
-  outboxFailed: 0,
-  outboxProcessed: 0,
-  confirmedNoTable: 0,
-  configuredCapacity: 0,
-  seatingAssignments: 0,
-  dietaryFlags: 0,
-  reconfirmationPending: 0,
-  totalContracted: 0,
-  totalPaid: 0,
-  incompleteAmounts: 0,
-  upcomingPayments: 0,
-  overduePayments: 0
-};
-
-function money(value: number): string {
-  return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    maximumFractionDigits: 0
-  }).format(value || 0);
-}
-
-export default function DashboardResumen() {
-  const [stats, setStats] = useState(EMPTY_STATS);
+export default function DashboardHome() {
+  const [summary, setSummary] = useState<ManagementSummary | null>(null);
+  const [tables, setTables] = useState<TableRow[]>([]);
+  const [seating, setSeating] = useState<SeatingRow[]>([]);
+  const [guests, setGuests] = useState<GuestRow[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [issues, setIssues] = useState<IssueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadStats = useCallback(async (manual = false) => {
+  const loadData = useCallback(async (manual = false) => {
     if (manual) setRefreshing(true);
-    setLoadError(null);
-
+    setError(null);
     try {
       const supabase = createClient();
-      const [
-        guestsResult,
-        rsvpsResult,
-        issuesResult,
-        outboxResult,
-        tablesResult,
-        seatingResult,
-        expensesResult,
-        paymentsResult
-      ] = await Promise.all([
-        supabase
-          .from('wedding_guests')
-          .select('guest_status, invitation_status, attendance_status, dietary_type, table_id, reconfirmation_status'),
-        supabase
-          .from('rsvp_management_summary')
-          .select('rsvp_id, attendance_status, reconciliation_status, sheet_sync_status, member_count, matched_member_count, pending_member_count'),
-        supabase
-          .from('management_issues')
-          .select('severity, issue_type, status')
-          .eq('status', 'open'),
-        supabase.from('sync_outbox').select('status'),
-        supabase.from('wedding_tables').select('capacity'),
+      const [summaryResponse, tablesResult, seatingResult, guestsResult, expensesResult, paymentsResult, issuesResult] = await Promise.all([
+        fetch('/api/management-summary', { cache: 'no-store' }),
+        supabase.from('wedding_tables').select('id, capacity'),
         supabase.from('seating_assignments').select('id'),
+        supabase.from('wedding_guests').select('attendance_status, guest_status, dietary_type, table_id'),
         supabase.from('expenses').select('total_amount, due_date, payment_status'),
-        supabase.from('expense_payments').select('amount, status')
+        supabase.from('expense_payments').select('amount, status'),
+        supabase.from('management_issues').select('id, severity, issue_type, title, created_at, resolved_at').is('resolved_at', null).order('created_at', { ascending: false }).limit(8),
       ]);
-
-      const queryErrors = [
-        guestsResult.error,
-        rsvpsResult.error,
-        issuesResult.error,
-        outboxResult.error,
-        tablesResult.error,
-        seatingResult.error,
-        expensesResult.error,
-        paymentsResult.error
-      ].filter(Boolean);
-
-      if (queryErrors.length > 0) {
-        throw new Error(queryErrors.map(error => error?.message).join(' · '));
-      }
-
-      const guests = (guestsResult.data || []) as GuestRow[];
-      const rsvps = (rsvpsResult.data || []) as RsvpSummaryRow[];
-      const issues = (issuesResult.data || []) as IssueRow[];
-      const outbox = (outboxResult.data || []) as OutboxRow[];
-      const tables = (tablesResult.data || []) as TableRow[];
-      const expenses = (expensesResult.data || []) as ExpenseRow[];
-      const payments = (paymentsResult.data || []) as PaymentRow[];
-
-      const activeGuests = guests.filter(guest => guest.guest_status === 'active');
-      const confirmedPeople = activeGuests.filter(guest => guest.attendance_status === 'attending').length;
-      const declinedPeople = activeGuests.filter(guest => guest.attendance_status === 'not_attending').length;
-      const pendingPeople = activeGuests.filter(guest => guest.attendance_status === 'pending').length;
-
-      const individualMatches = rsvps.filter(
-        rsvp => rsvp.reconciliation_status === 'matched' && rsvp.pending_member_count === 0
-      ).length;
-      const jointMatches = rsvps.filter(
-        rsvp => rsvp.reconciliation_status === 'split_matched' && rsvp.pending_member_count === 0
-      ).length;
-      const partiallyMatched = rsvps.filter(
-        rsvp => rsvp.reconciliation_status === 'partially_matched'
-      ).length;
-      const reviewResponses = rsvps.filter(rsvp =>
-        rsvp.pending_member_count > 0 ||
-        ['unmatched', 'partially_matched', 'ambiguous', 'conflict'].includes(rsvp.reconciliation_status)
-      ).length;
-
-      const configuredCapacity = tables.reduce(
-        (sum, table) => sum + (Number(table.capacity) || 0),
-        0
-      );
-      const totalContracted = expenses.reduce(
-        (sum, expense) => sum + (Number(expense.total_amount) || 0),
-        0
-      );
-      const totalPaid = payments
-        .filter(payment => payment.status === 'Pagado')
-        .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
-
-      const now = new Date();
-      const inThirtyDays = new Date(now);
-      inThirtyDays.setDate(now.getDate() + 30);
-      let upcomingPayments = 0;
-      let overduePayments = 0;
-
-      expenses.forEach(expense => {
-        if (!expense.due_date || expense.payment_status === 'Pagado') return;
-        const dueDate = new Date(expense.due_date);
-        if (dueDate < now) overduePayments++;
-        else if (dueDate <= inThirtyDays) upcomingPayments++;
-      });
-
-      setStats({
-        activeGuests: activeGuests.length,
-        invitationsSent: activeGuests.filter(guest => guest.invitation_status !== 'not_sent').length,
-        responsesReceived: rsvps.length,
-        attendingResponses: rsvps.filter(rsvp => rsvp.attendance_status === 'attending').length,
-        confirmedPeople,
-        declinedPeople,
-        pendingPeople,
-        reconciledResponses: individualMatches + jointMatches,
-        individualMatches,
-        jointMatches,
-        reviewResponses,
-        partiallyMatched,
-        openIssues: issues.length,
-        criticalIssues: issues.filter(issue => issue.severity === 'critical').length,
-        sheetSyncFailed: rsvps.filter(rsvp => rsvp.sheet_sync_status === 'failed').length,
-        outboxPending: outbox.filter(item => item.status === 'pending' || item.status === 'processing').length,
-        outboxFailed: outbox.filter(item => item.status === 'failed').length,
-        outboxProcessed: outbox.filter(item => item.status === 'processed').length,
-        confirmedNoTable: activeGuests.filter(
-          guest => guest.attendance_status === 'attending' && !guest.table_id
-        ).length,
-        configuredCapacity,
-        seatingAssignments: seatingResult.data?.length || 0,
-        dietaryFlags: activeGuests.filter(
-          guest => guest.dietary_type && guest.dietary_type !== 'Ninguna'
-        ).length,
-        reconfirmationPending: activeGuests.filter(
-          guest => guest.reconfirmation_status === 'pending'
-        ).length,
-        totalContracted,
-        totalPaid,
-        incompleteAmounts: expenses.filter(expense => expense.total_amount === null).length,
-        upcomingPayments,
-        overduePayments
-      });
-      setLastUpdatedAt(new Date());
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'No fue posible actualizar el resumen.');
+      const dbErrors = [tablesResult.error, seatingResult.error, guestsResult.error, expensesResult.error, paymentsResult.error, issuesResult.error].filter(Boolean);
+      if (dbErrors.length) throw new Error(dbErrors.map((item) => item?.message).join(' · '));
+      const summaryPayload = await summaryResponse.json().catch(() => null);
+      if (!summaryResponse.ok || !summaryPayload?.ok) throw new Error(summaryPayload?.error || 'No fue posible cargar el resumen de RSVP.');
+      setSummary(summaryPayload.summary);
+      setTables((tablesResult.data || []) as TableRow[]);
+      setSeating((seatingResult.data || []) as SeatingRow[]);
+      setGuests((guestsResult.data || []) as GuestRow[]);
+      setExpenses((expensesResult.data || []) as ExpenseRow[]);
+      setPayments((paymentsResult.data || []) as PaymentRow[]);
+      setIssues((issuesResult.data || []) as IssueRow[]);
+    } catch (err: any) {
+      setError(err?.message || 'No fue posible actualizar el Centro de Gestión.');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      setLoading(false); setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    loadStats();
-    const interval = window.setInterval(() => loadStats(), 30_000);
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') loadStats();
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, [loadStats]);
+    loadData();
+    const timer = window.setInterval(() => loadData(), 60_000);
+    return () => window.clearInterval(timer);
+  }, [loadData]);
 
-  const capacityDifference = stats.configuredCapacity - stats.confirmedPeople;
-  const balance = stats.totalContracted - stats.totalPaid;
-  const hasOperationalAlert =
-    stats.reviewResponses > 0 ||
-    stats.criticalIssues > 0 ||
-    stats.sheetSyncFailed > 0 ||
-    stats.outboxPending > 0 ||
-    stats.outboxFailed > 0 ||
-    stats.configuredCapacity < stats.confirmedPeople;
+  const operational = useMemo(() => {
+    const activeGuests = guests.filter((guest) => guest.guest_status === 'active');
+    const attending = activeGuests.filter((guest) => guest.attendance_status === 'attending');
+    const capacity = tables.reduce((sum, table) => sum + Number(table.capacity || 0), 0);
+    const dietary = attending.filter((guest) => guest.dietary_type && guest.dietary_type !== 'Ninguna').length;
+    const noTable = attending.filter((guest) => !guest.table_id).length;
+    const contracted = expenses.reduce((sum, expense) => sum + Number(expense.total_amount || 0), 0);
+    const paid = payments.filter((payment) => payment.status === 'Pagado').reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const now = new Date();
+    const nextThirty = new Date(now); nextThirty.setDate(now.getDate() + 30);
+    const upcoming = expenses.filter((expense) => {
+      if (!expense.due_date || expense.payment_status === 'Pagado') return false;
+      const due = new Date(expense.due_date);
+      return due >= now && due <= nextThirty;
+    }).length;
+    return { active: activeGuests.length, attending: attending.length, capacity, dietary, noTable, contracted, paid, balance: contracted - paid, upcoming };
+  }, [guests, tables, expenses, payments]);
 
-  const reconciliationText = useMemo(() => {
-    return `${stats.individualMatches} individuales · ${stats.jointMatches} conjuntas`;
-  }, [stats.individualMatches, stats.jointMatches]);
+  const highPriority = issues.filter((issue) => ['critical','high'].includes(issue.severity)).slice(0, 4);
+  const sourceHealthy = summary ? summary.sheetPending === 0 : false;
 
   return (
     <DashboardLayout>
-      <div className="space-y-7">
-        <header className="flex flex-col gap-4 border-b border-[var(--border-color)] pb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="home-v2">
+        <section className="home-v2__hero">
           <div>
-            <span className="block text-xs font-semibold uppercase tracking-[0.25em] text-[var(--accent-gold)]">
-              Resumen operativo en vivo
-            </span>
-            <h1 className="mt-1 font-serif text-3xl text-[var(--text-primary)]">Centro de Comandos F&C</h1>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">
-              Supabase es la fuente canónica · Google Sheets funciona como espejo operativo.
-            </p>
+            <span className="home-v2__eyebrow">Centro de comando</span>
+            <h1>Todo lo importante, en una sola vista.</h1>
+            <p>Personas, decisiones, mesas y presupuesto conectados sin convertir un dato parcial en una certeza.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden text-right text-xs sm:block">
-              <strong className="block">23 de octubre de 2026</strong>
-              <span className="text-[var(--text-muted)]">
-                {lastUpdatedAt
-                  ? `Actualizado ${lastUpdatedAt.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
-                  : 'Esperando actualización'}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => loadStats(true)}
-              disabled={refreshing}
-              className="btn-secondary flex items-center gap-2 text-xs disabled:opacity-60"
-            >
-              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-              {refreshing ? 'Actualizando' : 'Actualizar'}
-            </button>
-          </div>
-        </header>
-
-        {loadError && (
-          <div className="flex items-start gap-3 border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-800">
-            <AlertCircle size={18} className="mt-0.5 shrink-0" />
-            <div><strong className="block">No se pudo actualizar el dashboard</strong>{loadError}</div>
-          </div>
-        )}
-
-        <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
-            Invitados y respuestas
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2"><Users size={14} /> Invitados activos</span>
-              <div className="kpi-value">{loading ? '…' : stats.activeGuests}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
-                {stats.invitationsSent} invitaciones enviadas · {stats.responsesReceived} respuestas web
-              </span>
-            </div>
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2 text-emerald-800"><CheckCircle2 size={14} /> Personas confirmadas</span>
-              <div className="kpi-value text-emerald-800">{loading ? '…' : stats.confirmedPeople}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
-                {stats.attendingResponses} respuestas afirmativas · {stats.dietaryFlags} restricciones
-              </span>
-            </div>
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2"><XCircle size={14} /> No asisten</span>
-              <div className="kpi-value">{loading ? '…' : stats.declinedPeople}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">Personas individuales en la nómina canónica</span>
-            </div>
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2 text-amber-800"><Clock size={14} /> Pendientes</span>
-              <div className="kpi-value text-amber-800">{loading ? '…' : stats.pendingPeople}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{stats.reconfirmationPending} reconfirmaciones pendientes</span>
-            </div>
-          </div>
+          <button type="button" className="home-v2__refresh" onClick={() => loadData(true)} disabled={refreshing}>
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Actualizando…' : 'Actualizar datos'}
+          </button>
         </section>
 
-        <section>
-          <div className="mb-3 flex items-end justify-between gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
-              Calidad de datos y sincronización
-            </h2>
-            <Link href="/dashboard/issues" className="text-xs font-semibold underline">Abrir incidencias</Link>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2"><CheckCircle2 size={14} /> RSVP conciliados</span>
-              <div className="kpi-value">{loading ? '…' : stats.reconciledResponses}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{reconciliationText}</span>
-            </div>
-            <div className={`kpi-card ${stats.reviewResponses > 0 ? 'border-amber-500/50' : ''}`}>
-              <span className="kpi-title flex items-center gap-2 text-amber-800"><AlertTriangle size={14} /> Requieren revisión</span>
-              <div className="kpi-value text-amber-800">{loading ? '…' : stats.reviewResponses}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
-                {stats.partiallyMatched} parciales · {stats.criticalIssues} críticas
-              </span>
-            </div>
-            <div className={`kpi-card ${stats.sheetSyncFailed > 0 || stats.outboxPending > 0 || stats.outboxFailed > 0 ? 'border-rose-500/50' : ''}`}>
-              <span className="kpi-title flex items-center gap-2"><Database size={14} /> Sincronización</span>
-              <div className="kpi-value">{loading ? '…' : stats.outboxPending}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
-                Cola pendiente · {stats.outboxFailed} fallidas · {stats.sheetSyncFailed} RSVP sin copiar
-              </span>
-            </div>
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2"><AlertCircle size={14} /> Incidencias abiertas</span>
-              <div className="kpi-value">{loading ? '…' : stats.openIssues}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{stats.criticalIssues} requieren prioridad</span>
-            </div>
-          </div>
-        </section>
+        {error && <div className="home-v2__error"><AlertCircle size={17}/><div><strong>No se pudo actualizar</strong><span>{error}</span></div></div>}
 
-        <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
-            Mesas y operación
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2"><Armchair size={14} /> Capacidad configurada</span>
-              <div className={`kpi-value ${capacityDifference < 0 ? 'text-rose-700' : ''}`}>{loading ? '…' : stats.configuredCapacity}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
-                {capacityDifference >= 0 ? `${capacityDifference} cupos disponibles` : `Faltan ${Math.abs(capacityDifference)} cupos`}
-              </span>
+        {loading ? <div className="home-v2__loading"><Loader2 className="animate-spin" size={22}/><span>Cargando estado real…</span></div> : <>
+          <section className="home-v2__truth">
+            <div className="home-v2__truth-main">
+              <span className="home-v2__label">Estado de confirmaciones</span>
+              <div className="home-v2__truth-number">{summary?.rsvpAttending ?? '—'}</div>
+              <strong>personas asistentes integradas al flujo RSVP</strong>
+              <p>Este número refleja lo que hoy está integrado en Supabase/Sheets. No lo mostramos como “total oficial” mientras exista una lista nominal más reciente pendiente de consolidar.</p>
             </div>
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2"><Users size={14} /> Con mesa</span>
-              <div className="kpi-value">{loading ? '…' : stats.seatingAssignments}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{stats.confirmedNoTable} confirmados aún sin mesa</span>
+            <div className="home-v2__truth-grid">
+              <div><span>Fichas operativas</span><strong>{operational.attending}</strong><small>asistentes ya conciliados</small></div>
+              <div className={(summary?.reconciliationPending || 0) > 0 ? 'is-attention' : ''}><span>Por conciliar</span><strong>{summary?.reconciliationPending ?? 0}</strong><small>personas del RSVP integrado</small></div>
+              <div><span>Sheets</span><strong>{summary ? `${summary.sheetSynced}/${summary.rsvpResponses}` : '—'}</strong><small>{sourceHealthy ? 'sincronizado' : `${summary?.sheetPending || 0} pendientes`}</small></div>
+              <div><span>Última integración</span><strong className="home-v2__date">{formatDate(summary?.lastRsvpUpdateAt || null)}</strong><small>hora Santiago</small></div>
             </div>
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2"><DollarSign size={14} /> Contratado</span>
-              <div className="text-2xl font-semibold">{loading ? '…' : money(stats.totalContracted)}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">{stats.incompleteAmounts} montos incompletos</span>
-            </div>
-            <div className="kpi-card">
-              <span className="kpi-title flex items-center gap-2"><DollarSign size={14} /> Saldo conocido</span>
-              <div className="text-2xl font-semibold">{loading ? '…' : money(balance)}</div>
-              <span className="mt-2 block text-xs text-[var(--text-secondary)]">
-                {stats.overduePayments} vencidos · {stats.upcomingPayments} próximos 30 días
-              </span>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        {hasOperationalAlert && (
-          <div className="flex flex-col gap-3 border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <AlertTriangle size={19} className="mt-0.5 shrink-0" />
-              <div>
-                <strong className="block">Todavía existen tareas operativas antes del cierre final.</strong>
-                <span>Revisa incidencias y completa las mesas antes de exportar la nómina definitiva a proveedores.</span>
+          <section className="home-v2__section">
+            <div className="home-v2__section-head"><div><span className="home-v2__label">Necesita atención</span><h2>Qué resolver ahora</h2></div><Link href="/dashboard/issues">Ver todo <ArrowRight size={13}/></Link></div>
+            <div className="home-v2__attention-grid">
+              <Link href="/dashboard/issues" className="home-v2__attention-card is-primary"><span className="home-v2__attention-icon"><Users size={18}/></span><div><strong>{summary?.reconciliationPending ?? 0} personas por conciliar</strong><p>Resolver estas fichas aumenta el universo realmente utilizable para mesas, restricciones y operación.</p></div><ArrowRight size={16}/></Link>
+              <Link href="/dashboard/tables" className="home-v2__attention-card"><span className="home-v2__attention-icon"><Armchair size={18}/></span><div><strong>{operational.noTable} asistentes sin mesa</strong><p>{seating.length} asignaciones persistidas · {operational.capacity} cupos configurados.</p></div><ArrowRight size={16}/></Link>
+              <Link href="/dashboard/finance" className="home-v2__attention-card"><span className="home-v2__attention-icon"><WalletCards size={18}/></span><div><strong>{operational.upcoming} pagos próximos</strong><p>Saldo comprometido: {shortMoney(Math.max(0, operational.balance))}.</p></div><ArrowRight size={16}/></Link>
+            </div>
+          </section>
+
+          <section className="home-v2__section">
+            <div className="home-v2__section-head"><div><span className="home-v2__label">Operación</span><h2>Estado de la boda</h2></div></div>
+            <div className="home-v2__operation-grid">
+              <Link href="/dashboard/guests" className="home-v2__module-card"><div className="home-v2__module-top"><span><Users size={17}/></span><small>Invitados</small></div><strong>{operational.active}</strong><p>fichas activas</p><div className="home-v2__module-row"><span>{operational.attending} asisten en ficha</span><span>{operational.dietary} restricciones</span></div></Link>
+              <Link href="/dashboard/tables" className="home-v2__module-card"><div className="home-v2__module-top"><span><Armchair size={17}/></span><small>Mesas y salón</small></div><strong>{tables.length}</strong><p>mesas configuradas</p><div className="home-v2__module-row"><span>{operational.capacity} cupos</span><span>{seating.length} sentados</span></div></Link>
+              <Link href="/dashboard/finance" className="home-v2__module-card"><div className="home-v2__module-top"><span><DollarSign size={17}/></span><small>Presupuesto</small></div><strong className="home-v2__money">{shortMoney(operational.contracted)}</strong><p>comprometido</p><div className="home-v2__module-row"><span>{shortMoney(operational.paid)} pagado</span><span>{shortMoney(Math.max(0, operational.balance))} saldo</span></div></Link>
+              <Link href="/dashboard/issues" className="home-v2__module-card"><div className="home-v2__module-top"><span><AlertCircle size={17}/></span><small>Incidencias</small></div><strong>{summary?.openIssues ?? 0}</strong><p>abiertas</p><div className="home-v2__module-row"><span>{highPriority.length} prioritarias visibles</span><span>revisar</span></div></Link>
+            </div>
+          </section>
+
+          <section className="home-v2__bottom-grid">
+            <div className="home-v2__panel">
+              <div className="home-v2__panel-head"><div><span className="home-v2__label">Incidencias recientes</span><h3>Prioridad operativa</h3></div><Link href="/dashboard/issues">Abrir</Link></div>
+              <div className="home-v2__issue-list">
+                {(highPriority.length ? highPriority : issues.slice(0,4)).map((issue) => <Link href="/dashboard/issues" key={issue.id} className="home-v2__issue"><span className={`home-v2__issue-dot is-${issue.severity}`}/><div><strong>{issue.title || issue.issue_type}</strong><small>{issue.issue_type}</small></div><ArrowRight size={13}/></Link>)}
+                {!issues.length && <div className="home-v2__empty"><CheckCircle2 size={18}/><span>No hay incidencias abiertas.</span></div>}
               </div>
             </div>
-            <div className="flex gap-2">
-              <Link href="/dashboard/issues" className="btn-secondary text-xs">Incidencias</Link>
-              <Link href="/dashboard/tables" className="btn-primary text-xs">Mesas</Link>
+            <div className="home-v2__panel">
+              <div className="home-v2__panel-head"><div><span className="home-v2__label">Preparación</span><h3>Señales rápidas</h3></div></div>
+              <div className="home-v2__signals">
+                <div><span><CheckCircle2 size={15}/></span><div><strong>RSVP → Sheets</strong><small>{sourceHealthy ? 'Sincronización al día' : 'Hay pendientes de sincronización'}</small></div></div>
+                <div><span><Clock3 size={15}/></span><div><strong>Conciliación</strong><small>{summary?.reconciliationPending || 0} personas requieren trabajo humano</small></div></div>
+                <div><span><Utensils size={15}/></span><div><strong>Restricciones</strong><small>{operational.dietary} fichas operativas con restricción</small></div></div>
+                <div><span><Armchair size={15}/></span><div><strong>Distribución</strong><small>{operational.noTable} asistentes conciliados aún sin mesa</small></div></div>
+              </div>
             </div>
-          </div>
-        )}
+          </section>
+        </>}
       </div>
     </DashboardLayout>
   );
