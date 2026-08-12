@@ -103,7 +103,7 @@ export default function PlanningPage() {
     const remaining = budget?.summary.remaining || 0;
     const incoming = confirmed?.summary.incomingAttending || 0;
 
-    return [
+    const nextTasks: PlanningTask[] = [
       {
         id: 'confirmados', area: 'Invitados', href: '/dashboard/guests', priority: 1,
         title: missingMaster ? `Conciliar ${missingMaster} asistentes con su ficha maestra` : 'Confirmados conciliados con ficha maestra',
@@ -146,10 +146,10 @@ export default function PlanningPage() {
         detail: openIssues ? 'Hay excepciones operativas que requieren revisión antes del cierre.' : 'No hay excepciones operativas activas.',
         state: openIssues ? 'attention' : 'done',
       },
-    ].sort((a, b) => {
-      const order = { attention: 0, pending: 1, done: 2 };
-      return order[a.state] - order[b.state] || a.priority - b.priority;
-    });
+    ];
+
+    const order: Record<PlanningTask['state'], number> = { attention: 0, pending: 1, done: 2 };
+    return nextTasks.sort((a, b) => order[a.state] - order[b.state] || a.priority - b.priority);
   }, [confirmed, budget, timeline, guestCount, assignedCount, openIssues]);
 
   const metrics = useMemo(() => {
