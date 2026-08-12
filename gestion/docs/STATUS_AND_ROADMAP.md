@@ -1,12 +1,13 @@
 # STATUS_AND_ROADMAP.md — Estado y hoja de ruta
 
-> Los conteos de producción son una fotografía temporal. Verificar Supabase antes de tomar decisiones operativas.
+> Los conteos operativos cambian con cada RSVP. Consultar las fuentes conectadas antes de tomar decisiones. Este documento describe la arquitectura y el estado de producto; no es una fuente de conteos en tiempo real.
 
 ## 1. Leyenda
 
-- ✅ Producción
-- 🟡 Funcional, requiere mejoras
-- 🔵 En desarrollo o siguiente entrega
+- ✅ Producción existente
+- 🧪 Implementado en Preview / PR #34
+- 🟡 Funcional, requiere consolidación
+- 🔵 Siguiente entrega
 - ⚪ No iniciado
 - 🔴 Bloqueado o requiere decisión
 
@@ -15,246 +16,180 @@
 | Módulo | Estado | Observación |
 |---|---|---|
 | Autenticación administrativa | ✅ | Supabase Auth + `admin_profiles` |
-| Resumen operativo | ✅ | Métricas y actualización automática |
-| Invitados individuales | ✅ | Creación, edición y estados |
-| RSVP originales | ✅ | Visibles en gestión |
-| Integrantes de RSVP conjuntos | ✅ | Separación de personas implementada |
-| Conciliación | ✅ | Exacta y revisión manual |
-| Bandeja de incidencias | ✅ | Base para “Necesita tu atención” |
-| Restricciones alimentarias | ✅ | Por persona, con datos sensibles |
-| Google Sheets | ✅ | Espejo mediante `sync_outbox` |
+| RSVP y conciliación | ✅ / 🧪 | Base productiva existente + nueva UX en Preview |
+| Invitados | 🧪 | Directorio, filtros, edición y distinción entre consolidado/live |
+| Necesita atención | 🧪 | Bandeja accionable de conciliación e incidencias |
+| Inicio / Command Center | 🧪 | Agrega confirmados, capacidad, cronograma, música, presupuesto y documentos |
+| Mesas | 🧪 | Asignación, drag & drop, grupos, capacidad, edición y Preview local |
+| Salón | 🧪 | Editor espacial independiente, drag, rotación, bloqueo, zoom y auditoría de layout |
+| Planificación | 🧪 | Prioridades derivadas del estado conectado; no checklist genérica |
+| Cronograma | 🧪 | Lectura en vivo desde `TIMELINE` |
+| Música | 🧪 | Combina cronograma + presupuesto; no inventa playlist faltante |
+| Presupuesto | 🧪 | Lectura en vivo desde `PRESUPUESTO_IGLESIA` |
+| Proveedores y pagos | 🟡 / 🧪 | Datos estructurados parciales en Supabase + nueva UX en Preview |
+| Documentos | 🧪 | Registro privado en `DOCUMENTOS`, búsqueda, filtros y altas protegidas |
+| Actividad | 🧪 | `audit_log` presentado como timeline legible |
+| Copiloto operacional | 🧪 | Beta de solo lectura, grounded en fuentes conectadas; identidad distinta del benchmark externo |
+| Google Sheets sync | ✅ | `sync_outbox` sigue siendo la vía para el espejo donde aplica |
 | Auditoría | ✅ | `audit_log` para cambios relevantes |
-| Mesas por lista | ✅ | Selector, capacidad y validaciones |
-| Plano referencial | 🟡 | No trabaja aún como editor profesional |
-| Finanzas y pagos | 🟡 | Funcional para matrimonio actual |
-| Proveedores | 🟡 | Datos existentes; falta experiencia completa |
-| Portal de proveedores | ⚪ | Falta implementar permisos y UX |
-| Cronograma compartido | ⚪ | Falta modelo y vistas |
+| Portal de proveedores | ⚪ | Falta permisos, vistas por rol y UX dedicada |
 | Entregables versionados | ⚪ | Falta modelo y portal |
-| Planos 2D profesionales | ⚪ | Prioridad estratégica |
-| IA para mesas | ⚪ | Debe operar sobre propuestas aisladas |
-| Staging aislado | 🔴 | Debe configurarse antes de PR funcionales grandes |
-| Pruebas automatizadas de gestión | 🔴 | No existe script formal `test` |
-| Typecheck separado | 🔴 | No existe script formal `typecheck` |
-| Multi-matrimonio | ⚪ | Etapa posterior al segundo piloto |
-| Facturación comercial | ⚪ | Pospuesta deliberadamente |
+| Plano arquitectónico/escala real | 🔵 | El Salón actual usa coordenadas relativas y anclajes conceptuales |
+| IA de propuestas de seating | 🔵 | Debe operar sobre propuestas aisladas y reversibles |
+| Staging formal aislado | 🔴 | Preview bloquea escrituras deliberadas, pero falta Supabase/Sheets staging independiente |
+| Tests automatizados | 🔴 | No existe suite formal suficiente |
+| Typecheck separado | 🔴 | El build de Next valida tipos, pero falta script independiente |
+| Multi-matrimonio | ⚪ | Posterior al segundo piloto |
+| Facturación comercial | ⚪ | Pospuesta |
 
-## 3. Fotografía operativa conocida
+## 3. Arquitectura operativa V2
 
-Corte histórico de referencia al cierre de la reparación del 25 de julio de 2026:
+### Confirmados
 
-| Indicador | Valor conocido |
-|---|---:|
-| RSVP totales | 54 |
-| RSVP afirmativos | 53 |
-| RSVP negativos | 1 |
-| Invitados activos | 258 |
-| Personas individuales confirmadas | 36 |
-| RSVP individuales conciliados | 32 |
-| Respuestas conjuntas conciliadas | 2 |
-| Respuestas parciales | 1 |
-| Sin conciliar | 19 |
-| Sheets sincronizados | 54 |
-| `sync_outbox` pendientes | 0 |
-| Mesas configuradas | 4 |
-| Capacidad configurada | 40 |
-| Asignaciones reales | 0 |
+`CONFIRMADOS_ACTUALES` funciona como consolidado curado y `rsvp_response_members` como fuente live para detectar RSVP posteriores al último corte. La UI debe presentar ambos niveles y nunca confundir un corte de hoja con el estado conocido más reciente.
 
-No hardcodear estos valores en la aplicación ni tratarlos como vigentes sin consulta actual.
+### Datos estructurados
 
-## 4. Riesgos abiertos
+Supabase sigue siendo la fuente canónica para entidades operativas estructuradas como invitados, mesas, asignaciones, incidencias, auditoría, proveedores y pagos cuando esos modelos existen.
 
-### Producción activa
+### Fuentes especializadas en Sheets
 
-Personas continúan confirmándose. Una migración o preview mal configurado puede afectar datos reales.
+Mientras la migración no esté completa, algunos dominios se consumen directamente desde el Centro de Comandos:
 
-### Falta de staging formal
+- `CONFIRMADOS_ACTUALES`;
+- `GRUPOS_MESA`;
+- `PRESUPUESTO_IGLESIA`;
+- `TIMELINE`;
+- `DOCUMENTOS`.
 
-Antes de desarrollo funcional nuevo se requiere:
+La interfaz debe declarar la procedencia cuando mezcle Supabase y Sheets.
 
-- Supabase staging o branch persistente;
-- Vercel Preview apuntando a staging;
-- datos ficticios;
-- Google Sheets de prueba o integración desactivada.
+## 4. Hallazgos operativos detectados durante el V2
 
-### Cobertura automática insuficiente
+Fotografía observada durante la iteración del 12 de agosto de 2026. No hardcodear estos valores:
 
-El proyecto necesita:
+- la lista de asistentes conocida es mayor que las fichas maestras actualmente operativas;
+- Supabase tenía 53 fichas activas marcadas como asistentes en la consulta de auditoría;
+- existían 6 mesas y 60 cupos configurados;
+- no existían asignaciones persistidas en `seating_assignments` en ese corte;
+- se detectó numeración de mesa duplicada;
+- se detectaron coordenadas de mesas prácticamente superpuestas.
 
-- `typecheck`;
-- tests de dominio;
-- tests de RLS;
-- tests de rutas;
-- guard de regresión específico de `gestion/`.
+Por esta razón el producto diferencia explícitamente:
 
-### Roles actuales
+1. asistentes conocidos;
+2. asistentes consolidados;
+3. RSVP live pendientes de consolidación;
+4. fichas maestras operativas;
+5. personas efectivamente asignables a mesas.
 
-`owner`, `editor` y `viewer` no son suficientes para proveedores ni múltiples matrimonios.
+## 5. Seguridad de Preview
 
-### Planos
+El PR #34 utiliza una política conservadora:
 
-La experiencia visual actual no es suficiente para que un centro de eventos o productor la use como plano profesional.
+- lecturas pueden consultar fuentes operativas para validar la experiencia;
+- las acciones de edición sensibles se simulan localmente en Preview cuando corresponde;
+- endpoints nuevos de escritura deben bloquear Preview explícitamente;
+- no se hacen migraciones destructivas;
+- no se fusiona ni despliega a producción sin aprobación humana.
 
-## 5. Roadmap progresivo
+Esto reduce riesgo, pero **no reemplaza un staging formal**.
 
-## Fase 0 — Documentación y seguridad
+## 6. Producto ya cubierto por PR #34
 
-Estado: 🔵
+El flujo principal del Centro de Gestión ya puede recorrerse como:
 
-Objetivos:
+`Inicio → Planificación → Invitados → Necesita atención → Mesas → Salón → Cronograma → Música → Presupuesto/Proveedores → Documentos → Actividad`
 
-- incorporar documentación profesional;
-- definir alcance protegido;
-- crear reglas para agentes;
-- auditar Preview y variables;
-- diseñar staging;
-- añadir scripts de calidad.
+La navegación y el diseño ya no replican el benchmark compartido. Se adoptaron patrones útiles, pero con una identidad editorial-operativa propia y un Copiloto operacional distinto.
 
-Criterio de salida:
+## 7. Próximas prioridades
 
-- agentes pueden comprender el sistema;
-- Preview no puede escribir en producción;
-- existe una prueba básica repetible.
+### Fase inmediata — QA y consolidación
 
-## Fase 1 — Producto comprensible
+1. revisar visualmente todas las rutas autenticadas en desktop/tablet/móvil;
+2. resolver conteos y semántica entre asistentes conocidos vs fichas operativas;
+3. corregir la configuración real de mesas antes de persistir un layout final;
+4. revisar todos los botones y estados vacíos/error/loading;
+5. validar permisos de escritura de cada endpoint;
+6. limpiar warnings de build y deuda CSS;
+7. documentar rollback y checklist de merge.
 
-Objetivos:
+### Staging real
 
-- reorganizar navegación;
-- convertir incidencias en “Necesita tu atención”;
-- mejorar experiencia de proveedores;
-- definir roles entendibles;
-- crear contexto mínimo de matrimonio.
+Antes de habilitar flujos de escritura amplios en Preview:
 
-Primer PR funcional recomendado:
+- crear Supabase staging o branch persistente;
+- usar datos ficticios o copia sanitizada;
+- separar Google Sheets de prueba;
+- separar variables Vercel Preview/Production;
+- ejecutar smoke tests repetibles.
 
-- navegación;
-- home operativo;
-- proveedores básicos;
-- roles iniciales;
-- sin multi-matrimonio completo;
-- sin IA;
-- sin editor de planos.
+### Seating Intelligence
 
-## Fase 2 — Operación compartida
+Siguiente bloque de producto después de QA:
 
-Objetivos:
+- reglas duras y preferencias;
+- grupos conocidos vs probables;
+- propuestas aisladas;
+- múltiples escenarios;
+- score explicable;
+- comparación;
+- aprobación explícita;
+- aplicación transaccional;
+- rollback.
 
-- cronograma;
-- tareas por proveedor;
-- entregables;
-- confirmar recepción;
-- comentarios simples;
-- exportaciones por rol.
+La IA nunca modifica asignaciones reales durante la generación.
 
-## Fase 3 — Planos 2D profesionales
+### Salón profesional
 
-Objetivos:
+El editor actual debe evolucionar con:
 
-- cargar plano como fondo;
-- escala;
-- objetos;
+- fondo de plano real;
+- escala/dimensiones verificadas;
+- objetos y biblioteca de montaje;
 - capas;
-- zoom;
-- alineación;
-- rotación;
-- bloqueo;
+- alineación y snapping;
 - versiones;
-- vistas por proveedor.
+- vistas por proveedor;
+- exportación.
 
 No incluir 3D inicialmente.
 
-## Fase 4 — IA asistida para mesas
+### Copiloto V2
 
-Objetivos:
+La beta actual es data-first y de solo lectura. La evolución deberá mantener:
 
-- reglas estructuradas;
-- instrucciones en lenguaje natural;
-- motor determinista;
-- varias propuestas;
-- puntuación;
-- explicación;
-- aprobación humana;
-- rollback.
+- grounding en fuentes conectadas;
+- explicación de por qué responde algo;
+- diferenciación entre hecho, inferencia y sugerencia;
+- confirmación explícita antes de cualquier acción;
+- registro de acciones;
+- permisos por rol.
 
-La IA nunca debe modificar asignaciones reales durante la generación.
+No convertirlo en agente autónomo de escritura.
 
-## Fase 5 — Segundo matrimonio piloto
+## 8. MVP comercial
 
-Objetivos:
+El producto se acerca al MVP cuando:
 
-- crear segundo conjunto ficticio o piloto;
-- probar onboarding;
-- probar roles;
-- probar aislamiento;
-- encontrar supuestos hardcodeados.
+1. la pareja puede operar sin entrar a Supabase;
+2. el planner gestiona invitados, RSVP, mesas, salón y cronograma;
+3. las respuestas conjuntas cuentan por persona;
+4. las incidencias son accionables;
+5. banquetera/venue/foto/AV pueden tener vistas acotadas;
+6. cambios relevantes quedan auditados;
+7. la interfaz funciona en móvil y escritorio;
+8. IA/seating sólo propone hasta aprobación humana;
+9. existe staging real y pruebas mínimas;
+10. puede incorporarse un segundo matrimonio sin duplicar código.
 
-## Fase 6 — Multi-matrimonio
-
-Objetivos:
-
-- `weddings`;
-- `wedding_members`;
-- `wedding_id` progresivo;
-- RLS por matrimonio;
-- plantillas;
-- archivo de eventos terminados.
-
-## Fase 7 — Producto comercial
-
-Objetivos:
-
-- marca blanca;
-- planes y límites;
-- soporte;
-- recuperación de cuenta;
-- privacidad;
-- términos;
-- observabilidad.
-
-## Fase posterior
-
-- facturación;
-- pagos en plataforma;
-- 3D;
-- marketplace;
-- app nativa.
-
-## 6. Criterios del MVP comercial
-
-El MVP es utilizable cuando:
-
-1. La pareja opera sin entrar a Supabase.
-2. El planner gestiona invitados, RSVP, mesas y cronograma.
-3. La banquetera descarga cantidades y restricciones.
-4. El centro consulta plano, capacidades y montaje.
-5. Fotografía consulta cronograma y shot list.
-6. Cada proveedor ve solo lo necesario.
-7. Respuestas conjuntas cuentan por persona.
-8. Incidencias son accionables.
-9. Sheets refleja Supabase.
-10. Cambios relevantes quedan auditados.
-11. La interfaz funciona en móvil y escritorio.
-12. Las propuestas de IA son reversibles.
-13. Puede agregarse un segundo matrimonio sin duplicar código.
-
-## 7. Fuera de alcance inmediato
+## 9. Fuera de alcance inmediato
 
 - cambios al sitio público;
-- facturación comercial;
 - pagos online;
-- 3D;
 - marketplace;
-- chat en tiempo real;
-- aplicación móvil nativa;
-- IA autónoma.
-
-## 8. Próxima decisión
-
-Después de fusionar este paquete documental:
-
-1. Antigravity IDE realiza auditoría de solo lectura de `gestion/`.
-2. Se corrigen discrepancias documentales.
-3. Se configura staging.
-4. Se prepara un PR pequeño de calidad y protecciones de entorno.
-5. Solo después comienza la adaptación funcional.
+- 3D;
+- app nativa;
+- IA autónoma;
+- merge automático a producción.
