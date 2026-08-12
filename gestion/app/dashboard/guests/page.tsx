@@ -91,6 +91,19 @@ interface OfficialPerson {
   confirmedAt: string | null;
   syncStatus: string;
   phone: string;
+  source: 'confirmed_sheet' | 'supabase_pending_sheet';
+}
+
+interface IncomingPerson {
+  id: string;
+  rsvpId: string;
+  name: string;
+  guestId: string | null;
+  resolutionStatus: string;
+  dietaryType?: string;
+  dietaryDetail?: string;
+  updatedAt: string | null;
+  source: 'supabase_pending_sheet';
 }
 
 interface TableGroup {
@@ -105,18 +118,28 @@ interface TableGroup {
 interface ConfirmedSource {
   ok: boolean;
   source: string;
+  liveSource: string;
   groupsSource: string;
   summary: {
     attending: number;
     declined: number;
+    currentKnownAttending: number;
+    currentKnownDeclined: number;
+    incomingAttending: number;
+    incomingDeclined: number;
     totalResponsesPeople: number;
     associated: number;
+    currentKnownAssociated: number;
     withoutMasterRecord: number;
+    currentKnownWithoutMaster: number;
     dietary: number;
+    currentKnownDietary: number;
     latestConfirmationName: string | null;
     latestConfirmationAt: string | null;
   };
   people: OfficialPerson[];
+  incomingAttending: IncomingPerson[];
+  incomingDeclined: IncomingPerson[];
   groups: TableGroup[];
 }
 
@@ -200,7 +223,7 @@ export default function GuestsPage() {
         officialResponse.json().catch(() => null),
       ]);
 
-      if (!officialResponse.ok || !officialPayload?.ok) throw new Error(officialPayload?.error || 'No fue posible cargar CONFIRMADOS_ACTUALES.');
+      if (!officialResponse.ok || !officialPayload?.ok) throw new Error(officialPayload?.error || 'No fue posible cargar las fuentes de confirmados.');
 
       setGuests((guestsResult.data || []) as Guest[]);
       setRsvps((rsvpResult.data || []) as RsvpSummary[]);
@@ -225,6 +248,38 @@ export default function GuestsPage() {
     dietary: activeGuests.filter((guest) => guest.dietary_type && guest.dietary_type !== 'Ninguna').length,
   }), [activeGuests]);
 
+  const combinedOfficialPeople = useMemo<OfficialPerson[]>(() => {
+    const incomingAttending: OfficialPerson[] = (official?.incomingAttending || []).map((person, index) => ({
+      rowNumber: -1000 - index,
+      name: person.name,
+      attendance: 'Asiste',
+      dietaryType: person.dietaryType || '',
+      dietaryDetail: person.dietaryDetail || '',
+      recordStatus: person.guestId ? 'Ficha asociada' : 'Sin ficha maestra',
+      guestId: person.guestId,
+      rsvpId: person.rsvpId,
+      confirmedAt: person.updatedAt,
+      syncStatus: 'pendiente hoja consolidada',
+      phone: '',
+      source: 'supabase_pending_sheet',
+    }));
+    const incomingDeclined: OfficialPerson[] = (official?.incomingDeclined || []).map((person, index) => ({
+      rowNumber: -2000 - index,
+      name: person.name,
+      attendance: 'No asiste',
+      dietaryType: '',
+      dietaryDetail: '',
+      recordStatus: person.guestId ? 'Ficha asociada' : 'Sin ficha maestra',
+      guestId: person.guestId,
+      rsvpId: person.rsvpId,
+      confirmedAt: person.updatedAt,
+      syncStatus: 'pendiente hoja consolidada',
+      phone: '',
+      source: 'supabase_pending_sheet',
+    }));
+    return [...incomingAttending, ...incomingDeclined, ...(official?.people || [])];
+  }, [official]);
+
   const filteredGuests = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
     return activeGuests.filter((guest) => {
@@ -242,8 +297,8 @@ export default function GuestsPage() {
 
   const filteredOfficial = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
-    return (official?.people || []).filter((person) => !term || `${person.name} ${person.phone} ${person.recordStatus}`.toLowerCase().includes(term));
-  }, [official, searchTerm]);
+    return combinedOfficialPeople.filter((person) => !term || `${person.name} ${person.phone} ${person.recordStatus}`.toLowerCase().includes(term));
+  }, [combinedOfficialPeople, searchTerm]);
 
   const filteredRsvps = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
@@ -333,9 +388,11 @@ export default function GuestsPage() {
   }
 
   const editorOpen = Boolean(selectedGuest || creatingGuest);
-  const officialAttending = official?.summary.attending ?? 0;
-  const officialDeclined = official?.summary.declined ?? 0;
-  const withoutMaster = official?.summary.withoutMasterRecord ?? 0;
+  const currentKnownAttending = official?.summary.currentKnownAttending ?? official?.summary.attending ?? 0;
+  const currentKnownDeclined = official?.summary.currentKnownDeclined ?? official?.summary.declined ?? 0;
+  const curatedAttending = official?.summary.attending ?? 0;
+  const incomingAttending = official?.summary.incomingAttending ?? 0;
+  const withoutMaster = official?.summary.currentKnownWithoutMaster ?? official?.summary.withoutMasterRecord ?? 0;
   const knownGroups = (official?.groups || []).filter((group) => group.confirmed).length;
   const probableGroups = (official?.groups || []).filter((group) => !group.confirmed).length;
 
@@ -346,7 +403,7 @@ export default function GuestsPage() {
           <div>
             <span className="guests-v2__eyebrow">Personas y RSVP</span>
             <h1>Invitados</h1>
-            <p>La vista oficial nace de CONFIRMADOS_ACTUALES; Supabase conserva las fichas operativas, RSVP, mesas y conciliación.</p>
+            <p>CONFIRMADOS_ACTUALES funciona como consolidado curado; Supabase agrega en vivo las respuestas nuevas que todavía no han pasado a esa hoja.</p>
           </div>
           <div className="guests-v2__actions">
             {previewMode && <span className="guests-v2__preview-chip">Preview · cambios locales</span>}
@@ -358,24 +415,24 @@ export default function GuestsPage() {
         {notice && <div className={`guests-v2__notice guests-v2__notice--${notice.type}`}>{notice.type === 'success' ? <CheckCircle2 size={16}/> : notice.type === 'error' ? <XCircle size={16}/> : <AlertTriangle size={16}/>}<span>{notice.text}</span></div>}
 
         <section className="guests-v2__source">
-          <div><span>Confirmados oficiales</span><strong>{officialAttending || '—'}</strong><small>Fuente: CONFIRMADOS_ACTUALES</small></div>
-          <div><span>No asisten</span><strong>{officialDeclined}</strong><small>Personas informadas como baja</small></div>
-          <div className={withoutMaster ? 'is-attention' : ''}><span>Sin ficha maestra</span><strong>{withoutMaster}</strong><small>Confirmados oficiales por conciliar</small></div>
+          <div><span>Asistentes conocidos ahora</span><strong>{currentKnownAttending || '—'}</strong><small>{curatedAttending} consolidados{incomingAttending ? ` + ${incomingAttending} nuevos RSVP` : ''}</small></div>
+          <div><span>No asisten</span><strong>{currentKnownDeclined}</strong><small>Estado conocido más reciente</small></div>
+          <div className={withoutMaster ? 'is-attention' : ''}><span>Sin ficha maestra</span><strong>{withoutMaster}</strong><small>Confirmados por conciliar</small></div>
           <div><span>Grupos de mesa</span><strong>{knownGroups} + {probableGroups}</strong><small>{knownGroups} conocidos · {probableGroups} por validar</small></div>
           <div><span>Última confirmación</span><strong className="guests-v2__date">{official?.summary.latestConfirmationName || '—'}</strong><small>{formatSourceDate(official?.summary.latestConfirmationAt || null)}</small></div>
         </section>
 
         <section className="guests-v2__metrics">
-          <article><span>Con ficha asociada</span><strong>{official?.summary.associated || 0}</strong><small>Confirmados oficiales listos para operar</small></article>
-          <article><span>Restricciones</span><strong>{official?.summary.dietary || 0}</strong><small>Dentro de confirmados oficiales</small></article>
-          <article><span>RSVP integrados</span><strong>{summary?.rsvpAttending || 0}</strong><small>Pipeline técnico actual</small></article>
-          <article className={(summary?.reconciliationPending || 0) ? 'is-attention' : ''}><span>RSVP por conciliar</span><strong>{summary?.reconciliationPending || 0}</strong><small>Incidencias del pipeline</small></article>
-          <article><span>Sheets</span><strong>{summary ? `${summary.sheetSynced}/${summary.rsvpResponses}` : '—'}</strong><small>{summary?.sheetPending ? `${summary.sheetPending} pendientes` : 'Sincronizado'}</small></article>
+          <article><span>Con ficha asociada</span><strong>{official?.summary.currentKnownAssociated || 0}</strong><small>Confirmados listos para operar</small></article>
+          <article><span>Restricciones</span><strong>{official?.summary.currentKnownDietary || 0}</strong><small>Dentro de asistentes conocidos</small></article>
+          <article><span>Consolidado hoja</span><strong>{curatedAttending}</strong><small>CONFIRMADOS_ACTUALES</small></article>
+          <article className={incomingAttending ? 'is-attention' : ''}><span>Nuevos por consolidar</span><strong>{incomingAttending}</strong><small>Ya existen en Supabase</small></article>
+          <article><span>RSVP → Sheets</span><strong>{summary ? `${summary.sheetSynced}/${summary.rsvpResponses}` : '—'}</strong><small>{summary?.sheetPending ? `${summary.sheetPending} pendientes` : 'Sincronizado'}</small></article>
         </section>
 
         <section className="guests-v2__toolbar">
           <div className="guests-v2__tabs">
-            <button type="button" className={tab === 'official' ? 'is-active' : ''} onClick={() => setTab('official')}><UserCheck size={15}/>Confirmados <span>{officialAttending}</span></button>
+            <button type="button" className={tab === 'official' ? 'is-active' : ''} onClick={() => setTab('official')}><UserCheck size={15}/>Confirmados <span>{currentKnownAttending}</span></button>
             <button type="button" className={tab === 'directory' ? 'is-active' : ''} onClick={() => setTab('directory')}><Users size={15}/>Directorio</button>
             <button type="button" className={tab === 'rsvps' ? 'is-active' : ''} onClick={() => setTab('rsvps')}><Link2 size={15}/>RSVP <span>{summary?.reconciliationPending || 0}</span></button>
             <button type="button" className={tab === 'groups' ? 'is-active' : ''} onClick={() => setTab('groups')}><Users size={15}/>Grupos <span>{(official?.groups || []).length}</span></button>
@@ -388,10 +445,10 @@ export default function GuestsPage() {
             <div className="guests-v2__list-head"><span>Persona</span><span>Estado de ficha</span><span>Asistencia</span><span>Confirmación</span></div>
             <div className="guests-v2__list">
               {filteredOfficial.map((person) => <article key={`${person.rowNumber}-${person.name}`} className="guests-v2__person-card">
-                <div className="guests-v2__person-main"><span className="guests-v2__avatar">{initialsFromName(person.name)}</span><div><strong>{person.name}</strong><small>{person.phone || 'Sin teléfono'}</small></div></div>
+                <div className="guests-v2__person-main"><span className="guests-v2__avatar">{initialsFromName(person.name)}</span><div><strong>{person.name}</strong><small>{person.source === 'supabase_pending_sheet' ? 'Nuevo RSVP · pendiente consolidar' : person.phone || 'Sin teléfono'}</small></div></div>
                 <div className="guests-v2__group"><strong>{person.recordStatus || 'Sin estado'}</strong><small>{person.guestId ? 'Ficha Supabase vinculada' : 'Requiere conciliación'}</small></div>
                 <div className="guests-v2__status-cell"><span className={`guests-v2__status guests-v2__status--${person.attendance === 'Asiste' ? 'attending' : 'not_attending'}`}>{person.attendance}</span>{person.dietaryType && person.dietaryType !== 'Ninguna' && <small><Utensils size={11}/>{person.dietaryType}</small>}</div>
-                <div className="guests-v2__operation"><span>{formatSourceDate(person.confirmedAt)}</span>{person.guestId ? <span>✓ asociada</span> : <Link href="/dashboard/issues">Conciliar →</Link>}</div>
+                <div className="guests-v2__operation"><span>{formatSourceDate(person.confirmedAt)}</span>{person.source === 'supabase_pending_sheet' ? <span>pendiente hoja</span> : person.guestId ? <span>✓ asociada</span> : <Link href="/dashboard/issues">Conciliar →</Link>}</div>
               </article>)}
               {!filteredOfficial.length && <div className="guests-v2__empty">No hay personas que coincidan con la búsqueda.</div>}
             </div>
