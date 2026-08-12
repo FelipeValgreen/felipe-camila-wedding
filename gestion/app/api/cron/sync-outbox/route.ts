@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getExternalSyncBlock } from '@/lib/environment-guard';
 import { processSyncOutbox } from '@/lib/sync-outbox';
 
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { ok: false, error: 'UNAUTHORIZED_CRON_REQUEST', nonce },
       { status: 401, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  const environmentBlock = getExternalSyncBlock();
+  if (environmentBlock) {
+    return NextResponse.json(
+      { ...environmentBlock, nonce },
+      { status: 403, headers: NO_STORE_HEADERS }
     );
   }
 
