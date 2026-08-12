@@ -24,7 +24,6 @@ import type { LucideIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 
 interface LayoutProps { children: React.ReactNode; }
-
 type NavItem = { label: string; href: string; icon: LucideIcon; description: string; };
 
 const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
@@ -40,7 +39,8 @@ const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
     label: 'Personas y espacio',
     items: [
       { label: 'Invitados', href: '/dashboard/guests', icon: Users, description: 'Personas, RSVP y restricciones' },
-      { label: 'Mesas', href: '/dashboard/tables', icon: Grid, description: 'Capacidad, grupos y distribución' },
+      { label: 'Mesas', href: '/dashboard/tables', icon: Grid, description: 'Grupos, asignación y capacidad' },
+      { label: 'Salón', href: '/dashboard/venue', icon: Grid, description: 'Plano, flujo y composición espacial' },
     ],
   },
   {
@@ -49,14 +49,14 @@ const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
       { label: 'Cronograma', href: '/dashboard/timeline', icon: CalendarDays, description: 'Secuencia operativa del evento' },
       { label: 'Música', href: '/dashboard/music', icon: Music, description: 'Momentos, banda, DJ y decisiones' },
       { label: 'Presupuesto y proveedores', href: '/dashboard/finance', icon: DollarSign, description: 'Gastos, pagos y contratos' },
+      { label: 'Documentos', href: '/dashboard/documents', icon: FileText, description: 'Fuentes activas y referencias' },
       { label: 'Actividad', href: '/dashboard/activity', icon: Activity, description: 'Historial de cambios' },
     ],
   },
 ];
 
 const roadmapItems = [
-  { label: 'Salón avanzado', icon: Grid },
-  { label: 'Documentos', icon: FileText },
+  { label: 'Asistente inteligente', icon: Sparkles },
 ];
 
 const routeTitles: Record<string, { eyebrow: string; title: string }> = {
@@ -65,9 +65,11 @@ const routeTitles: Record<string, { eyebrow: string; title: string }> = {
   '/dashboard/planning': { eyebrow: 'Control', title: 'Planificación' },
   '/dashboard/guests': { eyebrow: 'Personas', title: 'Invitados' },
   '/dashboard/tables': { eyebrow: 'Espacio', title: 'Mesas' },
+  '/dashboard/venue': { eyebrow: 'Espacio', title: 'Salón' },
   '/dashboard/timeline': { eyebrow: 'Operación', title: 'Cronograma' },
   '/dashboard/music': { eyebrow: 'Operación', title: 'Música' },
   '/dashboard/finance': { eyebrow: 'Operación', title: 'Presupuesto y proveedores' },
+  '/dashboard/documents': { eyebrow: 'Operación', title: 'Documentos' },
   '/dashboard/activity': { eyebrow: 'Trazabilidad', title: 'Actividad' },
 };
 
@@ -93,7 +95,6 @@ export default function DashboardLayout({ children }: LayoutProps) {
   }, [pathname]);
 
   const daysUntilWedding = useMemo(() => getDaysUntilWedding(), []);
-
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   useEffect(() => {
@@ -142,14 +143,12 @@ export default function DashboardLayout({ children }: LayoutProps) {
         <div className="workspace-brand-lockup"><span className="workspace-mark">F&amp;C</span><div><strong>Centro de Gestión</strong><span>Felipe &amp; Camila</span></div></div>
         <button type="button" className="workspace-sidebar-close" onClick={() => setMobileOpen(false)} aria-label="Cerrar menú"><X size={19}/></button>
       </div>
-
       <div className="workspace-event-card">
         <div className="workspace-event-kicker"><span>23 octubre 2026</span><span>{daysUntilWedding === 0 ? 'Hoy' : `${daysUntilWedding} días`}</span></div>
         <strong>El Umbral Vivo</strong>
         <p>Una sola vista para decisiones, personas, espacio y operación.</p>
         <div className="workspace-event-progress" aria-hidden="true"><span/></div>
       </div>
-
       <nav className="workspace-nav" aria-label="Navegación del Centro de Gestión">
         {navigationGroups.map((group) => <div className="workspace-nav-group" key={group.label}>
           <span className="workspace-nav-label">{group.label}</span>
@@ -160,13 +159,11 @@ export default function DashboardLayout({ children }: LayoutProps) {
           })}</div>
         </div>)}
       </nav>
-
       <div className="workspace-roadmap">
-        <div className="workspace-roadmap-heading"><span>En evolución</span><small>Próximos módulos</small></div>
-        <div className="workspace-roadmap-list" aria-label="Próximos módulos no disponibles todavía">{roadmapItems.map((item) => { const Icon = item.icon; return <div className="workspace-roadmap-item" key={item.label}><Icon size={14} strokeWidth={1.7}/><span>{item.label}</span><small>Próximamente</small></div>; })}</div>
+        <div className="workspace-roadmap-heading"><span>En evolución</span><small>Próximo bloque</small></div>
+        <div className="workspace-roadmap-list" aria-label="Próximos módulos no disponibles todavía">{roadmapItems.map((item) => { const Icon = item.icon; return <div className="workspace-roadmap-item" key={item.label}><Icon size={14} strokeWidth={1.7}/><span>{item.label}</span><small>En diseño</small></div>; })}</div>
       </div>
     </div>
-
     <div className="workspace-sidebar-footer">
       <div className="workspace-assistant-status" aria-label="Asistente de planificación en diseño"><span className="workspace-assistant-icon"><Sparkles size={16}/></span><div><strong>Asistente de planificación</strong><small>Identidad y funciones en diseño</small></div></div>
       <div className="workspace-footer-actions">
