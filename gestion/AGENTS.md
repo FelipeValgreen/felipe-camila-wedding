@@ -1,240 +1,502 @@
 # AGENTS.md — Reglas para agentes de IA
 
-Este archivo es vinculante para cualquier agente que trabaje en `gestion/**`.
+**Versión:** 2.0 RC  
+**Ámbito:** `gestion/**`
 
-## 1. Alcance permitido
+---
 
-Se puede trabajar en:
+## 1. Propósito
 
-- `gestion/**`
-- migraciones nuevas estrictamente necesarias para el Centro de Gestión
-- documentación específica del Centro de Gestión
+Cualquier agente que trabaje sobre el Centro de Gestión debe mantener:
 
-No se puede modificar sin autorización separada:
+- seguridad;
+- contexto;
+- integridad de datos;
+- diferenciación de producto;
+- calidad;
+- trazabilidad.
 
-- `index.html` público
-- `js/main.js` público
-- `galeria/**`
-- `fotos/**`
-- APIs públicas de RSVP
-- flujo público de inscripción
-- frontend de `felipeycami.cl`
+---
 
-La producción pública está activa y recibe confirmaciones reales.
-
-## 2. Regla de seguridad principal
+## 2. Regla principal
 
 ```text
-Preview y desarrollo nunca deben escribir en Supabase de producción.
+Comprender primero.
+Verificar segundo.
+Modificar tercero.
 ```
 
-Antes de cualquier trabajo funcional, confirmar:
+---
 
-- rama Git distinta de `main`;
-- Supabase local o staging;
-- Vercel Preview con variables staging;
-- sincronización externa desactivada o dirigida a una planilla de prueba;
-- ausencia de secretos productivos en el entorno del agente.
+## 3. Benchmark externo
 
-## 3. Lectura obligatoria
+El producto compartido por el usuario es una referencia.
 
-Antes de proponer cambios, leer:
+Los agentes pueden extraer:
 
-1. `gestion/README.md`
-2. `gestion/CONTEXT.md`
-3. `gestion/docs/ARCHITECTURE.md`
-4. `gestion/docs/DOMAIN_RULES.md`
-5. `gestion/docs/DATA_MODEL.md`
-6. `gestion/docs/STATUS_AND_ROADMAP.md`
-7. `gestion/docs/RUNBOOK.md`
+- patrones;
+- ideas de flujo;
+- heurísticas;
+- aprendizajes UX.
 
-Después, inspeccionar el código real. La documentación orienta, pero el código y la base verificada determinan el estado vigente.
+No pueden copiar:
 
-## 4. Proceso obligatorio
+- marca;
+- textos;
+- personaje;
+- nombre del asistente;
+- paleta exacta;
+- layout exacto;
+- iconos;
+- presets;
+- microcopy;
+- identidad.
 
-Para cada tarea:
+Toda implementación debe ser propia.
 
-1. Explicar el objetivo.
-2. Identificar archivos afectados.
-3. Identificar tablas, vistas, RPC y triggers afectados.
-4. Evaluar si puede impactar RSVP activos.
-5. Proponer un cambio pequeño.
-6. Describir riesgos y rollback.
-7. Esperar aprobación si existe escritura sensible.
-8. Crear respaldo si habrá cambios de datos.
-9. Trabajar en rama.
-10. Ejecutar validaciones.
-11. Crear PR.
-12. No fusionar automáticamente.
-13. Verificar Preview.
-14. Verificar producción después de una aprobación explícita de despliegue.
+---
 
-## 5. Operaciones prohibidas por defecto
-
-- Ejecutar SQL directamente en producción para “probar”.
-- Ejecutar `supabase db push` contra producción.
-- Usar `SUPABASE_SECRET_KEY` productiva en un agente.
-- Procesar `sync_outbox` productivo durante desarrollo.
-- Escribir en Google Sheets productivo desde Preview.
-- Ejecutar backfills masivos sin dry-run.
-- Eliminar tablas o columnas existentes.
-- Renombrar campos usados por RSVP activos.
-- Cambiar tipos de columnas productivas en un primer paso.
-- Fusionar a `main` automáticamente.
-- Ocultar errores con valores hardcodeados.
-
-## 6. Migraciones
-
-Las primeras migraciones de un módulo deben ser aditivas.
+## 4. Alcance
 
 Permitido:
 
-- tablas nuevas;
-- columnas nuevas nullable;
-- vistas nuevas;
-- funciones nuevas;
-- índices nuevos;
-- políticas RLS nuevas;
-- triggers nuevos cuidadosamente aislados.
+- `gestion/**`;
+- docs de gestión;
+- tests;
+- staging;
+- migraciones aditivas necesarias.
 
-Requiere revisión especial:
+No autorizado:
 
-- `DROP`;
-- columnas `NOT NULL` sobre datos existentes;
-- reemplazar triggers actuales;
-- cambiar contratos de APIs activas;
-- backfills;
-- nuevas funciones `SECURITY DEFINER`.
+- sitio público;
+- RSVP público;
+- galería;
+- fotos;
+- producción automática;
+- datos reales como sandbox.
 
-Toda función `SECURITY DEFINER` debe:
+---
 
-- fijar `search_path`;
-- validar `auth.uid()`;
-- validar rol o permiso;
-- restringir grants;
-- registrar auditoría cuando corresponda.
+## 5. Lectura obligatoria
 
-## 7. Reglas de dominio que no pueden romperse
+1. `gestion/PRD.md`
+2. `gestion/CONTEXT.md`
+3. `gestion/MEMORY.md`
+4. `gestion/AGENTS.md`
+5. `gestion/README.md`
+6. `gestion/docs/ARCHITECTURE.md`
+7. `gestion/docs/DOMAIN_RULES.md`
+8. `gestion/docs/DATA_MODEL.md`
+9. `gestion/docs/STATUS_AND_ROADMAP.md`
+10. `gestion/docs/RUNBOOK.md`
 
-- Una respuesta RSVP no siempre equivale a una persona.
-- Cada asistente debe tener una ficha individual.
-- El RSVP original debe conservarse.
-- No crear acompañantes implícitos.
-- No hacer fuzzy matching automático.
-- Conciliar automáticamente solo por teléfono exacto y único o nombre normalizado exacto y único.
-- `attendance_status` y `reconfirmation_status` son independientes.
-- Solo asistentes confirmados pueden asignarse a mesas.
-- No superar capacidad de mesa.
-- La IA de mesas genera propuestas separadas; nunca escribe directamente en asignaciones reales.
-- Supabase es canónico; Sheets es espejo.
-- Los proveedores solo ven lo necesario.
+Después inspeccionar código real.
 
-## 8. IA y gestión de contexto
+---
 
-Si el agente:
+## 6. Agentes especializados
 
-- tiene pocos tokens;
-- pierde contexto;
-- no sabe si una migración fue aplicada;
-- encuentra discrepancias entre código y documentación;
-- pierde la respuesta de una herramienta;
-- encuentra cambios ajenos en la rama;
-- no puede confirmar el entorno;
+### Product Lead
 
-debe detener todas las escrituras.
+- alcance;
+- decisiones;
+- roadmap;
+- PR pequeños.
 
-Crear un handoff en:
+### Wedding Operations Lead
 
-```text
-gestion/docs/handoffs/YYYY-MM-DD-tarea.md
-```
+- dominio;
+- RSVP;
+- invitados;
+- mesas;
+- proveedores;
+- cronograma.
 
-Debe incluir:
+### UX Lead
 
-- objetivo;
-- estado actual;
-- archivos modificados;
-- migraciones creadas;
-- migraciones aplicadas y entorno;
-- pruebas ejecutadas;
-- errores;
-- riesgos;
-- rollback;
-- siguiente paso exacto.
+- journeys;
+- información;
+- responsive;
+- claridad.
 
-Regla:
+### Visual / Design System Lead
 
-```text
-Poco contexto = no migrar, no desplegar, no escribir en producción.
-```
+- identidad propia;
+- tokens;
+- componentes;
+- jerarquía.
 
-## 9. Validaciones mínimas
+### Frontend Engineer
 
-Actualmente existen:
+- Next.js;
+- React;
+- accesibilidad;
+- rendimiento.
+
+### Backend Engineer
+
+- rutas;
+- validación;
+- transacciones;
+- errores.
+
+### Supabase/Data Architect
+
+- esquema;
+- RLS;
+- RPC;
+- migraciones;
+- backups.
+
+### Security Lead
+
+- secretos;
+- privilegios;
+- PII;
+- logs;
+- entornos.
+
+### AI Product Lead
+
+- asistente;
+- propuestas;
+- guardrails;
+- human-in-the-loop.
+
+### QA Lead
+
+- regresión;
+- responsive;
+- accesibilidad;
+- E2E.
+
+### DevOps Lead
+
+- Git;
+- Preview;
+- Vercel;
+- rollback.
+
+### Documentation Steward
+
+- PRD;
+- Context;
+- Memory;
+- handoffs;
+- consistencia.
+
+---
+
+## 7. Flujo de trabajo
+
+### Baseline
+
+Registrar:
+
+- branch;
+- SHA;
+- diff;
+- entorno;
+- Preview;
+- riesgos.
+
+### Diagnóstico
+
+Identificar:
+
+- archivos;
+- tablas;
+- APIs;
+- RPC;
+- migraciones;
+- impacto RSVP;
+- impacto producción.
+
+### Plan
+
+Cambio pequeño y revisable.
+
+### Implementación
+
+Siempre en rama.
+
+### Validación
+
+Ejecutar cuando existan:
 
 ```bash
 npm run lint
-npm run build
-```
-
-Brecha conocida: faltan scripts formales de pruebas y `typecheck`.
-
-Para cambios futuros se debe incorporar y ejecutar, cuando estén disponibles:
-
-```bash
 npm run typecheck
 npm test
 npm run build
 ```
 
-Además:
+No declarar PASS si no se ejecutó.
 
-- revisar diff;
-- buscar secretos;
-- revisar RLS;
-- probar roles;
-- verificar móvil y escritorio;
-- comprobar que no cambió el sitio público.
+### Preview
 
-## 10. Datos sensibles
+Debe estar aislado.
 
-No incluir en logs:
+### PR
 
-- teléfonos completos;
-- correos completos;
-- alergias asociadas a nombres;
-- notas familiares;
-- tokens;
-- claves;
-- documentos privados.
-
-Usar datos ficticios en tests y staging.
-
-## 11. Convención de PR
-
-Cada PR debe explicar:
+Incluir:
 
 - problema;
 - alcance;
-- archivos;
-- migraciones;
-- impacto de datos;
-- pruebas;
+- screenshots;
+- datos;
 - seguridad;
+- pruebas;
+- rollback.
+
+### Merge
+
+No automático.
+
+---
+
+## 8. Preview
+
+```text
+Preview y Development nunca deben escribir en Supabase o Sheets de producción.
+```
+
+Si no se puede confirmar aislamiento:
+
+```text
+BLOCKED_PREVIEW_ISOLATION_REQUIRED
+```
+
+---
+
+## 9. Dominio
+
+### RSVP
+
+Conservar original.
+
+### Invitados
+
+Una ficha por persona.
+
+### Acompañantes
+
+No implícitos.
+
+### Conciliación
+
+Sólo exacta y única.
+
+### Mesas
+
+- `attending`;
+- capacidad;
+- consistencia;
+- auditoría.
+
+### Restricciones
+
+Sensibles.
+
+### Sheets
+
+Espejo.
+
+---
+
+## 10. Asistente de planificación
+
+Nombre provisional técnico.
+
+Puede:
+
+- leer contexto permitido;
+- explicar;
+- resumir;
+- proponer;
+- preparar.
+
+No puede sin aprobación:
+
+- mover;
+- borrar;
+- cambiar asistencia;
+- modificar presupuesto;
+- compartir;
+- enviar;
+- contratar;
+- aprobar;
+- desplegar.
+
+---
+
+## 11. IA para mesas
+
+Separar:
+
+```text
+propuesta
+```
+
+de:
+
+```text
+asignación real
+```
+
+Nunca generar directamente sobre:
+
+- `seating_assignments`;
+- `wedding_guests.table_id`.
+
+---
+
+## 12. UX
+
+No botones falsos.
+
+Toda acción visible debe ser:
+
+- funcional;
+- deshabilitada con explicación;
+- eliminada;
+- “Próximamente” claramente indicado.
+
+No depender de drag & drop en móvil.
+
+---
+
+## 13. Diseño
+
+Crear un sistema visual propio.
+
+No replicar el benchmark píxel por píxel.
+
+Toda propuesta visual debe explicar:
+
+- qué problema resuelve;
+- qué mantiene;
+- qué diferencia;
+- cómo funciona móvil.
+
+---
+
+## 14. Migraciones
+
+Por defecto:
+
+- aditivas;
+- pequeñas;
+- reversibles.
+
+Revisión especial:
+
+- DROP;
+- backfill;
+- NOT NULL;
+- cambio de tipo;
+- trigger sensible;
+- SECURITY DEFINER.
+
+---
+
+## 15. Seguridad
+
+Prohibido:
+
+- secretos en Git;
+- service role en cliente;
+- PII en logs;
+- credenciales productivas en Preview;
+- hardcodes de autorización;
+- desactivar RLS como solución.
+
+---
+
+## 16. QA
+
+### Resoluciones
+
+```text
+360x800
+390x844
+430x932
+768x1024
+1366x768
+1440x900
+```
+
+### Casos críticos
+
+- RSVP individual;
+- respuesta conjunta;
+- parcial;
+- ambiguo;
+- mesa llena;
+- invitado no confirmado;
+- movimiento de mesa;
+- fallo Sheets;
+- permisos por rol.
+
+---
+
+## 17. Handoff
+
+Si el agente pierde contexto o certeza:
+
+```text
+gestion/docs/handoffs/YYYY-MM-DD-<tarea>.md
+```
+
+No seguir escribiendo.
+
+---
+
+## 18. Memory
+
+Actualizar `MEMORY.md` sólo con decisiones duraderas.
+
+No guardar:
+
+- secretos;
+- PII;
+- snapshots temporales.
+
+---
+
+## 19. Señales de parada
+
+Detener si:
+
+- entorno incierto;
+- Preview usa producción;
+- migración incierta;
+- cambio ajeno inesperado;
+- prueba crítica falla;
+- se requiere producción;
+- se requiere borrar datos reales.
+
+Usar:
+
+```text
+HUMAN_DECISION_REQUIRED
+```
+
+cuando corresponda.
+
+---
+
+## 20. Done
+
+No basta con compilar.
+
+Debe existir:
+
+- comportamiento correcto;
+- seguridad;
+- integridad;
+- responsive;
+- QA;
 - rollback;
-- elementos fuera de alcance.
-
-Un PR no debe mezclar documentación, refactor amplio, migración y nueva funcionalidad si pueden separarse.
-
-## 12. Definición de terminado
-
-Una tarea no está terminada porque “compila”. Debe comprobarse:
-
-- comportamiento esperado;
-- ausencia de regresión en gestión;
-- aislamiento de producción;
-- integridad de datos;
-- permisos;
-- sincronización si corresponde;
-- trazabilidad;
-- rollback documentado.
+- documentación;
+- memoria actualizada.
