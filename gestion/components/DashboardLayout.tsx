@@ -33,6 +33,7 @@ const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { label: 'Inicio', href: '/dashboard', icon: LayoutDashboard, description: 'Estado general de la boda' },
       { label: 'Necesita atención', href: '/dashboard/issues', icon: AlertCircle, description: 'Incidencias por resolver' },
+      { label: 'Planificación', href: '/dashboard/planning', icon: CalendarDays, description: 'Plan de cierre desde datos reales' },
     ],
   },
   {
@@ -53,7 +54,6 @@ const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
 ];
 
 const roadmapItems = [
-  { label: 'Planificación', icon: CalendarDays },
   { label: 'Salón avanzado', icon: Grid },
   { label: 'Música', icon: Music },
   { label: 'Documentos', icon: FileText },
@@ -62,6 +62,7 @@ const roadmapItems = [
 const routeTitles: Record<string, { eyebrow: string; title: string }> = {
   '/dashboard': { eyebrow: 'Centro de Gestión', title: 'Inicio' },
   '/dashboard/issues': { eyebrow: 'Control', title: 'Necesita atención' },
+  '/dashboard/planning': { eyebrow: 'Control', title: 'Planificación' },
   '/dashboard/guests': { eyebrow: 'Personas', title: 'Invitados' },
   '/dashboard/tables': { eyebrow: 'Espacio', title: 'Mesas' },
   '/dashboard/timeline': { eyebrow: 'Operación', title: 'Cronograma' },
