@@ -71,27 +71,57 @@ interface RsvpSummary {
 
 interface ManagementSummary {
   rsvpAttending: number;
-  rsvpDeclined: number;
-  rsvpPending: number;
-  rsvpPeopleIntegrated: number;
-  rsvpMatched: number;
-  rsvpNeedsReview: number;
-  rsvpUnmatched: number;
   reconciliationPending: number;
   rsvpResponses: number;
   sheetSynced: number;
   sheetPending: number;
   activeGuests: number;
-  activeAttendingGuests: number;
-  activeDeclinedGuests: number;
-  activePendingGuests: number;
-  openIssues: number;
-  lastRsvpUpdateAt: string | null;
-  lastResponseAt: string | null;
-  countSemantics: string;
+  rsvpMatched: number;
+}
+
+interface OfficialPerson {
+  rowNumber: number;
+  name: string;
+  attendance: string;
+  dietaryType: string;
+  dietaryDetail: string;
+  recordStatus: string;
+  guestId: string | null;
+  rsvpId: string | null;
+  confirmedAt: string | null;
+  syncStatus: string;
+  phone: string;
+}
+
+interface TableGroup {
+  groupId: string;
+  groupName: string;
+  linkType: string;
+  confirmed: boolean;
+  people: string[];
+  sourceNotes: string[];
+}
+
+interface ConfirmedSource {
+  ok: boolean;
+  source: string;
+  groupsSource: string;
+  summary: {
+    attending: number;
+    declined: number;
+    totalResponsesPeople: number;
+    associated: number;
+    withoutMasterRecord: number;
+    dietary: number;
+    latestConfirmationName: string | null;
+    latestConfirmationAt: string | null;
+  };
+  people: OfficialPerson[];
+  groups: TableGroup[];
 }
 
 type GuestFilter = 'all' | 'attending' | 'pending' | 'not_attending' | 'no_phone' | 'no_table' | 'dietary';
+type Tab = 'official' | 'directory' | 'rsvps' | 'groups';
 type Notice = { type: 'success' | 'error' | 'info'; text: string };
 
 const EMPTY_GUEST: Partial<Guest> = {
@@ -104,8 +134,9 @@ function fullName(guest: Pick<Guest, 'first_name' | 'last_name'>) {
   return `${guest.first_name} ${guest.last_name || ''}`.trim();
 }
 
-function initials(guest: Pick<Guest, 'first_name' | 'last_name'>) {
-  return `${guest.first_name?.[0] || ''}${guest.last_name?.[0] || ''}`.toUpperCase() || '?';
+function initialsFromName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return `${parts[0]?.[0] || ''}${parts[1]?.[0] || ''}`.toUpperCase() || '?';
 }
 
 function statusLabel(status: string) {
@@ -117,14 +148,17 @@ function statusLabel(status: string) {
   return labels[status] || status;
 }
 
-function formatDate(value: string | null) {
+function formatSourceDate(value: string | null) {
   if (!value) return 'Sin dato';
+  if (/^\d{4}-\d{2}-\d{2}[ T]/.test(value) && !value.endsWith('Z') && !/[+-]\d\d:\d\d$/.test(value)) {
+    return value.replace('T', ' ');
+  }
   try {
     return new Intl.DateTimeFormat('es-CL', {
       day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago',
     }).format(new Date(value));
   } catch {
-    return 'Actualizado';
+    return value;
   }
 }
 
@@ -132,9 +166,10 @@ export default function GuestsPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [rsvps, setRsvps] = useState<RsvpSummary[]>([]);
   const [summary, setSummary] = useState<ManagementSummary | null>(null);
+  const [official, setOfficial] = useState<ConfirmedSource | null>(null);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<Notice | null>(null);
-  const [tab, setTab] = useState<'guests' | 'rsvps'>('guests');
+  const [tab, setTab] = useState<Tab>('official');
   const [filter, setFilter] = useState<GuestFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
@@ -143,25 +178,34 @@ export default function GuestsPage() {
   const [saving, setSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
 
-  useEffect(() => {
-    setPreviewMode(window.location.hostname !== 'gestion.felipeycami.cl');
-  }, []);
+  useEffect(() => setPreviewMode(window.location.hostname !== 'gestion.felipeycami.cl'), []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setNotice(null);
     try {
       const supabase = createClient();
-      const [guestsResult, rsvpResult, summaryResponse] = await Promise.all([
+      const [guestsResult, rsvpResult, summaryResponse, officialResponse] = await Promise.all([
         supabase.from('wedding_guests').select('*').order('first_name', { ascending: true }),
         supabase.from('rsvp_management_summary').select('*').order('created_at', { ascending: false }),
         fetch('/api/management-summary', { cache: 'no-store' }),
+        fetch('/api/confirmed-source', { cache: 'no-store' }),
       ]);
+
       const errors = [guestsResult.error, rsvpResult.error].filter(Boolean);
       if (errors.length) throw new Error(errors.map((error) => error?.message).join(' · '));
-      const summaryPayload = await summaryResponse.json().catch(() => null);
+
+      const [summaryPayload, officialPayload] = await Promise.all([
+        summaryResponse.json().catch(() => null),
+        officialResponse.json().catch(() => null),
+      ]);
+
+      if (!officialResponse.ok || !officialPayload?.ok) throw new Error(officialPayload?.error || 'No fue posible cargar CONFIRMADOS_ACTUALES.');
+
       setGuests((guestsResult.data || []) as Guest[]);
       setRsvps((rsvpResult.data || []) as RsvpSummary[]);
       if (summaryResponse.ok && summaryPayload?.ok) setSummary(summaryPayload.summary);
+      setOfficial(officialPayload as ConfirmedSource);
     } catch (error: any) {
       setNotice({ type: 'error', text: error?.message || 'No fue posible cargar invitados y RSVP.' });
     } finally {
@@ -172,7 +216,6 @@ export default function GuestsPage() {
   useEffect(() => { loadData(); }, [loadData]);
 
   const activeGuests = useMemo(() => guests.filter((guest) => guest.guest_status === 'active'), [guests]);
-
   const stats = useMemo(() => ({
     active: activeGuests.length,
     attending: activeGuests.filter((guest) => guest.attendance_status === 'attending').length,
@@ -180,9 +223,7 @@ export default function GuestsPage() {
     declined: activeGuests.filter((guest) => guest.attendance_status === 'not_attending').length,
     noTable: activeGuests.filter((guest) => guest.attendance_status === 'attending' && !guest.table_id).length,
     dietary: activeGuests.filter((guest) => guest.dietary_type && guest.dietary_type !== 'Ninguna').length,
-    reviewResponses: rsvps.filter((rsvp) => rsvp.pending_member_count > 0 || ['unmatched','partially_matched','ambiguous','conflict'].includes(rsvp.reconciliation_status)).length,
-    joint: rsvps.filter((rsvp) => rsvp.member_count > 1).length,
-  }), [activeGuests, rsvps]);
+  }), [activeGuests]);
 
   const filteredGuests = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
@@ -199,10 +240,20 @@ export default function GuestsPage() {
     });
   }, [activeGuests, filter, searchTerm]);
 
+  const filteredOfficial = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return (official?.people || []).filter((person) => !term || `${person.name} ${person.phone} ${person.recordStatus}`.toLowerCase().includes(term));
+  }, [official, searchTerm]);
+
   const filteredRsvps = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
     return rsvps.filter((rsvp) => !term || `${rsvp.response_name} ${rsvp.phone_e164}`.toLowerCase().includes(term));
   }, [rsvps, searchTerm]);
+
+  const filteredGroups = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return (official?.groups || []).filter((group) => !term || `${group.groupName} ${group.people.join(' ')}`.toLowerCase().includes(term));
+  }, [official, searchTerm]);
 
   function openEdit(guest: Guest) {
     setCreatingGuest(false); setSelectedGuest(guest); setEditForm({ ...guest }); setNotice(null);
@@ -254,27 +305,39 @@ export default function GuestsPage() {
         method: isCreate ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...(isCreate ? {} : { id: selectedGuest?.id }), first_name: firstName,
-          last_name: String(editForm.last_name || '').trim(), phone_e164: editForm.phone_e164 || null,
-          group_name: String(editForm.group_name || 'General').trim(), family_side: editForm.family_side || 'Compartido',
-          guest_category: editForm.guest_category || 'Adulto', invitation_status: editForm.invitation_status || 'not_sent',
-          attendance_status: editForm.attendance_status || 'pending', dietary_type: editForm.dietary_type || 'Ninguna',
-          dietary_detail: editForm.dietary_detail || null, reconfirmation_status: editForm.reconfirmation_status || 'pending',
-          guest_status: editForm.guest_status || 'active', notes: editForm.notes || null,
+          ...(isCreate ? {} : { id: selectedGuest?.id }),
+          first_name: firstName,
+          last_name: String(editForm.last_name || '').trim(),
+          phone_e164: editForm.phone_e164 || null,
+          group_name: String(editForm.group_name || 'General').trim(),
+          family_side: editForm.family_side || 'Compartido',
+          guest_category: editForm.guest_category || 'Adulto',
+          invitation_status: editForm.invitation_status || 'not_sent',
+          attendance_status: editForm.attendance_status || 'pending',
+          dietary_type: editForm.dietary_type || 'Ninguna',
+          dietary_detail: editForm.dietary_detail || null,
+          reconfirmation_status: editForm.reconfirmation_status || 'pending',
+          guest_status: editForm.guest_status || 'active',
+          notes: editForm.notes || null,
         }),
       });
       const payload = await response.json();
       if (!response.ok || !payload.ok) throw new Error(payload.error || 'No fue posible guardar la ficha.');
       await loadData(); closeEditor();
-      setNotice({ type: Array.isArray(payload.warnings) && payload.warnings.length ? 'info' : 'success', text: `${isCreate ? 'Invitado creado' : 'Ficha actualizada'} correctamente.` });
+      setNotice({ type: 'success', text: `${isCreate ? 'Invitado creado' : 'Ficha actualizada'} correctamente.` });
     } catch (error: any) {
       setNotice({ type: 'error', text: error?.message || 'No fue posible guardar la ficha.' });
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   }
 
   const editorOpen = Boolean(selectedGuest || creatingGuest);
-  const integratedAttending = summary?.rsvpAttending ?? 0;
-  const reconciliationPending = summary?.reconciliationPending ?? 0;
+  const officialAttending = official?.summary.attending ?? 0;
+  const officialDeclined = official?.summary.declined ?? 0;
+  const withoutMaster = official?.summary.withoutMasterRecord ?? 0;
+  const knownGroups = (official?.groups || []).filter((group) => group.confirmed).length;
+  const probableGroups = (official?.groups || []).filter((group) => !group.confirmed).length;
 
   return (
     <DashboardLayout>
@@ -283,7 +346,7 @@ export default function GuestsPage() {
           <div>
             <span className="guests-v2__eyebrow">Personas y RSVP</span>
             <h1>Invitados</h1>
-            <p>Una ficha por persona, una trazabilidad clara por RSVP y un flujo separado para todo lo que todavía requiere conciliación.</p>
+            <p>La vista oficial nace de CONFIRMADOS_ACTUALES; Supabase conserva las fichas operativas, RSVP, mesas y conciliación.</p>
           </div>
           <div className="guests-v2__actions">
             {previewMode && <span className="guests-v2__preview-chip">Preview · cambios locales</span>}
@@ -295,68 +358,66 @@ export default function GuestsPage() {
         {notice && <div className={`guests-v2__notice guests-v2__notice--${notice.type}`}>{notice.type === 'success' ? <CheckCircle2 size={16}/> : notice.type === 'error' ? <XCircle size={16}/> : <AlertTriangle size={16}/>}<span>{notice.text}</span></div>}
 
         <section className="guests-v2__source">
-          <div><span>RSVP integrados · asisten</span><strong>{integratedAttending || '—'}</strong><small>No se presenta como total oficial mientras exista una lista nominal externa sin conciliar.</small></div>
-          <div><span>Fichas activas</span><strong>{summary?.activeGuests ?? stats.active}</strong><small>Directorio canónico</small></div>
-          <div className={reconciliationPending ? 'is-attention' : ''}><span>Pendientes de conciliación</span><strong>{reconciliationPending}</strong><small>{summary ? `${summary.rsvpMatched} asistentes ya vinculados` : '—'}</small></div>
-          <div><span>Google Sheets</span><strong>{summary ? `${summary.sheetSynced}/${summary.rsvpResponses}` : '—'}</strong><small>{summary?.sheetPending ? `${summary.sheetPending} pendientes` : 'Sincronizado'}</small></div>
-          <div><span>Último dato integrado</span><strong className="guests-v2__date">{formatDate(summary?.lastRsvpUpdateAt || null)}</strong><small>Hora Santiago</small></div>
+          <div><span>Confirmados oficiales</span><strong>{officialAttending || '—'}</strong><small>Fuente: CONFIRMADOS_ACTUALES</small></div>
+          <div><span>No asisten</span><strong>{officialDeclined}</strong><small>Personas informadas como baja</small></div>
+          <div className={withoutMaster ? 'is-attention' : ''}><span>Sin ficha maestra</span><strong>{withoutMaster}</strong><small>Confirmados oficiales por conciliar</small></div>
+          <div><span>Grupos de mesa</span><strong>{knownGroups} + {probableGroups}</strong><small>{knownGroups} conocidos · {probableGroups} por validar</small></div>
+          <div><span>Última confirmación</span><strong className="guests-v2__date">{official?.summary.latestConfirmationName || '—'}</strong><small>{formatSourceDate(official?.summary.latestConfirmationAt || null)}</small></div>
         </section>
 
         <section className="guests-v2__metrics">
-          <article><span>Asisten en ficha maestra</span><strong>{stats.attending}</strong><small>Listos para operación</small></article>
-          <article><span>Pendientes en ficha</span><strong>{stats.pending}</strong><small>Aún sin respuesta conciliada</small></article>
-          <article><span>No asisten</span><strong>{stats.declined}</strong><small>Ficha individual</small></article>
-          <article className={stats.noTable ? 'is-attention' : ''}><span>Sin mesa</span><strong>{stats.noTable}</strong><small>Entre asistentes conciliados</small></article>
-          <article><span>Restricciones</span><strong>{stats.dietary}</strong><small>Alimentarias registradas</small></article>
+          <article><span>Con ficha asociada</span><strong>{official?.summary.associated || 0}</strong><small>Confirmados oficiales listos para operar</small></article>
+          <article><span>Restricciones</span><strong>{official?.summary.dietary || 0}</strong><small>Dentro de confirmados oficiales</small></article>
+          <article><span>RSVP integrados</span><strong>{summary?.rsvpAttending || 0}</strong><small>Pipeline técnico actual</small></article>
+          <article className={(summary?.reconciliationPending || 0) ? 'is-attention' : ''}><span>RSVP por conciliar</span><strong>{summary?.reconciliationPending || 0}</strong><small>Incidencias del pipeline</small></article>
+          <article><span>Sheets</span><strong>{summary ? `${summary.sheetSynced}/${summary.rsvpResponses}` : '—'}</strong><small>{summary?.sheetPending ? `${summary.sheetPending} pendientes` : 'Sincronizado'}</small></article>
         </section>
 
         <section className="guests-v2__toolbar">
           <div className="guests-v2__tabs">
-            <button type="button" className={tab === 'guests' ? 'is-active' : ''} onClick={() => setTab('guests')}><Users size={15}/>Directorio</button>
-            <button type="button" className={tab === 'rsvps' ? 'is-active' : ''} onClick={() => setTab('rsvps')}><UserCheck size={15}/>RSVP y conciliación <span>{reconciliationPending}</span></button>
+            <button type="button" className={tab === 'official' ? 'is-active' : ''} onClick={() => setTab('official')}><UserCheck size={15}/>Confirmados <span>{officialAttending}</span></button>
+            <button type="button" className={tab === 'directory' ? 'is-active' : ''} onClick={() => setTab('directory')}><Users size={15}/>Directorio</button>
+            <button type="button" className={tab === 'rsvps' ? 'is-active' : ''} onClick={() => setTab('rsvps')}><Link2 size={15}/>RSVP <span>{summary?.reconciliationPending || 0}</span></button>
+            <button type="button" className={tab === 'groups' ? 'is-active' : ''} onClick={() => setTab('groups')}><Users size={15}/>Grupos <span>{(official?.groups || []).length}</span></button>
           </div>
           <label className="guests-v2__search"><Search size={14}/><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar nombre, grupo o teléfono…"/></label>
         </section>
 
-        {loading ? <div className="guests-v2__loading"><Loader2 className="animate-spin" size={20}/><span>Cargando información real…</span></div> : tab === 'guests' ? (
+        {loading ? <div className="guests-v2__loading"><Loader2 className="animate-spin" size={20}/><span>Cargando información real…</span></div> : tab === 'official' ? (
           <section className="guests-v2__directory">
-            <div className="guests-v2__filters">
-              {([
-                ['all',`Todos ${stats.active}`], ['attending',`Asisten ${stats.attending}`], ['pending',`Pendientes ${stats.pending}`],
-                ['not_attending',`No asisten ${stats.declined}`], ['no_phone','Sin teléfono'], ['no_table',`Sin mesa ${stats.noTable}`], ['dietary',`Restricciones ${stats.dietary}`],
-              ] as Array<[GuestFilter,string]>).map(([value,label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={filter === value ? 'is-active' : ''}>{label}</button>)}
-            </div>
-
-            <div className="guests-v2__list-head"><span>Persona</span><span>Grupo</span><span>Estado</span><span>Operación</span></div>
+            <div className="guests-v2__list-head"><span>Persona</span><span>Estado de ficha</span><span>Asistencia</span><span>Confirmación</span></div>
             <div className="guests-v2__list">
-              {filteredGuests.map((guest) => (
-                <article key={guest.id} className="guests-v2__person-card">
-                  <div className="guests-v2__person-main"><span className="guests-v2__avatar">{initials(guest)}</span><div><strong>{fullName(guest)}</strong><small>{guest.phone_e164 || 'Sin teléfono'}</small></div></div>
-                  <div className="guests-v2__group"><strong>{guest.group_name || 'Sin grupo'}</strong><small>{guest.family_side} · {guest.guest_category}</small></div>
-                  <div className="guests-v2__status-cell"><span className={`guests-v2__status guests-v2__status--${guest.attendance_status}`}>{statusLabel(guest.attendance_status)}</span>{guest.dietary_type && guest.dietary_type !== 'Ninguna' && <small><Utensils size={11}/>{guest.dietary_type}</small>}</div>
-                  <div className="guests-v2__operation"><span>{guest.table_id ? 'Mesa asignada' : guest.attendance_status === 'attending' ? 'Sin mesa' : '—'}</span><button type="button" onClick={() => openEdit(guest)}><Edit3 size={13}/>Editar</button></div>
-                </article>
-              ))}
-              {!filteredGuests.length && <div className="guests-v2__empty">No hay personas en esta vista.</div>}
+              {filteredOfficial.map((person) => <article key={`${person.rowNumber}-${person.name}`} className="guests-v2__person-card">
+                <div className="guests-v2__person-main"><span className="guests-v2__avatar">{initialsFromName(person.name)}</span><div><strong>{person.name}</strong><small>{person.phone || 'Sin teléfono'}</small></div></div>
+                <div className="guests-v2__group"><strong>{person.recordStatus || 'Sin estado'}</strong><small>{person.guestId ? 'Ficha Supabase vinculada' : 'Requiere conciliación'}</small></div>
+                <div className="guests-v2__status-cell"><span className={`guests-v2__status guests-v2__status--${person.attendance === 'Asiste' ? 'attending' : 'not_attending'}`}>{person.attendance}</span>{person.dietaryType && person.dietaryType !== 'Ninguna' && <small><Utensils size={11}/>{person.dietaryType}</small>}</div>
+                <div className="guests-v2__operation"><span>{formatSourceDate(person.confirmedAt)}</span>{person.guestId ? <span>✓ asociada</span> : <Link href="/dashboard/issues">Conciliar →</Link>}</div>
+              </article>)}
+              {!filteredOfficial.length && <div className="guests-v2__empty">No hay personas que coincidan con la búsqueda.</div>}
             </div>
+          </section>
+        ) : tab === 'directory' ? (
+          <section className="guests-v2__directory">
+            <div className="guests-v2__filters">{([
+              ['all', `Todos ${stats.active}`], ['attending', `Asisten ${stats.attending}`], ['pending', `Pendientes ${stats.pending}`], ['not_attending', `No asisten ${stats.declined}`], ['no_phone', 'Sin teléfono'], ['no_table', `Sin mesa ${stats.noTable}`], ['dietary', `Restricciones ${stats.dietary}`],
+            ] as Array<[GuestFilter,string]>).map(([value,label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={filter === value ? 'is-active' : ''}>{label}</button>)}</div>
+            <div className="guests-v2__list-head"><span>Persona</span><span>Grupo</span><span>Estado</span><span>Operación</span></div>
+            <div className="guests-v2__list">{filteredGuests.map((guest) => <article key={guest.id} className="guests-v2__person-card">
+              <div className="guests-v2__person-main"><span className="guests-v2__avatar">{initialsFromName(fullName(guest))}</span><div><strong>{fullName(guest)}</strong><small>{guest.phone_e164 || 'Sin teléfono'}</small></div></div>
+              <div className="guests-v2__group"><strong>{guest.group_name || 'Sin grupo'}</strong><small>{guest.family_side} · {guest.guest_category}</small></div>
+              <div className="guests-v2__status-cell"><span className={`guests-v2__status guests-v2__status--${guest.attendance_status}`}>{statusLabel(guest.attendance_status)}</span>{guest.dietary_type && guest.dietary_type !== 'Ninguna' && <small><Utensils size={11}/>{guest.dietary_type}</small>}</div>
+              <div className="guests-v2__operation"><span>{guest.table_id ? 'Mesa asignada' : guest.attendance_status === 'attending' ? 'Sin mesa' : '—'}</span><button type="button" onClick={() => openEdit(guest)}><Edit3 size={13}/>Editar</button></div>
+            </article>)}{!filteredGuests.length && <div className="guests-v2__empty">No hay personas en esta vista.</div>}</div>
+          </section>
+        ) : tab === 'rsvps' ? (
+          <section className="guests-v2__rsvp-grid">
+            <div className="guests-v2__rsvp-intro"><div><span className="guests-v2__eyebrow">Evidencia original</span><h2>RSVP y conciliación</h2><p>Las respuestas se conservan tal como llegaron. Una respuesta conjunta puede representar varias personas y sólo se transforma en fichas cuando la conciliación es segura.</p></div>{(summary?.reconciliationPending || 0) > 0 && <Link href="/dashboard/issues" className="guests-v2__button guests-v2__button--primary"><Link2 size={13}/>Resolver {summary?.reconciliationPending} personas</Link>}</div>
+            <div className="guests-v2__rsvp-list">{filteredRsvps.map((rsvp) => { const needsReview = rsvp.pending_member_count > 0 || !['matched','split_matched'].includes(rsvp.reconciliation_status); return <article key={rsvp.rsvp_id} className={`guests-v2__rsvp-card ${needsReview ? 'is-attention' : ''}`}><div className="guests-v2__rsvp-top"><div><strong>{rsvp.response_name}</strong><small>{formatSourceDate(rsvp.created_at)} · {rsvp.phone_e164}</small></div><span className={`guests-v2__status ${needsReview ? 'guests-v2__status--pending' : 'guests-v2__status--attending'}`}>{needsReview ? 'Revisar' : 'Conciliada'}</span></div><div className="guests-v2__members">{(rsvp.members || []).map((member) => <span key={member.id} className={member.resolution_status === 'matched' ? 'is-matched' : ''}>{member.display_name}<small>{statusLabel(member.resolution_status)}</small></span>)}</div><div className="guests-v2__rsvp-footer"><span>{rsvp.matched_member_count}/{rsvp.member_count} vinculadas</span><span>{statusLabel(rsvp.sheet_sync_status)}</span>{needsReview ? <Link href="/dashboard/issues">Resolver →</Link> : <CheckCircle2 size={16}/>}</div></article>; })}{!filteredRsvps.length && <div className="guests-v2__empty">No hay RSVP que coincidan con la búsqueda.</div>}</div>
           </section>
         ) : (
           <section className="guests-v2__rsvp-grid">
-            <div className="guests-v2__rsvp-intro">
-              <div><span className="guests-v2__eyebrow">Evidencia original</span><h2>RSVP y conciliación</h2><p>Las respuestas se conservan tal como llegaron. Una respuesta conjunta puede representar varias personas y sólo se transforma en fichas cuando la conciliación es segura.</p></div>
-              {reconciliationPending > 0 && <Link href="/dashboard/issues" className="guests-v2__button guests-v2__button--primary"><Link2 size={13}/>Resolver {reconciliationPending} personas</Link>}
-            </div>
-            <div className="guests-v2__rsvp-list">
-              {filteredRsvps.map((rsvp) => {
-                const needsReview = rsvp.pending_member_count > 0 || !['matched','split_matched'].includes(rsvp.reconciliation_status);
-                return <article key={rsvp.rsvp_id} className={`guests-v2__rsvp-card ${needsReview ? 'is-attention' : ''}`}>
-                  <div className="guests-v2__rsvp-top"><div><strong>{rsvp.response_name}</strong><small>{formatDate(rsvp.created_at)} · {rsvp.phone_e164}</small></div><span className={`guests-v2__status ${needsReview ? 'guests-v2__status--pending' : 'guests-v2__status--attending'}`}>{needsReview ? 'Revisar' : 'Conciliada'}</span></div>
-                  <div className="guests-v2__members">{(rsvp.members || []).map((member) => <span key={member.id} className={member.resolution_status === 'matched' ? 'is-matched' : ''}>{member.display_name}<small>{statusLabel(member.resolution_status)}</small></span>)}</div>
-                  <div className="guests-v2__rsvp-footer"><span>{rsvp.matched_member_count}/{rsvp.member_count} vinculadas</span><span>{statusLabel(rsvp.sheet_sync_status)}</span>{needsReview ? <Link href="/dashboard/issues">Resolver →</Link> : <CheckCircle2 size={16}/>}</div>
-                </article>;
-              })}
-              {!filteredRsvps.length && <div className="guests-v2__empty">No hay RSVP que coincidan con la búsqueda.</div>}
-            </div>
+            <div className="guests-v2__rsvp-intro"><div><span className="guests-v2__eyebrow">GRUPOS_MESA</span><h2>Relaciones para planificar mesas</h2><p>Los grupos confirmados deben mantenerse juntos. Los grupos “Por validar” sirven como sugerencia, pero no se convierten en una regla dura hasta confirmar la relación.</p></div><Link href="/dashboard/tables" className="guests-v2__button guests-v2__button--primary">Abrir mesas</Link></div>
+            <div className="guests-v2__rsvp-list">{filteredGroups.map((group) => <article key={group.groupId} className={`guests-v2__rsvp-card ${group.confirmed ? '' : 'is-attention'}`}><div className="guests-v2__rsvp-top"><div><strong>{group.groupName}</strong><small>{group.groupId} · {group.people.length} personas</small></div><span className={`guests-v2__status ${group.confirmed ? 'guests-v2__status--attending' : 'guests-v2__status--pending'}`}>{group.confirmed ? 'Relación conocida' : 'Por validar'}</span></div><div className="guests-v2__members">{group.people.map((person) => <span key={person} className={group.confirmed ? 'is-matched' : ''}>{person}</span>)}</div><div className="guests-v2__rsvp-footer"><span>{group.linkType}</span><span>{group.sourceNotes[0] || 'Sin observación'}</span></div></article>)}{!filteredGroups.length && <div className="guests-v2__empty">No hay grupos que coincidan con la búsqueda.</div>}</div>
           </section>
         )}
 
