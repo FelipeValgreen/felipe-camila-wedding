@@ -18,6 +18,12 @@ export function createClient() {
     globalHeaders['Authorization'] = authHeader;
   }
 
+  type CookieToSet = {
+    name: string;
+    value: string;
+    options?: Parameters<typeof cookieStore.set>[2];
+  };
+
   return createServerClient(
     supabaseUrl,
     supabasePublishableKey,
@@ -29,7 +35,7 @@ export function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieToSet[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
