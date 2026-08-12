@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
+import PlanningCopilot from '@/components/PlanningCopilot';
 
 interface LayoutProps { children: React.ReactNode; }
 type NavItem = { label: string; href: string; icon: LucideIcon; description: string; };
@@ -53,10 +54,6 @@ const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
       { label: 'Actividad', href: '/dashboard/activity', icon: Activity, description: 'Historial de cambios' },
     ],
   },
-];
-
-const roadmapItems = [
-  { label: 'Asistente inteligente', icon: Sparkles },
 ];
 
 const routeTitles: Record<string, { eyebrow: string; title: string }> = {
@@ -159,13 +156,9 @@ export default function DashboardLayout({ children }: LayoutProps) {
           })}</div>
         </div>)}
       </nav>
-      <div className="workspace-roadmap">
-        <div className="workspace-roadmap-heading"><span>En evolución</span><small>Próximo bloque</small></div>
-        <div className="workspace-roadmap-list" aria-label="Próximos módulos no disponibles todavía">{roadmapItems.map((item) => { const Icon = item.icon; return <div className="workspace-roadmap-item" key={item.label}><Icon size={14} strokeWidth={1.7}/><span>{item.label}</span><small>En diseño</small></div>; })}</div>
-      </div>
     </div>
     <div className="workspace-sidebar-footer">
-      <div className="workspace-assistant-status" aria-label="Asistente de planificación en diseño"><span className="workspace-assistant-icon"><Sparkles size={16}/></span><div><strong>Asistente de planificación</strong><small>Identidad y funciones en diseño</small></div></div>
+      <button type="button" className="workspace-assistant-status" onClick={() => window.dispatchEvent(new CustomEvent('fc-open-copilot'))} aria-label="Abrir copiloto operacional"><span className="workspace-assistant-icon"><Sparkles size={16}/></span><div><strong>Copiloto operacional</strong><small>Datos conectados · beta</small></div></button>
       <div className="workspace-footer-actions">
         <button type="button" onClick={handleSyncNow} disabled={syncing} className="workspace-sync-button"><RefreshCw size={15} className={syncing ? 'animate-spin' : ''}/><span>{syncing ? 'Sincronizando…' : 'Sincronizar datos'}</span></button>
         <a href="https://felipeycami.cl" target="_blank" rel="noreferrer" className="workspace-invite-link"><ExternalLink size={14}/><span>Ver invitación</span></a>
@@ -186,5 +179,6 @@ export default function DashboardLayout({ children }: LayoutProps) {
       <header className="workspace-contextbar"><div><span>{pageContext.eyebrow}</span><strong>{pageContext.title}</strong></div><div className="workspace-context-meta"><span>23 · 10 · 26</span><span className="workspace-context-dot"/><span>{daysUntilWedding === 0 ? 'Hoy es el día' : `Faltan ${daysUntilWedding} días`}</span></div></header>
       <div className="workspace-main-inner">{children}</div>
     </main>
+    <PlanningCopilot currentPath={pathname || '/dashboard'}/>
   </div>;
 }
