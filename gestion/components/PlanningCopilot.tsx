@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import {
@@ -124,6 +124,15 @@ export default function PlanningCopilot({ currentPath }: CopilotProps) {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const handler = () => {
+      setOpen(true);
+      if (!snapshot && !loading) void loadContext();
+    };
+    window.addEventListener('fc-open-copilot', handler);
+    return () => window.removeEventListener('fc-open-copilot', handler);
+  });
 
   function answer(question: string) {
     if (!snapshot) return 'Primero necesito cargar el estado conectado del evento.';
