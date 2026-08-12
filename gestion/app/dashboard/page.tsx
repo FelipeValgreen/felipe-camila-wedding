@@ -46,13 +46,21 @@ interface ManagementSummary {
 interface ConfirmedSource {
   ok: boolean;
   source: string;
+  liveSource: string;
   summary: {
     attending: number;
     declined: number;
+    currentKnownAttending: number;
+    currentKnownDeclined: number;
+    incomingAttending: number;
+    incomingDeclined: number;
     totalResponsesPeople: number;
     associated: number;
+    currentKnownAssociated: number;
     withoutMasterRecord: number;
+    currentKnownWithoutMaster: number;
     dietary: number;
+    currentKnownDietary: number;
     latestConfirmationName: string | null;
     latestConfirmationAt: string | null;
   };
@@ -135,7 +143,7 @@ export default function DashboardHome() {
       ]);
 
       if (!summaryResponse.ok || !summaryPayload?.ok) throw new Error(summaryPayload?.error || 'No fue posible cargar el resumen RSVP.');
-      if (!officialResponse.ok || !officialPayload?.ok) throw new Error(officialPayload?.error || 'No fue posible cargar CONFIRMADOS_ACTUALES.');
+      if (!officialResponse.ok || !officialPayload?.ok) throw new Error(officialPayload?.error || 'No fue posible cargar las fuentes de confirmados.');
 
       setSummary(summaryPayload.summary);
       setOfficial(officialPayload as ConfirmedSource);
@@ -169,10 +177,12 @@ export default function DashboardHome() {
 
   const highPriority = issues.filter((issue) => ['critical', 'high'].includes(issue.severity)).slice(0, 4);
   const sourceHealthy = summary ? summary.sheetPending === 0 : false;
-  const officialAttending = official?.summary.attending ?? 0;
-  const officialDeclined = official?.summary.declined ?? 0;
-  const unresolvedMaster = official?.summary.withoutMasterRecord ?? 0;
-  const assignedOfficialGap = Math.max(0, officialAttending - seating.length);
+  const curatedAttending = official?.summary.attending ?? 0;
+  const currentKnownAttending = official?.summary.currentKnownAttending ?? curatedAttending;
+  const currentKnownDeclined = official?.summary.currentKnownDeclined ?? official?.summary.declined ?? 0;
+  const incomingAttending = official?.summary.incomingAttending ?? 0;
+  const unresolvedMaster = official?.summary.currentKnownWithoutMaster ?? official?.summary.withoutMasterRecord ?? 0;
+  const assignedOfficialGap = Math.max(0, currentKnownAttending - seating.length);
 
   return (
     <DashboardLayout>
@@ -181,7 +191,7 @@ export default function DashboardHome() {
           <div>
             <span className="home-v2__eyebrow">Centro de comando</span>
             <h1>Todo lo importante, en una sola vista.</h1>
-            <p>Confirmados oficiales, conciliación, mesas y presupuesto conectados a las fuentes operativas actuales.</p>
+            <p>Confirmados, conciliación, mesas y presupuesto conectados a las fuentes operativas actuales.</p>
           </div>
           <button type="button" className="home-v2__refresh" onClick={() => loadData(true)} disabled={refreshing}>
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Actualizando…' : 'Actualizar datos'}
@@ -193,23 +203,23 @@ export default function DashboardHome() {
         {loading ? <div className="home-v2__loading"><Loader2 className="animate-spin" size={22}/><span>Cargando estado real…</span></div> : <>
           <section className="home-v2__truth">
             <div className="home-v2__truth-main">
-              <span className="home-v2__label">Confirmados oficiales</span>
-              <div className="home-v2__truth-number">{officialAttending || '—'}</div>
+              <span className="home-v2__label">Asistentes conocidos ahora</span>
+              <div className="home-v2__truth-number">{currentKnownAttending || '—'}</div>
               <strong>personas confirmadas que asistirán</strong>
-              <p>Fuente oficial: <b>CONFIRMADOS_ACTUALES</b>. Los RSVP conjuntos ya están desdoblados por persona y este total se actualiza directamente desde la hoja operativa.</p>
+              <p><b>{curatedAttending}</b> ya están consolidadas en CONFIRMADOS_ACTUALES{incomingAttending ? ` y ${incomingAttending} nuevas confirmaciones llegaron a Supabase y todavía no han pasado a la hoja consolidada.` : '.'}</p>
             </div>
             <div className="home-v2__truth-grid">
-              <div><span>No asisten</span><strong>{officialDeclined}</strong><small>personas informadas como baja</small></div>
-              <div className={unresolvedMaster > 0 ? 'is-attention' : ''}><span>Sin ficha maestra</span><strong>{unresolvedMaster}</strong><small>confirmados oficiales todavía por conciliar</small></div>
+              <div><span>No asisten</span><strong>{currentKnownDeclined}</strong><small>estado conocido más reciente</small></div>
+              <div className={unresolvedMaster > 0 ? 'is-attention' : ''}><span>Sin ficha maestra</span><strong>{unresolvedMaster}</strong><small>confirmados que aún requieren conciliación</small></div>
               <div><span>Última confirmación</span><strong className="home-v2__date">{official?.summary.latestConfirmationName || '—'}</strong><small>{formatSourceDate(official?.summary.latestConfirmationAt || null)}</small></div>
-              <div><span>RSVP → Sheets</span><strong>{summary ? `${summary.sheetSynced}/${summary.rsvpResponses}` : '—'}</strong><small>{sourceHealthy ? 'sincronización al día' : `${summary?.sheetPending || 0} pendientes`}</small></div>
+              <div><span>Consolidación</span><strong>{incomingAttending ? `${incomingAttending} nueva${incomingAttending === 1 ? '' : 's'}` : 'Al día'}</strong><small>{incomingAttending ? 'pendientes de CONFIRMADOS_ACTUALES' : 'Supabase y hoja alineados'}</small></div>
             </div>
           </section>
 
           <section className="home-v2__section">
             <div className="home-v2__section-head"><div><span className="home-v2__label">Necesita atención</span><h2>Qué resolver ahora</h2></div><Link href="/dashboard/issues">Ver todo <ArrowRight size={13}/></Link></div>
             <div className="home-v2__attention-grid">
-              <Link href="/dashboard/guests" className="home-v2__attention-card is-primary"><span className="home-v2__attention-icon"><Users size={18}/></span><div><strong>{unresolvedMaster} confirmados sin ficha maestra</strong><p>Son personas oficiales que todavía no pueden participar plenamente en mesas, restricciones y automatizaciones del sistema.</p></div><ArrowRight size={16}/></Link>
+              <Link href="/dashboard/guests" className="home-v2__attention-card is-primary"><span className="home-v2__attention-icon"><Users size={18}/></span><div><strong>{unresolvedMaster} confirmados sin ficha maestra</strong><p>Son personas conocidas que todavía no pueden participar plenamente en mesas, restricciones y automatizaciones.</p></div><ArrowRight size={16}/></Link>
               <Link href="/dashboard/tables" className="home-v2__attention-card"><span className="home-v2__attention-icon"><Armchair size={18}/></span><div><strong>{assignedOfficialGap} confirmados aún sin asiento persistido</strong><p>{seating.length} asignaciones guardadas · {operational.capacity} cupos configurados.</p></div><ArrowRight size={16}/></Link>
               <Link href="/dashboard/finance" className="home-v2__attention-card"><span className="home-v2__attention-icon"><WalletCards size={18}/></span><div><strong>{shortMoney(budget?.summary.remaining)} por pagar</strong><p>Presupuesto oficial: {shortMoney(budget?.summary.totalBudget)} · pagado/prepagado {shortMoney(budget?.summary.paidOrPrepaid)}.</p></div><ArrowRight size={16}/></Link>
             </div>
@@ -218,7 +228,7 @@ export default function DashboardHome() {
           <section className="home-v2__section">
             <div className="home-v2__section-head"><div><span className="home-v2__label">Operación</span><h2>Estado de la boda</h2></div></div>
             <div className="home-v2__operation-grid">
-              <Link href="/dashboard/guests" className="home-v2__module-card"><div className="home-v2__module-top"><span><Users size={17}/></span><small>Invitados</small></div><strong>{officialAttending}</strong><p>confirmados oficiales</p><div className="home-v2__module-row"><span>{official?.summary.associated || 0} con ficha asociada</span><span>{official?.summary.dietary || 0} restricciones</span></div></Link>
+              <Link href="/dashboard/guests" className="home-v2__module-card"><div className="home-v2__module-top"><span><Users size={17}/></span><small>Invitados</small></div><strong>{currentKnownAttending}</strong><p>confirmados conocidos</p><div className="home-v2__module-row"><span>{official?.summary.currentKnownAssociated || 0} con ficha asociada</span><span>{official?.summary.currentKnownDietary || 0} restricciones</span></div></Link>
               <Link href="/dashboard/tables" className="home-v2__module-card"><div className="home-v2__module-top"><span><Armchair size={17}/></span><small>Mesas y salón</small></div><strong>{tables.length}</strong><p>mesas configuradas</p><div className="home-v2__module-row"><span>{operational.capacity} cupos</span><span>{seating.length} sentados</span></div></Link>
               <Link href="/dashboard/finance" className="home-v2__module-card"><div className="home-v2__module-top"><span><DollarSign size={17}/></span><small>Presupuesto</small></div><strong className="home-v2__money">{shortMoney(budget?.summary.totalBudget)}</strong><p>presupuesto operativo</p><div className="home-v2__module-row"><span>{shortMoney(budget?.summary.paidOrPrepaid)} pagado</span><span>{shortMoney(budget?.summary.remaining)} faltante</span></div></Link>
               <Link href="/dashboard/issues" className="home-v2__module-card"><div className="home-v2__module-top"><span><AlertCircle size={17}/></span><small>Incidencias</small></div><strong>{summary?.openIssues ?? 0}</strong><p>abiertas</p><div className="home-v2__module-row"><span>{summary?.reconciliationPending || 0} RSVP por conciliar</span><span>revisar</span></div></Link>
@@ -236,10 +246,10 @@ export default function DashboardHome() {
             <div className="home-v2__panel">
               <div className="home-v2__panel-head"><div><span className="home-v2__label">Preparación</span><h3>Señales rápidas</h3></div></div>
               <div className="home-v2__signals">
-                <div><span><CheckCircle2 size={15}/></span><div><strong>Confirmados oficiales</strong><small>{officialAttending} asisten · {officialDeclined} no asisten</small></div></div>
+                <div><span><CheckCircle2 size={15}/></span><div><strong>Confirmados</strong><small>{currentKnownAttending} asisten · {currentKnownDeclined} no asisten</small></div></div>
                 <div><span><Clock3 size={15}/></span><div><strong>Conciliación</strong><small>{unresolvedMaster} confirmados todavía sin ficha maestra</small></div></div>
-                <div><span><Utensils size={15}/></span><div><strong>Restricciones</strong><small>{official?.summary.dietary || 0} confirmados con restricción registrada</small></div></div>
-                <div><span><Armchair size={15}/></span><div><strong>Distribución</strong><small>{assignedOfficialGap} confirmados sin asiento persistido</small></div></div>
+                <div><span><Utensils size={15}/></span><div><strong>Restricciones</strong><small>{official?.summary.currentKnownDietary || 0} confirmados con restricción registrada</small></div></div>
+                <div><span><Armchair size={15}/></span><div><strong>RSVP → Sheets</strong><small>{sourceHealthy ? 'Sincronización técnica al día' : `${summary?.sheetPending || 0} pendientes técnicos`}</small></div></div>
               </div>
             </div>
           </section>
