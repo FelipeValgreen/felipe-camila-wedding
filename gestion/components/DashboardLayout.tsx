@@ -47,6 +47,7 @@ const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
     label: 'Operación',
     items: [
       { label: 'Cronograma', href: '/dashboard/timeline', icon: CalendarDays, description: 'Secuencia operativa del evento' },
+      { label: 'Música', href: '/dashboard/music', icon: Music, description: 'Momentos, banda, DJ y decisiones' },
       { label: 'Presupuesto y proveedores', href: '/dashboard/finance', icon: DollarSign, description: 'Gastos, pagos y contratos' },
       { label: 'Actividad', href: '/dashboard/activity', icon: Activity, description: 'Historial de cambios' },
     ],
@@ -55,7 +56,6 @@ const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
 
 const roadmapItems = [
   { label: 'Salón avanzado', icon: Grid },
-  { label: 'Música', icon: Music },
   { label: 'Documentos', icon: FileText },
 ];
 
@@ -66,6 +66,7 @@ const routeTitles: Record<string, { eyebrow: string; title: string }> = {
   '/dashboard/guests': { eyebrow: 'Personas', title: 'Invitados' },
   '/dashboard/tables': { eyebrow: 'Espacio', title: 'Mesas' },
   '/dashboard/timeline': { eyebrow: 'Operación', title: 'Cronograma' },
+  '/dashboard/music': { eyebrow: 'Operación', title: 'Música' },
   '/dashboard/finance': { eyebrow: 'Operación', title: 'Presupuesto y proveedores' },
   '/dashboard/activity': { eyebrow: 'Trazabilidad', title: 'Actividad' },
 };
