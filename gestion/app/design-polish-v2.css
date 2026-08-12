@@ -16,8 +16,12 @@
 .workspace-event-card p{font-size:11px;}
 .workspace-profile-copy strong{font-size:10.5px;}
 .workspace-profile-copy span{font-size:8.5px;}
+.workspace-assistant-status{width:100%;text-align:left;color:inherit;font-family:inherit;cursor:pointer;transition:border-color .16s ease,background .16s ease,transform .16s ease;}
+.workspace-assistant-status:hover{border-color:rgba(216,151,124,.42);background:rgba(184,111,82,.09);transform:translateY(-1px);}
+.workspace-assistant-status:focus-visible{outline:2px solid rgba(216,151,124,.55);outline-offset:2px;}
 .workspace-assistant-status strong{font-size:10.5px;}
 .workspace-assistant-status small{font-size:8.5px;}
 .workspace-sync-button,.workspace-invite-link{font-size:9.5px;}
 .workspace-contextbar>div:first-child span{font-size:9px;}
 .workspace-context-meta{font-size:10px;}
+@media(max-width:640px){.workspace-nav-item{min-height:52px}.workspace-nav-copy small{white-space:normal;line-height:1.3}.workspace-sidebar-footer{gap:10px}}
