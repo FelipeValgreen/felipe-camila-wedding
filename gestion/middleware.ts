@@ -3,6 +3,12 @@ import { createServerClient } from '@supabase/ssr';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: any;
+};
+
 function nonProductionApiWriteBlocked(request: NextRequest): boolean {
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
   if (!isApiRoute || SAFE_METHODS.has(request.method.toUpperCase())) return false;
@@ -53,7 +59,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieToSet[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({
             request,
