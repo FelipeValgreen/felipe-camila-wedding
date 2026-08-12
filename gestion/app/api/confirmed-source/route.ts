@@ -33,7 +33,7 @@ async function googleAccessToken(email: string, privateKey: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth-grant-type:jwt-bearer'.replace('oauth-grant-type', 'oauth:grant-type'),
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion: `${unsigned}.${signature}`,
     }),
     cache: 'no-store',
@@ -80,7 +80,7 @@ export async function GET() {
       readRange(spreadsheetId, token, 'GRUPOS_MESA!A1:H200'),
       supabase
         .from('rsvp_response_members')
-        .select('id, rsvp_id, display_name, guest_id, resolution_status, attendance_status, updated_at')
+        .select('id, rsvp_id, display_name, guest_id, resolution_status, attendance_status, dietary_type, dietary_detail, updated_at')
         .order('updated_at', { ascending: true }),
     ]);
 
@@ -114,6 +114,8 @@ export async function GET() {
         name: member.display_name || '',
         guestId: member.guest_id || null,
         resolutionStatus: member.resolution_status || 'unmatched',
+        dietaryType: member.dietary_type || '',
+        dietaryDetail: member.dietary_detail || '',
         updatedAt: member.updated_at || null,
         source: 'supabase_pending_sheet' as const,
       }));
@@ -133,6 +135,9 @@ export async function GET() {
     const associated = attending.filter((person) => person.recordStatus === 'Ficha asociada');
     const withoutMasterRecord = attending.filter((person) => person.recordStatus === 'Sin ficha maestra');
     const dietary = attending.filter((person) => person.dietaryType && person.dietaryType !== 'Ninguna');
+    const incomingAssociated = incomingAttending.filter((person) => Boolean(person.guestId));
+    const incomingWithoutMaster = incomingAttending.filter((person) => !person.guestId);
+    const incomingDietary = incomingAttending.filter((person) => person.dietaryType && person.dietaryType !== 'Ninguna');
     const latestSheet = attending[attending.length - 1] || null;
     const latestIncoming = incomingAttending[incomingAttending.length - 1] || null;
 
@@ -178,8 +183,11 @@ export async function GET() {
         incomingDeclined: incomingDeclined.length,
         totalResponsesPeople: people.length,
         associated: associated.length,
+        currentKnownAssociated: associated.length + incomingAssociated.length,
         withoutMasterRecord: withoutMasterRecord.length,
+        currentKnownWithoutMaster: withoutMasterRecord.length + incomingWithoutMaster.length,
         dietary: dietary.length,
+        currentKnownDietary: dietary.length + incomingDietary.length,
         latestConfirmationName: latestIncoming?.name || latestSheet?.name || null,
         latestConfirmationAt: latestIncoming?.updatedAt || latestSheet?.confirmedAt || null,
       },
