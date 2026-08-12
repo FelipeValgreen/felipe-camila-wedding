@@ -18,6 +18,12 @@ async function checkAdminAuth(supabase: any) {
   return { authorized: true, user, profile };
 }
 
+function clampDimension(value: unknown, fallback: number, min: number, max: number) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return Math.max(min, Math.min(max, numeric));
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = createClient();
@@ -55,14 +61,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: `Ya existe la Mesa ${tableNumber}.` }, { status: 400 });
     }
 
+    const tableType = String(body.table_type || 'round_guest');
     const insertData = {
       table_number: tableNumber,
       name: String(body.name || `Mesa ${tableNumber}`).trim(),
       capacity,
-      table_type: body.table_type || 'round_guest',
+      table_type: tableType,
       zone: String(body.zone || 'Principal').trim(),
       position_x: Math.max(4, Math.min(96, posX)),
       position_y: Math.max(6, Math.min(94, posY)),
+      width: clampDimension(body.width, tableType === 'rectangular_guest' ? 18 : 10, 6, 36),
+      height: clampDimension(body.height, tableType === 'rectangular_guest' ? 8 : 10, 6, 24),
+      rotation: clampDimension(body.rotation, 0, -180, 180),
       locked: Boolean(body.locked)
     };
 
@@ -128,7 +138,10 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ ok: false, error: 'Mesa no encontrada.' }, { status: 404 });
     }
 
-    const allowedKeys = ['table_number', 'name', 'capacity', 'table_type', 'zone', 'position_x', 'position_y', 'locked', 'notes'];
+    const allowedKeys = [
+      'table_number', 'name', 'capacity', 'table_type', 'zone',
+      'position_x', 'position_y', 'width', 'height', 'rotation', 'locked', 'notes'
+    ];
     const updates: Record<string, any> = {};
     for (const key of allowedKeys) {
       if (key in rawUpdates) updates[key] = rawUpdates[key];
@@ -186,8 +199,12 @@ export async function PATCH(request: Request) {
       }
       updates.position_y = Math.max(6, Math.min(94, positionY));
     }
+    if ('width' in updates) updates.width = clampDimension(updates.width, Number(beforeTable.width || 10), 6, 36);
+    if ('height' in updates) updates.height = clampDimension(updates.height, Number(beforeTable.height || 10), 6, 24);
+    if ('rotation' in updates) updates.rotation = clampDimension(updates.rotation, Number(beforeTable.rotation || 0), -180, 180);
     if ('name' in updates) updates.name = String(updates.name || '').trim() || beforeTable.name;
     if ('zone' in updates) updates.zone = String(updates.zone || '').trim() || 'Principal';
+    if ('table_type' in updates) updates.table_type = String(updates.table_type || beforeTable.table_type || 'round_guest');
     if ('locked' in updates) updates.locked = Boolean(updates.locked);
 
     const { data: table, error } = await supabase
