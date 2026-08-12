@@ -1,7 +1,36 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+function nonProductionApiWriteBlocked(request: NextRequest): boolean {
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
+  if (!isApiRoute || SAFE_METHODS.has(request.method.toUpperCase())) return false;
+
+  if (process.env.VERCEL_ENV === 'production') return false;
+  return process.env.ALLOW_NON_PRODUCTION_WRITES !== 'true';
+}
+
 export async function middleware(request: NextRequest) {
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
+
+  if (nonProductionApiWriteBlocked(request)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'NON_PRODUCTION_WRITE_BLOCKED',
+        message: 'Las escrituras del Centro de Gestión están bloqueadas en este entorno.'
+      },
+      { status: 403 }
+    );
+  }
+
+  // API routes apply their own authentication and authorization. The middleware
+  // only adds the environment-level write barrier above.
+  if (isApiRoute) {
+    return NextResponse.next();
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -62,5 +91,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/dashboard/:path*', '/api/:path*'],
 };
