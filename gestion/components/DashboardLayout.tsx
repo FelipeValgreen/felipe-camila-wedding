@@ -20,6 +20,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 
 interface LayoutProps {
@@ -29,7 +30,7 @@ interface LayoutProps {
 type NavItem = {
   label: string;
   href: string;
-  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  icon: LucideIcon;
   description: string;
 };
 
