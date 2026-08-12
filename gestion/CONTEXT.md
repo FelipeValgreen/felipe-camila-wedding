@@ -1,216 +1,413 @@
-# CONTEXT.md — Contexto del Centro de Gestión
+# CONTEXT.md — Contexto Maestro del Centro de Gestión
 
-## Alcance
+**Versión:** 2.0 RC  
+**Fecha:** 12 de agosto de 2026  
+**Ámbito:** `gestion/**`
 
-Este documento describe exclusivamente `gestion.felipeycami.cl/dashboard` y los servicios usados por el Centro de Gestión.
+---
 
-Queda fuera de alcance:
+## 1. Identidad
 
-- frontend público de `felipeycami.cl`;
-- flujo público de RSVP;
-- galería pública;
-- carga pública de fotografías;
-- cambios editoriales de la invitación.
+El repositorio `FelipeValgreen/felipe-camila-wedding` contiene:
 
-## Identidad del proyecto
+1. experiencia pública del matrimonio;
+2. Centro de Gestión en `gestion/`.
 
-- Novios: Felipe y Camila
+Este documento describe sólo el Centro de Gestión.
+
+---
+
+## 2. Caso real
+
+- Pareja: Felipe y Camila
 - Fecha: 23 de octubre de 2026
-- Ceremonia: 17:30
-- Repositorio único: `FelipeValgreen/felipe-camila-wedding`
-- Aplicación de gestión: `gestion/`
+- Timezone: America/Santiago
 - Producción: `https://gestion.felipeycami.cl/dashboard`
+- Repositorio: `FelipeValgreen/felipe-camila-wedding`
+- Directorio: `gestion/`
+- Proyecto Vercel: `gestion`
 - Supabase canónico: `mwumnywbvjxekskfrlms`
 - Google Sheets: `F&C Centro Comandos`
 
-## Situación operativa
+Producción contiene datos reales y no debe usarse como sandbox.
 
-El matrimonio actual es un caso real en producción. Personas continúan enviando confirmaciones, por lo que cualquier cambio debe preservar:
+---
 
-- inserción de nuevos RSVP;
-- conciliación;
-- fichas individuales;
-- incidencias;
-- sincronización con Sheets;
-- métricas;
-- asignaciones de mesa;
-- auditoría.
+## 3. Propósito
 
-El Centro de Gestión ya es funcional. La meta es adaptarlo progresivamente para que también pueda ser usado por:
+Evolucionar el Centro de Gestión hacia un sistema integral de planificación y operación de bodas reutilizable por:
 
-- novios;
-- wedding planners;
-- banqueteras;
-- centros de eventos;
-- fotógrafos y videógrafos;
-- equipos audiovisuales;
-- decoradores y otros proveedores.
+- parejas;
+- planners;
+- catering;
+- venues;
+- fotografía;
+- audiovisual;
+- decoración;
+- otros proveedores.
 
-## Visión del producto
+---
 
-La plataforma tendrá tres experiencias conectadas.
+## 4. Benchmark compartido por el usuario
 
-### 1. Administración del matrimonio
+El usuario compartió un producto externo como referencia visual y funcional.
 
-Para pareja y planner:
+Referencia adicional:
 
+`https://www.youtube.com/watch?v=CoHKehTBP-Y`
+
+Ese producto debe tratarse únicamente como:
+
+```text
+benchmark / inspiración / referencia
+```
+
+Nunca como:
+
+```text
+marca / identidad / especificación literal
+```
+
+### Aprendizajes útiles
+
+- módulos claros;
+- gestión de proveedores;
+- invitados;
+- mesas;
+- plano;
+- importación Excel;
+- presets;
+- ayuda contextual;
+- lenguaje simple.
+
+### Diferenciación obligatoria
+
+Nuestro producto debe tener:
+
+- naming propio;
+- navegación reinterpretada;
+- identidad visual propia;
+- microcopy propio;
+- asistente propio;
+- presets propios;
+- iconografía propia;
+- decisiones UX propias.
+
+---
+
+## 5. Baseline técnico conocido
+
+### Stack
+
+- Next.js 14
+- React 18
+- TypeScript 5
+- Tailwind / PostCSS
+- Supabase Auth
+- PostgreSQL
+- RLS
+- Vercel
+- Vercel Cron
+- Google Sheets API
+- GitHub
+
+### Rutas conocidas
+
+```text
+/dashboard
+/dashboard/guests
+/dashboard/issues
+/dashboard/tables
+/dashboard/finance
+/dashboard/activity
+```
+
+---
+
+## 6. Arquitectura
+
+```text
+Usuario autenticado
+→ Next.js
+→ Supabase Auth
+→ RLS / APIs / RPC
+→ PostgreSQL
+→ audit_log
+→ sync_outbox
+→ Google Sheets
+```
+
+Supabase es canónico.
+
+Sheets es espejo.
+
+---
+
+## 7. Datos de dominio
+
+### RSVP
+
+`rsvp_responses`
+
+Conserva la evidencia original.
+
+### Integrantes
+
+`rsvp_response_members`
+
+Representa personas detectadas dentro de una respuesta.
+
+### Invitados
+
+`wedding_guests`
+
+Ficha individual.
+
+### Incidencias
+
+`management_issues`
+
+Casos que requieren revisión humana.
+
+### Mesas
+
+- `wedding_tables`
+- `seating_assignments`
+- `wedding_guests.table_id`
+
+---
+
+## 8. Reglas no negociables
+
+- una respuesta RSVP no siempre es una persona;
+- cada asistente necesita ficha individual;
+- no +1 implícito;
+- no fuzzy matching automático;
+- asistencia y reconfirmación son independientes;
+- sólo `attending` puede sentarse;
+- no superar capacidad;
+- restricciones son sensibles;
+- Supabase es canónico;
+- Sheets es espejo;
+- IA propone, no aplica automáticamente.
+
+---
+
+## 9. Estado funcional
+
+Existe base para:
+
+- autenticación;
+- resumen;
 - invitados;
 - RSVP;
+- integrantes;
+- conciliación;
 - incidencias;
 - restricciones;
 - mesas;
-- planos;
-- cronograma;
-- proveedores;
-- entregables;
-- finanzas;
-- actividad.
-
-### 2. Portal de proveedores
-
-Cada proveedor debe ver únicamente:
-
-- tareas propias;
-- documentos compartidos;
-- cronograma relevante;
-- cambios recientes;
-- contactos autorizados;
-- información mínima necesaria.
-
-### 3. Inteligencia asistida
-
-La IA debe:
-
-- interpretar instrucciones;
-- transformar instrucciones en reglas;
-- generar propuestas de mesas;
-- explicar decisiones;
-- comparar alternativas.
-
-La IA nunca debe:
-
-- aplicar cambios reales sin aprobación;
-- inferir relaciones privadas;
-- saltarse capacidad;
-- mover invitados directamente si la generación queda incompleta.
-
-## Estado funcional conocido
-
-Módulos en producción:
-
-- resumen operativo;
-- directorio de invitados;
-- respuestas RSVP originales;
-- integrantes individuales por respuesta;
-- conciliación;
-- bandeja de incidencias;
-- restricciones alimentarias;
-- edición de fichas;
-- mesas;
 - asignaciones;
-- vista gráfica referencial;
 - finanzas;
+- proveedores;
 - actividad;
-- sincronización con Google Sheets;
-- auditoría.
+- auditoría;
+- sincronización.
 
-Módulos incompletos o pendientes:
+Pendiente o incompleto:
 
-- proveedores como experiencia completa;
-- portal de proveedores;
-- cronograma compartido;
-- entregables versionados;
-- planos 2D profesionales;
-- reglas y propuestas de IA para mesas;
-- multi-matrimonio;
-- facturación, para una etapa posterior.
+- staging formal;
+- tests;
+- typecheck;
+- sistema visual propio;
+- mobile UX;
+- ciclo completo de proveedores;
+- cronograma;
+- documentos;
+- editor 2D profesional;
+- asistente;
+- IA de mesas;
+- multi-matrimonio.
 
-## Conceptos de negocio
+---
 
-### Invitado
+## 10. Dirección de producto
 
-Persona individual registrada en `wedding_guests`.
+El producto se organiza alrededor de:
 
-### Respuesta RSVP
+- Inicio
+- Planificación
+- Presupuesto
+- Proveedores
+- Invitados
+- Mesas
+- Salón
+- Cronograma
+- Música
+- Documentos
+- Actividad
+- Configuración
 
-Formulario original guardado en `rsvp_responses`. Puede representar una o varias personas.
+La navegación final puede iterarse, pero no debe copiar literalmente la referencia externa.
 
-### Integrante de respuesta
+---
 
-Persona detectada dentro de una respuesta, registrada en `rsvp_response_members`.
+## 11. Invitados, mesas y salón
 
-### Incidencia
+Estos tres dominios deben conectarse.
 
-Situación que requiere revisión humana, registrada en `management_issues`.
+```text
+Invitado
+→ estado
+→ mesa
+→ capacidad
+→ plano
+```
 
-### Conciliación
+El sistema debe evitar duplicar datos entre pantallas.
 
-Vinculación entre un integrante de RSVP y una ficha individual.
+---
 
-### Reconfirmación
+## 12. Asistente
 
-Estado posterior e independiente de la asistencia original.
+Nombre provisional:
 
-### Espejo operativo
+```text
+Asistente de planificación
+```
 
-Google Sheets. Refleja Supabase, pero no debe sustituirlo.
+El nombre definitivo, identidad, avatar y tono se definirán más adelante.
 
-## Casos conjuntos importantes
+No utilizar nombres o personajes del benchmark.
 
-Resueltos como personas individuales:
+---
 
-- Claudia Kauak y Phillipe Casabon.
-- Felipe Márquez y Mane Sánchez.
+## 13. Editor del salón
 
-Parcial:
+Debe separar:
 
-- Verónica Ceroni identificada.
-- Hernán Muñoz pendiente de ficha inequívoca.
+### Preview
 
-Estos casos justifican que el modelo separe respuesta original de personas.
+Inspiracional.
 
-## Reglas históricas importantes
+### Plano
 
-- Invitaciones individuales.
-- No existe acompañante implícito.
-- No realizar fuzzy matching automático.
-- No alterar reconfirmación al cambiar asistencia.
-- No afirmar sincronización sin verificarla.
-- Crear respaldo antes de cambios masivos.
-- No usar Supabase Edge Functions.
-- Proveedores con mínimo privilegio.
-- Una sola fuente de verdad para cada dato.
+Operativo.
 
-## Stack confirmado
+El preview no reemplaza el plano real.
 
-- monorepo único;
-- Next.js y TypeScript en `gestion/`;
-- Supabase PostgreSQL, Auth y RLS;
-- Vercel;
-- Google Sheets API;
-- cron horario;
-- GitHub y PR;
-- desarrollo asistido por IA, especialmente Antigravity IDE y agentes compatibles con Markdown de contexto.
+---
 
-## Forma de trabajo
+## 14. Diseño visual
 
-- documentación dentro de `gestion/`;
-- agentes leen contexto antes de modificar;
-- Preview aislado;
-- staging con datos ficticios;
-- PR pequeños;
-- migraciones aditivas;
-- aprobación humana antes de producción.
+Aún NO existe paleta definitiva aprobada para el nuevo sistema.
 
-## Orden de evolución
+Requisitos de dirección:
 
-1. Documentación profesional.
-2. Aislamiento seguro de Preview y staging.
-3. Navegación y “Necesita tu atención”.
-4. Proveedores y permisos entendibles.
-5. Cronograma y entregables.
-6. Planos 2D profesionales.
-7. IA asistida para mesas.
-8. Segundo matrimonio piloto.
-9. Multi-matrimonio.
-10. Facturación y comercialización posterior.
+- elegante;
+- premium;
+- calmado;
+- editorial;
+- moderno;
+- legible;
+- propio.
+
+No asumir como obligatorios colores o tipografías del benchmark.
+
+---
+
+## 15. Entornos
+
+### Production
+
+Datos reales.
+
+### Preview
+
+Debe usar staging o impedir escrituras.
+
+### Development
+
+Preferir datos ficticios e integraciones externas desactivadas.
+
+Regla:
+
+```text
+Preview nunca escribe en producción.
+```
+
+---
+
+## 16. Alcance protegido
+
+No modificar desde tareas de gestión:
+
+- sitio público;
+- galería;
+- carga de fotos;
+- RSVP público;
+- APIs públicas de inscripción.
+
+Requieren autorización separada.
+
+---
+
+## 17. Baseline Git histórico
+
+Referencia conocida:
+
+```text
+main
+3c08cb05cdf0b2db636f89cf10dfe56ebfc23508
+```
+
+Ese commit incorporó documentación profesional del Centro de Gestión.
+
+Antes de trabajar, volver a verificar Git.
+
+---
+
+## 18. Baseline Vercel histórico
+
+Referencia observada:
+
+```text
+project: gestion
+state: READY
+target: production
+commit: 3c08cb05cdf0b2db636f89cf10dfe56ebfc23508
+```
+
+Volver a verificar antes de desplegar.
+
+---
+
+## 19. Documentación existente
+
+Conservar y armonizar con:
+
+- `gestion/README.md`
+- `gestion/AGENTS.md`
+- `gestion/CONTEXT.md`
+- `gestion/PRD.md`
+- `gestion/MEMORY.md`
+- `gestion/docs/ARCHITECTURE.md`
+- `gestion/docs/DOMAIN_RULES.md`
+- `gestion/docs/DATA_MODEL.md`
+- `gestion/docs/STATUS_AND_ROADMAP.md`
+- `gestion/docs/RUNBOOK.md`
+- auditorías.
+
+---
+
+## 20. Prioridad ante conflictos
+
+1. seguridad;
+2. reglas de dominio;
+3. esquema y código verificados;
+4. PRD aprobado;
+5. Context;
+6. Memory;
+7. documentación histórica;
+8. prompts antiguos.
+
+Un benchmark externo nunca prevalece sobre el dominio del producto.
