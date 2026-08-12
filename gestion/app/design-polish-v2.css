@@ -1,0 +1,23 @@
+/* Global visual refinements for the V2 product direction. */
+@media (min-width:1025px){
+  .workspace-sidebar{width:268px;flex-basis:268px;}
+  .workspace-sidebar-scroll{padding:20px 15px 15px;}
+  .workspace-event-card{margin:14px 0 22px;padding:15px;border-radius:16px;}
+  .workspace-nav{gap:19px;}
+  .workspace-nav-list{gap:3px;}
+  .workspace-nav-item{min-height:48px;padding:7px 9px;border-radius:12px;}
+  .workspace-nav-icon{width:30px;height:30px;border-radius:9px;}
+  .workspace-sidebar-footer{padding:12px 15px 15px;}
+  .workspace-main-inner{padding:30px 32px 60px;}
+}
+.workspace-nav-copy strong{font-size:12px;line-height:1.2;}
+.workspace-nav-copy small{font-size:9.5px;line-height:1.25;}
+.workspace-nav-label{font-size:8.5px;}
+.workspace-event-card p{font-size:11px;}
+.workspace-profile-copy strong{font-size:10.5px;}
+.workspace-profile-copy span{font-size:8.5px;}
+.workspace-assistant-status strong{font-size:10.5px;}
+.workspace-assistant-status small{font-size:8.5px;}
+.workspace-sync-button,.workspace-invite-link{font-size:9.5px;}
+.workspace-contextbar>div:first-child span{font-size:9px;}
+.workspace-context-meta{font-size:10px;}
