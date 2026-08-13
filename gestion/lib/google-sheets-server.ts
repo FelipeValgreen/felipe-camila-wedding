@@ -37,29 +37,13 @@ export async function googleSheetsAccessToken(scope = 'https://www.googleapis.co
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth-type:jwt-bearer'.replace('oauth-type', 'oauth-type'),
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion: `${unsigned}.${signature}`,
     }),
     cache: 'no-store',
   });
 
-  if (!response.ok) {
-    // Retry with the standards-compliant grant type. Kept separate to avoid silent auth ambiguity.
-    const retry = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        assertion: `${unsigned}.${signature}`,
-      }),
-      cache: 'no-store',
-    });
-    if (!retry.ok) throw new Error(`GOOGLE_OAUTH_FAILED_${retry.status}`);
-    const payload = await retry.json();
-    if (!payload.access_token) throw new Error('GOOGLE_OAUTH_TOKEN_MISSING');
-    return payload.access_token as string;
-  }
-
+  if (!response.ok) throw new Error(`GOOGLE_OAUTH_FAILED_${response.status}`);
   const payload = await response.json();
   if (!payload.access_token) throw new Error('GOOGLE_OAUTH_TOKEN_MISSING');
   return payload.access_token as string;
