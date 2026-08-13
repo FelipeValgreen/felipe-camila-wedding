@@ -1,260 +1,243 @@
 # STATUS_AND_ROADMAP.md — Estado y hoja de ruta
 
-> Los conteos de producción son una fotografía temporal. Verificar Supabase antes de tomar decisiones operativas.
+**Actualizado:** 13 de agosto de 2026
+
+> Los conteos de RSVP, pagos, incidencias y asignaciones cambian continuamente. Este documento registra capacidades de producto y arquitectura, no conteos operativos en tiempo real.
 
 ## 1. Leyenda
 
-- ✅ Producción
-- 🟡 Funcional, requiere mejoras
-- 🔵 En desarrollo o siguiente entrega
-- ⚪ No iniciado
-- 🔴 Bloqueado o requiere decisión
+- ✅ Implementado y con base productiva
+- 🧪 Implementado en la rama/Preview de la entrega V2
+- 🟡 Funcional con una limitación conocida
+- ⚪ Futuro
+- 🔴 Bloqueante para una capacidad específica
 
-## 2. Estado actual
+## 2. Estado de producto
 
-| Módulo | Estado | Observación |
+| Módulo | Estado | Estado técnico |
 |---|---|---|
-| Autenticación administrativa | ✅ | Supabase Auth + `admin_profiles` |
-| Resumen operativo | ✅ | Métricas y actualización automática |
-| Invitados individuales | ✅ | Creación, edición y estados |
-| RSVP originales | ✅ | Visibles en gestión |
-| Integrantes de RSVP conjuntos | ✅ | Separación de personas implementada |
-| Conciliación | ✅ | Exacta y revisión manual |
-| Bandeja de incidencias | ✅ | Base para “Necesita tu atención” |
-| Restricciones alimentarias | ✅ | Por persona, con datos sensibles |
-| Google Sheets | ✅ | Espejo mediante `sync_outbox` |
+| Autenticación administrativa | ✅ | Supabase Auth + `admin_profiles` + RLS |
+| Inicio / Command Center | 🧪 | Resumen conectado de confirmados, mesas, cronograma, música, presupuesto, documentos e incidencias |
+| Necesita atención | ✅ / 🧪 | Conciliación e incidencias existentes, integradas a la nueva navegación |
+| Planificación | 🧪 | Prioridades derivadas + tareas manuales autogestionables |
+| Invitados | ✅ / 🧪 | Directorio, edición rápida, restricciones, clasificación familiar/social y conciliación |
+| Relaciones de invitados | 🧪 | Grupos canónicos editables; conocidos = regla fuerte, probables = preferencia |
+| Mesas | ✅ / 🧪 | CRUD de mesas, capacidad, asignar/quitar, drag & drop y avisos de grupos separados |
+| Seating Intelligence | 🧪 / 🟡 | Tres escenarios, score explicable, todos los confirmados y mesas virtuales; aplicación masiva real permanece protegida |
+| Salón | 🧪 | Editor 2D operativo, layout canónico, plano oficial como referencia, drag/resize/rotación/bloqueo/versionado |
+| Cronograma | 🧪 | Fuente canónica en Supabase + CRUD + borradores seguros en Preview |
+| Música | 🧪 | Momentos/canciones/cues/proveedor + CRUD + acciones del Copiloto |
+| Presupuesto | 🧪 | `event_budget_items` canónico + CRUD |
+| Proveedores | ✅ / 🧪 | CRUD, estados y auditoría |
+| Pagos | 🧪 | Registro, edición y eliminación con permisos/auditoría |
+| Documentos | 🧪 | Registro canónico + búsqueda/filtros + CRUD |
+| Actividad | ✅ / 🧪 | `audit_log` presentado como timeline operativo |
+| Copiloto operacional | 🧪 / 🟡 | Grounding obligatorio, fallback seguro y acciones confirmables para Música/Cronograma/Tareas; proveedor LLM externo no es requisito de disponibilidad |
+| Estado del sistema | 🧪 | Diagnóstico de fuentes, integridad, capacidad, conciliación y guards de entorno |
+| Google Sheets sync | ✅ | `sync_outbox`; bloqueado fuera de producción por guard |
 | Auditoría | ✅ | `audit_log` para cambios relevantes |
-| Mesas por lista | ✅ | Selector, capacidad y validaciones |
-| Plano referencial | 🟡 | No trabaja aún como editor profesional |
-| Finanzas y pagos | 🟡 | Funcional para matrimonio actual |
-| Proveedores | 🟡 | Datos existentes; falta experiencia completa |
-| Portal de proveedores | ⚪ | Falta implementar permisos y UX |
-| Cronograma compartido | ⚪ | Falta modelo y vistas |
-| Entregables versionados | ⚪ | Falta modelo y portal |
-| Planos 2D profesionales | ⚪ | Prioridad estratégica |
-| IA para mesas | ⚪ | Debe operar sobre propuestas aisladas |
-| Staging aislado | 🔴 | Debe configurarse antes de PR funcionales grandes |
-| Pruebas automatizadas de gestión | 🔴 | No existe script formal `test` |
-| Typecheck separado | 🔴 | No existe script formal `typecheck` |
-| Multi-matrimonio | ⚪ | Etapa posterior al segundo piloto |
-| Facturación comercial | ⚪ | Pospuesta deliberadamente |
+| Preview seguro | ✅ / 🟡 | Escrituras DB/Sheets bloqueadas; módulos nuevos usan borradores locales persistentes. Aún no existe DB staging completa |
+| Typecheck separado | ✅ | `npm run typecheck` y `npm run check:ci` |
+| Tests automatizados de dominio/E2E | 🔴 | Falta suite formal; el build/TypeScript no reemplaza pruebas de interacción |
+| Portal de proveedores | ⚪ | Requiere roles y vistas acotadas |
+| Multi-matrimonio | ⚪ | Siguiente etapa comercial, no necesaria para el caso Felipe/Camila |
+| Facturación comercial | ⚪ | Pospuesta |
 
-## 3. Fotografía operativa conocida
+## 3. Modelo canónico V2
 
-Corte histórico de referencia al cierre de la reparación del 25 de julio de 2026:
+Supabase sigue siendo la fuente de verdad para entidades estructuradas. Google Sheets permanece como espejo o como fuente operacional transitoria sólo donde todavía corresponde.
 
-| Indicador | Valor conocido |
-|---|---:|
-| RSVP totales | 54 |
-| RSVP afirmativos | 53 |
-| RSVP negativos | 1 |
-| Invitados activos | 258 |
-| Personas individuales confirmadas | 36 |
-| RSVP individuales conciliados | 32 |
-| Respuestas conjuntas conciliadas | 2 |
-| Respuestas parciales | 1 |
-| Sin conciliar | 19 |
-| Sheets sincronizados | 54 |
-| `sync_outbox` pendientes | 0 |
-| Mesas configuradas | 4 |
-| Capacidad configurada | 40 |
-| Asignaciones reales | 0 |
+Entidades relevantes:
 
-No hardcodear estos valores en la aplicación ni tratarlos como vigentes sin consulta actual.
+```text
+rsvp_responses
+rsvp_response_members
+wedding_guests
+wedding_tables
+seating_assignments
+management_issues
+vendors
+expenses / expense_payments
+event_budget_items / event_budget_payments
+event_timeline_items
+event_music_items
+event_documents
+event_tasks
+guest_relationship_groups
+guest_relationship_members
+event_venue_layouts
+audit_log
+sync_outbox
+```
 
-## 4. Riesgos abiertos
+Nuevas entidades de esta entrega:
 
-### Producción activa
+- `guest_relationship_groups` y `guest_relationship_members` para vínculos conocidos/probables;
+- `wedding_guests.family_branch` para una rama/afinidad explícita sin inventar parentescos;
+- `event_venue_layouts` para layout espacial versionado.
 
-Personas continúan confirmándose. Una migración o preview mal configurado puede afectar datos reales.
+Las migraciones de esquema están versionadas en `supabase/migrations/`. Datos personales y backfills privados **no** se incluyen en el repositorio público.
 
-### Falta de staging formal
+## 4. Confirmados y fichas
 
-Antes de desarrollo funcional nuevo se requiere:
+La experiencia diferencia explícitamente:
 
-- Supabase staging o branch persistente;
-- Vercel Preview apuntando a staging;
-- datos ficticios;
-- Google Sheets de prueba o integración desactivada.
+1. asistentes conocidos en el consolidado + delta live;
+2. personas con ficha operativa en `wedding_guests`;
+3. personas todavía pendientes de conciliación;
+4. personas realmente persistibles en `seating_assignments`.
 
-### Cobertura automática insuficiente
+Seating Intelligence puede incluir a un confirmado sin ficha como **registro virtual de planificación**, pero ese registro no puede escribirse como asignación real hasta ser conciliado.
 
-El proyecto necesita:
+## 5. Relaciones y familias
 
-- `typecheck`;
-- tests de dominio;
-- tests de RLS;
-- tests de rutas;
-- guard de regresión específico de `gestion/`.
+Las relaciones ya no dependen de una inferencia oculta del algoritmo.
 
-### Roles actuales
+```text
+Relación conocida
+→ regla fuerte
 
-`owner`, `editor` y `viewer` no son suficientes para proveedores ni múltiples matrimonios.
+Relación por validar
+→ preferencia blanda
 
-### Planos
+family_branch explícito
+→ afinidad operativa para seating
+```
 
-La experiencia visual actual no es suficiente para que un centro de eventos o productor la use como plano profesional.
+El usuario puede editar relaciones y ramas desde Invitados. Esto permite separar, por ejemplo, ramas familiares sin que el sistema invente quién es madre, padre, pareja o hermano.
 
-## 5. Roadmap progresivo
+## 6. Mesas y Seating Intelligence
 
-## Fase 0 — Documentación y seguridad
+La página de Mesas es ahora un workspace autogestionable:
 
-Estado: 🔵
+- banco de invitados;
+- búsqueda y filtros;
+- drag & drop;
+- selector alternativo;
+- CRUD de mesas;
+- capacidad dura;
+- grupos conocidos visibles;
+- aviso cuando un grupo conocido queda separado;
+- Preview persistente sin escribir producción.
 
-Objetivos:
+Seating Intelligence genera tres escenarios:
 
-- incorporar documentación profesional;
-- definir alcance protegido;
-- crear reglas para agentes;
-- auditar Preview y variables;
-- diseñar staging;
-- añadir scripts de calidad.
+- **Cohesión familiar**;
+- **Equilibrada**;
+- **Mezcla social**.
 
-Criterio de salida:
+Cada escenario incluye score, razones, cupos y mesas adicionales propuestas cuando la capacidad real no alcanza. Guardar una propuesta crea un borrador que Salón puede visualizar; no ejecuta silenciosamente asignaciones reales.
 
-- agentes pueden comprender el sistema;
-- Preview no puede escribir en producción;
-- existe una prueba básica repetible.
+## 7. Salón
 
-## Fase 1 — Producto comprensible
+El editor del Salón ya tiene dos capas distintas:
 
-Objetivos:
+### Referencia
 
-- reorganizar navegación;
-- convertir incidencias en “Necesita tu atención”;
-- mejorar experiencia de proveedores;
-- definir roles entendibles;
-- crear contexto mínimo de matrimonio.
+Plano oficial del recinto como overlay/guía.
 
-Primer PR funcional recomendado:
+### Layout operativo
 
-- navegación;
-- home operativo;
-- proveedores básicos;
-- roles iniciales;
-- sin multi-matrimonio completo;
-- sin IA;
-- sin editor de planos.
+Elementos editables con:
 
-## Fase 2 — Operación compartida
-
-Objetivos:
-
-- cronograma;
-- tareas por proveedor;
-- entregables;
-- confirmar recepción;
-- comentarios simples;
-- exportaciones por rol.
-
-## Fase 3 — Planos 2D profesionales
-
-Objetivos:
-
-- cargar plano como fondo;
-- escala;
-- objetos;
-- capas;
-- zoom;
-- alineación;
+- posición;
+- tamaño;
 - rotación;
 - bloqueo;
-- versiones;
-- vistas por proveedor.
+- duplicación;
+- eliminación;
+- biblioteca de objetos;
+- versión canónica en producción;
+- borrador local persistente en Preview.
 
-No incluir 3D inicialmente.
+El borrador de Seating Intelligence puede visualizar mesas adicionales propuestas sobre el Salón sin confundirlas con mesas persistidas.
 
-## Fase 4 — IA asistida para mesas
+## 8. Copiloto operacional
 
-Objetivos:
+El Copiloto es **data-first** y no depende de que un LLM externo responda para seguir siendo útil.
 
-- reglas estructuradas;
-- instrucciones en lenguaje natural;
-- motor determinista;
-- varias propuestas;
-- puntuación;
-- explicación;
-- aprobación humana;
-- rollback.
+Flujo:
 
-La IA nunca debe modificar asignaciones reales durante la generación.
+```text
+pregunta
+→ consulta fuentes conectadas
+→ snapshot actual
+→ respuesta grounded
+→ acción propuesta, si corresponde
+→ confirmación explícita
+→ escritura permitida sólo en entorno y rol correctos
+```
 
-## Fase 5 — Segundo matrimonio piloto
+Acciones actualmente preparables:
 
-Objetivos:
+- canción/momento de Música;
+- bloque de Cronograma;
+- tarea de Planificación.
 
-- crear segundo conjunto ficticio o piloto;
-- probar onboarding;
-- probar roles;
-- probar aislamiento;
-- encontrar supuestos hardcodeados.
+En Preview la confirmación crea un borrador local. En producción llama al API canónico correspondiente, con guard, permisos y auditoría.
 
-## Fase 6 — Multi-matrimonio
+## 9. Seguridad de entornos
 
-Objetivos:
+Regla permanente:
 
-- `weddings`;
-- `wedding_members`;
-- `wedding_id` progresivo;
-- RLS por matrimonio;
-- plantillas;
-- archivo de eventos terminados.
+```text
+Preview / Development nunca deben escribir en la base o Sheets de producción.
+```
 
-## Fase 7 — Producto comercial
+La rama implementa `environment-guard.ts` y aplica guards a endpoints de escritura y sincronización. Además, los módulos nuevos usan `localStorage` sólo como sandbox persistente en Preview.
 
-Objetivos:
+Limitación conocida: esto **no equivale a un staging full-stack**. Para pruebas de mutaciones reales fuera de producción todavía se necesita un proyecto/branch Supabase aislado y un Sheet de prueba.
 
-- marca blanca;
-- planes y límites;
-- soporte;
-- recuperación de cuenta;
-- privacidad;
-- términos;
-- observabilidad.
+## 10. Validación actual
 
-## Fase posterior
+La rama V2 se despliega automáticamente como Vercel Preview. Cada cambio funcional se valida con el build de Next.js/TypeScript del deployment; el proyecto además dispone de:
 
-- facturación;
-- pagos en plataforma;
-- 3D;
+```bash
+npm run typecheck
+npm run check:ci
+```
+
+Antes de cada merge final se debe verificar:
+
+- deployment Preview en estado `READY`;
+- build sin errores;
+- errores runtime recientes;
+- guards de endpoints de mutación;
+- migraciones de esquema versionadas;
+- ausencia de PII/secrets nuevos en el repo público.
+
+## 11. Pendientes reales para cerrar el caso Felipe/Camila
+
+No son bloqueantes de la nueva arquitectura, pero sí tareas operativas:
+
+1. conciliar los confirmados que todavía no tienen ficha individual;
+2. completar ramas familiares/sociales que el algoritmo no puede conocer por sí solo;
+3. elegir y ajustar un escenario de seating;
+4. persistir asignaciones finales sólo cuando las fichas estén conciliadas;
+5. ajustar el layout del Salón con medidas/decisiones reales del montaje;
+6. completar canciones, cues, responsables y horarios pendientes;
+7. mantener tareas manuales y documentación al día.
+
+## 12. Siguiente etapa de producto comercial
+
+Después de cerrar el caso real:
+
+- staging aislado completo;
+- test E2E de flujos críticos;
+- `wedding_id` / multi-matrimonio sin duplicación de código;
+- permisos por boda y proveedor;
+- portal de proveedores;
+- entregables/versiones;
+- exportaciones operativas;
+- onboarding de un segundo matrimonio;
+- recién después, billing/entitlements.
+
+## 13. Fuera de alcance de esta entrega
+
+- cambios al sitio público o RSVP público;
 - marketplace;
-- app nativa.
-
-## 6. Criterios del MVP comercial
-
-El MVP es utilizable cuando:
-
-1. La pareja opera sin entrar a Supabase.
-2. El planner gestiona invitados, RSVP, mesas y cronograma.
-3. La banquetera descarga cantidades y restricciones.
-4. El centro consulta plano, capacidades y montaje.
-5. Fotografía consulta cronograma y shot list.
-6. Cada proveedor ve solo lo necesario.
-7. Respuestas conjuntas cuentan por persona.
-8. Incidencias son accionables.
-9. Sheets refleja Supabase.
-10. Cambios relevantes quedan auditados.
-11. La interfaz funciona en móvil y escritorio.
-12. Las propuestas de IA son reversibles.
-13. Puede agregarse un segundo matrimonio sin duplicar código.
-
-## 7. Fuera de alcance inmediato
-
-- cambios al sitio público;
-- facturación comercial;
 - pagos online;
+- app nativa;
 - 3D;
-- marketplace;
-- chat en tiempo real;
-- aplicación móvil nativa;
-- IA autónoma.
-
-## 8. Próxima decisión
-
-Después de fusionar este paquete documental:
-
-1. Antigravity IDE realiza auditoría de solo lectura de `gestion/`.
-2. Se corrigen discrepancias documentales.
-3. Se configura staging.
-4. Se prepara un PR pequeño de calidad y protecciones de entorno.
-5. Solo después comienza la adaptación funcional.
+- agente con escrituras autónomas sin confirmación;
+- publicar datos personales en GitHub.

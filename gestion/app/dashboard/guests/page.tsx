@@ -9,18 +9,20 @@ import { createClient } from '@/lib/supabase-browser';
 import {
   AlertTriangle,
   CheckCircle2,
-  Edit,
+  Clock3,
+  Edit3,
   Link2,
   Loader2,
   Plus,
   RefreshCw,
-  Save,
   Search,
   UserCheck,
   Users,
+  Utensils,
   X,
-  XCircle
+  XCircle,
 } from 'lucide-react';
+import './guests-v2.css';
 
 interface Guest {
   id: string;
@@ -67,81 +69,166 @@ interface RsvpSummary {
   members: RsvpMember[] | null;
 }
 
-type GuestFilter =
-  | 'all'
-  | 'attending'
-  | 'pending'
-  | 'not_attending'
-  | 'no_phone'
-  | 'no_table'
-  | 'dietary';
+interface ManagementSummary {
+  rsvpAttending: number;
+  reconciliationPending: number;
+  rsvpResponses: number;
+  sheetSynced: number;
+  sheetPending: number;
+  activeGuests: number;
+  rsvpMatched: number;
+}
 
+interface OfficialPerson {
+  rowNumber: number;
+  name: string;
+  attendance: string;
+  dietaryType: string;
+  dietaryDetail: string;
+  recordStatus: string;
+  guestId: string | null;
+  rsvpId: string | null;
+  confirmedAt: string | null;
+  syncStatus: string;
+  phone: string;
+  source: 'confirmed_sheet' | 'supabase_pending_sheet';
+}
+
+interface IncomingPerson {
+  id: string;
+  rsvpId: string;
+  name: string;
+  guestId: string | null;
+  resolutionStatus: string;
+  dietaryType?: string;
+  dietaryDetail?: string;
+  updatedAt: string | null;
+  source: 'supabase_pending_sheet';
+}
+
+interface TableGroup {
+  groupId: string;
+  groupName: string;
+  linkType: string;
+  confirmed: boolean;
+  people: string[];
+  sourceNotes: string[];
+}
+
+interface ConfirmedSource {
+  ok: boolean;
+  source: string;
+  liveSource: string;
+  groupsSource: string;
+  summary: {
+    attending: number;
+    declined: number;
+    currentKnownAttending: number;
+    currentKnownDeclined: number;
+    incomingAttending: number;
+    incomingDeclined: number;
+    totalResponsesPeople: number;
+    associated: number;
+    currentKnownAssociated: number;
+    withoutMasterRecord: number;
+    currentKnownWithoutMaster: number;
+    dietary: number;
+    currentKnownDietary: number;
+    latestConfirmationName: string | null;
+    latestConfirmationAt: string | null;
+  };
+  people: OfficialPerson[];
+  incomingAttending: IncomingPerson[];
+  incomingDeclined: IncomingPerson[];
+  groups: TableGroup[];
+}
+
+type GuestFilter = 'all' | 'attending' | 'pending' | 'not_attending' | 'no_phone' | 'no_table' | 'dietary';
+type Tab = 'official' | 'directory' | 'rsvps' | 'groups';
 type Notice = { type: 'success' | 'error' | 'info'; text: string };
 
 const EMPTY_GUEST: Partial<Guest> = {
-  first_name: '',
-  last_name: '',
-  phone_e164: '',
-  group_name: 'General',
-  family_side: 'Compartido',
-  guest_category: 'Adulto',
-  invitation_status: 'not_sent',
-  attendance_status: 'pending',
-  dietary_type: 'Ninguna',
-  dietary_detail: '',
-  reconfirmation_status: 'pending',
-  guest_status: 'active',
-  notes: ''
+  first_name: '', last_name: '', phone_e164: '', group_name: 'General', family_side: 'Compartido',
+  guest_category: 'Adulto', invitation_status: 'not_sent', attendance_status: 'pending',
+  dietary_type: 'Ninguna', dietary_detail: '', reconfirmation_status: 'pending', guest_status: 'active', notes: '',
 };
 
-function fullName(guest: Pick<Guest, 'first_name' | 'last_name'>): string {
+function fullName(guest: Pick<Guest, 'first_name' | 'last_name'>) {
   return `${guest.first_name} ${guest.last_name || ''}`.trim();
 }
 
-function statusLabel(status: string): string {
+function initialsFromName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return `${parts[0]?.[0] || ''}${parts[1]?.[0] || ''}`.toUpperCase() || '?';
+}
+
+function statusLabel(status: string) {
   const labels: Record<string, string> = {
-    attending: 'Asiste',
-    not_attending: 'No asiste',
-    pending: 'Pendiente',
-    matched: 'Conciliada',
-    split_matched: 'Conjunta conciliada',
-    partially_matched: 'Conciliación parcial',
-    unmatched: 'Sin vincular',
-    ambiguous: 'Ambigua',
-    conflict: 'Conflicto'
+    attending: 'Asiste', not_attending: 'No asiste', pending: 'Pendiente', matched: 'Conciliada',
+    split_matched: 'Conjunta conciliada', partially_matched: 'Conciliación parcial', unmatched: 'Sin vincular',
+    needs_review: 'Requiere revisión', ambiguous: 'Ambigua', conflict: 'Conflicto', synced: 'Sincronizado',
   };
   return labels[status] || status;
+}
+
+function formatSourceDate(value: string | null) {
+  if (!value) return 'Sin dato';
+  if (/^\d{4}-\d{2}-\d{2}[ T]/.test(value) && !value.endsWith('Z') && !/[+-]\d\d:\d\d$/.test(value)) {
+    return value.replace('T', ' ');
+  }
+  try {
+    return new Intl.DateTimeFormat('es-CL', {
+      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago',
+    }).format(new Date(value));
+  } catch {
+    return value;
+  }
 }
 
 export default function GuestsPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [rsvps, setRsvps] = useState<RsvpSummary[]>([]);
+  const [summary, setSummary] = useState<ManagementSummary | null>(null);
+  const [official, setOfficial] = useState<ConfirmedSource | null>(null);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<Notice | null>(null);
-  const [tab, setTab] = useState<'guests' | 'rsvps'>('guests');
+  const [tab, setTab] = useState<Tab>('official');
   const [filter, setFilter] = useState<GuestFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [creatingGuest, setCreatingGuest] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Guest>>({});
   const [saving, setSaving] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+
+  useEffect(() => setPreviewMode(window.location.hostname !== 'gestion.felipeycami.cl'), []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setNotice(null);
     try {
       const supabase = createClient();
-      const [guestsResult, rsvpResult] = await Promise.all([
+      const [guestsResult, rsvpResult, summaryResponse, officialResponse] = await Promise.all([
         supabase.from('wedding_guests').select('*').order('first_name', { ascending: true }),
-        supabase.from('rsvp_management_summary').select('*').order('created_at', { ascending: false })
+        supabase.from('rsvp_management_summary').select('*').order('created_at', { ascending: false }),
+        fetch('/api/management-summary', { cache: 'no-store' }),
+        fetch('/api/confirmed-source', { cache: 'no-store' }),
       ]);
 
       const errors = [guestsResult.error, rsvpResult.error].filter(Boolean);
-      if (errors.length > 0) {
-        throw new Error(errors.map(error => error?.message).join(' · '));
-      }
+      if (errors.length) throw new Error(errors.map((error) => error?.message).join(' · '));
+
+      const [summaryPayload, officialPayload] = await Promise.all([
+        summaryResponse.json().catch(() => null),
+        officialResponse.json().catch(() => null),
+      ]);
+
+      if (!officialResponse.ok || !officialPayload?.ok) throw new Error(officialPayload?.error || 'No fue posible cargar las fuentes de confirmados.');
 
       setGuests((guestsResult.data || []) as Guest[]);
       setRsvps((rsvpResult.data || []) as RsvpSummary[]);
+      if (summaryResponse.ok && summaryPayload?.ok) setSummary(summaryPayload.summary);
+      setOfficial(officialPayload as ConfirmedSource);
     } catch (error: any) {
       setNotice({ type: 'error', text: error?.message || 'No fue posible cargar invitados y RSVP.' });
     } finally {
@@ -149,37 +236,54 @@ export default function GuestsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const activeGuests = useMemo(
-    () => guests.filter(guest => guest.guest_status === 'active'),
-    [guests]
-  );
-
+  const activeGuests = useMemo(() => guests.filter((guest) => guest.guest_status === 'active'), [guests]);
   const stats = useMemo(() => ({
     active: activeGuests.length,
-    attending: activeGuests.filter(guest => guest.attendance_status === 'attending').length,
-    pending: activeGuests.filter(guest => guest.attendance_status === 'pending').length,
-    declined: activeGuests.filter(guest => guest.attendance_status === 'not_attending').length,
-    noTable: activeGuests.filter(
-      guest => guest.attendance_status === 'attending' && !guest.table_id
-    ).length,
-    dietary: activeGuests.filter(
-      guest => guest.dietary_type && guest.dietary_type !== 'Ninguna'
-    ).length,
-    review: rsvps.filter(rsvp =>
-      rsvp.pending_member_count > 0 ||
-      ['unmatched', 'partially_matched', 'ambiguous', 'conflict'].includes(rsvp.reconciliation_status)
-    ).length,
-    joint: rsvps.filter(rsvp => rsvp.member_count > 1).length
-  }), [activeGuests, rsvps]);
+    attending: activeGuests.filter((guest) => guest.attendance_status === 'attending').length,
+    pending: activeGuests.filter((guest) => guest.attendance_status === 'pending').length,
+    declined: activeGuests.filter((guest) => guest.attendance_status === 'not_attending').length,
+    noTable: activeGuests.filter((guest) => guest.attendance_status === 'attending' && !guest.table_id).length,
+    dietary: activeGuests.filter((guest) => guest.dietary_type && guest.dietary_type !== 'Ninguna').length,
+  }), [activeGuests]);
+
+  const combinedOfficialPeople = useMemo<OfficialPerson[]>(() => {
+    const incomingAttending: OfficialPerson[] = (official?.incomingAttending || []).map((person, index) => ({
+      rowNumber: -1000 - index,
+      name: person.name,
+      attendance: 'Asiste',
+      dietaryType: person.dietaryType || '',
+      dietaryDetail: person.dietaryDetail || '',
+      recordStatus: person.guestId ? 'Ficha asociada' : 'Sin ficha maestra',
+      guestId: person.guestId,
+      rsvpId: person.rsvpId,
+      confirmedAt: person.updatedAt,
+      syncStatus: 'pendiente hoja consolidada',
+      phone: '',
+      source: 'supabase_pending_sheet',
+    }));
+    const incomingDeclined: OfficialPerson[] = (official?.incomingDeclined || []).map((person, index) => ({
+      rowNumber: -2000 - index,
+      name: person.name,
+      attendance: 'No asiste',
+      dietaryType: '',
+      dietaryDetail: '',
+      recordStatus: person.guestId ? 'Ficha asociada' : 'Sin ficha maestra',
+      guestId: person.guestId,
+      rsvpId: person.rsvpId,
+      confirmedAt: person.updatedAt,
+      syncStatus: 'pendiente hoja consolidada',
+      phone: '',
+      source: 'supabase_pending_sheet',
+    }));
+    return [...incomingAttending, ...incomingDeclined, ...(official?.people || [])];
+  }, [official]);
 
   const filteredGuests = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
-    return activeGuests.filter(guest => {
-      const haystack = `${fullName(guest)} ${guest.group_name} ${guest.phone_e164 || ''}`.toLowerCase();
+    return activeGuests.filter((guest) => {
+      const haystack = `${fullName(guest)} ${guest.group_name} ${guest.family_side} ${guest.phone_e164 || ''}`.toLowerCase();
       if (term && !haystack.includes(term)) return false;
       if (filter === 'attending') return guest.attendance_status === 'attending';
       if (filter === 'pending') return guest.attendance_status === 'pending';
@@ -191,44 +295,65 @@ export default function GuestsPage() {
     });
   }, [activeGuests, filter, searchTerm]);
 
+  const filteredOfficial = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return combinedOfficialPeople.filter((person) => !term || `${person.name} ${person.phone} ${person.recordStatus}`.toLowerCase().includes(term));
+  }, [combinedOfficialPeople, searchTerm]);
+
   const filteredRsvps = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
-    return rsvps.filter(rsvp =>
-      !term || `${rsvp.response_name} ${rsvp.phone_e164}`.toLowerCase().includes(term)
-    );
+    return rsvps.filter((rsvp) => !term || `${rsvp.response_name} ${rsvp.phone_e164}`.toLowerCase().includes(term));
   }, [rsvps, searchTerm]);
 
+  const filteredGroups = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return (official?.groups || []).filter((group) => !term || `${group.groupName} ${group.people.join(' ')}`.toLowerCase().includes(term));
+  }, [official, searchTerm]);
+
   function openEdit(guest: Guest) {
-    setCreatingGuest(false);
-    setSelectedGuest(guest);
-    setEditForm({ ...guest });
-    setNotice(null);
+    setCreatingGuest(false); setSelectedGuest(guest); setEditForm({ ...guest }); setNotice(null);
   }
 
   function openCreate() {
-    setCreatingGuest(true);
-    setSelectedGuest(null);
-    setEditForm({ ...EMPTY_GUEST });
-    setNotice(null);
+    setCreatingGuest(true); setSelectedGuest(null); setEditForm({ ...EMPTY_GUEST }); setNotice(null);
   }
 
   function closeEditor() {
     if (saving) return;
-    setSelectedGuest(null);
-    setCreatingGuest(false);
-    setEditForm({});
+    setSelectedGuest(null); setCreatingGuest(false); setEditForm({});
+  }
+
+  function saveGuestLocally(firstName: string) {
+    const isCreate = creatingGuest;
+    const next: Guest = {
+      id: isCreate ? `preview-${Date.now()}` : selectedGuest!.id,
+      first_name: firstName,
+      last_name: String(editForm.last_name || '').trim(),
+      phone_e164: editForm.phone_e164 || null,
+      group_name: String(editForm.group_name || 'General').trim(),
+      family_side: String(editForm.family_side || 'Compartido'),
+      guest_category: String(editForm.guest_category || 'Adulto'),
+      invitation_status: String(editForm.invitation_status || 'not_sent'),
+      attendance_status: String(editForm.attendance_status || 'pending'),
+      dietary_type: String(editForm.dietary_type || 'Ninguna'),
+      dietary_detail: editForm.dietary_detail || null,
+      reconfirmation_status: String(editForm.reconfirmation_status || 'pending'),
+      table_id: selectedGuest?.table_id || null,
+      rsvp_id: selectedGuest?.rsvp_id || null,
+      guest_status: String(editForm.guest_status || 'active'),
+      notes: editForm.notes || null,
+    };
+    setGuests((current) => isCreate ? [...current, next] : current.map((guest) => guest.id === next.id ? next : guest));
+    closeEditor();
+    setNotice({ type: 'info', text: `${isCreate ? 'Invitado creado' : 'Ficha actualizada'} localmente en Preview. Producción no fue modificada.` });
   }
 
   async function saveGuest() {
     const firstName = String(editForm.first_name || '').trim();
-    if (!firstName) {
-      setNotice({ type: 'error', text: 'El nombre es obligatorio.' });
-      return;
-    }
+    if (!firstName) { setNotice({ type: 'error', text: 'El nombre es obligatorio.' }); return; }
+    if (previewMode) { saveGuestLocally(firstName); return; }
 
-    setSaving(true);
-    setNotice(null);
-
+    setSaving(true); setNotice(null);
     try {
       const isCreate = creatingGuest;
       const response = await fetch('/api/guests', {
@@ -248,30 +373,13 @@ export default function GuestsPage() {
           dietary_detail: editForm.dietary_detail || null,
           reconfirmation_status: editForm.reconfirmation_status || 'pending',
           guest_status: editForm.guest_status || 'active',
-          notes: editForm.notes || null
-        })
+          notes: editForm.notes || null,
+        }),
       });
-
       const payload = await response.json();
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || 'No fue posible guardar la ficha.');
-      }
-
-      await loadData();
-
-      // Cierre explícito después de un guardado exitoso. No depende del valor
-      // asincrónico de `saving`, por lo que el panel no queda abierto.
-      setSelectedGuest(null);
-      setCreatingGuest(false);
-      setEditForm({});
-
-      const hasWarnings = Array.isArray(payload.warnings) && payload.warnings.length > 0;
-      setNotice({
-        type: hasWarnings ? 'info' : 'success',
-        text: hasWarnings
-          ? `${isCreate ? 'Invitado creado' : 'Ficha actualizada'} correctamente. La sincronización quedó en cola para reintento.`
-          : `${isCreate ? 'Invitado creado' : 'Ficha actualizada'} correctamente.`
-      });
+      if (!response.ok || !payload.ok) throw new Error(payload.error || 'No fue posible guardar la ficha.');
+      await loadData(); closeEditor();
+      setNotice({ type: 'success', text: `${isCreate ? 'Invitado creado' : 'Ficha actualizada'} correctamente.` });
     } catch (error: any) {
       setNotice({ type: 'error', text: error?.message || 'No fue posible guardar la ficha.' });
     } finally {
@@ -280,276 +388,113 @@ export default function GuestsPage() {
   }
 
   const editorOpen = Boolean(selectedGuest || creatingGuest);
+  const currentKnownAttending = official?.summary.currentKnownAttending ?? official?.summary.attending ?? 0;
+  const currentKnownDeclined = official?.summary.currentKnownDeclined ?? official?.summary.declined ?? 0;
+  const curatedAttending = official?.summary.attending ?? 0;
+  const incomingAttending = official?.summary.incomingAttending ?? 0;
+  const withoutMaster = official?.summary.currentKnownWithoutMaster ?? official?.summary.withoutMasterRecord ?? 0;
+  const knownGroups = (official?.groups || []).filter((group) => group.confirmed).length;
+  const probableGroups = (official?.groups || []).filter((group) => !group.confirmed).length;
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <header className="flex flex-col gap-4 border-b border-[var(--border-color)] pb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="guests-v2">
+        <section className="guests-v2__hero">
           <div>
-            <span className="block text-xs font-semibold uppercase tracking-[0.25em] text-[var(--accent-gold)]">
-              Directorio canónico de personas
-            </span>
-            <h1 className="mt-1 font-serif text-3xl text-[var(--text-primary)]">Invitados y RSVP</h1>
-            <p className="mt-1 max-w-3xl text-xs text-[var(--text-secondary)]">
-              Las personas se administran individualmente. Las respuestas conjuntas se conservan como evidencia y se separan desde Incidencias.
-            </p>
+            <span className="guests-v2__eyebrow">Personas y RSVP</span>
+            <h1>Invitados</h1>
+            <p>CONFIRMADOS_ACTUALES funciona como consolidado curado; Supabase agrega en vivo las respuestas nuevas que todavía no han pasado a esa hoja.</p>
           </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => loadData()} className="btn-secondary flex items-center gap-2">
-              <RefreshCw size={14} /> Actualizar
-            </button>
-            <button type="button" onClick={openCreate} className="btn-primary flex items-center gap-2">
-              <Plus size={14} /> Nuevo invitado
-            </button>
+          <div className="guests-v2__actions">
+            {previewMode && <span className="guests-v2__preview-chip">Preview · cambios locales</span>}
+            <button type="button" onClick={loadData} className="guests-v2__button"><RefreshCw size={14}/>Actualizar</button>
+            <button type="button" onClick={openCreate} className="guests-v2__button guests-v2__button--primary"><Plus size={14}/>Nuevo invitado</button>
           </div>
-        </header>
+        </section>
 
-        {notice && (
-          <div className={`flex items-start gap-2 border p-3 text-sm ${
-            notice.type === 'success'
-              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800'
-              : notice.type === 'error'
-                ? 'border-rose-500/40 bg-rose-500/10 text-rose-800'
-                : 'border-amber-500/40 bg-amber-500/10 text-amber-800'
-          }`}>
-            {notice.type === 'success'
-              ? <CheckCircle2 size={17} />
-              : notice.type === 'error'
-                ? <XCircle size={17} />
-                : <AlertTriangle size={17} />}
-            <span>{notice.text}</span>
-          </div>
-        )}
+        {notice && <div className={`guests-v2__notice guests-v2__notice--${notice.type}`}>{notice.type === 'success' ? <CheckCircle2 size={16}/> : notice.type === 'error' ? <XCircle size={16}/> : <AlertTriangle size={16}/>}<span>{notice.text}</span></div>}
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
-          {[
-            ['Activos', stats.active],
-            ['Confirmados', stats.attending],
-            ['Pendientes', stats.pending],
-            ['No asisten', stats.declined],
-            ['Sin mesa', stats.noTable],
-            ['Restricciones', stats.dietary],
-            ['RSVP por revisar', stats.review],
-            ['Conjuntas', stats.joint]
-          ].map(([label, value]) => (
-            <div key={String(label)} className="border border-[var(--border-color)] bg-[var(--bg-card)] p-3 text-center">
-              <span className="block text-[9px] uppercase tracking-wider text-[var(--text-muted)]">{label}</span>
-              <strong className="text-xl">{value}</strong>
+        <section className="guests-v2__source">
+          <div><span>Asistentes conocidos ahora</span><strong>{currentKnownAttending || '—'}</strong><small>{curatedAttending} consolidados{incomingAttending ? ` + ${incomingAttending} nuevos RSVP` : ''}</small></div>
+          <div><span>No asisten</span><strong>{currentKnownDeclined}</strong><small>Estado conocido más reciente</small></div>
+          <div className={withoutMaster ? 'is-attention' : ''}><span>Sin ficha maestra</span><strong>{withoutMaster}</strong><small>Confirmados por conciliar</small></div>
+          <div><span>Grupos de mesa</span><strong>{knownGroups} + {probableGroups}</strong><small>{knownGroups} conocidos · {probableGroups} por validar</small></div>
+          <div><span>Última confirmación</span><strong className="guests-v2__date">{official?.summary.latestConfirmationName || '—'}</strong><small>{formatSourceDate(official?.summary.latestConfirmationAt || null)}</small></div>
+        </section>
+
+        <section className="guests-v2__metrics">
+          <article><span>Con ficha asociada</span><strong>{official?.summary.currentKnownAssociated || 0}</strong><small>Confirmados listos para operar</small></article>
+          <article><span>Restricciones</span><strong>{official?.summary.currentKnownDietary || 0}</strong><small>Dentro de asistentes conocidos</small></article>
+          <article><span>Consolidado hoja</span><strong>{curatedAttending}</strong><small>CONFIRMADOS_ACTUALES</small></article>
+          <article className={incomingAttending ? 'is-attention' : ''}><span>Nuevos por consolidar</span><strong>{incomingAttending}</strong><small>Ya existen en Supabase</small></article>
+          <article><span>RSVP → Sheets</span><strong>{summary ? `${summary.sheetSynced}/${summary.rsvpResponses}` : '—'}</strong><small>{summary?.sheetPending ? `${summary.sheetPending} pendientes` : 'Sincronizado'}</small></article>
+        </section>
+
+        <section className="guests-v2__toolbar">
+          <div className="guests-v2__tabs">
+            <button type="button" className={tab === 'official' ? 'is-active' : ''} onClick={() => setTab('official')}><UserCheck size={15}/>Confirmados <span>{currentKnownAttending}</span></button>
+            <button type="button" className={tab === 'directory' ? 'is-active' : ''} onClick={() => setTab('directory')}><Users size={15}/>Directorio</button>
+            <button type="button" className={tab === 'rsvps' ? 'is-active' : ''} onClick={() => setTab('rsvps')}><Link2 size={15}/>RSVP <span>{summary?.reconciliationPending || 0}</span></button>
+            <button type="button" className={tab === 'groups' ? 'is-active' : ''} onClick={() => setTab('groups')}><Users size={15}/>Grupos <span>{(official?.groups || []).length}</span></button>
+          </div>
+          <label className="guests-v2__search"><Search size={14}/><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar nombre, grupo o teléfono…"/></label>
+        </section>
+
+        {loading ? <div className="guests-v2__loading"><Loader2 className="animate-spin" size={20}/><span>Cargando información real…</span></div> : tab === 'official' ? (
+          <section className="guests-v2__directory">
+            <div className="guests-v2__list-head"><span>Persona</span><span>Estado de ficha</span><span>Asistencia</span><span>Confirmación</span></div>
+            <div className="guests-v2__list">
+              {filteredOfficial.map((person) => <article key={`${person.rowNumber}-${person.name}`} className="guests-v2__person-card">
+                <div className="guests-v2__person-main"><span className="guests-v2__avatar">{initialsFromName(person.name)}</span><div><strong>{person.name}</strong><small>{person.source === 'supabase_pending_sheet' ? 'Nuevo RSVP · pendiente consolidar' : person.phone || 'Sin teléfono'}</small></div></div>
+                <div className="guests-v2__group"><strong>{person.recordStatus || 'Sin estado'}</strong><small>{person.guestId ? 'Ficha Supabase vinculada' : 'Requiere conciliación'}</small></div>
+                <div className="guests-v2__status-cell"><span className={`guests-v2__status guests-v2__status--${person.attendance === 'Asiste' ? 'attending' : 'not_attending'}`}>{person.attendance}</span>{person.dietaryType && person.dietaryType !== 'Ninguna' && <small><Utensils size={11}/>{person.dietaryType}</small>}</div>
+                <div className="guests-v2__operation"><span>{formatSourceDate(person.confirmedAt)}</span>{person.source === 'supabase_pending_sheet' ? <span>pendiente hoja</span> : person.guestId ? <span>✓ asociada</span> : <Link href="/dashboard/issues">Conciliar →</Link>}</div>
+              </article>)}
+              {!filteredOfficial.length && <div className="guests-v2__empty">No hay personas que coincidan con la búsqueda.</div>}
             </div>
-          ))}
-        </div>
-
-        {stats.review > 0 && (
-          <div className="flex flex-col gap-3 border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3 text-sm text-amber-900">
-              <AlertTriangle size={18} className="mt-0.5 shrink-0" />
-              <div>
-                <strong className="block">Hay {stats.review} respuestas que requieren revisión.</strong>
-                <span>Resuélvelas antes de cerrar cantidades o distribuir mesas.</span>
-              </div>
-            </div>
-            <Link href="/dashboard/issues" className="btn-primary flex items-center justify-center gap-2 text-xs">
-              <Link2 size={13} /> Abrir incidencias
-            </Link>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3 border-b border-[var(--border-color)] pb-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => setTab('guests')}
-              className={`flex items-center gap-2 border px-3 py-2 ${tab === 'guests' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              <Users size={14} /> Personas individuales
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab('rsvps')}
-              className={`flex items-center gap-2 border px-3 py-2 ${tab === 'rsvps' ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-            >
-              <UserCheck size={14} /> Respuestas originales
-            </button>
-          </div>
-          <div className="relative w-full sm:w-80">
-            <Search size={14} className="absolute left-3 top-3 text-[var(--text-muted)]" />
-            <input
-              value={searchTerm}
-              onChange={event => setSearchTerm(event.target.value)}
-              placeholder="Buscar nombre, grupo o teléfono…"
-              className="w-full border border-[var(--border-color)] bg-[var(--bg-card)] py-2 pl-9 pr-3 text-xs"
-            />
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="border border-[var(--border-color)] bg-[var(--bg-card)] p-10 text-center text-sm text-[var(--text-secondary)]">
-            <Loader2 className="mx-auto mb-2 animate-spin" size={22} /> Cargando información…
-          </div>
-        ) : tab === 'guests' ? (
-          <>
-            <div className="flex flex-wrap gap-2 text-xs">
-              {[
-                ['all', `Todos (${stats.active})`],
-                ['attending', `Confirmados (${stats.attending})`],
-                ['pending', `Pendientes (${stats.pending})`],
-                ['not_attending', `No asisten (${stats.declined})`],
-                ['no_phone', 'Sin teléfono'],
-                ['no_table', `Sin mesa (${stats.noTable})`],
-                ['dietary', `Restricciones (${stats.dietary})`]
-              ].map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setFilter(value as GuestFilter)}
-                  className={`border px-3 py-1.5 ${filter === value ? 'bg-[var(--text-primary)] text-white' : 'bg-[var(--bg-card)]'}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            <div className="overflow-x-auto border border-[var(--border-color)] bg-[var(--bg-card)]">
-              <table className="w-full min-w-[1050px] text-left text-xs">
-                <thead className="border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
-                  <tr>
-                    <th className="p-3">Nombre</th>
-                    <th className="p-3">Grupo</th>
-                    <th className="p-3">Familia</th>
-                    <th className="p-3">Categoría</th>
-                    <th className="p-3">Teléfono</th>
-                    <th className="p-3">Asistencia</th>
-                    <th className="p-3">Restricción</th>
-                    <th className="p-3">Reconfirmación</th>
-                    <th className="p-3">Mesa</th>
-                    <th className="p-3">Acción</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border-color)]">
-                  {filteredGuests.length === 0 ? (
-                    <tr><td colSpan={10} className="p-8 text-center text-[var(--text-secondary)]">No hay invitados en esta vista.</td></tr>
-                  ) : filteredGuests.map(guest => (
-                    <tr key={guest.id} className="hover:bg-[var(--bg-secondary)]/50">
-                      <td className="p-3 font-semibold">{fullName(guest)}</td>
-                      <td className="p-3">{guest.group_name}</td>
-                      <td className="p-3">{guest.family_side}</td>
-                      <td className="p-3">{guest.guest_category}</td>
-                      <td className="p-3 font-mono">{guest.phone_e164 || <span className="font-sans text-rose-700">Sin teléfono</span>}</td>
-                      <td className="p-3">{statusLabel(guest.attendance_status)}</td>
-                      <td className="p-3">{guest.dietary_type && guest.dietary_type !== 'Ninguna' ? `${guest.dietary_type}${guest.dietary_detail ? ` · ${guest.dietary_detail}` : ''}` : 'Ninguna'}</td>
-                      <td className="p-3">{guest.reconfirmation_status}</td>
-                      <td className="p-3">{guest.table_id ? 'Asignada' : guest.attendance_status === 'attending' ? <span className="text-amber-700">Sin mesa</span> : '—'}</td>
-                      <td className="p-3">
-                        <button type="button" onClick={() => openEdit(guest)} className="btn-secondary flex items-center gap-1 px-2 py-1 text-[10px]">
-                          <Edit size={12} /> Editar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
+          </section>
+        ) : tab === 'directory' ? (
+          <section className="guests-v2__directory">
+            <div className="guests-v2__filters">{([
+              ['all', `Todos ${stats.active}`], ['attending', `Asisten ${stats.attending}`], ['pending', `Pendientes ${stats.pending}`], ['not_attending', `No asisten ${stats.declined}`], ['no_phone', 'Sin teléfono'], ['no_table', `Sin mesa ${stats.noTable}`], ['dietary', `Restricciones ${stats.dietary}`],
+            ] as Array<[GuestFilter,string]>).map(([value,label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={filter === value ? 'is-active' : ''}>{label}</button>)}</div>
+            <div className="guests-v2__list-head"><span>Persona</span><span>Grupo</span><span>Estado</span><span>Operación</span></div>
+            <div className="guests-v2__list">{filteredGuests.map((guest) => <article key={guest.id} className="guests-v2__person-card">
+              <div className="guests-v2__person-main"><span className="guests-v2__avatar">{initialsFromName(fullName(guest))}</span><div><strong>{fullName(guest)}</strong><small>{guest.phone_e164 || 'Sin teléfono'}</small></div></div>
+              <div className="guests-v2__group"><strong>{guest.group_name || 'Sin grupo'}</strong><small>{guest.family_side} · {guest.guest_category}</small></div>
+              <div className="guests-v2__status-cell"><span className={`guests-v2__status guests-v2__status--${guest.attendance_status}`}>{statusLabel(guest.attendance_status)}</span>{guest.dietary_type && guest.dietary_type !== 'Ninguna' && <small><Utensils size={11}/>{guest.dietary_type}</small>}</div>
+              <div className="guests-v2__operation"><span>{guest.table_id ? 'Mesa asignada' : guest.attendance_status === 'attending' ? 'Sin mesa' : '—'}</span><button type="button" onClick={() => openEdit(guest)}><Edit3 size={13}/>Editar</button></div>
+            </article>)}{!filteredGuests.length && <div className="guests-v2__empty">No hay personas en esta vista.</div>}</div>
+          </section>
+        ) : tab === 'rsvps' ? (
+          <section className="guests-v2__rsvp-grid">
+            <div className="guests-v2__rsvp-intro"><div><span className="guests-v2__eyebrow">Evidencia original</span><h2>RSVP y conciliación</h2><p>Las respuestas se conservan tal como llegaron. Una respuesta conjunta puede representar varias personas y sólo se transforma en fichas cuando la conciliación es segura.</p></div>{(summary?.reconciliationPending || 0) > 0 && <Link href="/dashboard/issues" className="guests-v2__button guests-v2__button--primary"><Link2 size={13}/>Resolver {summary?.reconciliationPending} personas</Link>}</div>
+            <div className="guests-v2__rsvp-list">{filteredRsvps.map((rsvp) => { const needsReview = rsvp.pending_member_count > 0 || !['matched','split_matched'].includes(rsvp.reconciliation_status); return <article key={rsvp.rsvp_id} className={`guests-v2__rsvp-card ${needsReview ? 'is-attention' : ''}`}><div className="guests-v2__rsvp-top"><div><strong>{rsvp.response_name}</strong><small>{formatSourceDate(rsvp.created_at)} · {rsvp.phone_e164}</small></div><span className={`guests-v2__status ${needsReview ? 'guests-v2__status--pending' : 'guests-v2__status--attending'}`}>{needsReview ? 'Revisar' : 'Conciliada'}</span></div><div className="guests-v2__members">{(rsvp.members || []).map((member) => <span key={member.id} className={member.resolution_status === 'matched' ? 'is-matched' : ''}>{member.display_name}<small>{statusLabel(member.resolution_status)}</small></span>)}</div><div className="guests-v2__rsvp-footer"><span>{rsvp.matched_member_count}/{rsvp.member_count} vinculadas</span><span>{statusLabel(rsvp.sheet_sync_status)}</span>{needsReview ? <Link href="/dashboard/issues">Resolver →</Link> : <CheckCircle2 size={16}/>}</div></article>; })}{!filteredRsvps.length && <div className="guests-v2__empty">No hay RSVP que coincidan con la búsqueda.</div>}</div>
+          </section>
         ) : (
-          <div className="overflow-x-auto border border-[var(--border-color)] bg-[var(--bg-card)]">
-            <table className="w-full min-w-[1000px] text-left text-xs">
-              <thead className="border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
-                <tr>
-                  <th className="p-3">Fecha</th>
-                  <th className="p-3">Nombre escrito</th>
-                  <th className="p-3">Asistencia</th>
-                  <th className="p-3">Personas detectadas</th>
-                  <th className="p-3">Conciliación</th>
-                  <th className="p-3">Sheets</th>
-                  <th className="p-3">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border-color)]">
-                {filteredRsvps.map(rsvp => (
-                  <tr key={rsvp.rsvp_id} className="align-top hover:bg-[var(--bg-secondary)]/50">
-                    <td className="whitespace-nowrap p-3">{new Date(rsvp.created_at).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="p-3"><strong className="block">{rsvp.response_name}</strong><span className="font-mono text-[10px] text-[var(--text-muted)]">{rsvp.phone_e164}</span></td>
-                    <td className="p-3">{statusLabel(rsvp.attendance_status)}</td>
-                    <td className="p-3">
-                      <div className="flex flex-wrap gap-1">
-                        {(rsvp.members || []).map(member => (
-                          <span key={member.id} className={`border px-2 py-1 text-[10px] ${member.resolution_status === 'matched' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800' : 'border-amber-500/40 bg-amber-500/10 text-amber-800'}`}>
-                            {member.display_name} · {member.resolution_status}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="p-3">{statusLabel(rsvp.reconciliation_status)} · {rsvp.matched_member_count}/{rsvp.member_count}</td>
-                    <td className="p-3"><span className={rsvp.sheet_sync_status === 'synced' ? 'text-emerald-700' : 'text-rose-700'}>{rsvp.sheet_sync_status}</span></td>
-                    <td className="p-3">
-                      {rsvp.pending_member_count > 0 || !['matched', 'split_matched'].includes(rsvp.reconciliation_status) ? (
-                        <Link href="/dashboard/issues" className="btn-primary flex items-center justify-center gap-1 px-2 py-1 text-[10px]">
-                          <Link2 size={12} /> Resolver
-                        </Link>
-                      ) : <CheckCircle2 size={16} className="text-emerald-700" />}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <section className="guests-v2__rsvp-grid">
+            <div className="guests-v2__rsvp-intro"><div><span className="guests-v2__eyebrow">GRUPOS_MESA</span><h2>Relaciones para planificar mesas</h2><p>Los grupos confirmados deben mantenerse juntos. Los grupos “Por validar” sirven como sugerencia, pero no se convierten en una regla dura hasta confirmar la relación.</p></div><Link href="/dashboard/tables" className="guests-v2__button guests-v2__button--primary">Abrir mesas</Link></div>
+            <div className="guests-v2__rsvp-list">{filteredGroups.map((group) => <article key={group.groupId} className={`guests-v2__rsvp-card ${group.confirmed ? '' : 'is-attention'}`}><div className="guests-v2__rsvp-top"><div><strong>{group.groupName}</strong><small>{group.groupId} · {group.people.length} personas</small></div><span className={`guests-v2__status ${group.confirmed ? 'guests-v2__status--attending' : 'guests-v2__status--pending'}`}>{group.confirmed ? 'Relación conocida' : 'Por validar'}</span></div><div className="guests-v2__members">{group.people.map((person) => <span key={person} className={group.confirmed ? 'is-matched' : ''}>{person}</span>)}</div><div className="guests-v2__rsvp-footer"><span>{group.linkType}</span><span>{group.sourceNotes[0] || 'Sin observación'}</span></div></article>)}{!filteredGroups.length && <div className="guests-v2__empty">No hay grupos que coincidan con la búsqueda.</div>}</div>
+          </section>
         )}
 
-        {editorOpen && (
-          <>
-            <button
-              type="button"
-              aria-label="Cerrar edición"
-              onClick={closeEditor}
-              className="fixed inset-0 z-40 bg-black/25"
-            />
-            <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-xl overflow-y-auto border-l border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-2xl">
-              <div className="mb-6 flex items-start justify-between border-b border-[var(--border-color)] pb-4">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">
-                    {creatingGuest ? 'Nueva persona' : 'Edición de ficha'}
-                  </span>
-                  <h2 className="font-serif text-2xl">{creatingGuest ? 'Crear invitado' : fullName(selectedGuest!)}</h2>
-                </div>
-                <button type="button" onClick={closeEditor} disabled={saving}><X size={19} /></button>
-              </div>
-
-              <div className="space-y-5">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Nombre *</span><input value={editForm.first_name || ''} onChange={event => setEditForm({ ...editForm, first_name: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Apellido</span><input value={editForm.last_name || ''} onChange={event => setEditForm({ ...editForm, last_name: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
-                </div>
-
-                <label className="block text-xs"><span className="mb-1 block font-semibold uppercase">Teléfono</span><input value={editForm.phone_e164 || ''} onChange={event => setEditForm({ ...editForm, phone_e164: event.target.value })} placeholder="+56 9 1234 5678" className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Grupo</span><input value={editForm.group_name || ''} onChange={event => setEditForm({ ...editForm, group_name: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Familia</span><select value={editForm.family_side || 'Compartido'} onChange={event => setEditForm({ ...editForm, family_side: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option>Felipe</option><option>Camila</option><option>Compartido</option><option>Por clasificar</option></select></label>
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Categoría</span><select value={editForm.guest_category || 'Adulto'} onChange={event => setEditForm({ ...editForm, guest_category: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option>Adulto</option><option>Niño</option><option>Proveedor-Staff</option><option>After 11</option></select></label>
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Asistencia</span><select value={editForm.attendance_status || 'pending'} onChange={event => setEditForm({ ...editForm, attendance_status: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option value="pending">Pendiente</option><option value="attending">Asiste</option><option value="not_attending">No asiste</option></select></label>
-                </div>
-
-                <div className="border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-900">
-                  Cambiar asistencia no modifica automáticamente la reconfirmación. Ambos campos son independientes.
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Restricción</span><select value={editForm.dietary_type || 'Ninguna'} onChange={event => setEditForm({ ...editForm, dietary_type: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option>Ninguna</option><option>Vegetariano</option><option>Vegano</option><option>Celíaco / libre de gluten</option><option>Alergias</option><option>Otra</option></select></label>
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Detalle</span><input value={editForm.dietary_detail || ''} onChange={event => setEditForm({ ...editForm, dietary_detail: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Reconfirmación</span><select value={editForm.reconfirmation_status || 'pending'} onChange={event => setEditForm({ ...editForm, reconfirmation_status: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option value="pending">Pendiente</option><option value="confirmed">Confirmada</option><option value="changed">Cambió</option><option value="not_required">No requerida</option></select></label>
-                  <label className="text-xs"><span className="mb-1 block font-semibold uppercase">Estado ficha</span><select value={editForm.guest_status || 'active'} onChange={event => setEditForm({ ...editForm, guest_status: event.target.value })} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2"><option value="active">Activa</option><option value="replaced">Reemplazada</option><option value="inactive">Inactiva</option></select></label>
-                </div>
-
-                <label className="block text-xs"><span className="mb-1 block font-semibold uppercase">Notas internas</span><textarea value={editForm.notes || ''} onChange={event => setEditForm({ ...editForm, notes: event.target.value })} rows={4} className="w-full border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2" /></label>
-
-                <button type="button" onClick={saveGuest} disabled={saving} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
-                  {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-                  {saving ? 'Guardando ficha…' : creatingGuest ? 'Crear invitado' : 'Guardar cambios'}
-                </button>
-              </div>
-            </aside>
-          </>
-        )}
+        {editorOpen && <>
+          <button type="button" aria-label="Cerrar edición" onClick={closeEditor} className="guests-v2__backdrop"/>
+          <aside className="guests-v2__drawer">
+            <header><div><span className="guests-v2__eyebrow">{creatingGuest ? 'Nueva persona' : 'Ficha individual'}</span><h2>{creatingGuest ? 'Crear invitado' : fullName(selectedGuest!)}</h2></div><button type="button" onClick={closeEditor} disabled={saving}><X size={19}/></button></header>
+            <div className="guests-v2__form">
+              <div className="guests-v2__form-grid"><label><span>Nombre *</span><input value={editForm.first_name || ''} onChange={(e) => setEditForm({...editForm,first_name:e.target.value})}/></label><label><span>Apellido</span><input value={editForm.last_name || ''} onChange={(e) => setEditForm({...editForm,last_name:e.target.value})}/></label></div>
+              <label><span>Teléfono</span><input value={editForm.phone_e164 || ''} onChange={(e) => setEditForm({...editForm,phone_e164:e.target.value})} placeholder="+56 9 1234 5678"/></label>
+              <div className="guests-v2__form-grid"><label><span>Grupo</span><input value={editForm.group_name || ''} onChange={(e) => setEditForm({...editForm,group_name:e.target.value})}/></label><label><span>Familia</span><select value={editForm.family_side || 'Compartido'} onChange={(e) => setEditForm({...editForm,family_side:e.target.value})}><option>Felipe</option><option>Camila</option><option>Compartido</option><option>Por clasificar</option></select></label></div>
+              <div className="guests-v2__form-grid"><label><span>Categoría</span><select value={editForm.guest_category || 'Adulto'} onChange={(e) => setEditForm({...editForm,guest_category:e.target.value})}><option>Adulto</option><option>Niño</option><option>Proveedor-Staff</option><option>After 11</option></select></label><label><span>Asistencia</span><select value={editForm.attendance_status || 'pending'} onChange={(e) => setEditForm({...editForm,attendance_status:e.target.value})}><option value="pending">Pendiente</option><option value="attending">Asiste</option><option value="not_attending">No asiste</option></select></label></div>
+              <div className="guests-v2__form-note"><Clock3 size={14}/><span>Asistencia y reconfirmación son campos independientes. Cambiar uno no altera automáticamente el otro.</span></div>
+              <div className="guests-v2__form-grid"><label><span>Restricción</span><select value={editForm.dietary_type || 'Ninguna'} onChange={(e) => setEditForm({...editForm,dietary_type:e.target.value})}><option>Ninguna</option><option>Vegetariano</option><option>Vegano</option><option>Celíaco / libre de gluten</option><option>Alergias</option><option>Otra</option></select></label><label><span>Detalle</span><input value={editForm.dietary_detail || ''} onChange={(e) => setEditForm({...editForm,dietary_detail:e.target.value})}/></label></div>
+              <label><span>Reconfirmación</span><select value={editForm.reconfirmation_status || 'pending'} onChange={(e) => setEditForm({...editForm,reconfirmation_status:e.target.value})}><option value="pending">Pendiente</option><option value="confirmed">Confirmado</option><option value="declined">Declinó</option></select></label>
+              <label><span>Notas</span><textarea rows={4} value={editForm.notes || ''} onChange={(e) => setEditForm({...editForm,notes:e.target.value})}/></label>
+            </div>
+            <footer><button type="button" className="guests-v2__button" onClick={closeEditor}>Cancelar</button><button type="button" className="guests-v2__button guests-v2__button--primary" onClick={saveGuest} disabled={saving}>{saving ? <Loader2 size={14} className="animate-spin"/> : <CheckCircle2 size={14}/>}Guardar ficha</button></footer>
+          </aside>
+        </>}
       </div>
     </DashboardLayout>
   );
