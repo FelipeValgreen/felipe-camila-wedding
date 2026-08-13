@@ -1,0 +1,8 @@
+/* Production QA hardening — visible feedback, focus and interaction states. */
+.issues-v2__message{position:sticky;top:74px;z-index:45;box-shadow:0 12px 34px rgba(31,43,49,.12)}
+.issues-v2 button:disabled,.issues-v2 select:disabled,.issues-v2 input:disabled{opacity:.5;cursor:not-allowed!important}
+.issues-v2 button:focus-visible,.issues-v2 a:focus-visible,.issues-v2 input:focus-visible,.issues-v2 select:focus-visible,
+.workspace-shell button:focus-visible,.workspace-shell a:focus-visible,.workspace-shell input:focus-visible,.workspace-shell select:focus-visible,.workspace-shell textarea:focus-visible{outline:3px solid rgba(184,111,82,.3);outline-offset:2px}
+.issues-v2__resolve button,.issues-v2__add button{transition:transform .14s ease,box-shadow .14s ease,opacity .14s ease}
+.issues-v2__resolve button:not(:disabled):active,.issues-v2__add button:not(:disabled):active{transform:translateY(1px)}
+@media(max-width:850px){.issues-v2__message{top:62px}}
