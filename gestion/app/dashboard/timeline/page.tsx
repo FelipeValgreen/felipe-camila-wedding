@@ -4,93 +4,54 @@ export const dynamic = 'force-dynamic';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Loader2, RefreshCw, Search } from 'lucide-react';
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Edit3, Loader2, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react';
 import './timeline-v2.css';
 
 interface TimelineItem {
+  id: string;
   rowNumber: number;
   dateTime: string;
+  endsAt: string | null;
   block: string;
+  category: string;
   owner: string;
+  location: string;
   duration: string;
   status: string;
   dependencies: string;
   notes: string;
+  sortOrder: number;
 }
+interface TimelineSource { ok:boolean; source:string; mirrorSource?:string; canonical?:boolean; items:TimelineItem[]; summary:{total:number;confirmed:number;pending:number}; fetchedAt:string; }
+type FormState = Omit<TimelineItem,'rowNumber'|'duration'>;
 
-interface TimelineSource {
-  ok: boolean;
-  source: string;
-  items: TimelineItem[];
-  summary: { total: number; confirmed: number; pending: number };
-  fetchedAt: string;
-}
+function clock(value:string){const date=new Date(value);if(!Number.isNaN(date.getTime()))return new Intl.DateTimeFormat('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Santiago'}).format(date);const match=value.match(/(\d{2}:\d{2})/);return match?.[1]||value||'—';}
+function dateLabel(value:string){if(!value)return '23 octubre 2026';const date=new Date(value);if(Number.isNaN(date.getTime()))return '23 octubre 2026';return new Intl.DateTimeFormat('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Santiago'}).format(date);}
+function toInput(value:string|null){if(!value)return '';const date=new Date(value);if(Number.isNaN(date.getTime()))return value.slice(0,16);const parts=new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Santiago'}).formatToParts(date);const m=Object.fromEntries(parts.map(p=>[p.type,p.value]));return `${m.year}-${m.month}-${m.day}T${m.hour}:${m.minute}`;}
+const EMPTY:FormState={id:'',dateTime:'2026-10-23T12:00',endsAt:null,block:'',category:'General',owner:'',location:'',status:'Pendiente',dependencies:'',notes:'',sortOrder:0};
 
-function clock(value: string) {
-  const match = value.match(/(\d{2}:\d{2})/);
-  return match?.[1] || value || '—';
-}
-
-function dateLabel(value: string) {
-  if (!value) return '23 octubre 2026';
-  const date = new Date(value.replace(' ', 'T') + (value.includes('T') ? '' : '-03:00'));
-  if (Number.isNaN(date.getTime())) return '23 octubre 2026';
-  return new Intl.DateTimeFormat('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Santiago' }).format(date);
-}
-
-export default function TimelinePage() {
-  const [data, setData] = useState<TimelineSource | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [showPendingOnly, setShowPendingOnly] = useState(false);
-
-  const loadData = useCallback(async (manual = false) => {
-    if (manual) setRefreshing(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/timeline-source', { cache: 'no-store' });
-      const payload = await response.json();
-      if (!response.ok || !payload?.ok) throw new Error(payload?.error || 'No fue posible cargar el cronograma.');
-      setData(payload as TimelineSource);
-    } catch (err: any) {
-      setError(err?.message || 'No fue posible cargar el cronograma.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  const items = useMemo(() => {
-    const term = search.toLowerCase().trim();
-    return (data?.items || []).filter((item) => {
-      if (showPendingOnly && item.status.toLowerCase() === 'confirmado') return false;
-      if (!term) return true;
-      return `${item.block} ${item.owner} ${item.dependencies} ${item.notes}`.toLowerCase().includes(term);
-    });
-  }, [data, search, showPendingOnly]);
-
-  const nextCritical = useMemo(() => (data?.items || []).filter((item) => item.status.toLowerCase() !== 'confirmado').slice(0, 3), [data]);
+export default function TimelinePage(){
+  const [data,setData]=useState<TimelineSource|null>(null),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[error,setError]=useState<string|null>(null),[notice,setNotice]=useState<string|null>(null),[search,setSearch]=useState(''),[showPendingOnly,setShowPendingOnly]=useState(false),[editor,setEditor]=useState<FormState|null>(null),[previewMode,setPreviewMode]=useState(false),[saving,setSaving]=useState(false);
+  useEffect(()=>setPreviewMode(window.location.hostname!=='gestion.felipeycami.cl'),[]);
+  const loadData=useCallback(async(manual=false)=>{if(manual)setRefreshing(true);setError(null);try{const response=await fetch('/api/timeline-source',{cache:'no-store'});const payload=await response.json();if(!response.ok||!payload?.ok)throw new Error(payload?.error||'No fue posible cargar el cronograma.');setData(payload);}catch(err:any){setError(err?.message||'No fue posible cargar el cronograma.');}finally{setLoading(false);setRefreshing(false);}},[]);
+  useEffect(()=>{loadData();},[loadData]);
+  const items=useMemo(()=>{const term=search.toLowerCase().trim();return(data?.items||[]).filter(item=>{if(showPendingOnly&&item.status.toLowerCase()==='confirmado')return false;if(!term)return true;return `${item.block} ${item.owner} ${item.category} ${item.location} ${item.dependencies} ${item.notes}`.toLowerCase().includes(term);});},[data,search,showPendingOnly]);
+  const nextCritical=useMemo(()=>(data?.items||[]).filter(item=>item.status.toLowerCase()!=='confirmado').slice(0,3),[data]);
+  function openNew(){setEditor({...EMPTY,id:`preview-${Date.now()}`,sortOrder:(data?.items.length||0)*10+10});}
+  function openEdit(item:TimelineItem){setEditor({...item,dateTime:toInput(item.dateTime),endsAt:item.endsAt?toInput(item.endsAt):null});}
+  function localSave(form:FormState){setData(current=>{if(!current)return current;const exists=current.items.some(i=>i.id===form.id);const item:TimelineItem={...form,rowNumber:exists?(current.items.find(i=>i.id===form.id)?.rowNumber||1):current.items.length+1,duration:''};const next=exists?current.items.map(i=>i.id===form.id?item:i):[...current.items,item];const confirmed=next.filter(i=>i.status.toLowerCase()==='confirmado').length;return {...current,items:next,summary:{total:next.length,confirmed,pending:next.length-confirmed}};});setEditor(null);setNotice('Cambio guardado localmente en Preview. Staging persistente quedará habilitado después de crear el branch aislado.');}
+  async function save(){if(!editor?.block.trim()||!editor.dateTime){setError('Título y fecha/hora son obligatorios.');return;}if(previewMode){localSave(editor);return;}setSaving(true);setError(null);try{const isNew=editor.id.startsWith('preview-');const response=await fetch('/api/timeline-source',{method:isNew?'POST':'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({...editor,id:isNew?undefined:editor.id})});const payload=await response.json();if(!response.ok||!payload?.ok)throw new Error(payload?.message||payload?.error||'No fue posible guardar.');setEditor(null);setNotice('Cronograma actualizado.');await loadData();}catch(err:any){setError(err?.message||'No fue posible guardar.');}finally{setSaving(false);}}
+  async function remove(item:TimelineItem){if(!window.confirm(`¿Eliminar “${item.block}”?`))return;if(previewMode){setData(current=>current?{...current,items:current.items.filter(i=>i.id!==item.id),summary:{...current.summary,total:current.summary.total-1,pending:Math.max(0,current.summary.pending-(item.status.toLowerCase()==='confirmado'?0:1)),confirmed:Math.max(0,current.summary.confirmed-(item.status.toLowerCase()==='confirmado'?1:0))}}:current);setNotice('Bloque eliminado localmente en Preview.');return;}const response=await fetch(`/api/timeline-source?id=${item.id}`,{method:'DELETE'});const payload=await response.json();if(!response.ok||!payload?.ok){setError(payload?.message||payload?.error||'No fue posible eliminar.');return;}await loadData();}
 
   return <DashboardLayout><div className="timeline-v2">
-    <section className="timeline-v2__hero"><div><span className="timeline-v2__eyebrow">Operación del día</span><h1>Cronograma</h1><p>Secuencia operativa conectada directamente a la pestaña TIMELINE del Centro de Comandos, con responsables, dependencias y estado.</p></div><button type="button" onClick={() => loadData(true)} disabled={refreshing}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Actualizando…' : 'Actualizar'}</button></section>
-
-    {error && <div className="timeline-v2__error"><AlertTriangle size={16}/><span>{error}</span></div>}
-
-    {loading ? <div className="timeline-v2__loading"><Loader2 className="animate-spin" size={21}/>Cargando cronograma real…</div> : <>
-      <section className="timeline-v2__source"><div><span>Fuente</span><strong>{data?.source}</strong><small>lectura en vivo</small></div><div><span>Bloques</span><strong>{data?.summary.total || 0}</strong><small>eventos operativos</small></div><div><span>Confirmados</span><strong>{data?.summary.confirmed || 0}</strong><small>bloques cerrados</small></div><div className={(data?.summary.pending || 0) > 0 ? 'is-attention' : ''}><span>Pendientes</span><strong>{data?.summary.pending || 0}</strong><small>requieren definición</small></div></section>
-
-      <section className="timeline-v2__priority"><div><span className="timeline-v2__eyebrow">Antes del evento</span><h2>Qué falta cerrar</h2></div><div className="timeline-v2__priority-grid">{nextCritical.map((item) => <article key={item.rowNumber}><span><Clock3 size={14}/>{clock(item.dateTime)}</span><strong>{item.block}</strong><small>{item.dependencies || 'Sin dependencia declarada'}</small></article>)}{!nextCritical.length && <article className="is-complete"><CheckCircle2 size={18}/><strong>Todo el cronograma está confirmado.</strong></article>}</div></section>
-
-      <section className="timeline-v2__toolbar"><label><Search size={14}/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar bloque, responsable o dependencia…"/></label><button type="button" className={showPendingOnly ? 'is-active' : ''} onClick={() => setShowPendingOnly((value) => !value)}>Sólo pendientes</button></section>
-
-      <section className="timeline-v2__day"><header><div><CalendarDays size={17}/><div><span>Viernes</span><strong>{dateLabel(data?.items[0]?.dateTime || '')}</strong></div></div><small>{items.length} bloques visibles</small></header><div className="timeline-v2__rail">{items.map((item) => {
-        const confirmed = item.status.toLowerCase() === 'confirmado';
-        return <article key={item.rowNumber} className={confirmed ? 'is-confirmed' : 'is-pending'}><div className="timeline-v2__time"><strong>{clock(item.dateTime)}</strong><span>{item.duration || '—'}</span></div><span className="timeline-v2__dot"/><div className="timeline-v2__card"><div className="timeline-v2__card-top"><div><span>{item.owner || 'Responsable por definir'}</span><h2>{item.block}</h2></div><span className="timeline-v2__status">{item.status || 'Pendiente'}</span></div><div className="timeline-v2__meta"><div><span>Dependencias</span><strong>{item.dependencies || 'Sin dependencia declarada'}</strong></div><div><span>Nota ejecutiva</span><strong>{item.notes || 'Sin nota'}</strong></div></div></div></article>;
-      })}{!items.length && <div className="timeline-v2__empty">No hay bloques que coincidan con esta vista.</div>}</div></section>
+    <section className="timeline-v2__hero"><div><span className="timeline-v2__eyebrow">Operación del día</span><h1>Cronograma</h1><p>Run of Show editable. Supabase es ahora la fuente canónica; la hoja TIMELINE queda como referencia de origen.</p></div><div className="timeline-v2__hero-actions">{previewMode&&<span className="timeline-v2__preview">Preview</span>}<button type="button" onClick={()=>loadData(true)} disabled={refreshing}><RefreshCw size={14} className={refreshing?'animate-spin':''}/>{refreshing?'Actualizando…':'Actualizar'}</button><button type="button" className="is-primary" onClick={openNew}><Plus size={14}/>Nuevo bloque</button></div></section>
+    {error&&<div className="timeline-v2__error"><AlertTriangle size={16}/><span>{error}</span></div>}{notice&&<div className="timeline-v2__notice"><CheckCircle2 size={15}/>{notice}</div>}
+    {loading?<div className="timeline-v2__loading"><Loader2 className="animate-spin" size={21}/>Cargando cronograma…</div>:<>
+      <section className="timeline-v2__source"><div><span>Fuente canónica</span><strong>{data?.source}</strong><small>{data?.mirrorSource||'Supabase'}</small></div><div><span>Bloques</span><strong>{data?.summary.total||0}</strong><small>eventos operativos</small></div><div><span>Confirmados</span><strong>{data?.summary.confirmed||0}</strong><small>bloques cerrados</small></div><div className={(data?.summary.pending||0)>0?'is-attention':''}><span>Pendientes</span><strong>{data?.summary.pending||0}</strong><small>requieren definición</small></div></section>
+      <section className="timeline-v2__priority"><div><span className="timeline-v2__eyebrow">Antes del evento</span><h2>Qué falta cerrar</h2></div><div className="timeline-v2__priority-grid">{nextCritical.map(item=><article key={item.id}><span><Clock3 size={14}/>{clock(item.dateTime)}</span><strong>{item.block}</strong><small>{item.dependencies||'Sin dependencia declarada'}</small></article>)}{!nextCritical.length&&<article className="is-complete"><CheckCircle2 size={18}/><strong>Todo el cronograma está confirmado.</strong></article>}</div></section>
+      <section className="timeline-v2__toolbar"><label><Search size={14}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar bloque, responsable o dependencia…"/></label><button type="button" className={showPendingOnly?'is-active':''} onClick={()=>setShowPendingOnly(v=>!v)}>Sólo pendientes</button></section>
+      <section className="timeline-v2__day"><header><div><CalendarDays size={17}/><div><span>Viernes</span><strong>{dateLabel(data?.items[0]?.dateTime||'')}</strong></div></div><small>{items.length} bloques visibles</small></header><div className="timeline-v2__rail">{items.map(item=>{const confirmed=item.status.toLowerCase()==='confirmado';return <article key={item.id} className={confirmed?'is-confirmed':'is-pending'}><div className="timeline-v2__time"><strong>{clock(item.dateTime)}</strong><span>{item.duration||'—'}</span></div><span className="timeline-v2__dot"/><div className="timeline-v2__card"><div className="timeline-v2__card-top"><div><span>{item.owner||'Responsable por definir'}</span><h2>{item.block}</h2></div><div className="timeline-v2__card-actions"><span className="timeline-v2__status">{item.status||'Pendiente'}</span><button onClick={()=>openEdit(item)} aria-label="Editar"><Edit3 size={13}/></button><button onClick={()=>remove(item)} aria-label="Eliminar"><Trash2 size={13}/></button></div></div><div className="timeline-v2__meta"><div><span>Dependencias</span><strong>{item.dependencies||'Sin dependencia declarada'}</strong></div><div><span>Nota ejecutiva</span><strong>{item.notes||'Sin nota'}</strong></div></div></div></article>;})}{!items.length&&<div className="timeline-v2__empty">No hay bloques que coincidan con esta vista.</div>}</div></section>
     </>}
+    {editor&&<><button className="timeline-v2__backdrop" aria-label="Cerrar" onClick={()=>!saving&&setEditor(null)}/><aside className="timeline-v2__drawer"><header><div><span className="timeline-v2__eyebrow">Run of Show</span><h2>{editor.id.startsWith('preview-')?'Nuevo bloque':'Editar bloque'}</h2></div><button onClick={()=>setEditor(null)}><X size={18}/></button></header><div className="timeline-v2__form"><label><span>Título *</span><input value={editor.block} onChange={e=>setEditor({...editor,block:e.target.value})}/></label><div className="timeline-v2__form-grid"><label><span>Inicio *</span><input type="datetime-local" value={editor.dateTime} onChange={e=>setEditor({...editor,dateTime:e.target.value})}/></label><label><span>Término</span><input type="datetime-local" value={editor.endsAt||''} onChange={e=>setEditor({...editor,endsAt:e.target.value||null})}/></label></div><div className="timeline-v2__form-grid"><label><span>Categoría</span><input value={editor.category} onChange={e=>setEditor({...editor,category:e.target.value})}/></label><label><span>Estado</span><select value={editor.status} onChange={e=>setEditor({...editor,status:e.target.value})}><option>Pendiente</option><option>En curso</option><option>Confirmado</option><option>Bloqueado</option></select></label></div><div className="timeline-v2__form-grid"><label><span>Responsable</span><input value={editor.owner} onChange={e=>setEditor({...editor,owner:e.target.value})}/></label><label><span>Ubicación</span><input value={editor.location} onChange={e=>setEditor({...editor,location:e.target.value})}/></label></div><label><span>Dependencias</span><input value={editor.dependencies} onChange={e=>setEditor({...editor,dependencies:e.target.value})}/></label><label><span>Notas ejecutivas</span><textarea rows={5} value={editor.notes} onChange={e=>setEditor({...editor,notes:e.target.value})}/></label><footer><button onClick={()=>setEditor(null)}>Cancelar</button><button className="is-primary" onClick={save} disabled={saving}>{saving?<Loader2 size={14} className="animate-spin"/>:null}Guardar</button></footer></div></aside></>}
   </div></DashboardLayout>;
 }
