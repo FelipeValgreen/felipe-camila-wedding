@@ -1,17 +1,22 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
+import { getDatabaseWriteBlock } from '@/lib/environment-guard';
 
 export const dynamic = 'force-dynamic';
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string };
+type ActionType = 'music.create' | 'timeline.create' | 'task.create' | 'memory.create' | 'table.rename';
 type CopilotAction = {
   id: string;
-  type: 'music.create' | 'timeline.create' | 'task.create';
+  type: ActionType;
   label: string;
   description: string;
   payload: Record<string, any>;
   requiresConfirmation: true;
 };
+type ReviewPerson = { name: string; attendance?: string; confirmedAt?: string | null; source?: string; guestId?: string | null };
+
+type AiResult = { answer: string; model: string; action?: CopilotAction | null };
 
 async function fetchJsonSafe(origin: string, path: string, cookie: string) {
   try {
@@ -27,115 +32,163 @@ async function fetchJsonSafe(origin: string, path: string, cookie: string) {
 function normalize(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
+function formatMoney(value: unknown) {
+  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(value || 0));
+}
+function action(id: string, type: ActionType, label: string, description: string, payload: Record<string, any>): CopilotAction {
+  return { id: `${id}-${Date.now()}`, type, label, description, payload, requiresConfirmation: true };
+}
 
 function parseAction(question: string): CopilotAction | null {
   const text = question.trim();
-  const normalized = normalize(text);
+  const q = normalize(text);
+
+  const renameA = text.match(/(?:renombra|nombra|llama)\s+(?:la\s+)?mesa\s+(\d+)\s+(?:a|como)?\s*[“\"]?(.+?)[”\"]?[.!?]?$/i);
+  if (renameA) return action('table', 'table.rename', `Renombrar Mesa ${renameA[1]}`, `Nuevo nombre: ${renameA[2].trim()}`, { tableNumber: Number(renameA[1]), name: renameA[2].trim() });
+  const renameB = text.match(/ponle\s+[“\"]?(.+?)[”\"]?\s+a\s+(?:la\s+)?mesa\s+(\d+)[.!?]?$/i);
+  if (renameB) return action('table', 'table.rename', `Renombrar Mesa ${renameB[2]}`, `Nuevo nombre: ${renameB[1].trim()}`, { tableNumber: Number(renameB[2]), name: renameB[1].trim() });
+
+  const memory = text.match(/(?:recuerda(?:r)?|guarda(?:r)?\s+(?:esto\s+)?(?:en\s+memoria)?|anota(?:r)?\s+como\s+(preferencia|decisi[oó]n|hecho|restricci[oó]n|aprendizaje))\s*(?:que\s+)?[:,-]?\s*(.+)$/i);
+  if (memory) {
+    const requested = normalize(memory[1] || '');
+    const memoryType = requested.includes('decision') ? 'decision' : requested.includes('hecho') ? 'fact' : requested.includes('restriccion') ? 'constraint' : requested.includes('aprendizaje') ? 'learning' : 'preference';
+    const content = memory[2].trim();
+    return action('memory', 'memory.create', 'Guardar en Memoria IA', content, { memoryType, subjectType: 'event', title: content.slice(0, 90), content: { text: content }, confidence: 'confirmed', source: 'Copiloto' });
+  }
+
   const mutationVerb = /(agrega|agregar|anota|anotar|añade|añadir|incorpora|incorporar|pon|poner|registra|registrar|crea|crear)/;
-  if (!mutationVerb.test(normalized)) return null;
-
-  const songMatch = text.match(/(?:agrega(?:r)?|anota(?:r)?|añade|añadir|incorpora(?:r)?|pon(?:er)?|registra(?:r)?|crea(?:r)?)\s+(?:la\s+)?(?:canci[oó]n\s+)?[“\"]?(.+?)[”\"]?\s+de\s+(.+?)(?:\s+para\s+(?:el\s+|la\s+)?(.+?))?[.!?]?$/i);
-  if (songMatch && /(cancion|musica|dj|fiesta|baile|playlist|tema)/.test(normalized)) {
-    const song = songMatch[1].trim();
-    const artist = songMatch[2].trim();
-    const destination = (songMatch[3] || 'Fiesta / DJ').trim();
-    return {
-      id: `music-${Date.now()}`,
-      type: 'music.create',
-      label: `Agregar “${song}”`,
-      description: `${artist} · ${destination}`,
-      payload: { block: destination, song, artist, provider: 'DJ', status: 'Pendiente', priority: 'Normal', notes: 'Agregada desde Copiloto; revisar momento, versión y cue.' },
-      requiresConfirmation: true,
-    };
+  if (!mutationVerb.test(q)) return null;
+  const song = text.match(/(?:agrega(?:r)?|anota(?:r)?|añade|añadir|incorpora(?:r)?|pon(?:er)?|registra(?:r)?|crea(?:r)?)\s+(?:la\s+)?(?:canci[oó]n\s+)?[“\"]?(.+?)[”\"]?\s+de\s+(.+?)(?:\s+para\s+(?:el\s+|la\s+)?(.+?))?[.!?]?$/i);
+  if (song && /(cancion|musica|dj|fiesta|baile|playlist|tema|violin|banda|grupo)/.test(q)) {
+    const title = song[1].trim();
+    const artist = song[2].trim();
+    const destination = (song[3] || 'Fiesta / DJ').trim();
+    return action('music', 'music.create', `Agregar “${title}”`, `${artist} · ${destination}`, { block: destination, song: title, artist, provider: destination.toLowerCase().includes('violin') ? 'Violinista / músicos' : destination.toLowerCase().includes('banda') || destination.toLowerCase().includes('grupo') ? 'Banda / grupo' : 'DJ', actType: destination.toLowerCase().includes('violin') ? 'Violinista / músicos' : destination.toLowerCase().includes('banda') || destination.toLowerCase().includes('grupo') ? 'Banda / grupo' : 'DJ', setName: destination, status: 'Pendiente', priority: 'Normal', notes: 'Agregada desde Copiloto; revisar versión y cue.' });
   }
-
-  const timelineMatch = text.match(/(?:agrega(?:r)?|anota(?:r)?|añade|añadir|incorpora(?:r)?|registra(?:r)?|crea(?:r)?)\s+(?:un\s+)?(?:bloque|hito|tarea\s+del\s+cronograma)\s+(.+?)(?:\s+para\s+(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}))?[.!?]?$/i);
-  if (timelineMatch) {
-    const block = timelineMatch[1].trim();
-    const dateTime = timelineMatch[2]?.replace(' ', 'T') || '';
-    return {
-      id: `timeline-${Date.now()}`,
-      type: 'timeline.create',
-      label: `Agregar bloque “${block}”`,
-      description: dateTime ? `Programado ${dateTime}` : 'Fecha/hora por completar',
-      payload: { block, dateTime, status: 'Pendiente', category: 'General', notes: 'Creado desde Copiloto; revisar responsable, ubicación y dependencias.' },
-      requiresConfirmation: true,
-    };
+  const timeline = text.match(/(?:agrega(?:r)?|anota(?:r)?|añade|añadir|incorpora(?:r)?|registra(?:r)?|crea(?:r)?)\s+(?:un\s+)?(?:bloque|hito|tarea\s+del\s+cronograma)\s+(.+?)(?:\s+para\s+(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}))?[.!?]?$/i);
+  if (timeline) {
+    const block = timeline[1].trim();
+    const dateTime = timeline[2]?.replace(' ', 'T') || '';
+    return action('timeline', 'timeline.create', `Agregar bloque “${block}”`, dateTime ? `Programado ${dateTime}` : 'Fecha/hora por completar', { block, dateTime, status: 'Pendiente', category: 'General', notes: 'Creado desde Copiloto; revisar responsable, proveedor, ubicación y dependencias.' });
   }
-
-  const taskMatch = text.match(/(?:agrega(?:r)?|anota(?:r)?|añade|añadir|incorpora(?:r)?|registra(?:r)?|crea(?:r)?)\s+(?:una\s+)?tarea\s+(.+?)(?:\s+para\s+(\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2})?))?[.!?]?$/i);
-  if (taskMatch) {
-    const title = taskMatch[1].trim();
-    const dueAt = taskMatch[2]?.replace(' ', 'T') || null;
-    return {
-      id: `task-${Date.now()}`,
-      type: 'task.create',
-      label: `Crear tarea “${title}”`,
-      description: dueAt ? `Fecha límite ${dueAt}` : 'Fecha límite por definir',
-      payload: { title, category: 'General', owner: 'Felipe & Camila', status: 'Pendiente', priority: 'Media', dueAt, source: 'copilot' },
-      requiresConfirmation: true,
-    };
+  const task = text.match(/(?:agrega(?:r)?|anota(?:r)?|añade|añadir|incorpora(?:r)?|registra(?:r)?|crea(?:r)?)\s+(?:una\s+)?tarea\s+(.+?)(?:\s+para\s+(\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2})?))?[.!?]?$/i);
+  if (task) {
+    const title = task[1].trim();
+    const dueAt = task[2]?.replace(' ', 'T') || null;
+    return action('task', 'task.create', `Crear tarea “${title}”`, dueAt ? `Fecha límite ${dueAt}` : 'Fecha límite por definir', { title, category: 'General', owner: 'Felipe & Camila', status: 'Pendiente', priority: 'Media', dueAt, source: 'copilot' });
   }
-
   return null;
 }
 
-function groundedFallback(question: string, snapshot: any, unavailable: string[]) {
-  const q = normalize(question);
-  const confirmed = snapshot.confirmed?.summary || {};
-  const seating = snapshot.seating || {};
-  const budget = snapshot.budget?.summary || {};
-  const timeline = snapshot.timeline?.summary || {};
-  const music = snapshot.music?.summary || {};
-  const docs = snapshot.documents?.summary || {};
-  const issues = snapshot.issues || [];
-  const tasks = snapshot.tasks || [];
+const OPENAI_TOOLS = [
+  {
+    type: 'function', name: 'propose_table_rename', description: 'Propone renombrar una mesa cuando el usuario lo pide. No ejecuta el cambio; requiere confirmación.', strict: true,
+    parameters: { type: 'object', additionalProperties: false, properties: { tableNumber: { type: 'integer', minimum: 1 }, name: { type: 'string', minLength: 1 } }, required: ['tableNumber', 'name'] },
+  },
+  {
+    type: 'function', name: 'propose_memory', description: 'Propone guardar un hecho, decisión, preferencia, restricción o aprendizaje en la memoria durable. Úsala cuando el usuario diga que se recuerde algo.', strict: true,
+    parameters: { type: 'object', additionalProperties: false, properties: { memoryType: { type: 'string', enum: ['fact','decision','preference','relationship','constraint','rejected_option','learning'] }, title: { type: 'string' }, text: { type: 'string' }, confidence: { type: 'string', enum: ['confirmed','probable','inferred'] } }, required: ['memoryType','title','text','confidence'] },
+  },
+  {
+    type: 'function', name: 'propose_music_item', description: 'Propone agregar una canción o momento musical para DJ, violinista, banda/grupo u otro acto. No ejecuta el cambio.', strict: true,
+    parameters: { type: 'object', additionalProperties: false, properties: { block: { type: 'string' }, song: { type: ['string','null'] }, artist: { type: ['string','null'] }, actType: { type: 'string' }, setName: { type: ['string','null'] }, provider: { type: ['string','null'] }, priority: { type: 'string', enum: ['Normal','Alta','Must play','No tocar'] }, cue: { type: ['string','null'] }, notes: { type: ['string','null'] } }, required: ['block','song','artist','actType','setName','provider','priority','cue','notes'] },
+  },
+  {
+    type: 'function', name: 'propose_timeline_block', description: 'Propone un nuevo bloque del cronograma. No ejecuta el cambio.', strict: true,
+    parameters: { type: 'object', additionalProperties: false, properties: { block: { type: 'string' }, dateTime: { type: ['string','null'] }, endsAt: { type: ['string','null'] }, category: { type: 'string' }, owner: { type: ['string','null'] }, location: { type: ['string','null'] }, dependencies: { type: ['string','null'] }, notes: { type: ['string','null'] } }, required: ['block','dateTime','endsAt','category','owner','location','dependencies','notes'] },
+  },
+  {
+    type: 'function', name: 'propose_task', description: 'Propone crear una tarea operativa. No ejecuta el cambio.', strict: true,
+    parameters: { type: 'object', additionalProperties: false, properties: { title: { type: 'string' }, category: { type: 'string' }, owner: { type: 'string' }, priority: { type: 'string', enum: ['Baja','Media','Alta','Crítica'] }, dueAt: { type: ['string','null'] }, description: { type: ['string','null'] } }, required: ['title','category','owner','priority','dueAt','description'] },
+  },
+];
 
-  let answer = '';
-  if (/(confirmad|asisten|invitad)/.test(q) && /(cuant|total|numero|número)/.test(q)) {
-    answer = `Hecho: hoy hay ${confirmed.currentKnownAttending ?? '—'} asistentes conocidos. ${confirmed.attending ?? 0} están consolidados en CONFIRMADOS_ACTUALES y ${confirmed.incomingAttending ?? 0} corresponden al delta vivo detectado en Supabase. ${confirmed.currentKnownWithoutMaster ?? 0} todavía están pendientes de ficha maestra.`;
-  } else if (/(mesa|seating|sentar|salon|salón)/.test(q)) {
-    answer = `Hecho: hay ${seating.tables?.length ?? 0} mesas, capacidad total ${seating.capacity ?? 0}, ${seating.assigned ?? 0} personas asignadas y ${seating.unassigned ?? 0} fichas operativas asistentes sin mesa. Recomendación: conciliar fichas pendientes y revisar una propuesta de IA de mesas antes de aplicar cambios reales.`;
-  } else if (/(presupuesto|pagar|pagado|saldo|costo)/.test(q)) {
-    answer = `Hecho: el presupuesto canónico registra ${formatMoney(budget.totalBudget)} proyectados, ${formatMoney(budget.paidOrPrepaid)} pagados/prepagados y ${formatMoney(budget.remaining)} pendientes.`;
-  } else if (/(cronograma|timeline|horario|hito)/.test(q)) {
-    answer = `Hecho: el cronograma contiene ${timeline.total ?? 0} bloques; ${timeline.confirmed ?? 0} confirmados y ${timeline.pending ?? 0} pendientes. Recomendación: cerrar primero responsables, horarios y dependencias de los bloques pendientes.`;
-  } else if (/(musica|música|cancion|canción|dj|playlist)/.test(q)) {
-    answer = `Hecho: Música registra ${music.moments ?? 0} momentos, ${music.confirmedMoments ?? 0} confirmados y ${music.pendingMoments ?? 0} pendientes. Sí: puedes ir dictándome canciones para el DJ; cuando indiques título y artista prepararé una acción para que la confirmes antes de incorporarla.`;
-  } else if (/(tarea|checklist|planificacion|planificación)/.test(q)) {
-    const pending = tasks.filter((task: any) => task.status !== 'Completada');
-    answer = `Hecho: hay ${pending.length} tareas manuales pendientes registradas. También genero prioridades automáticas desde confirmados, mesas, cronograma y presupuesto. Puedes decir “agrega tarea …” y prepararé una tarjeta para tu confirmación.`;
-  } else if (/(document|archivo|contrato)/.test(q)) {
-    answer = `Hecho: el registro documental contiene ${docs.total ?? docs.items ?? 0} elementos según las fuentes disponibles. Puedo ayudarte a localizar pendientes, pero no afirmaré que un archivo existe si no está registrado.`;
-  } else if (/(atencion|atención|pendiente|falta|prioridad)/.test(q)) {
-    const high = issues.filter((issue: any) => ['critical', 'high', 'alta', 'critica', 'crítica'].includes(normalize(String(issue.severity || ''))));
-    answer = `Hecho: existen ${issues.length} incidencias abiertas${high.length ? `, de las cuales ${high.length} son de prioridad alta/crítica` : ''}. También conviene revisar ${confirmed.currentKnownWithoutMaster ?? 0} asistentes pendientes de ficha, ${timeline.pending ?? 0} bloques pendientes del cronograma y ${tasks.filter((task:any)=>task.status!=='Completada').length} tareas manuales pendientes.`;
-  } else if (/(puedes|podemos|sirve|funciona|agregar|editar|organizar)/.test(q)) {
-    answer = 'Sí. El Copiloto consulta el estado real del evento y puede preparar acciones para Música, Cronograma y Tareas. Las acciones nunca se ejecutan silenciosamente: verás exactamente qué se propone y deberás confirmarlo.';
-  } else {
-    answer = 'Puedo responder sobre confirmados, invitados, mesas, salón, presupuesto, proveedores, cronograma, música, documentos, tareas e incidencias usando las fuentes conectadas. Pregúntame por un dato o dime una acción concreta que quieras preparar.';
-  }
-  if (unavailable.length) answer += ` Nota de fuentes: ${unavailable.length} fuente(s) no respondieron en esta consulta; la respuesta usa únicamente lo que sí estaba disponible.`;
-  return answer;
+function actionFromToolCall(name: string, args: Record<string, any>): CopilotAction | null {
+  if (name === 'propose_table_rename') return action('table', 'table.rename', `Renombrar Mesa ${args.tableNumber}`, `Nuevo nombre: ${args.name}`, { tableNumber: Number(args.tableNumber), name: String(args.name) });
+  if (name === 'propose_memory') return action('memory', 'memory.create', 'Guardar en Memoria IA', String(args.title), { memoryType: args.memoryType, subjectType: 'event', title: args.title, content: { text: args.text }, confidence: args.confidence, source: 'Copiloto' });
+  if (name === 'propose_music_item') return action('music', 'music.create', `Agregar ${args.song ? `“${args.song}”` : args.block}`, `${args.actType}${args.setName ? ` · ${args.setName}` : ''}`, { block: args.block, song: args.song || '', artist: args.artist || '', actType: args.actType, setName: args.setName || '', provider: args.provider || '', priority: args.priority, cue: args.cue || '', notes: args.notes || '', status: 'Pendiente' });
+  if (name === 'propose_timeline_block') return action('timeline', 'timeline.create', `Agregar bloque “${args.block}”`, args.dateTime ? `Inicio ${args.dateTime}` : 'Fecha/hora por completar', { block: args.block, dateTime: args.dateTime || '', endsAt: args.endsAt || null, category: args.category || 'General', owner: args.owner || '', location: args.location || '', dependencies: args.dependencies || '', notes: args.notes || '', status: 'Pendiente' });
+  if (name === 'propose_task') return action('task', 'task.create', `Crear tarea “${args.title}”`, args.dueAt ? `Fecha límite ${args.dueAt}` : 'Fecha límite por definir', { title: args.title, category: args.category || 'General', owner: args.owner || 'Felipe & Camila', priority: args.priority || 'Media', dueAt: args.dueAt || null, description: args.description || '', status: 'Pendiente', source: 'copilot' });
+  return null;
 }
 
-function formatMoney(value: unknown) {
-  const amount = Number(value || 0);
-  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
+function extractResponseText(payload: any) {
+  if (typeof payload?.output_text === 'string' && payload.output_text.trim()) return payload.output_text.trim();
+  for (const item of payload?.output || []) {
+    if (item?.type !== 'message') continue;
+    for (const content of item?.content || []) if (content?.type === 'output_text' && content?.text) return String(content.text).trim();
+  }
+  return '';
+}
+
+async function askOpenAI(token: string, model: string, messages: Array<{ role: string; content: string }>): Promise<AiResult> {
+  const input = messages.map((message) => ({ role: message.role, content: [{ type: 'input_text', text: message.content }] }));
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, input, tools: OPENAI_TOOLS, tool_choice: 'auto', parallel_tool_calls: false, store: false, reasoning: { effort: 'low' }, text: { verbosity: 'low' } }), cache: 'no-store',
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(`OPENAI_${response.status}: ${payload?.error?.message || 'request failed'}`);
+  const call = (payload?.output || []).find((item: any) => item?.type === 'function_call');
+  let proposedAction: CopilotAction | null = null;
+  if (call?.name) {
+    try { proposedAction = actionFromToolCall(String(call.name), JSON.parse(String(call.arguments || '{}'))); } catch { proposedAction = null; }
+  }
+  const answer = extractResponseText(payload) || (proposedAction ? `Preparé una acción: ${proposedAction.label}. Revísala y confírmala si quieres aplicarla.` : 'Consulté el estado del evento, pero no pude formular una respuesta completa.');
+  return { answer, model: payload?.model || model, action: proposedAction };
 }
 
 async function askGateway(token: string, model: string, messages: Array<{ role: string; content: string }>) {
-  const response = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, stream: false, reasoning: { effort: 'low' }, temperature: 0.2 }),
-    cache: 'no-store',
-  });
+  const response = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages, stream: false, reasoning: { effort: 'low' }, temperature: 0.2 }), cache: 'no-store' });
   const payload = await response.json().catch(() => null);
   if (!response.ok) throw new Error(`AI_GATEWAY_${response.status}: ${payload?.error?.message || 'request failed'}`);
   const answer = String(payload?.choices?.[0]?.message?.content || '').trim();
   if (!answer) throw new Error('AI_GATEWAY_EMPTY_RESPONSE');
   return { answer, model: payload?.model || model };
+}
+
+function currentPeople(confirmed: any): ReviewPerson[] {
+  const combined = [...(confirmed.people || []), ...(confirmed.incomingAttending || []), ...(confirmed.incomingDeclined || [])] as any[];
+  return combined.map((person): ReviewPerson => ({ name: String(person.name || '').trim(), attendance: person.attendance || (person.source === 'supabase_pending_sheet' ? 'Asiste' : undefined), confirmedAt: person.confirmedAt || person.updatedAt || null, source: person.source || '', guestId: person.guestId || null })).filter((person) => Boolean(person.name));
+}
+function guestDelta(previous: any, current: ReviewPerson[]) {
+  const previousPeople = ((previous?.people || []) as ReviewPerson[]).filter((person) => person?.name);
+  const previousByName = new Map<string, ReviewPerson>(previousPeople.map((person) => [normalize(person.name), person]));
+  const currentByName = new Map<string, ReviewPerson>(current.map((person) => [normalize(person.name), person]));
+  const added = current.filter((person) => !previousByName.has(normalize(person.name)));
+  const removed = previousPeople.filter((person) => !currentByName.has(normalize(person.name)));
+  const changed = current.filter((person) => { const old = previousByName.get(normalize(person.name)); return Boolean(old && normalize(String(old.attendance || '')) !== normalize(String(person.attendance || ''))); });
+  return { added, removed, changed };
+}
+function reviewAnswer(summary: any, delta: ReturnType<typeof guestDelta>, firstReview: boolean, persisted: boolean) {
+  let answer = '';
+  if (firstReview) answer = `Primera revisión registrada. Estado actual: ${summary.currentKnownAttending ?? '—'} asistentes conocidos, ${summary.currentKnownWithoutMaster ?? 0} pendientes de ficha maestra y ${summary.currentKnownDietary ?? 0} con restricciones registradas. Desde este punto podré comparar cambios.`;
+  else if (!delta.added.length && !delta.removed.length && !delta.changed.length) answer = `Revisé la lista contra tu última revisión y no detecté cambios nominales. Estado actual: ${summary.currentKnownAttending ?? '—'} asistentes conocidos y ${summary.currentKnownWithoutMaster ?? 0} pendientes de ficha.`;
+  else {
+    const parts: string[] = [];
+    if (delta.added.length) parts.push(`Nuevos (${delta.added.length}): ${delta.added.map((person) => person.name).join(', ')}`);
+    if (delta.changed.length) parts.push(`Cambios de asistencia (${delta.changed.length}): ${delta.changed.map((person) => `${person.name} → ${person.attendance || 'actualizado'}`).join(', ')}`);
+    if (delta.removed.length) parts.push(`Ya no aparecen en la fuente actual (${delta.removed.length}): ${delta.removed.map((person) => person.name).join(', ')}`);
+    answer = `Revisé la lista actualizada. ${parts.join('. ')}. Total actual: ${summary.currentKnownAttending ?? '—'} asistentes conocidos; ${summary.currentKnownWithoutMaster ?? 0} todavía pendientes de ficha.`;
+  }
+  if (!persisted) answer += ' En Preview no moví el punto de revisión persistente para proteger producción.';
+  return answer;
+}
+
+function groundedFallback(question: string, snapshot: any, unavailable: string[]) {
+  const q = normalize(question), confirmed = snapshot.confirmed?.summary || {}, seating = snapshot.seating || {}, budget = snapshot.budget?.summary || {}, timeline = snapshot.timeline?.summary || {}, music = snapshot.music?.summary || {}, documents = snapshot.documents?.summary || {}, issues = snapshot.issues || [], tasks = snapshot.tasks || [];
+  let answer = '';
+  if (/(confirmad|asisten|invitad)/.test(q) && /(cuant|total|numero|número)/.test(q)) answer = `Hecho: hay ${confirmed.currentKnownAttending ?? '—'} asistentes conocidos; ${confirmed.currentKnownWithoutMaster ?? 0} están pendientes de ficha maestra.`;
+  else if (/(mesa|seating|sentar|salon|salón)/.test(q)) answer = `Hecho: hay ${seating.tables?.length ?? 0} mesas, capacidad ${seating.capacity ?? 0}, ${seating.assigned ?? 0} asignados y ${seating.unassigned ?? 0} fichas asistentes sin mesa.`;
+  else if (/(presupuesto|pagar|pagado|saldo|costo)/.test(q)) answer = `Hecho: presupuesto ${formatMoney(budget.totalBudget)}, pagado/prepagado ${formatMoney(budget.paidOrPrepaid)} y pendiente ${formatMoney(budget.remaining)}.`;
+  else if (/(cronograma|timeline|horario|hito)/.test(q)) answer = `Hecho: ${timeline.total ?? 0} bloques; ${timeline.confirmed ?? 0} confirmados y ${timeline.pending ?? 0} pendientes.`;
+  else if (/(musica|música|cancion|canción|dj|playlist|violin|banda|grupo)/.test(q)) answer = `Hecho: Música registra ${music.moments ?? 0} ítems; ${music.confirmedMoments ?? 0} confirmados y ${music.pendingMoments ?? 0} pendientes. Puedes dictarme canciones para DJ, violinista o grupo y prepararé la incorporación para tu confirmación.`;
+  else if (/(tarea|checklist|planificacion|planificación)/.test(q)) answer = `Hecho: ${tasks.filter((task: any) => task.status !== 'Completada').length} tareas manuales pendientes.`;
+  else if (/(document|archivo|contrato)/.test(q)) answer = `Hecho: el registro documental contiene ${documents.total ?? documents.items ?? 0} elementos según las fuentes disponibles.`;
+  else if (/(atencion|atención|pendiente|falta|prioridad)/.test(q)) answer = `Hecho: ${issues.length} incidencias abiertas; además ${confirmed.currentKnownWithoutMaster ?? 0} asistentes pendientes de ficha y ${timeline.pending ?? 0} bloques pendientes.`;
+  else answer = 'Puedo revisar cambios, consultar datos reales y preparar acciones sobre música, cronograma, tareas, nombres de mesas y memoria operacional. Ninguna modificación se ejecuta sin tu confirmación.';
+  if (unavailable.length) answer += ` Nota: ${unavailable.length} fuente(s) no respondieron; usé sólo las disponibles.`;
+  return answer;
 }
 
 export async function POST(request: Request) {
@@ -149,56 +202,70 @@ export async function POST(request: Request) {
     const body = await request.json();
     const question = String(body?.question || '').trim();
     const currentPath = String(body?.currentPath || '/dashboard');
-    const history = (Array.isArray(body?.history) ? body.history : []).slice(-8) as ChatMessage[];
+    const history = (Array.isArray(body?.history) ? body.history : []).slice(-10) as ChatMessage[];
     if (!question) return NextResponse.json({ ok: false, error: 'QUESTION_REQUIRED' }, { status: 400 });
 
     const cookie = request.headers.get('cookie') || '';
     const origin = new URL(request.url).origin;
-    const [confirmedResult, budgetResult, timelineResult, musicResult, documentsResult, tablesResult, guestsResult, seatingResult, issuesResult, vendorsResult, expensesResult, paymentsResult, tasksResult] = await Promise.all([
-      fetchJsonSafe(origin, '/api/confirmed-source', cookie),
-      fetchJsonSafe(origin, '/api/budget-source', cookie),
-      fetchJsonSafe(origin, '/api/timeline-source', cookie),
-      fetchJsonSafe(origin, '/api/music-source', cookie),
-      fetchJsonSafe(origin, '/api/documents-source', cookie),
-      supabase.from('wedding_tables').select('id, table_number, name, capacity, table_type, zone, position_x, position_y, rotation, locked').order('table_number'),
-      supabase.from('wedding_guests').select('id, first_name, last_name, group_name, family_side, attendance_status, dietary_type, dietary_detail, table_id, guest_status').eq('guest_status', 'active').order('first_name'),
-      supabase.from('seating_assignments').select('guest_id, table_id, seat_number'),
-      supabase.from('management_issues').select('id, issue_type, severity, title, description, status').eq('status', 'open'),
-      supabase.from('vendors').select('id, name, category, status, contact_name'),
-      supabase.from('expenses').select('id, vendor_id, concept, category, currency, total_amount, payment_status, due_date, responsible'),
-      supabase.from('expense_payments').select('id, expense_id, amount, currency, payment_date, payment_type, status'),
-      supabase.from('event_tasks').select('id, title, category, owner, status, priority, due_at, source').order('due_at', { ascending: true, nullsFirst: false }),
+    const [confirmedResult, budgetResult, timelineResult, musicResult, documentsResult, tablesResult, guestsResult, seatingResult, issuesResult, vendorsResult, expensesResult, paymentsResult, tasksResult, memoryResult] = await Promise.all([
+      fetchJsonSafe(origin, '/api/confirmed-source', cookie), fetchJsonSafe(origin, '/api/budget-source', cookie), fetchJsonSafe(origin, '/api/timeline-source', cookie), fetchJsonSafe(origin, '/api/music-source', cookie), fetchJsonSafe(origin, '/api/documents-source', cookie),
+      supabase.from('wedding_tables').select('id,table_number,name,capacity,table_type,zone,position_x,position_y,rotation,locked').order('table_number'),
+      supabase.from('wedding_guests').select('id,first_name,last_name,group_name,family_side,family_branch,attendance_status,dietary_type,dietary_detail,table_id,guest_status').eq('guest_status', 'active').order('first_name'),
+      supabase.from('seating_assignments').select('guest_id,table_id,seat_number'),
+      supabase.from('management_issues').select('id,issue_type,severity,title,description,status').eq('status', 'open'),
+      supabase.from('vendors').select('*').order('name'), supabase.from('expenses').select('*'), supabase.from('expense_payments').select('*'),
+      supabase.from('event_tasks').select('*').order('due_at', { ascending: true, nullsFirst: false }),
+      supabase.from('event_memory').select('memory_type,subject_type,subject_id,title,content,confidence,source,updated_at').eq('status', 'active').order('updated_at', { ascending: false }).limit(100),
     ]);
 
     const unavailable: string[] = [];
     const read = (result: any, name: string, fallback: any) => { if (result?.ok) return result.data; unavailable.push(name); return fallback; };
-    const confirmed = read(confirmedResult, 'Confirmados/relaciones', { summary: {}, people: [], incomingAttending: [], incomingDeclined: [], groups: [], dataQuality: [] });
+    const confirmed = read(confirmedResult, 'Confirmados', { summary: {}, people: [], incomingAttending: [], incomingDeclined: [], groups: [], dataQuality: [] });
     const budget = read(budgetResult, 'Presupuesto', { summary: {}, items: [] });
     const timeline = read(timelineResult, 'Cronograma', { summary: {}, items: [] });
-    const music = read(musicResult, 'Música', { summary: {}, moments: [], budgetItems: [] });
+    const music = read(musicResult, 'Música', { summary: {}, moments: [] });
     const documents = read(documentsResult, 'Documentos', { summary: {}, items: [] });
-    const dbPairs = [['Mesas', tablesResult],['Invitados', guestsResult],['Asignaciones', seatingResult],['Incidencias', issuesResult],['Proveedores', vendorsResult],['Gastos', expensesResult],['Pagos', paymentsResult],['Tareas', tasksResult]] as const;
-    dbPairs.forEach(([name, result]) => { if (result.error) unavailable.push(name); });
+    ([['Mesas', tablesResult], ['Invitados', guestsResult], ['Asignaciones', seatingResult], ['Incidencias', issuesResult], ['Proveedores', vendorsResult], ['Tareas', tasksResult], ['Memoria', memoryResult]] as Array<[string, any]>).forEach(([name, result]) => { if (result.error) unavailable.push(name); });
 
-    const tables=tablesResult.data||[],guests=guestsResult.data||[],seating=seatingResult.data||[];
-    const tableById=new Map(tables.map((table:any)=>[table.id,table])),seatingByGuest=new Map(seating.map((item:any)=>[item.guest_id,item.table_id]));
-    const operationalGuests=guests.filter((guest:any)=>guest.attendance_status==='attending');
-    const seatingState=operationalGuests.map((guest:any)=>{const tableId=seatingByGuest.get(guest.id)||guest.table_id||null;const table:any=tableId?tableById.get(tableId):null;return{name:`${guest.first_name} ${guest.last_name||''}`.trim(),group:guest.group_name,familySide:guest.family_side,dietaryType:guest.dietary_type||'Ninguna',dietaryDetail:guest.dietary_detail||'',table:table?{number:table.table_number,name:table.name}:null};});
-    const snapshot={generatedAt:new Date().toISOString(),page:currentPath,confirmed:{summary:confirmed.summary||{},people:[...(confirmed.people||[]),...(confirmed.incomingAttending||[]),...(confirmed.incomingDeclined||[])].map((person:any)=>({name:person.name,attendance:person.attendance||(person.source==='supabase_pending_sheet'?'Asiste':undefined),recordStatus:person.recordStatus||(person.guestId?'Ficha asociada':'Sin ficha maestra'),dietaryType:person.dietaryType||'',confirmedAt:person.confirmedAt||person.updatedAt||null,source:person.source,masterGroup:person.masterGroup||'',masterCategory:person.masterCategory||''})),groups:confirmed.groups||[],dataQuality:confirmed.dataQuality||[]},seating:{tables,assignments:seatingState,operationalGuests:operationalGuests.length,assigned:seatingState.filter((item:any)=>item.table).length,unassigned:seatingState.filter((item:any)=>!item.table).length,capacity:tables.reduce((sum:number,table:any)=>sum+Number(table.capacity||0),0)},budget:{summary:budget.summary||{},items:budget.items||[]},timeline:{summary:timeline.summary||{},items:timeline.items||[]},music:{summary:music.summary||{},moments:music.moments||[],budgetItems:music.budgetItems||[]},documents:{summary:documents.summary||{},items:documents.items||[]},tasks:tasksResult.data||[],issues:issuesResult.data||[],vendors:vendorsResult.data||[],expenses:expensesResult.data||[],payments:paymentsResult.data||[],unavailableSources:unavailable};
+    const tables = tablesResult.data || [], guests = guestsResult.data || [], seating = seatingResult.data || [];
+    const tableById = new Map<string, any>(tables.map((table: any) => [table.id, table]));
+    const seatingByGuest = new Map<string, string>(seating.map((assignment: any) => [assignment.guest_id, assignment.table_id]));
+    const operationalGuests = guests.filter((guest: any) => guest.attendance_status === 'attending');
+    const seatingState = operationalGuests.map((guest: any) => { const tableId = seatingByGuest.get(guest.id) || guest.table_id || null; const table = tableId ? tableById.get(tableId) : null; return { name: `${guest.first_name} ${guest.last_name || ''}`.trim(), group: guest.group_name, familySide: guest.family_side, familyBranch: guest.family_branch || '', dietaryType: guest.dietary_type || 'Ninguna', table: table ? { number: table.table_number, name: table.name } : null }; });
+    const people = currentPeople(confirmed);
+    const snapshot = { generatedAt: new Date().toISOString(), page: currentPath, confirmed: { summary: confirmed.summary || {}, people, groups: confirmed.groups || [], dataQuality: confirmed.dataQuality || [] }, seating: { tables, assignments: seatingState, operationalGuests: operationalGuests.length, assigned: seatingState.filter((item: any) => item.table).length, unassigned: seatingState.filter((item: any) => !item.table).length, capacity: tables.reduce((sum: number, table: any) => sum + Number(table.capacity || 0), 0) }, budget: { summary: budget.summary || {}, items: budget.items || [] }, timeline: { summary: timeline.summary || {}, items: timeline.items || [] }, music: { summary: music.summary || {}, moments: music.moments || [] }, documents: { summary: documents.summary || {}, items: documents.items || [] }, tasks: tasksResult.data || [], issues: issuesResult.data || [], vendors: vendorsResult.data || [], expenses: expensesResult.data || [], payments: paymentsResult.data || [], memory: memoryResult.data || [], unavailableSources: unavailable };
 
-    const proposedAction=parseAction(question);
-    const capabilityQuestion=/(puedes|podemos|seria posible|sirve para|funciona para)/.test(normalize(question))&&/(agregar|anotar|organizar|editar|cancion|canción|musica|música|cronograma|tarea)/.test(normalize(question));
-    const gatewayToken=process.env.AI_GATEWAY_API_KEY||process.env.VERCEL_OIDC_TOKEN||'';
-    const preferredModel=process.env.AI_GATEWAY_MODEL||'openai/gpt-5.6-sol';
-    const system=`Eres el Copiloto Operacional de la boda de Felipe y Camila. Responde usando exclusivamente el SNAPSHOT actual.
-REGLAS: 1) Sólo hechos respaldados por SNAPSHOT. 2) Si falta un dato, dilo. 3) Distingue Hecho/Inferencia/Recomendación. 4) Nunca afirmes haber ejecutado cambios: las acciones requieren confirmación. 5) Menciona dataQuality/unavailableSources si afectan la respuesta. 6) No inventes parentescos; grupos confirmados son hechos y “Por validar” sólo sugerencias. 7) Respeta capacidad y grupos conocidos. 8) Para confirmados usa currentKnownAttending. 9) No inventes canciones, costos, responsables, horarios ni documentos. 10) Español de Chile, concreto y orientado a decisiones. 11) Puedes preparar canciones, bloques de cronograma y tareas; cada acción requiere confirmación.
-SNAPSHOT ACTUAL:\n${JSON.stringify(snapshot)}`;
-    const messages=[{role:'system',content:system},...history.map(message=>({role:message.role,content:message.text})),{role:'user',content:question}];
-    let answer='',model='grounded-fallback',mode:'ai'|'grounded-fallback'='grounded-fallback',gatewayError:string|null=null;
-    if(gatewayToken){const candidates=Array.from(new Set([preferredModel,'openai/gpt-5.6-sol','anthropic/claude-sonnet-5','google/gemini-3.1-pro-preview']));for(const candidate of candidates){try{const result=await askGateway(gatewayToken,candidate,messages);answer=result.answer;model=result.model;mode='ai';break;}catch(error:any){gatewayError=error?.message||'AI Gateway no disponible';}}}
-    if(!answer)answer=groundedFallback(question,snapshot,unavailable);
-    if(capabilityQuestion&&proposedAction===null&&!answer.includes('confirm'))answer+=' Cuando me des una acción concreta, prepararé una tarjeta para que la confirmes.';
-    return NextResponse.json({ok:true,answer,model,mode,groundedAt:snapshot.generatedAt,readOnly:!proposedAction,action:proposedAction,unavailableSources:unavailable,gatewayError:mode==='ai'?null:gatewayError});
+    const reviewRequested = /(revis(a|ar|e)|actualizad|que cambio|qué cambió|cambios desde|novedades).*(lista|invitad|confirmad|rsvp)|^(revisar lista actualizada)$/i.test(question);
+    if (reviewRequested) {
+      const { data: state } = await supabase.from('copilot_review_state').select('last_snapshot,last_reviewed_at').eq('user_id', user.id).eq('domain', 'guest_list').maybeSingle();
+      const delta = guestDelta(state?.last_snapshot, people);
+      const writeBlocked = Boolean(getDatabaseWriteBlock());
+      if (!writeBlocked) await supabase.from('copilot_review_state').upsert({ user_id: user.id, domain: 'guest_list', last_reviewed_at: new Date().toISOString(), last_snapshot: { people, summary: confirmed.summary || {} }, updated_at: new Date().toISOString() }, { onConflict: 'user_id,domain' });
+      return NextResponse.json({ ok: true, answer: reviewAnswer(confirmed.summary || {}, delta, !state, !writeBlocked), model: 'deterministic-delta', mode: 'grounded-delta', groundedAt: snapshot.generatedAt, readOnly: true, action: null, unavailableSources: unavailable, reviewPersisted: !writeBlocked });
+    }
+
+    const deterministicAction = parseAction(question);
+    const system = `Eres el Copiloto Operacional del matrimonio. Tu trabajo es consultar SNAPSHOT y MEMORIA ACTIVA y ayudar a operar el evento. Distingue Hecho / Inferencia / Recomendación. Nunca inventes parentescos, canciones, costos, horarios, documentos o proveedores. Si falta un dato, dilo. Para confirmados usa currentKnownAttending. Relaciones probables nunca son hechos. Cuando el usuario pida una modificación soportada, usa una herramienta propose_*: la herramienta sólo prepara la acción; el usuario debe confirmarla después. Nunca afirmes que ejecutaste un cambio. Español de Chile, concreto y orientado a decisiones.\nSNAPSHOT:\n${JSON.stringify(snapshot)}`;
+    const messages = [{ role: 'system', content: system }, ...history.map((message) => ({ role: message.role, content: message.text })), { role: 'user', content: question }];
+
+    let answer = '', model = 'grounded-fallback', mode = 'grounded-fallback', aiError: string | null = null, aiAction: CopilotAction | null = null;
+    const openAIKey = process.env.OPENAI_API_KEY || '';
+    if (openAIKey) {
+      try { const result = await askOpenAI(openAIKey, process.env.OPENAI_COPILOT_MODEL || 'gpt-5.6', messages); answer = result.answer; model = result.model; mode = 'openai-responses-tools'; aiAction = result.action || null; }
+      catch (error: any) { aiError = error?.message || 'OpenAI no disponible'; }
+    }
+    if (!answer) {
+      const gatewayToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || '';
+      if (gatewayToken) {
+        for (const candidate of Array.from(new Set([process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.6', 'openai/gpt-5.6', 'anthropic/claude-sonnet-5', 'google/gemini-3.1-pro-preview']))) {
+          try { const result = await askGateway(gatewayToken, candidate, messages); answer = result.answer; model = result.model; mode = 'ai-gateway'; break; }
+          catch (error: any) { aiError = error?.message || 'AI Gateway no disponible'; }
+        }
+      }
+    }
+    if (!answer) answer = groundedFallback(question, snapshot, unavailable);
+    const proposedAction = aiAction || deterministicAction;
+    return NextResponse.json({ ok: true, answer, model, mode, groundedAt: snapshot.generatedAt, readOnly: !proposedAction, action: proposedAction, unavailableSources: unavailable, aiError: mode === 'grounded-fallback' ? aiError : null });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error?.message || 'No fue posible responder con el Copiloto.' }, { status: 500 });
   }

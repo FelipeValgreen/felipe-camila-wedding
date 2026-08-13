@@ -1,136 +1,36 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { ArrowRight, Bot, Check, Loader2, MessageCircle, Send, Sparkles, X } from 'lucide-react';
-import styles from './PlanningCopilot.module.css';
+import React,{useEffect,useMemo,useState}from'react';
+import Link from'next/link';
+import{ArrowRight,Bot,Check,Loader2,MessageCircle,Send,Sparkles,X}from'lucide-react';
+import{createClient}from'@/lib/supabase-browser';
+import styles from'./PlanningCopilot.module.css';
 
-type CopilotProps = { currentPath: string };
-type CopilotAction = {
-  id: string;
-  type: 'music.create' | 'timeline.create' | 'task.create';
-  label: string;
-  description: string;
-  payload: Record<string, any>;
-  requiresConfirmation: true;
-};
-type Message = { role: 'assistant' | 'user'; text: string; meta?: string; action?: CopilotAction; actionState?: 'pending' | 'applied' | 'discarded' | 'error' };
+type CopilotProps={currentPath:string};
+type ActionType='music.create'|'timeline.create'|'task.create'|'memory.create'|'table.rename';
+type CopilotAction={id:string;type:ActionType;label:string;description:string;payload:Record<string,any>;requiresConfirmation:true};
+type Message={role:'assistant'|'user';text:string;meta?:string;action?:CopilotAction;actionState?:'pending'|'applied'|'discarded'|'error'};
+const CHAT_KEY='fc-copilot-chat-v3',PREVIEW_MUSIC_KEY='fc-preview-music-actions-v1',PREVIEW_TIMELINE_KEY='fc-preview-timeline-actions-v1',PREVIEW_TASK_KEY='fc-preview-manual-tasks-v1',PREVIEW_MEMORY_KEY='fc-preview-memory-v1',PREVIEW_TABLES_KEY='fc-preview-tables-v2';
 
-const CHAT_KEY = 'fc-copilot-chat-v2';
-const PREVIEW_MUSIC_KEY = 'fc-preview-music-actions-v1';
-const PREVIEW_TIMELINE_KEY = 'fc-preview-timeline-actions-v1';
-const PREVIEW_TASK_KEY = 'fc-preview-manual-tasks-v1';
+function modeLabel(payload:any){if(payload.mode==='openai-responses-tools')return`${payload.model} · GPT con herramientas · fuentes consultadas ahora`;if(payload.mode==='openai-responses')return`${payload.model} · OpenAI Responses · fuentes consultadas ahora`;if(payload.mode==='ai-gateway')return`${payload.model} · AI Gateway · fuentes consultadas ahora`;if(payload.mode==='grounded-delta')return'Revisión comparativa · fuentes consultadas ahora';return payload.aiError?'Modo seguro · IA externa no disponible':'Modo seguro · respuesta grounded';}
+function destination(type:ActionType){return type==='music.create'?'Música':type==='timeline.create'?'Cronograma':type==='task.create'?'Planificación':type==='memory.create'?'Memoria IA':'Mesas';}
 
-export default function PlanningCopilot({ currentPath }: CopilotProps) {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', text: 'Soy el Copiloto Operacional. Consulto las fuentes conectadas antes de responder y preparo cambios para que tú los confirmes.' },
-  ]);
-
-  const previewMode = typeof window !== 'undefined' && window.location.hostname !== 'gestion.felipeycami.cl';
-  const pageLabel = useMemo(() => {
-    if (currentPath.includes('/guests')) return 'Invitados';
-    if (currentPath.includes('/tables')) return 'Mesas';
-    if (currentPath.includes('/venue')) return 'Salón';
-    if (currentPath.includes('/finance')) return 'Presupuesto';
-    if (currentPath.includes('/timeline')) return 'Cronograma';
-    if (currentPath.includes('/music')) return 'Música';
-    if (currentPath.includes('/documents')) return 'Documentos';
-    if (currentPath.includes('/planning')) return 'Planificación';
-    if (currentPath.includes('/system')) return 'Estado del sistema';
-    if (currentPath.includes('/issues')) return 'Necesita atención';
-    return 'Inicio';
-  }, [currentPath]);
-
-  useEffect(() => {
-    const handler = () => setOpen(true);
-    window.addEventListener('fc-open-copilot', handler);
-    try {
-      const stored = window.sessionStorage.getItem(CHAT_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length) setMessages(parsed.slice(-30));
-      }
-    } catch { /* optional persistence */ }
-    return () => window.removeEventListener('fc-open-copilot', handler);
-  }, []);
-
-  useEffect(() => {
-    try { window.sessionStorage.setItem(CHAT_KEY, JSON.stringify(messages.slice(-30))); } catch { /* optional */ }
-  }, [messages]);
-
-  async function submit(question = input) {
-    const text = question.trim();
-    if (!text || loading) return;
-    const history = messages.filter((message) => !message.action || message.actionState !== 'pending').slice(-8).map(({ role, text }) => ({ role, text }));
-    setMessages((current) => [...current, { role: 'user', text }]);
-    setInput('');
-    setLoading(true);
-    try {
-      const response = await fetch('/api/copilot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: text, currentPath, history }) });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok || !payload?.ok) throw new Error(payload?.message || payload?.error || 'No pude consultar el estado del evento.');
-      const modeLabel = payload.mode === 'ai' ? `${payload.model} · fuentes consultadas ahora` : 'Modo seguro · respuesta grounded sin modelo externo';
-      setMessages((current) => [...current, { role: 'assistant', text: payload.answer, meta: modeLabel, action: payload.action || undefined, actionState: payload.action ? 'pending' : undefined }]);
-    } catch (error: any) {
-      setMessages((current) => [...current, { role: 'assistant', text: error?.message || 'No pude responder en este momento.', meta: 'Copiloto no disponible' }]);
-    } finally { setLoading(false); }
-  }
-
-  function updateActionState(actionId: string, state: Message['actionState'], text?: string) {
-    setMessages((current) => current.map((message) => message.action?.id === actionId ? { ...message, actionState: state, ...(text ? { text: `${message.text}\n\n${text}` } : {}) } : message));
-  }
-
-  function savePreviewDraft(action: CopilotAction) {
-    if (action.type === 'task.create') {
-      const draft = { id:`preview-task-${Date.now()}`, title:action.payload.title || 'Nueva tarea', description:action.payload.description || '', category:action.payload.category || 'General', owner:action.payload.owner || 'Felipe & Camila', status:action.payload.status || 'Pendiente', priority:action.payload.priority || 'Media', dueAt:action.payload.dueAt || null, source:'copilot-preview', completedAt:null, updatedAt:new Date().toISOString() };
-      try { const current=JSON.parse(window.localStorage.getItem(PREVIEW_TASK_KEY)||'[]'); const next=Array.isArray(current)?[...current,draft]:[draft]; window.localStorage.setItem(PREVIEW_TASK_KEY,JSON.stringify(next.slice(-250))); window.dispatchEvent(new CustomEvent('fc-preview-task-action',{detail:draft})); } catch { /* optional */ }
-      return;
-    }
-    const key = action.type === 'music.create' ? PREVIEW_MUSIC_KEY : PREVIEW_TIMELINE_KEY;
-    const eventName = action.type === 'music.create' ? 'fc-preview-music-action' : 'fc-preview-timeline-action';
-    const draft = { id: `copilot-${Date.now()}`, ...action.payload, createdAt: new Date().toISOString(), source: 'copilot-preview' };
-    try { const current = JSON.parse(window.localStorage.getItem(key) || '[]'); const next = Array.isArray(current) ? [...current, draft] : [draft]; window.localStorage.setItem(key, JSON.stringify(next.slice(-100))); window.dispatchEvent(new CustomEvent(eventName, { detail: draft })); } catch { /* optional */ }
-  }
-
-  async function applyAction(action: CopilotAction) {
-    updateActionState(action.id, 'pending');
-    if (previewMode) {
-      savePreviewDraft(action);
-      const destination = action.type === 'music.create' ? 'Música' : action.type === 'timeline.create' ? 'Cronograma' : 'Planificación';
-      updateActionState(action.id, 'applied', `Confirmado como borrador local de Preview. Ya aparecerá en ${destination}.`);
-      return;
-    }
-    try {
-      const endpoint = action.type === 'music.create' ? '/api/music-source' : action.type === 'timeline.create' ? '/api/timeline-source' : '/api/tasks';
-      const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(action.payload) });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok || !payload?.ok) throw new Error(payload?.message || payload?.error || 'No fue posible aplicar la acción.');
-      updateActionState(action.id, 'applied', 'Acción aplicada y auditada correctamente.');
-      window.dispatchEvent(new CustomEvent(action.type === 'music.create' ? 'fc-data-music-changed' : action.type === 'timeline.create' ? 'fc-data-timeline-changed' : 'fc-data-tasks-changed'));
-    } catch (error: any) { updateActionState(action.id, 'error', error?.message || 'No fue posible aplicar la acción.'); }
-  }
-
-  const quickActions = ['¿Qué requiere atención ahora?', '¿Cuántos confirmados tenemos?', '¿Qué falta para cerrar las mesas?', 'Resume el presupuesto', '¿Qué falta en el cronograma?', '¿Qué decisiones faltan en música?'];
-
-  return <>
-    <button type="button" className={styles.fab} onClick={() => setOpen((value) => !value)} aria-label={open ? 'Cerrar copiloto' : 'Abrir copiloto'}>{open ? <X size={19}/> : <><Sparkles size={17}/><span>Copiloto</span></>}</button>
-    {open && <aside className={styles.panel} aria-label="Copiloto operacional">
-      <header className={styles.header}><div className={styles.identity}><span><Bot size={18}/></span><div><strong>Copiloto operacional</strong><small>IA grounded · acciones con confirmación</small></div></div><button type="button" onClick={() => setOpen(false)} aria-label="Cerrar"><X size={17}/></button></header>
-      <div className={styles.context}><MessageCircle size={13}/><span>Contexto actual: <strong>{pageLabel}</strong></span><span>Grounding obligatorio</span></div>
-      <div className={styles.messages}>
-        {messages.map((message, index) => <div key={`${message.role}-${index}`} className={`${styles.message} ${message.role === 'user' ? styles.user : styles.assistant}`}>
-          <span className={styles.messageText}>{message.text}</span>
-          {message.action && <div className={`${styles.actionCard} ${message.actionState === 'applied' ? styles.actionApplied : message.actionState === 'discarded' ? styles.actionDiscarded : message.actionState === 'error' ? styles.actionError : ''}`}><span className={styles.actionKicker}>Acción propuesta</span><strong>{message.action.label}</strong><small>{message.action.description}</small>{message.actionState === 'pending' && <div><button type="button" onClick={() => updateActionState(message.action!.id, 'discarded')}>Descartar</button><button type="button" className={styles.confirmAction} onClick={() => applyAction(message.action!)}><Check size={12}/>Confirmar</button></div>}{message.actionState === 'applied' && <span className={styles.actionState}><Check size={11}/>Confirmada</span>}{message.actionState === 'discarded' && <span className={styles.actionState}>Descartada</span>}{message.actionState === 'error' && <span className={styles.actionState}>No se pudo aplicar</span>}</div>}
-          {message.meta && <small className={styles.meta}>{message.meta}</small>}
-        </div>)}
-        {loading && <div className={styles.loading}><Loader2 size={18} className="animate-spin"/><span>Consultando RSVP, mesas, presupuesto y operación…</span></div>}
-      </div>
-      <div className={styles.quick}>{quickActions.map((action) => <button type="button" key={action} disabled={loading} onClick={() => submit(action)}>{action}</button>)}</div>
-      <form className={styles.composer} onSubmit={(event) => { event.preventDefault(); submit(); }}><input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ej. Agrega Dancing Queen de ABBA para la fiesta" disabled={loading}/><button type="submit" disabled={loading || !input.trim()} aria-label="Enviar">{loading ? <Loader2 size={15} className="animate-spin"/> : <Send size={15}/>}</button></form>
-      <footer className={styles.footer}><span>{previewMode ? 'Preview: cambios confirmados se guardan como borrador local.' : 'Propone; sólo modifica después de tu confirmación.'}</span><Link href="/dashboard/planning" onClick={() => setOpen(false)}>Abrir Planificación <ArrowRight size={12}/></Link></footer>
-    </aside>}
-  </>;
+export default function PlanningCopilot({currentPath}:CopilotProps){
+ const[open,setOpen]=useState(false),[loading,setLoading]=useState(false),[input,setInput]=useState(''),[messages,setMessages]=useState<Message[]>([{role:'assistant',text:'Soy el Copiloto Operacional. Puedo revisar qué cambió, consultar las fuentes conectadas y preparar cambios para que tú los confirmes.'}]);
+ const previewMode=typeof window!=='undefined'&&location.hostname!=='gestion.felipeycami.cl';
+ const pageLabel=useMemo(()=>currentPath.includes('/guests')?'Invitados':currentPath.includes('/tables')?'Mesas':currentPath.includes('/venue')?'Salón':currentPath.includes('/team')?'Equipo y proveedores':currentPath.includes('/finance')?'Presupuesto':currentPath.includes('/timeline')?'Cronograma':currentPath.includes('/music')?'Música':currentPath.includes('/memory')?'Memoria IA':currentPath.includes('/documents')?'Documentos':currentPath.includes('/planning')?'Planificación':currentPath.includes('/system')?'Estado del sistema':currentPath.includes('/issues')?'Necesita atención':'Inicio',[currentPath]);
+ useEffect(()=>{const handler=()=>setOpen(true);addEventListener('fc-open-copilot',handler);try{const stored=sessionStorage.getItem(CHAT_KEY);if(stored){const parsed=JSON.parse(stored);if(Array.isArray(parsed)&&parsed.length)setMessages(parsed.slice(-40));}}catch{}return()=>removeEventListener('fc-open-copilot',handler);},[]);
+ useEffect(()=>{try{sessionStorage.setItem(CHAT_KEY,JSON.stringify(messages.slice(-40)));}catch{}},[messages]);
+ async function submit(question=input){const text=question.trim();if(!text||loading)return;const history=messages.filter(m=>!m.action||m.actionState!=='pending').slice(-10).map(({role,text})=>({role,text}));setMessages(cur=>[...cur,{role:'user',text}]);setInput('');setLoading(true);try{const r=await fetch('/api/copilot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,currentPath,history})}),p=await r.json().catch(()=>null);if(!r.ok||!p?.ok)throw new Error(p?.message||p?.error||'No pude consultar el evento.');setMessages(cur=>[...cur,{role:'assistant',text:p.answer,meta:modeLabel(p),action:p.action||undefined,actionState:p.action?'pending':undefined}]);}catch(e:any){setMessages(cur=>[...cur,{role:'assistant',text:e?.message||'No pude responder en este momento.',meta:'Copiloto no disponible'}]);}finally{setLoading(false);}}
+ function updateActionState(id:string,state:Message['actionState'],text?:string){setMessages(cur=>cur.map(m=>m.action?.id===id?{...m,actionState:state,...(text?{text:`${m.text}\n\n${text}`}:{})}:m));}
+ function appendLocal(key:string,draft:any,limit=150){try{const cur=JSON.parse(localStorage.getItem(key)||'[]');localStorage.setItem(key,JSON.stringify([...(Array.isArray(cur)?cur:[]),draft].slice(-limit)));}catch{}}
+ function savePreviewStandard(action:CopilotAction){
+  if(action.type==='task.create'){const draft={id:`preview-task-${Date.now()}`,title:action.payload.title||'Nueva tarea',description:action.payload.description||'',category:action.payload.category||'General',owner:action.payload.owner||'Felipe & Camila',status:action.payload.status||'Pendiente',priority:action.payload.priority||'Media',dueAt:action.payload.dueAt||null,source:'copilot-preview',completedAt:null,updatedAt:new Date().toISOString()};appendLocal(PREVIEW_TASK_KEY,draft,250);dispatchEvent(new CustomEvent('fc-preview-task-action',{detail:draft}));return;}
+  if(action.type==='memory.create'){const draft={id:`preview-memory-${Date.now()}`,memory_type:action.payload.memoryType||'preference',subject_type:action.payload.subjectType||'event',subject_id:null,title:action.payload.title||action.description,content:action.payload.content||{text:action.description},confidence:action.payload.confidence||'confirmed',source:'Copiloto · Preview',source_ref:null,status:'active',created_at:new Date().toISOString(),updated_at:new Date().toISOString()};appendLocal(PREVIEW_MEMORY_KEY,draft,250);dispatchEvent(new CustomEvent('fc-preview-memory-action',{detail:draft}));return;}
+  const key=action.type==='music.create'?PREVIEW_MUSIC_KEY:PREVIEW_TIMELINE_KEY,event=action.type==='music.create'?'fc-preview-music-action':'fc-preview-timeline-action',draft={id:`copilot-${Date.now()}`,...action.payload,createdAt:new Date().toISOString(),source:'copilot-preview'};appendLocal(key,draft,100);dispatchEvent(new CustomEvent(event,{detail:draft}));
+ }
+ async function renameTable(action:CopilotAction,preview:boolean){const tableNumber=Number(action.payload.tableNumber),name=String(action.payload.name||'').trim();if(!tableNumber||!name)throw new Error('Número y nombre de mesa son obligatorios.');const supabase=createClient(),{data:table,error}=await supabase.from('wedding_tables').select('*').eq('table_number',tableNumber).maybeSingle();if(error)throw error;if(!table)throw new Error(`No existe la Mesa ${tableNumber}.`);if(preview){const state=JSON.parse(localStorage.getItem(PREVIEW_TABLES_KEY)||'{"overrides":{},"created":[],"deleted":[],"assignments":{}}');state.overrides=state.overrides||{};state.overrides[table.id]={...table,...(state.overrides[table.id]||{}),name};localStorage.setItem(PREVIEW_TABLES_KEY,JSON.stringify(state));dispatchEvent(new CustomEvent('fc-preview-tables-changed'));return;}const r=await fetch('/api/tables',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:table.id,name})}),p=await r.json().catch(()=>null);if(!r.ok||!p?.ok)throw new Error(p?.error||'No fue posible renombrar la mesa.');dispatchEvent(new CustomEvent('fc-data-tables-changed'));}
+ async function applyAction(action:CopilotAction){updateActionState(action.id,'pending');try{if(action.type==='table.rename'){await renameTable(action,previewMode);updateActionState(action.id,'applied',previewMode?'Nombre guardado en el borrador de Mesas.':'Mesa renombrada y auditada correctamente.');return;}if(previewMode){savePreviewStandard(action);updateActionState(action.id,'applied',`Confirmado como borrador local de Preview. Ya aparecerá en ${destination(action.type)}.`);return;}const endpoint=action.type==='music.create'?'/api/music-source':action.type==='timeline.create'?'/api/timeline-source':action.type==='memory.create'?'/api/memory':'/api/tasks';const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(action.payload)}),p=await r.json().catch(()=>null);if(!r.ok||p?.ok===false)throw new Error(p?.message||p?.error||'No fue posible aplicar la acción.');updateActionState(action.id,'applied','Acción aplicada y auditada correctamente.');dispatchEvent(new CustomEvent(action.type==='music.create'?'fc-data-music-changed':action.type==='timeline.create'?'fc-data-timeline-changed':action.type==='memory.create'?'fc-data-memory-changed':'fc-data-tasks-changed'));}catch(e:any){updateActionState(action.id,'error',e?.message||'No fue posible aplicar la acción.');}}
+ const quick=['Revisar lista actualizada','¿Qué cambió desde mi última revisión?','¿Qué requiere atención ahora?','¿Cuántos confirmados tenemos?','¿Qué falta para cerrar las mesas?','¿Qué decisiones faltan en música?'];
+ return<><button type="button" className={styles.fab} onClick={()=>setOpen(v=>!v)} aria-label={open?'Cerrar copiloto':'Abrir copiloto'}>{open?<X size={19}/>:<><Sparkles size={17}/><span>Copiloto</span></>}</button>{open&&<aside className={styles.panel} aria-label="Copiloto operacional"><header className={styles.header}><div className={styles.identity}><span><Bot size={18}/></span><div><strong>Copiloto operacional</strong><small>GPT grounded · herramientas con confirmación</small></div></div><button onClick={()=>setOpen(false)}><X size={17}/></button></header><div className={styles.context}><MessageCircle size={13}/><span>Contexto actual: <strong>{pageLabel}</strong></span><span>Grounding obligatorio</span></div><div className={styles.messages}>{messages.map((m,i)=><div key={`${m.role}-${i}`} className={`${styles.message} ${m.role==='user'?styles.user:styles.assistant}`}><span className={styles.messageText}>{m.text}</span>{m.action&&<div className={`${styles.actionCard} ${m.actionState==='applied'?styles.actionApplied:m.actionState==='discarded'?styles.actionDiscarded:m.actionState==='error'?styles.actionError:''}`}><span className={styles.actionKicker}>Acción propuesta</span><strong>{m.action.label}</strong><small>{m.action.description}</small>{m.actionState==='pending'&&<div><button onClick={()=>updateActionState(m.action!.id,'discarded')}>Descartar</button><button className={styles.confirmAction} onClick={()=>applyAction(m.action!)}><Check size={12}/>Confirmar</button></div>}{m.actionState==='applied'&&<span className={styles.actionState}><Check size={11}/>Confirmada</span>}{m.actionState==='discarded'&&<span className={styles.actionState}>Descartada</span>}{m.actionState==='error'&&<span className={styles.actionState}>No se pudo aplicar</span>}</div>}{m.meta&&<small className={styles.meta}>{m.meta}</small>}</div>)}{loading&&<div className={styles.loading}><Loader2 size={18} className="animate-spin"/><span>Consultando cambios, RSVP, mesas y operación…</span></div>}</div><div className={styles.quick}>{quick.map(q=><button key={q} disabled={loading} onClick={()=>submit(q)}>{q}</button>)}</div><form className={styles.composer} onSubmit={e=>{e.preventDefault();submit();}}><input value={input} onChange={e=>setInput(e.target.value)} placeholder="Ej. Recuerda que preferimos mesas por ramas familiares" disabled={loading}/><button type="submit" disabled={loading||!input.trim()}>{loading?<Loader2 size={15} className="animate-spin"/>:<Send size={15}/>}</button></form><footer className={styles.footer}><span>{previewMode?'Preview: acciones confirmadas quedan como borrador local.':'Consulta datos reales; toda mutación requiere confirmación.'}</span><Link href="/dashboard/planning" onClick={()=>setOpen(false)}>Abrir Planificación <ArrowRight size={12}/></Link></footer></aside>}</>;
 }

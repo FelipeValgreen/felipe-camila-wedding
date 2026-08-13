@@ -1,424 +1,50 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
+export const dynamic='force-dynamic';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
-import { createClient } from '@/lib/supabase-browser';
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Eye,
-  Grid3X3,
-  Loader2,
-  Lock,
-  Minus,
-  Move,
-  Plus,
-  RefreshCw,
-  RotateCcw,
-  Save,
-  Sparkles,
-  Unlock,
-  Users,
-  Wand2,
-  ZoomIn,
-  ZoomOut,
-} from 'lucide-react';
-import './venue-v2.css';
+import React,{useCallback,useEffect,useMemo,useRef,useState}from'react';
+import DashboardLayout from'@/components/DashboardLayout';
+import{createClient}from'@/lib/supabase-browser';
+import{AlertTriangle,CheckCircle2,Eye,Grid3X3,Loader2,Lock,Minus,Move,Plus,RefreshCw,RotateCcw,RotateCw,Save,Unlock,Users,Wand2,ZoomIn,ZoomOut}from'lucide-react';
+import'./venue-v2.css';
 
-interface TableItem {
-  id: string;
-  table_number: number;
-  name: string;
-  capacity: number;
-  table_type: string;
-  zone: string;
-  position_x: number | string;
-  position_y: number | string;
-  width?: number | string;
-  height?: number | string;
-  rotation?: number | string;
-  locked: boolean;
-  notes: string | null;
-}
+type TableItem={id:string;table_number:number;name:string;capacity:number;table_type:string;zone:string;position_x:number|string;position_y:number|string;width?:number|string;height?:number|string;position_x_m?:number|string|null;position_y_m?:number|string|null;width_m?:number|string|null;height_m?:number|string|null;rotation?:number|string;locked:boolean;notes:string|null;};
+type GuestItem={id:string;first_name:string;last_name:string;table_id:string|null};
+type Assignment={id:string;guest_id:string;table_id:string;seat_number:number|null};
+type ConfirmedSource={summary:{currentKnownAttending:number;attending:number;incomingAttending:number;currentKnownAssociated:number;currentKnownWithoutMaster:number};groups:Array<{groupId:string;groupName:string;confirmed:boolean;people:string[]}>;};
+type VenueLayout={id:string;venue_name:string;space_width_m:number|string;space_height_m:number|string;grid_step_m:number|string;version:number};
+type Notice={type:'success'|'warning'|'info'|'error';text:string};
+type PreviewState={overrides:Record<string,TableItem>;created:TableItem[];deleted:string[];assignments:Record<string,string|null>};
+const PREVIEW_TABLES_KEY='fc-preview-tables-v2',PREVIEW_VENUE_KEY='fc-venue-layout-v6',EMPTY_STATE:PreviewState={overrides:{},created:[],deleted:[],assignments:{}};
+const AUTO_POS=[[.26,.22],[.50,.20],[.74,.22],[.20,.48],[.80,.48],[.26,.74],[.50,.78],[.74,.74],[.12,.35],[.88,.35],[.12,.64],[.88,.64]];
+function n(value:any,fallback=0){const parsed=Number(value);return Number.isFinite(parsed)?parsed:fallback;}function clamp(v:number,min:number,max:number){return Math.max(min,Math.min(max,v));}function round2(v:number){return Math.round(v*100)/100;}
+function metricDefaults(type:string){return type==='rectangular_guest'?{w:2.4,h:.9}:{w:1.8,h:1.8};}
+function hydrate(table:TableItem,spaceW:number,spaceH:number):TableItem{const d=metricDefaults(table.table_type);return{...table,position_x_m:round2(n(table.position_x_m,n(table.position_x,50)/100*spaceW)),position_y_m:round2(n(table.position_y_m,n(table.position_y,50)/100*spaceH)),width_m:round2(n(table.width_m,d.w)),height_m:round2(n(table.height_m,d.h))};}
+function sync(table:TableItem,spaceW:number,spaceH:number,patch:Partial<TableItem>):TableItem{const next={...table,...patch},xm=clamp(n(next.position_x_m,n(next.position_x,50)/100*spaceW),0,spaceW),ym=clamp(n(next.position_y_m,n(next.position_y,50)/100*spaceH),0,spaceH),wm=clamp(n(next.width_m,metricDefaults(next.table_type).w),.3,spaceW),hm=clamp(n(next.height_m,metricDefaults(next.table_type).h),.3,spaceH);return{...next,position_x_m:round2(xm),position_y_m:round2(ym),width_m:round2(wm),height_m:round2(hm),position_x:round2(xm/spaceW*100),position_y:round2(ym/spaceH*100)};}
+function readPreview():PreviewState{try{const p=JSON.parse(localStorage.getItem(PREVIEW_TABLES_KEY)||'null');return p?.assignments?p:structuredClone(EMPTY_STATE);}catch{return structuredClone(EMPTY_STATE);}}
+function writePreview(state:PreviewState){try{localStorage.setItem(PREVIEW_TABLES_KEY,JSON.stringify(state));dispatchEvent(new CustomEvent('fc-preview-tables-changed'));}catch{}}
+function mergeTables(base:TableItem[],state:PreviewState){const map=new Map(base.filter(t=>!state.deleted.includes(t.id)).map(t=>[t.id,state.overrides[t.id]||t]));state.created.filter(t=>!state.deleted.includes(t.id)).forEach(t=>map.set(t.id,state.overrides[t.id]||t));return Array.from(map.values()).sort((a,b)=>a.table_number-b.table_number);}
+function ChairRing({capacity,occupied,rectangular}:{capacity:number;occupied:number;rectangular:boolean}){const visible=Math.min(Math.max(capacity,1),12);if(rectangular)return<>{Array.from({length:visible}).map((_,index)=>{const top=index<Math.ceil(visible/2),sideIndex=top?index:index-Math.ceil(visible/2),sideTotal=top?Math.ceil(visible/2):Math.floor(visible/2),left=((sideIndex+1)/(sideTotal+1))*100;return<span key={index} className={`venue-v2__chair venue-v2__chair--rect ${index<occupied?'is-occupied':''}`} style={{left:`${left}%`,top:top?'-13px':'auto',bottom:top?'auto':'-13px'}}/>;})}</>;return<>{Array.from({length:visible}).map((_,index)=>{const angle=Math.PI*2*index/visible-Math.PI/2,left=50+Math.cos(angle)*65,top=50+Math.sin(angle)*65;return<span key={index} className={`venue-v2__chair ${index<occupied?'is-occupied':''}`} style={{left:`${left}%`,top:`${top}%`}}/>;})}</>;}
 
-interface GuestItem {
-  id: string;
-  first_name: string;
-  last_name: string;
-  table_id: string | null;
-}
-
-interface Assignment {
-  id: string;
-  guest_id: string;
-  table_id: string;
-  seat_number: number | null;
-}
-
-interface ConfirmedSource {
-  summary: {
-    currentKnownAttending: number;
-    attending: number;
-    incomingAttending: number;
-    currentKnownAssociated: number;
-    currentKnownWithoutMaster: number;
-  };
-  groups: Array<{ groupId: string; groupName: string; confirmed: boolean; people: string[] }>;
-}
-
-type Notice = { type: 'success' | 'warning' | 'info' | 'error'; text: string };
-
-const autoPositions = [
-  [27, 24], [50, 21], [73, 24],
-  [23, 48], [77, 48],
-  [27, 73], [50, 76], [73, 73],
-  [15, 36], [85, 36], [15, 62], [85, 62],
-];
-
-function clamp(value: number, min: number, max: number) { return Math.max(min, Math.min(max, value)); }
-function number(value: number | string | undefined, fallback = 0) { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : fallback; }
-
-function ChairRing({ capacity, occupied, rectangular }: { capacity: number; occupied: number; rectangular: boolean }) {
-  const visible = Math.min(Math.max(capacity, 1), 12);
-  if (rectangular) {
-    return <>{Array.from({ length: visible }).map((_, index) => {
-      const topSide = index < Math.ceil(visible / 2);
-      const sideIndex = topSide ? index : index - Math.ceil(visible / 2);
-      const sideTotal = topSide ? Math.ceil(visible / 2) : Math.floor(visible / 2);
-      const left = ((sideIndex + 1) / (sideTotal + 1)) * 100;
-      return <span key={index} className={`venue-v2__chair venue-v2__chair--rect ${index < occupied ? 'is-occupied' : ''}`} style={{ left: `${left}%`, top: topSide ? '-13px' : 'auto', bottom: topSide ? 'auto' : '-13px' }}/>;
-    })}</>;
-  }
-  return <>{Array.from({ length: visible }).map((_, index) => {
-    const angle = (Math.PI * 2 * index) / visible - Math.PI / 2;
-    const left = 50 + Math.cos(angle) * 65;
-    const top = 50 + Math.sin(angle) * 65;
-    return <span key={index} className={`venue-v2__chair ${index < occupied ? 'is-occupied' : ''}`} style={{ left: `${left}%`, top: `${top}%` }}/>;
-  })}</>;
-}
-
-export default function VenuePage() {
-  const [tables, setTables] = useState<TableItem[]>([]);
-  const [guests, setGuests] = useState<GuestItem[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [confirmed, setConfirmed] = useState<ConfirmedSource | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Partial<TableItem>>({});
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [previewMode, setPreviewMode] = useState(false);
-  const [notice, setNotice] = useState<Notice | null>(null);
-  const [zoom, setZoom] = useState(.86);
-  const [showGuides, setShowGuides] = useState(true);
-  const [presentation, setPresentation] = useState(false);
-  const canvasRef = useRef<HTMLDivElement | null>(null);
-  const dragRef = useRef<{ id: string; pointerId: number } | null>(null);
-
-  useEffect(() => setPreviewMode(window.location.hostname !== 'gestion.felipeycami.cl'), []);
-
-  const loadData = useCallback(async (manual = false) => {
-    if (manual) setRefreshing(true);
-    setNotice(null);
-    try {
-      const supabase = createClient();
-      const [tablesResult, guestsResult, assignmentsResult, confirmedResponse] = await Promise.all([
-        supabase.from('wedding_tables').select('*').order('table_number', { ascending: true }),
-        supabase.from('wedding_guests').select('id, first_name, last_name, table_id').eq('attendance_status', 'attending').eq('guest_status', 'active'),
-        supabase.from('seating_assignments').select('*'),
-        fetch('/api/confirmed-source', { cache: 'no-store' }),
-      ]);
-      const errors = [tablesResult.error, guestsResult.error, assignmentsResult.error].filter(Boolean);
-      if (errors.length) throw new Error(errors.map((item) => item?.message).join(' · '));
-      const confirmedPayload = await confirmedResponse.json();
-      if (!confirmedResponse.ok || !confirmedPayload?.ok) throw new Error(confirmedPayload?.error || 'No fue posible leer confirmados.');
-      const nextTables = (tablesResult.data || []) as TableItem[];
-      setTables(nextTables);
-      setGuests((guestsResult.data || []) as GuestItem[]);
-      setAssignments((assignmentsResult.data || []) as Assignment[]);
-      setConfirmed(confirmedPayload as ConfirmedSource);
-      setSelectedId((current) => {
-        const next = current && nextTables.some((table) => table.id === current) ? current : nextTables[0]?.id || null;
-        const selected = nextTables.find((table) => table.id === next);
-        setDraft(selected ? { ...selected } : {});
-        return next;
-      });
-    } catch (error: any) {
-      setNotice({ type: 'error', text: error?.message || 'No fue posible cargar el salón.' });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  const assignmentByGuest = useMemo(() => new Map(assignments.map((item) => [item.guest_id, item.table_id])), [assignments]);
-  const occupancyByTable = useMemo(() => {
-    const map = new Map<string, number>();
-    tables.forEach((table) => map.set(table.id, 0));
-    guests.forEach((guest) => {
-      const tableId = assignmentByGuest.get(guest.id) || guest.table_id;
-      if (tableId && map.has(tableId)) map.set(tableId, (map.get(tableId) || 0) + 1);
-    });
-    return map;
-  }, [tables, guests, assignmentByGuest]);
-
-  const metrics = useMemo(() => {
-    const known = confirmed?.summary.currentKnownAttending || 0;
-    const curated = confirmed?.summary.attending || 0;
-    const liveDelta = confirmed?.summary.incomingAttending || 0;
-    const associated = confirmed?.summary.currentKnownAssociated || guests.length;
-    const capacity = tables.reduce((sum, table) => sum + number(table.capacity), 0);
-    const assigned = Array.from(occupancyByTable.values()).reduce((sum, value) => sum + value, 0);
-    return {
-      known,
-      curated,
-      liveDelta,
-      associated,
-      capacity,
-      assigned,
-      capacityGap: Math.max(0, known - capacity),
-      surplus: Math.max(0, capacity - known),
-      unassignedOperational: Math.max(0, guests.length - assigned),
-    };
-  }, [confirmed, tables, guests.length, occupancyByTable]);
-
-  const dataIssues = useMemo(() => {
-    const issues: string[] = [];
-    const numbers = new Map<number, number>();
-    tables.forEach((table) => numbers.set(number(table.table_number), (numbers.get(number(table.table_number)) || 0) + 1));
-    const duplicates = Array.from(numbers.entries()).filter(([, count]) => count > 1).map(([value]) => value);
-    if (duplicates.length) issues.push(`Número de mesa duplicado: ${duplicates.join(', ')}`);
-    for (let i = 0; i < tables.length; i += 1) {
-      for (let j = i + 1; j < tables.length; j += 1) {
-        const dx = Math.abs(number(tables[i].position_x) - number(tables[j].position_x));
-        const dy = Math.abs(number(tables[i].position_y) - number(tables[j].position_y));
-        if (dx < 3 && dy < 3) { issues.push(`${tables[i].name} y ${tables[j].name} están prácticamente superpuestas.`); break; }
-      }
-    }
-    if (metrics.capacityGap > 0) issues.push(`La capacidad configurada es ${metrics.capacity}; faltan ${metrics.capacityGap} cupos para los ${metrics.known} asistentes conocidos.`);
-    if (!assignments.length) issues.push('Todavía no hay asignaciones persistidas de invitados a mesas.');
-    return Array.from(new Set(issues));
-  }, [tables, metrics.capacityGap, metrics.capacity, metrics.known, assignments.length]);
-
-  const selected = tables.find((table) => table.id === selectedId) || null;
-
-  function selectTable(table: TableItem) { setSelectedId(table.id); setDraft({ ...table }); }
-  function patchLocal(id: string, updates: Partial<TableItem>) {
-    setTables((current) => current.map((table) => table.id === id ? { ...table, ...updates } : table));
-    if (selectedId === id) setDraft((current) => ({ ...current, ...updates }));
-  }
-
-  function autoLayout() {
-    setTables((current) => current.map((table, index) => ({ ...table, position_x: autoPositions[index % autoPositions.length][0], position_y: autoPositions[index % autoPositions.length][1], rotation: 0 })));
-    setNotice({ type: 'info', text: 'Distribución equilibrada aplicada localmente. Revisa el plano y guarda sólo cuando estés conforme.' });
-  }
-
-  async function completeCapacity() {
-    if (metrics.capacityGap <= 0) { setNotice({ type: 'success', text: 'La capacidad actual ya cubre a todos los asistentes conocidos.' }); return; }
-    const needed = Math.ceil(metrics.capacityGap / 10);
-    const start = tables.reduce((max, table) => Math.max(max, number(table.table_number)), 0) + 1;
-    if (previewMode) {
-      const created = Array.from({ length: needed }).map((_, offset) => {
-        const index = tables.length + offset;
-        const pos = autoPositions[index % autoPositions.length];
-        return {
-          id: `preview-capacity-${Date.now()}-${offset}`,
-          table_number: start + offset,
-          name: `Mesa ${start + offset}`,
-          capacity: 10,
-          table_type: 'round_guest',
-          zone: 'Principal',
-          position_x: pos[0],
-          position_y: pos[1],
-          width: 120,
-          height: 120,
-          rotation: 0,
-          locked: false,
-          notes: null,
-        } as TableItem;
-      });
-      setTables((current) => [...current, ...created]);
-      setNotice({ type: 'info', text: `${needed} mesa(s) de 10 agregadas localmente para cubrir la capacidad. Producción permanece intacta.` });
-      return;
-    }
-    setSaving(true);
-    try {
-      for (let offset = 0; offset < needed; offset += 1) {
-        const index = tables.length + offset;
-        const pos = autoPositions[index % autoPositions.length];
-        const response = await fetch('/api/tables', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-          table_number: start + offset, name: `Mesa ${start + offset}`, capacity: 10, table_type: 'round_guest', zone: 'Principal', position_x: pos[0], position_y: pos[1], width: 120, height: 120, rotation: 0, locked: false, notes: null,
-        }) });
-        const payload = await response.json();
-        if (!response.ok || !payload?.ok) throw new Error(payload?.error || 'No fue posible crear una mesa.');
-      }
-      await loadData();
-      setNotice({ type: 'success', text: `Capacidad ampliada con ${needed} mesa(s).` });
-    } catch (error: any) {
-      setNotice({ type: 'error', text: error?.message || 'No fue posible completar capacidad.' });
-    } finally { setSaving(false); }
-  }
-
-  async function saveSelected() {
-    if (!selected) return;
-    const updates = {
-      name: String(draft.name || selected.name),
-      table_number: number(draft.table_number, selected.table_number),
-      capacity: Math.max(1, number(draft.capacity, selected.capacity)),
-      table_type: String(draft.table_type || selected.table_type),
-      zone: String(draft.zone || selected.zone || 'Principal'),
-      position_x: number(draft.position_x, number(selected.position_x)),
-      position_y: number(draft.position_y, number(selected.position_y)),
-      width: number(draft.width, number(selected.width, 120)),
-      height: number(draft.height, number(selected.height, 120)),
-      rotation: number(draft.rotation, number(selected.rotation)),
-      locked: Boolean(draft.locked),
-      notes: draft.notes || null,
-    };
-    if (previewMode || selected.id.startsWith('preview-')) {
-      patchLocal(selected.id, updates);
-      setNotice({ type: 'info', text: `${updates.name} actualizada localmente. Preview no modificó producción.` });
-      return;
-    }
-    setSaving(true);
-    try {
-      const response = await fetch('/api/tables', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: selected.id, ...updates }) });
-      const payload = await response.json();
-      if (!response.ok || !payload?.ok) throw new Error(payload?.error || 'No fue posible guardar la mesa.');
-      patchLocal(selected.id, payload.table);
-      setNotice({ type: 'success', text: `${payload.table.name} guardada.` });
-    } catch (error: any) {
-      setNotice({ type: 'error', text: error?.message || 'No fue posible guardar la mesa.' });
-    } finally { setSaving(false); }
-  }
-
-  async function saveLayout() {
-    if (previewMode) { setNotice({ type: 'info', text: 'El layout se mantiene local en Preview. Producción no fue modificada.' }); return; }
-    setSaving(true);
-    try {
-      for (const table of tables) {
-        if (table.id.startsWith('preview-')) continue;
-        const response = await fetch('/api/tables', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: table.id, position_x: number(table.position_x), position_y: number(table.position_y), rotation: number(table.rotation), locked: table.locked }) });
-        const payload = await response.json();
-        if (!response.ok || !payload?.ok) throw new Error(payload?.error || `No fue posible guardar ${table.name}.`);
-      }
-      setNotice({ type: 'success', text: 'Distribución del salón guardada.' });
-    } catch (error: any) {
-      setNotice({ type: 'error', text: error?.message || 'No fue posible guardar la distribución.' });
-    } finally { setSaving(false); }
-  }
-
-  function resetPreview() { if (!previewMode) return; loadData(); }
-
-  function pointerDown(event: React.PointerEvent<HTMLButtonElement>, table: TableItem) {
-    selectTable(table);
-    if (table.locked) return;
-    dragRef.current = { id: table.id, pointerId: event.pointerId };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    event.preventDefault();
-  }
-  function pointerMove(event: React.PointerEvent<HTMLButtonElement>, table: TableItem) {
-    if (!dragRef.current || dragRef.current.id !== table.id || table.locked || !canvasRef.current) return;
-    const bounds = canvasRef.current.getBoundingClientRect();
-    const x = clamp(((event.clientX - bounds.left) / bounds.width) * 100, 8, 92);
-    const y = clamp(((event.clientY - bounds.top) / bounds.height) * 100, 10, 90);
-    patchLocal(table.id, { position_x: Number(x.toFixed(2)), position_y: Number(y.toFixed(2)) });
-  }
-  function pointerUp(event: React.PointerEvent<HTMLButtonElement>, tableId: string) {
-    if (!dragRef.current || dragRef.current.id !== tableId) return;
-    dragRef.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-  }
-
-  return <DashboardLayout><div className="venue-v2">
-    <section className="venue-v2__hero">
-      <div><span className="venue-v2__eyebrow">Espacio y experiencia</span><h1>Salón</h1><p>Un editor visual separado de la distribución de invitados. Aquí trabajamos geometría, capacidad y flujo; las posiciones son editables y los datos de mesas siguen viniendo de Supabase.</p></div>
-      <div className="venue-v2__actions">{previewMode && <span className="venue-v2__preview">Preview · cambios locales</span>}<button type="button" onClick={() => loadData(true)}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Actualizando…' : 'Actualizar'}</button><button type="button" onClick={autoLayout}><Wand2 size={14}/>Auto-distribuir</button><button type="button" className="is-primary" onClick={saveLayout} disabled={saving}><Save size={14}/>{saving ? 'Guardando…' : 'Guardar layout'}</button></div>
-    </section>
-
-    {notice && <div className={`venue-v2__notice is-${notice.type}`}>{notice.type === 'success' ? <CheckCircle2 size={16}/> : <AlertTriangle size={16}/>}<span>{notice.text}</span></div>}
-
-    {loading ? <div className="venue-v2__loading"><Loader2 className="animate-spin" size={22}/>Cargando mesas, capacidad y asistentes…</div> : <>
-      <section className="venue-v2__metrics">
-        <article><span>Asistentes conocidos</span><strong>{metrics.known}</strong><small>{metrics.curated} consolidados + {metrics.liveDelta} nuevos RSVP</small></article>
-        <article><span>Capacidad configurada</span><strong>{metrics.capacity}</strong><small>{tables.length} mesas</small></article>
-        <article className={metrics.capacityGap ? 'is-attention' : ''}><span>Brecha de capacidad</span><strong>{metrics.capacityGap ? `-${metrics.capacityGap}` : `+${metrics.surplus}`}</strong><small>{metrics.capacityGap ? 'cupos que faltan' : 'cupos de holgura'}</small></article>
-        <article><span>Listos para operar</span><strong>{guests.length}</strong><small>{metrics.unassignedOperational} sin mesa persistida</small></article>
-        <article><span>Asignados</span><strong>{metrics.assigned}</strong><small>seating_assignments + ficha</small></article>
-      </section>
-
-      {dataIssues.length > 0 && <section className="venue-v2__audit"><header><AlertTriangle size={16}/><div><strong>Antes de cerrar el plano</strong><span>{dataIssues.length} observación(es) detectadas automáticamente</span></div></header><div>{dataIssues.map((issue) => <span key={issue}>{issue}</span>)}</div>{metrics.capacityGap > 0 && <button type="button" onClick={completeCapacity} disabled={saving}><Plus size={13}/>Completar capacidad con mesas de 10</button>}</section>}
-
-      <section className={`venue-v2__workspace ${presentation ? 'is-presentation' : ''}`}>
-        {!presentation && <aside className="venue-v2__left-panel">
-          <span className="venue-v2__eyebrow">Composición</span><h2>Capas del salón</h2><p>Los anclajes visuales son conceptuales; no sustituyen un plano arquitectónico del recinto.</p>
-          <div className="venue-v2__layer is-on"><span><Grid3X3 size={14}/>Mesas</span><strong>{tables.length}</strong></div>
-          <div className="venue-v2__layer is-on"><span><Move size={14}/>Pista central</span><small>Referencia</small></div>
-          <div className="venue-v2__layer is-on"><span><Sparkles size={14}/>Escenario / DJ</span><small>Referencia</small></div>
-          <div className="venue-v2__layer is-on"><span><Sparkles size={14}/>Bar y acceso</span><small>Referencia</small></div>
-          <div className="venue-v2__panel-divider"/>
-          <button type="button" className="venue-v2__panel-button" onClick={() => setShowGuides((value) => !value)}><Grid3X3 size={13}/>{showGuides ? 'Ocultar guías' : 'Mostrar guías'}</button>
-          {previewMode && <button type="button" className="venue-v2__panel-button" onClick={resetPreview}><RotateCcw size={13}/>Restablecer datos</button>}
-          <div className="venue-v2__capacity-card"><span>Capacidad objetivo</span><strong>{metrics.known}</strong><small>{metrics.capacityGap > 0 ? `Aún faltan ${metrics.capacityGap} cupos` : `Cobertura suficiente (+${metrics.surplus})`}</small></div>
-        </aside>}
-
-        <div className="venue-v2__canvas-column">
-          <div className="venue-v2__toolbar">
-            <div><button type="button" onClick={() => setZoom((value) => clamp(Number((value - .08).toFixed(2)), .55, 1.25))}><ZoomOut size={13}/></button><span>{Math.round(zoom * 100)}%</span><button type="button" onClick={() => setZoom((value) => clamp(Number((value + .08).toFixed(2)), .55, 1.25))}><ZoomIn size={13}/></button><button type="button" onClick={() => setZoom(.86)}>Ajustar</button></div>
-            <div><button type="button" onClick={() => setPresentation((value) => !value)}><Eye size={13}/>{presentation ? 'Volver a editar' : 'Presentación'}</button></div>
-          </div>
-          <div className="venue-v2__viewport">
-            <div className="venue-v2__stage" style={{ transform: `scale(${zoom})` }}>
-              <div ref={canvasRef} className={`venue-v2__canvas ${showGuides ? 'show-guides' : ''}`}>
-                <div className="venue-v2__zone venue-v2__zone--stage"><span>Escenario / DJ</span></div>
-                <div className="venue-v2__zone venue-v2__zone--bar"><span>Bar / apoyo</span></div>
-                <div className="venue-v2__zone venue-v2__zone--entrance"><span>Acceso</span></div>
-                <div className="venue-v2__dance"><span>Pista</span><small>flujo central</small></div>
-                <div className="venue-v2__green venue-v2__green--a"/><div className="venue-v2__green venue-v2__green--b"/><div className="venue-v2__green venue-v2__green--c"/><div className="venue-v2__green venue-v2__green--d"/>
-                {tables.map((table) => {
-                  const rectangular = table.table_type === 'rectangular_guest';
-                  const occupied = occupancyByTable.get(table.id) || 0;
-                  return <button
-                    key={table.id}
-                    type="button"
-                    className={`venue-v2__table ${rectangular ? 'is-rectangular' : ''} ${selectedId === table.id ? 'is-selected' : ''} ${table.locked ? 'is-locked' : ''}`}
-                    style={{ left: `${clamp(number(table.position_x, 50), 8, 92)}%`, top: `${clamp(number(table.position_y, 50), 10, 90)}%`, transform: `translate(-50%,-50%) rotate(${number(table.rotation)}deg)` }}
-                    onClick={() => selectTable(table)}
-                    onPointerDown={(event) => pointerDown(event, table)}
-                    onPointerMove={(event) => pointerMove(event, table)}
-                    onPointerUp={(event) => pointerUp(event, table.id)}
-                    onPointerCancel={(event) => pointerUp(event, table.id)}
-                    title={table.locked ? 'Mesa bloqueada' : 'Arrastra para mover'}
-                  >
-                    <ChairRing capacity={number(table.capacity, 10)} occupied={occupied} rectangular={rectangular}/>
-                    <strong>{table.name}</strong><span>{occupied}/{table.capacity}</span>{table.locked && <Lock size={10}/>} 
-                  </button>;
-                })}
-                <div className="venue-v2__canvas-note">Composición conceptual editable · coordenadas relativas</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {!presentation && <aside className="venue-v2__inspector">
-          <span className="venue-v2__eyebrow">Inspector</span><h2>{selected?.name || 'Selecciona una mesa'}</h2>
-          {!selected ? <p>Haz clic en una mesa para editar sus propiedades.</p> : <>
-            <div className="venue-v2__selection-summary"><Users size={15}/><div><strong>{occupancyByTable.get(selected.id) || 0} / {selected.capacity}</strong><span>personas asignadas</span></div></div>
-            <label><span>Nombre</span><input value={String(draft.name || '')} onChange={(event) => setDraft({ ...draft, name: event.target.value })}/></label>
-            <div className="venue-v2__form-grid"><label><span>Número</span><input type="number" min="1" value={String(draft.table_number || '')} onChange={(event) => setDraft({ ...draft, table_number: Number(event.target.value) })}/></label><label><span>Zona</span><input value={String(draft.zone || '')} onChange={(event) => setDraft({ ...draft, zone: event.target.value })}/></label></div>
-            <label><span>Tipo</span><select value={String(draft.table_type || 'round_guest')} onChange={(event) => setDraft({ ...draft, table_type: event.target.value })}><option value="round_guest">Redonda</option><option value="rectangular_guest">Rectangular / imperial</option></select></label>
-            <label><span>Capacidad</span><div className="venue-v2__counter"><button type="button" onClick={() => setDraft({ ...draft, capacity: Math.max(1, number(draft.capacity, selected.capacity) - 1) })}><Minus size={13}/></button><strong>{number(draft.capacity, selected.capacity)}</strong><button type="button" onClick={() => setDraft({ ...draft, capacity: number(draft.capacity, selected.capacity) + 1 })}><Plus size={13}/></button></div></label>
-            <label><span>Rotación · {number(draft.rotation)}°</span><input type="range" min="-180" max="180" step="5" value={number(draft.rotation)} onChange={(event) => { const rotation = Number(event.target.value); setDraft({ ...draft, rotation }); patchLocal(selected.id, { rotation }); }}/></label>
-            <div className="venue-v2__coords"><span>X {Math.round(number(selected.position_x))}%</span><span>Y {Math.round(number(selected.position_y))}%</span></div>
-            <button type="button" className="venue-v2__inspector-button" onClick={() => { const locked = !selected.locked; patchLocal(selected.id, { locked }); setDraft({ ...draft, locked }); }}>{selected.locked ? <Unlock size={13}/> : <Lock size={13}/>} {selected.locked ? 'Desbloquear posición' : 'Bloquear posición'}</button>
-            <button type="button" className="venue-v2__inspector-button is-primary" onClick={saveSelected} disabled={saving}><Save size={13}/>Guardar propiedades</button>
-          </>}
-        </aside>}
-      </section>
-    </>}
-  </div></DashboardLayout>;
+export default function VenuePage(){
+ const[tables,setTables]=useState<TableItem[]>([]),[guests,setGuests]=useState<GuestItem[]>([]),[assignments,setAssignments]=useState<Assignment[]>([]),[confirmed,setConfirmed]=useState<ConfirmedSource|null>(null),[venue,setVenue]=useState<VenueLayout|null>(null),[spaceW,setSpaceW]=useState(30),[spaceH,setSpaceH]=useState(18),[gridStep,setGridStep]=useState(1),[selectedId,setSelectedId]=useState<string|null>(null),[draft,setDraft]=useState<Partial<TableItem>>({}),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[saving,setSaving]=useState(false),[preview,setPreview]=useState(false),[notice,setNotice]=useState<Notice|null>(null),[zoom,setZoom]=useState(.9),[showGuides,setShowGuides]=useState(true),[presentation,setPresentation]=useState(false),[dragging,setDragging]=useState<string|null>(null);
+ const canvasRef=useRef<HTMLDivElement|null>(null),dragRef=useRef<string|null>(null),tablesRef=useRef(tables);tablesRef.current=tables;
+ useEffect(()=>setPreview(location.hostname!=='gestion.felipeycami.cl'),[]);
+ const load=useCallback(async(manual=false)=>{if(manual)setRefreshing(true);setNotice(null);try{const supabase=createClient();const[t,g,a,c,v]=await Promise.all([supabase.from('wedding_tables').select('*').order('table_number'),supabase.from('wedding_guests').select('id,first_name,last_name,table_id').eq('attendance_status','attending').eq('guest_status','active'),supabase.from('seating_assignments').select('*'),fetch('/api/confirmed-source',{cache:'no-store'}),fetch('/api/venue-layout',{cache:'no-store'})]);if(t.error||g.error||a.error)throw new Error(t.error?.message||g.error?.message||a.error?.message||'No fue posible cargar el salón.');const cp=await c.json(),vp=await v.json();if(!c.ok||!cp?.ok)throw new Error(cp?.error||'No fue posible leer confirmados.');if(!v.ok||!vp?.ok)throw new Error(vp?.error||'No fue posible leer escala del salón.');let w=n(vp.layout?.space_width_m,30),h=n(vp.layout?.space_height_m,18),grid=n(vp.layout?.grid_step_m,1);if(location.hostname!=='gestion.felipeycami.cl'){try{const local=JSON.parse(localStorage.getItem(PREVIEW_VENUE_KEY)||'null');if(local){w=n(local.spaceW,w);h=n(local.spaceH,h);grid=n(local.gridStep,grid);}}catch{}}let next=(t.data||[])as TableItem[];if(location.hostname!=='gestion.felipeycami.cl')next=mergeTables(next,readPreview());next=next.map(item=>hydrate(item,w,h));setSpaceW(w);setSpaceH(h);setGridStep(grid);setVenue(vp.layout||null);setTables(next);setGuests((g.data||[])as GuestItem[]);setAssignments((a.data||[])as Assignment[]);setConfirmed(cp);setSelectedId(current=>{const id=current&&next.some(item=>item.id===current)?current:next[0]?.id||null;const selected=next.find(item=>item.id===id);setDraft(selected?{...selected}:{});return id;});}catch(e:any){setNotice({type:'error',text:e?.message||'No fue posible cargar el salón.'});}finally{setLoading(false);setRefreshing(false);}},[]);
+ useEffect(()=>{void load();},[load]);
+ useEffect(()=>{const reload=()=>void load(true);addEventListener('fc-preview-tables-changed',reload);addEventListener('fc-data-tables-changed',reload);return()=>{removeEventListener('fc-preview-tables-changed',reload);removeEventListener('fc-data-tables-changed',reload);};},[load]);
+ useEffect(()=>{if(!preview)return;const timer=setInterval(()=>{try{const local=JSON.parse(localStorage.getItem(PREVIEW_VENUE_KEY)||'null');if(local&&(n(local.spaceW,spaceW)!==spaceW||n(local.spaceH,spaceH)!==spaceH||n(local.gridStep,gridStep)!==gridStep)){const w=n(local.spaceW,spaceW),h=n(local.spaceH,spaceH);setTables(cur=>cur.map(t=>hydrate(t,w,h)));setSpaceW(w);setSpaceH(h);setGridStep(n(local.gridStep,gridStep));}}catch{}},900);return()=>clearInterval(timer);},[preview,spaceW,spaceH,gridStep]);
+ useEffect(()=>{const move=(e:PointerEvent)=>{const id=dragRef.current,canvas=canvasRef.current;if(!id||!canvas)return;const table=tablesRef.current.find(t=>t.id===id);if(!table||table.locked)return;const b=canvas.getBoundingClientRect(),wm=n(table.width_m,1.8),hm=n(table.height_m,1.8),xm=clamp((e.clientX-b.left)/b.width*spaceW,wm/2,spaceW-wm/2),ym=clamp((e.clientY-b.top)/b.height*spaceH,hm/2,spaceH-hm/2);setTables(cur=>cur.map(t=>t.id===id?sync(t,spaceW,spaceH,{position_x_m:xm,position_y_m:ym}):t));setDraft(cur=>selectedId===id?{...cur,position_x_m:round2(xm),position_y_m:round2(ym),position_x:round2(xm/spaceW*100),position_y:round2(ym/spaceH*100)}:cur);e.preventDefault();};const up=()=>{dragRef.current=null;setDragging(null);};addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);return()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);};},[spaceW,spaceH,selectedId]);
+ const assignmentByGuest=useMemo(()=>new Map(assignments.map(i=>[i.guest_id,i.table_id])),[assignments]);const occupancy=useMemo(()=>{const map=new Map<string,number>();tables.forEach(t=>map.set(t.id,0));guests.forEach(g=>{const tid=assignmentByGuest.get(g.id)||g.table_id;if(tid&&map.has(tid))map.set(tid,(map.get(tid)||0)+1);});return map;},[tables,guests,assignmentByGuest]);
+ const metrics=useMemo(()=>{const known=confirmed?.summary.currentKnownAttending||0,capacity=tables.reduce((s,t)=>s+n(t.capacity),0),assigned=Array.from(occupancy.values()).reduce((s,v)=>s+v,0);return{known,capacity,assigned,capacityGap:Math.max(0,known-capacity),surplus:Math.max(0,capacity-known),unassigned:Math.max(0,guests.length-assigned),missing:confirmed?.summary.currentKnownWithoutMaster||0};},[confirmed,tables,occupancy,guests.length]);
+ const issues=useMemo(()=>{const list:string[]=[];for(let i=0;i<tables.length;i++)for(let j=i+1;j<tables.length;j++){const a=tables[i],b=tables[j],dx=n(a.position_x_m)-n(b.position_x_m),dy=n(a.position_y_m)-n(b.position_y_m),distance=Math.sqrt(dx*dx+dy*dy),needed=Math.max(n(a.width_m,1.8),n(a.height_m,1.8))/2+Math.max(n(b.width_m,1.8),n(b.height_m,1.8))/2+.35;if(distance<needed)list.push(`${a.name} y ${b.name} necesitan más separación.`);}tables.forEach(t=>{const x=n(t.position_x_m),y=n(t.position_y_m),w=n(t.width_m,1.8),h=n(t.height_m,1.8);if(x-w/2<0||x+w/2>spaceW||y-h/2<0||y+h/2>spaceH)list.push(`${t.name} sale de los límites del salón.`);});if(metrics.capacityGap)list.push(`Faltan ${metrics.capacityGap} cupos para los ${metrics.known} asistentes conocidos.`);if(!assignments.length)list.push('Todavía no hay asignaciones persistidas de invitados a mesas.');return Array.from(new Set(list));},[tables,spaceW,spaceH,metrics,assignments.length]);
+ const selected=tables.find(t=>t.id===selectedId)||null;function selectTable(t:TableItem){setSelectedId(t.id);setDraft({...t});}
+ function localPatch(id:string,patch:Partial<TableItem>){setTables(cur=>cur.map(t=>t.id===id?sync(t,spaceW,spaceH,patch):t));if(selectedId===id){const base=tables.find(t=>t.id===id);if(base)setDraft(sync(base,spaceW,spaceH,{...draft,...patch}));}}
+ function persistPreview(table:TableItem){const state=readPreview();state.overrides[table.id]=table;writePreview(state);}
+ function autoLayout(){setTables(cur=>cur.map((t,index)=>sync(t,spaceW,spaceH,{position_x_m:AUTO_POS[index%AUTO_POS.length][0]*spaceW,position_y_m:AUTO_POS[index%AUTO_POS.length][1]*spaceH,rotation:0})));setNotice({type:'info',text:'Distribución métrica aplicada localmente. Revisa distancias y guarda cuando estés conforme.'});}
+ async function completeCapacity(){if(metrics.capacityGap<=0){setNotice({type:'success',text:'La capacidad ya cubre a todos los asistentes conocidos.'});return;}const needed=Math.ceil(metrics.capacityGap/10),start=tables.reduce((m,t)=>Math.max(m,t.table_number),0)+1,created=Array.from({length:needed}).map((_,offset)=>{const index=tables.length+offset,position=AUTO_POS[index%AUTO_POS.length];return hydrate({id:`preview-capacity-${Date.now()}-${offset}`,table_number:start+offset,name:`Mesa ${start+offset}`,capacity:10,table_type:'round_guest',zone:'Principal',position_x:position[0]*100,position_y:position[1]*100,position_x_m:position[0]*spaceW,position_y_m:position[1]*spaceH,width_m:1.8,height_m:1.8,rotation:0,locked:false,notes:null},spaceW,spaceH);});if(preview){const state=readPreview();state.created.push(...created);writePreview(state);setTables(cur=>[...cur,...created]);setNotice({type:'info',text:`${needed} mesa(s) agregadas al borrador para cubrir capacidad.`});return;}setSaving(true);try{for(const table of created){const r=await fetch('/api/tables',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(table)}),p=await r.json();if(!r.ok||!p?.ok)throw new Error(p?.error||'No fue posible crear una mesa.');}await load(true);setNotice({type:'success',text:`Capacidad ampliada con ${needed} mesa(s).`});}catch(e:any){setNotice({type:'error',text:e?.message||'No fue posible completar capacidad.'});}finally{setSaving(false);}}
+ async function saveSelected(){if(!selected)return;const next=sync(selected,spaceW,spaceH,{...draft,name:String(draft.name||selected.name),table_number:Math.max(1,n(draft.table_number,selected.table_number)),capacity:Math.max(1,n(draft.capacity,selected.capacity)),table_type:String(draft.table_type||selected.table_type),zone:String(draft.zone||selected.zone||'Principal'),rotation:clamp(n(draft.rotation,n(selected.rotation)), -180,180),locked:Boolean(draft.locked),notes:draft.notes||null});if(preview||selected.id.startsWith('preview-')){persistPreview(next);setTables(cur=>cur.map(t=>t.id===next.id?next:t));setDraft({...next});setNotice({type:'info',text:`${next.name} guardada en el borrador.`});return;}setSaving(true);try{const r=await fetch('/api/tables',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(next)}),p=await r.json();if(!r.ok||!p?.ok)throw new Error(p?.error||'No fue posible guardar la mesa.');setTables(cur=>cur.map(t=>t.id===p.table.id?hydrate(p.table,spaceW,spaceH):t));setDraft(hydrate(p.table,spaceW,spaceH));setNotice({type:'success',text:`${p.table.name} guardada a escala.`});}catch(e:any){setNotice({type:'error',text:e?.message||'No fue posible guardar la mesa.'});}finally{setSaving(false);}}
+ async function saveLayout(){if(preview){const state=readPreview();tables.forEach(t=>state.overrides[t.id]=t);writePreview(state);setNotice({type:'info',text:'Layout de mesas guardado localmente en Preview.'});return;}setSaving(true);try{for(const table of tables){if(table.id.startsWith('preview-'))continue;const r=await fetch('/api/tables',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:table.id,position_x_m:n(table.position_x_m),position_y_m:n(table.position_y_m),width_m:n(table.width_m),height_m:n(table.height_m),rotation:n(table.rotation),locked:table.locked})}),p=await r.json();if(!r.ok||!p?.ok)throw new Error(p?.error||`No fue posible guardar ${table.name}.`);}setNotice({type:'success',text:'Layout de mesas guardado y auditado.'});await load(true);}catch(e:any){setNotice({type:'error',text:e?.message||'No fue posible guardar el layout.'});}finally{setSaving(false);}}
+ const canvasW=1080,canvasH=Math.max(540,Math.round(canvasW*spaceH/spaceW)),scalePx=canvasW/spaceW;
+ return<DashboardLayout><div className="venue-v2"><section className="venue-v2__hero"><div><span className="venue-v2__eyebrow">Espacio y montaje</span><h1>Salón</h1><p>Plano operativo en medidas reales. Mesas, pista, escenario, bar y demás elementos comparten la misma escala métrica para poder reutilizar el motor en cualquier recinto.</p></div><div className="venue-v2__actions">{preview&&<span className="venue-v2__preview">Preview · borrador persistente</span>}<button onClick={()=>load(true)}><RefreshCw size={13} className={refreshing?'animate-spin':''}/>Actualizar</button><button className="is-primary" onClick={saveLayout} disabled={saving}><Save size={13}/>Guardar layout</button></div></section>{notice&&<div className={`venue-v2__notice is-${notice.type}`}>{notice.type==='success'?<CheckCircle2 size={15}/>:<AlertTriangle size={15}/>}<span>{notice.text}</span></div>}<section className="venue-v2__metrics"><article><span>Salón</span><strong>{spaceW.toFixed(1)}×{spaceH.toFixed(1)}m</strong><small>{venue?.venue_name||'Recinto configurable'}</small></article><article><span>Confirmados</span><strong>{metrics.known}</strong><small>{metrics.missing} pendientes de ficha</small></article><article><span>Capacidad mesas</span><strong>{metrics.capacity}</strong><small>{metrics.capacityGap?`faltan ${metrics.capacityGap}`:`+${metrics.surplus} de holgura`}</small></article><article><span>Asignados</span><strong>{metrics.assigned}</strong><small>{metrics.unassigned} fichas sin mesa</small></article><article className={issues.length?'is-attention':''}><span>Observaciones</span><strong>{issues.length}</strong><small>espacio / capacidad</small></article></section>{issues.length>0&&<section className="venue-v2__audit"><header><AlertTriangle size={17}/><div><strong>Antes de cerrar el plano</strong><span>{issues.length} observación(es) calculadas</span></div></header><div>{issues.slice(0,5).map(issue=><span key={issue}>{issue}</span>)}</div>{metrics.capacityGap>0&&<button onClick={completeCapacity}><Plus size={12}/>Completar capacidad</button>}</section>}{loading?<div className="venue-v2__loading"><Loader2 size={20} className="animate-spin"/>Cargando plano y escala…</div>:<section className={`venue-v2__workspace ${presentation?'is-presentation':''}`}>{!presentation&&<aside className="venue-v2__left-panel"><span className="venue-v2__eyebrow">Composición</span><h2>Capas del salón</h2><p>Selecciona las mesas aquí o usa “Elementos” dentro del plano para escenario, pista, bar y montaje.</p><div className="venue-v2__layer is-on"><span><Grid3X3 size={13}/>Mesas</span><strong>{tables.length}</strong></div><div className="venue-v2__layer is-on"><span><Move size={13}/>Escala</span><small>{spaceW.toFixed(1)}×{spaceH.toFixed(1)}m</small></div><div className="venue-v2__layer is-on"><span><Wand2 size={13}/>Grilla</span><small>{gridStep}m</small></div><div className="venue-v2__panel-divider"/><button className="venue-v2__panel-button" onClick={autoLayout}><Wand2 size={12}/>Distribuir mesas</button><button className="venue-v2__panel-button" onClick={()=>setShowGuides(v=>!v)}><Grid3X3 size={12}/>{showGuides?'Ocultar guías':'Mostrar guías'}</button><div className="venue-v2__capacity-card"><span>Escala visual</span><strong>{scalePx.toFixed(1)}</strong><small>px por metro</small></div></aside>}<div className="venue-v2__canvas-column"><div className="venue-v2__toolbar"><div><button onClick={()=>setZoom(z=>Math.max(.55,z-.1))}><ZoomOut size={12}/></button><span>{Math.round(zoom*100)}%</span><button onClick={()=>setZoom(z=>Math.min(1.5,z+.1))}><ZoomIn size={12}/></button><button onClick={()=>setZoom(.9)}>Ajustar</button></div><div><button onClick={()=>setPresentation(v=>!v)}><Eye size={12}/>{presentation?'Editar':'Presentación'}</button></div></div><div className="venue-v2__viewport"><div className="venue-v2__stage" style={{width:canvasW+40,height:canvasH+40,transform:`scale(${zoom})`}}><div ref={canvasRef} className={`venue-v2__canvas ${showGuides?'show-guides':''}`} style={{width:canvasW,height:canvasH,backgroundSize:showGuides?`${scalePx*gridStep}px ${scalePx*gridStep}px,${scalePx*gridStep}px ${scalePx*gridStep}px,100% 100%`:undefined}}><div className="venue-v2__zone venue-v2__zone--stage">Escenario / DJ</div><div className="venue-v2__zone venue-v2__zone--bar">Bar / apoyo</div><div className="venue-v2__zone venue-v2__zone--entrance">Acceso</div><div className="venue-v2__dance"><span>Pista de baile</span><small>editable desde Elementos</small></div>{tables.map(table=>{const occupied=occupancy.get(table.id)||0,rect=table.table_type==='rectangular_guest',x=n(table.position_x_m)/spaceW*100,y=n(table.position_y_m)/spaceH*100,widthPx=Math.max(46,n(table.width_m,1.8)*scalePx),heightPx=Math.max(38,n(table.height_m,1.8)*scalePx);return<button type="button" key={table.id} className={`venue-v2__table ${rect?'is-rectangular':''} ${selectedId===table.id?'is-selected':''} ${table.locked?'is-locked':''}`} style={{left:`${x}%`,top:`${y}%`,width:widthPx,height:heightPx,transform:`translate(-50%,-50%) rotate(${n(table.rotation)}deg)`}} onClick={()=>selectTable(table)} onPointerDown={e=>{selectTable(table);if(table.locked)return;dragRef.current=table.id;setDragging(table.id);e.preventDefault();e.stopPropagation();}} title={`${table.name} · ${n(table.width_m).toFixed(1)}×${n(table.height_m).toFixed(1)}m`}><strong style={{transform:`rotate(${-n(table.rotation)}deg)`}}>{table.name}</strong><span style={{transform:`rotate(${-n(table.rotation)}deg)`}}>{occupied}/{table.capacity}</span>{table.locked&&<Lock size={10}/>}<ChairRing capacity={table.capacity} occupied={occupied} rectangular={rect}/></button>})}<div className="venue-v2__canvas-note">{dragging?'Moviendo mesa…':'Plano métrico · arrastra mesas y usa Elementos para el montaje'}</div></div></div></div></div>{!presentation&&<aside className="venue-v2__inspector">{selected?<><span className="venue-v2__eyebrow">Mesa seleccionada</span><h2>{selected.name}</h2><p>{(occupancy.get(selected.id)||0)} de {selected.capacity} lugares · medidas reales</p><div className="venue-v2__selection-summary"><Users size={15}/><div><strong>{n(selected.width_m).toFixed(1)} × {n(selected.height_m).toFixed(1)} m</strong><span>X {n(selected.position_x_m).toFixed(1)}m · Y {n(selected.position_y_m).toFixed(1)}m</span></div></div><label><span>Nombre visible</span><input value={String(draft.name??selected.name)} onChange={e=>setDraft({...draft,name:e.target.value})}/></label><div className="venue-v2__form-grid"><label><span>Número</span><input type="number" min="1" value={n(draft.table_number,selected.table_number)} onChange={e=>setDraft({...draft,table_number:Number(e.target.value)})}/></label><label><span>Capacidad</span><input type="number" min="1" max="30" value={n(draft.capacity,selected.capacity)} onChange={e=>setDraft({...draft,capacity:Number(e.target.value)})}/></label></div><label><span>Tipo</span><select value={String(draft.table_type??selected.table_type)} onChange={e=>{const type=e.target.value,d=metricDefaults(type);setDraft({...draft,table_type:type,width_m:d.w,height_m:d.h});}}><option value="round_guest">Redonda</option><option value="rectangular_guest">Rectangular</option></select></label><div className="venue-v2__form-grid"><label><span>Ancho (m)</span><input type="number" step="0.1" min="0.3" value={n(draft.width_m,n(selected.width_m,1.8))} onChange={e=>setDraft({...draft,width_m:Number(e.target.value)})}/></label><label><span>Largo (m)</span><input type="number" step="0.1" min="0.3" value={n(draft.height_m,n(selected.height_m,1.8))} onChange={e=>setDraft({...draft,height_m:Number(e.target.value)})}/></label></div><div className="venue-v2__form-grid"><label><span>X (m)</span><input type="number" step="0.1" value={n(draft.position_x_m,n(selected.position_x_m))} onChange={e=>setDraft({...draft,position_x_m:Number(e.target.value)})}/></label><label><span>Y (m)</span><input type="number" step="0.1" value={n(draft.position_y_m,n(selected.position_y_m))} onChange={e=>setDraft({...draft,position_y_m:Number(e.target.value)})}/></label></div><label><span>Zona</span><input value={String(draft.zone??selected.zone)} onChange={e=>setDraft({...draft,zone:e.target.value})}/></label><label><span>Rotación · {Math.round(n(draft.rotation,n(selected.rotation)))}°</span><input type="range" min="-180" max="180" step="5" value={n(draft.rotation,n(selected.rotation))} onChange={e=>{const value=Number(e.target.value);setDraft({...draft,rotation:value});localPatch(selected.id,{rotation:value});}}/></label><div className="venue-v3__rotate-row"><button onClick={()=>{const v=n(draft.rotation,n(selected.rotation))-15;setDraft({...draft,rotation:v});localPatch(selected.id,{rotation:v});}}><RotateCcw size={11}/>-15°</button><button onClick={()=>{setDraft({...draft,rotation:0});localPatch(selected.id,{rotation:0});}}>0°</button><button onClick={()=>{setDraft({...draft,rotation:90});localPatch(selected.id,{rotation:90});}}>90°</button><button onClick={()=>{const v=n(draft.rotation,n(selected.rotation))+15;setDraft({...draft,rotation:v});localPatch(selected.id,{rotation:v});}}><RotateCw size={11}/>+15°</button></div><button className="venue-v2__inspector-button" onClick={()=>{const locked=!Boolean(draft.locked??selected.locked);setDraft({...draft,locked});localPatch(selected.id,{locked});}}>{Boolean(draft.locked??selected.locked)?<Unlock size={12}/>:<Lock size={12}/>} {Boolean(draft.locked??selected.locked)?'Desbloquear':'Bloquear posición'}</button><button className="venue-v2__inspector-button is-primary" onClick={saveSelected} disabled={saving}><Save size={12}/>Guardar propiedades</button></>:<p>Selecciona una mesa en el plano.</p>}</aside>}</section>}</div></DashboardLayout>;
 }

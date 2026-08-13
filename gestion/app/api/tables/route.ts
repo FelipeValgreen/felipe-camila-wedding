@@ -2,156 +2,17 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { getDatabaseWriteBlock } from '@/lib/environment-guard';
 
-async function checkAdminAuth(supabase: any) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { authorized: false, status: 401, error: 'UNAUTHORIZED' };
-  const { data: profile } = await supabase.from('admin_profiles').select('role, active').eq('id', user.id).single();
-  if (!profile || !profile.active) return { authorized: false, status: 403, error: 'FORBIDDEN' };
-  return { authorized: true, user, profile };
-}
+async function checkAdminAuth(supabase:any){const{data:{user}}=await supabase.auth.getUser();if(!user)return{authorized:false,status:401,error:'UNAUTHORIZED'};const{data:profile}=await supabase.from('admin_profiles').select('role, active').eq('id',user.id).single();if(!profile||!profile.active)return{authorized:false,status:403,error:'FORBIDDEN'};return{authorized:true,user,profile};}
+function clamp(value:unknown,fallback:number,min:number,max:number){const n=Number(value);if(!Number.isFinite(n))return fallback;return Math.max(min,Math.min(max,n));}
+function writeBlockResponse(){const block=getDatabaseWriteBlock();return block?NextResponse.json(block,{status:409}):null;}
+async function venueDims(supabase:any){const{data}=await supabase.from('event_venue_layouts').select('space_width_m,space_height_m').eq('status','active').order('version',{ascending:false}).limit(1).maybeSingle();return{w:Math.max(1,Number(data?.space_width_m||30)),h:Math.max(1,Number(data?.space_height_m||18))};}
+function metricDefaults(type:string){return type==='rectangular_guest'?{w:2.4,h:.9}:{w:1.8,h:1.8};}
+function geometry(body:any,dims:{w:number;h:number},before?:any){const type=String(body.table_type??before?.table_type??'round_guest'),defaults=metricDefaults(type);let xM=Number(body.position_x_m),yM=Number(body.position_y_m),widthM=Number(body.width_m),heightM=Number(body.height_m);const legacyX=Number(body.position_x),legacyY=Number(body.position_y);if(!Number.isFinite(xM))xM=Number.isFinite(legacyX)?legacyX/100*dims.w:Number(before?.position_x_m??Number(before?.position_x||50)/100*dims.w);if(!Number.isFinite(yM))yM=Number.isFinite(legacyY)?legacyY/100*dims.h:Number(before?.position_y_m??Number(before?.position_y||50)/100*dims.h);if(!Number.isFinite(widthM))widthM=Number(before?.width_m||defaults.w);if(!Number.isFinite(heightM))heightM=Number(before?.height_m||defaults.h);xM=Math.max(0,Math.min(dims.w,xM));yM=Math.max(0,Math.min(dims.h,yM));widthM=Math.max(.3,Math.min(dims.w,widthM));heightM=Math.max(.3,Math.min(dims.h,heightM));return{position_x_m:Number(xM.toFixed(2)),position_y_m:Number(yM.toFixed(2)),width_m:Number(widthM.toFixed(2)),height_m:Number(heightM.toFixed(2)),position_x:Number((xM/dims.w*100).toFixed(2)),position_y:Number((yM/dims.h*100).toFixed(2)),width:clamp(body.width,before?.width||10,6,36),height:clamp(body.height,before?.height||10,6,24)};}
 
-function clampDimension(value: unknown, fallback: number, min: number, max: number) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return fallback;
-  return Math.max(min, Math.min(max, numeric));
-}
+export async function POST(request:Request){try{const blocked=writeBlockResponse();if(blocked)return blocked;const supabase=createClient(),auth=await checkAdminAuth(supabase);if(!auth.authorized)return NextResponse.json({ok:false,error:auth.error},{status:auth.status});if(auth.profile.role==='viewer')return NextResponse.json({ok:false,error:'VIEWER_MUTATION_DENIED'},{status:403});const body=await request.json(),tableNumber=Number(body.table_number),capacity=Number(body.capacity)||10;if(!Number.isInteger(tableNumber)||tableNumber<=0)return NextResponse.json({ok:false,error:'El número de mesa debe ser un entero positivo.'},{status:400});if(!Number.isInteger(capacity)||capacity<1||capacity>30)return NextResponse.json({ok:false,error:'La capacidad debe estar entre 1 y 30 personas.'},{status:400});const{data:existing}=await supabase.from('wedding_tables').select('id').eq('table_number',tableNumber).maybeSingle();if(existing)return NextResponse.json({ok:false,error:`Ya existe la Mesa ${tableNumber}.`},{status:400});const dims=await venueDims(supabase),tableType=String(body.table_type||'round_guest'),geom=geometry({...body,table_type:tableType},dims);const insertData={table_number:tableNumber,name:String(body.name||`Mesa ${tableNumber}`).trim(),capacity,table_type:tableType,zone:String(body.zone||'Principal').trim(),...geom,rotation:clamp(body.rotation,0,-180,180),locked:Boolean(body.locked),notes:body.notes||null};const{data:table,error}=await supabase.from('wedding_tables').insert(insertData).select().single();if(error||!table)return NextResponse.json({ok:false,error:error?.message||'No fue posible crear la mesa.'},{status:400});const warnings:string[]=[];const{error:auditError}=await supabase.from('audit_log').insert({entity_type:'wedding_tables',entity_id:table.id,action:'CREATE_TABLE',after_data:insertData,actor:auth.user.email,origin:'dashboard'});if(auditError)warnings.push('AUDIT_INSERT_FAILED');const{error:outboxError}=await supabase.from('sync_outbox').insert({entity_type:'wedding_tables',entity_id:table.id,operation:'INSERT',payload:table});if(outboxError)warnings.push('OUTBOX_INSERT_FAILED');return NextResponse.json({ok:true,table,warnings,venueDimensions:dims});}catch(error:any){return NextResponse.json({ok:false,error:error?.message||'Error interno.'},{status:500});}}
 
-function writeBlockResponse() {
-  const block = getDatabaseWriteBlock();
-  return block ? NextResponse.json(block, { status: 409 }) : null;
-}
+export async function PATCH(request:Request){try{const blocked=writeBlockResponse();if(blocked)return blocked;const supabase=createClient(),auth=await checkAdminAuth(supabase);if(!auth.authorized)return NextResponse.json({ok:false,error:auth.error},{status:auth.status});if(auth.profile.role==='viewer')return NextResponse.json({ok:false,error:'VIEWER_MUTATION_DENIED'},{status:403});const body=await request.json(),{id,...raw}=body;if(!id||typeof id!=='string')return NextResponse.json({ok:false,error:'ID de mesa inválido.'},{status:400});const{data:before}=await supabase.from('wedding_tables').select('*').eq('id',id).single();if(!before)return NextResponse.json({ok:false,error:'Mesa no encontrada.'},{status:404});const allowed=['table_number','name','capacity','table_type','zone','position_x','position_y','position_x_m','position_y_m','width','height','width_m','height_m','rotation','locked','notes'];const updates:Record<string,any>={};for(const key of allowed)if(key in raw)updates[key]=raw[key];if('table_number'in updates){const n=Number(updates.table_number);if(!Number.isInteger(n)||n<=0)return NextResponse.json({ok:false,error:'El número de mesa debe ser un entero positivo.'},{status:400});if(n!==before.table_number){const{data:duplicate}=await supabase.from('wedding_tables').select('id').eq('table_number',n).neq('id',id).maybeSingle();if(duplicate)return NextResponse.json({ok:false,error:`Ya existe la Mesa ${n}.`},{status:400});}updates.table_number=n;}if('capacity'in updates){const capacity=Number(updates.capacity);if(!Number.isInteger(capacity)||capacity<1||capacity>30)return NextResponse.json({ok:false,error:'La capacidad debe estar entre 1 y 30 personas.'},{status:400});const{count}=await supabase.from('seating_assignments').select('id',{count:'exact',head:true}).eq('table_id',id);if((count||0)>capacity)return NextResponse.json({ok:false,error:`No puedes reducir la capacidad a ${capacity}: actualmente hay ${count} personas asignadas.`},{status:409});updates.capacity=capacity;}
+ const geometryKeys=['position_x','position_y','position_x_m','position_y_m','width','height','width_m','height_m','table_type'];if(geometryKeys.some(key=>key in raw)){const dims=await venueDims(supabase);Object.assign(updates,geometry({...before,...raw},dims,before));}
+ if('rotation'in updates)updates.rotation=clamp(updates.rotation,Number(before.rotation||0),-180,180);if('name'in updates)updates.name=String(updates.name||'').trim()||before.name;if('zone'in updates)updates.zone=String(updates.zone||'').trim()||'Principal';if('table_type'in updates)updates.table_type=String(updates.table_type||before.table_type||'round_guest');if('locked'in updates)updates.locked=Boolean(updates.locked);const{data:table,error}=await supabase.from('wedding_tables').update(updates).eq('id',id).select().single();if(error||!table)return NextResponse.json({ok:false,error:error?.message||'No fue posible actualizar la mesa.'},{status:400});const warnings:string[]=[];const{error:auditError}=await supabase.from('audit_log').insert({entity_type:'wedding_tables',entity_id:id,action:'UPDATE_TABLE',before_data:before,after_data:updates,actor:auth.user.email,origin:'dashboard'});if(auditError)warnings.push('AUDIT_INSERT_FAILED');const{error:outboxError}=await supabase.from('sync_outbox').insert({entity_type:'wedding_tables',entity_id:id,operation:'UPDATE',payload:table});if(outboxError)warnings.push('OUTBOX_INSERT_FAILED');return NextResponse.json({ok:true,table,warnings});}catch(error:any){return NextResponse.json({ok:false,error:error?.message||'Error interno.'},{status:500});}}
 
-export async function POST(request: Request) {
-  try {
-    const blocked = writeBlockResponse();
-    if (blocked) return blocked;
-    const supabase = createClient();
-    const auth = await checkAdminAuth(supabase);
-    if (!auth.authorized) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
-    if (auth.profile.role === 'viewer') return NextResponse.json({ ok: false, error: 'VIEWER_MUTATION_DENIED' }, { status: 403 });
-
-    const body = await request.json();
-    const tableNumber = Number(body.table_number);
-    const capacity = Number(body.capacity) || 10;
-    const posX = Number(body.position_x ?? 50);
-    const posY = Number(body.position_y ?? 50);
-    if (!Number.isInteger(tableNumber) || tableNumber <= 0) return NextResponse.json({ ok: false, error: 'El número de mesa debe ser un entero positivo.' }, { status: 400 });
-    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 30) return NextResponse.json({ ok: false, error: 'La capacidad debe estar entre 1 y 30 personas.' }, { status: 400 });
-    if (!Number.isFinite(posX) || !Number.isFinite(posY)) return NextResponse.json({ ok: false, error: 'Las coordenadas de la mesa no son válidas.' }, { status: 400 });
-
-    const { data: existingNumber } = await supabase.from('wedding_tables').select('id').eq('table_number', tableNumber).maybeSingle();
-    if (existingNumber) return NextResponse.json({ ok: false, error: `Ya existe la Mesa ${tableNumber}.` }, { status: 400 });
-
-    const tableType = String(body.table_type || 'round_guest');
-    const insertData = {
-      table_number: tableNumber,
-      name: String(body.name || `Mesa ${tableNumber}`).trim(),
-      capacity,
-      table_type: tableType,
-      zone: String(body.zone || 'Principal').trim(),
-      position_x: Math.max(4, Math.min(96, posX)),
-      position_y: Math.max(6, Math.min(94, posY)),
-      width: clampDimension(body.width, tableType === 'rectangular_guest' ? 18 : 10, 6, 36),
-      height: clampDimension(body.height, tableType === 'rectangular_guest' ? 8 : 10, 6, 24),
-      rotation: clampDimension(body.rotation, 0, -180, 180),
-      locked: Boolean(body.locked)
-    };
-    const { data: table, error } = await supabase.from('wedding_tables').insert(insertData).select().single();
-    if (error || !table) return NextResponse.json({ ok: false, error: error?.message || 'No fue posible crear la mesa.' }, { status: 400 });
-
-    const warnings: string[] = [];
-    const { error: auditError } = await supabase.from('audit_log').insert({ entity_type: 'wedding_tables', entity_id: table.id, action: 'CREATE_TABLE', after_data: insertData, actor: auth.user.email, origin: 'dashboard' });
-    if (auditError) warnings.push('AUDIT_INSERT_FAILED');
-    const { error: outboxError } = await supabase.from('sync_outbox').insert({ entity_type: 'wedding_tables', entity_id: table.id, operation: 'INSERT', payload: table });
-    if (outboxError) warnings.push('OUTBOX_INSERT_FAILED');
-    return NextResponse.json({ ok: true, table, warnings });
-  } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Error interno.' }, { status: 500 });
-  }
-}
-
-export async function PATCH(request: Request) {
-  try {
-    const blocked = writeBlockResponse();
-    if (blocked) return blocked;
-    const supabase = createClient();
-    const auth = await checkAdminAuth(supabase);
-    if (!auth.authorized) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
-    if (auth.profile.role === 'viewer') return NextResponse.json({ ok: false, error: 'VIEWER_MUTATION_DENIED' }, { status: 403 });
-
-    const body = await request.json();
-    const { id, ...rawUpdates } = body;
-    if (!id || typeof id !== 'string') return NextResponse.json({ ok: false, error: 'ID de mesa inválido.' }, { status: 400 });
-    const { data: beforeTable } = await supabase.from('wedding_tables').select('*').eq('id', id).single();
-    if (!beforeTable) return NextResponse.json({ ok: false, error: 'Mesa no encontrada.' }, { status: 404 });
-
-    const allowedKeys = ['table_number','name','capacity','table_type','zone','position_x','position_y','width','height','rotation','locked','notes'];
-    const updates: Record<string, any> = {};
-    for (const key of allowedKeys) if (key in rawUpdates) updates[key] = rawUpdates[key];
-
-    if ('table_number' in updates) {
-      const tableNumber = Number(updates.table_number);
-      if (!Number.isInteger(tableNumber) || tableNumber <= 0) return NextResponse.json({ ok: false, error: 'El número de mesa debe ser un entero positivo.' }, { status: 400 });
-      if (tableNumber !== beforeTable.table_number) {
-        const { data: duplicate } = await supabase.from('wedding_tables').select('id').eq('table_number', tableNumber).neq('id', id).maybeSingle();
-        if (duplicate) return NextResponse.json({ ok: false, error: `Ya existe la Mesa ${tableNumber}.` }, { status: 400 });
-      }
-      updates.table_number = tableNumber;
-    }
-    if ('capacity' in updates) {
-      const capacity = Number(updates.capacity);
-      if (!Number.isInteger(capacity) || capacity < 1 || capacity > 30) return NextResponse.json({ ok: false, error: 'La capacidad debe estar entre 1 y 30 personas.' }, { status: 400 });
-      const { count } = await supabase.from('seating_assignments').select('id', { count: 'exact', head: true }).eq('table_id', id);
-      if ((count || 0) > capacity) return NextResponse.json({ ok: false, error: `No puedes reducir la capacidad a ${capacity}: actualmente hay ${count} personas asignadas.` }, { status: 409 });
-      updates.capacity = capacity;
-    }
-    if ('position_x' in updates) { const value = Number(updates.position_x); if (!Number.isFinite(value)) return NextResponse.json({ ok: false, error: 'La posición X no es válida.' }, { status: 400 }); updates.position_x = Math.max(4, Math.min(96, value)); }
-    if ('position_y' in updates) { const value = Number(updates.position_y); if (!Number.isFinite(value)) return NextResponse.json({ ok: false, error: 'La posición Y no es válida.' }, { status: 400 }); updates.position_y = Math.max(6, Math.min(94, value)); }
-    if ('width' in updates) updates.width = clampDimension(updates.width, Number(beforeTable.width || 10), 6, 36);
-    if ('height' in updates) updates.height = clampDimension(updates.height, Number(beforeTable.height || 10), 6, 24);
-    if ('rotation' in updates) updates.rotation = clampDimension(updates.rotation, Number(beforeTable.rotation || 0), -180, 180);
-    if ('name' in updates) updates.name = String(updates.name || '').trim() || beforeTable.name;
-    if ('zone' in updates) updates.zone = String(updates.zone || '').trim() || 'Principal';
-    if ('table_type' in updates) updates.table_type = String(updates.table_type || beforeTable.table_type || 'round_guest');
-    if ('locked' in updates) updates.locked = Boolean(updates.locked);
-
-    const { data: table, error } = await supabase.from('wedding_tables').update(updates).eq('id', id).select().single();
-    if (error || !table) return NextResponse.json({ ok: false, error: error?.message || 'No fue posible actualizar la mesa.' }, { status: 400 });
-    const warnings: string[] = [];
-    const { error: auditError } = await supabase.from('audit_log').insert({ entity_type: 'wedding_tables', entity_id: id, action: 'UPDATE_TABLE', before_data: beforeTable, after_data: updates, actor: auth.user.email, origin: 'dashboard' });
-    if (auditError) warnings.push('AUDIT_INSERT_FAILED');
-    const { error: outboxError } = await supabase.from('sync_outbox').insert({ entity_type: 'wedding_tables', entity_id: id, operation: 'UPDATE', payload: table });
-    if (outboxError) warnings.push('OUTBOX_INSERT_FAILED');
-    return NextResponse.json({ ok: true, table, warnings });
-  } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Error interno.' }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    const blocked = writeBlockResponse();
-    if (blocked) return blocked;
-    const supabase = createClient();
-    const auth = await checkAdminAuth(supabase);
-    if (!auth.authorized) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
-    if (auth.profile.role !== 'owner') return NextResponse.json({ ok: false, error: 'ONLY_OWNER_CAN_DELETE_TABLES' }, { status: 403 });
-
-    const id = new URL(request.url).searchParams.get('id');
-    if (!id) return NextResponse.json({ ok: false, error: 'ID de mesa faltante.' }, { status: 400 });
-    const { data: beforeTable } = await supabase.from('wedding_tables').select('*').eq('id', id).single();
-    if (!beforeTable) return NextResponse.json({ ok: false, error: 'Mesa no encontrada.' }, { status: 404 });
-    const { count } = await supabase.from('seating_assignments').select('id', { count: 'exact', head: true }).eq('table_id', id);
-    if ((count || 0) > 0) return NextResponse.json({ ok: false, error: `La mesa tiene ${count} persona(s). Debes reasignarlas antes de eliminarla.` }, { status: 409 });
-    const { error: deleteError } = await supabase.from('wedding_tables').delete().eq('id', id);
-    if (deleteError) return NextResponse.json({ ok: false, error: deleteError.message }, { status: 400 });
-    const warnings: string[] = [];
-    const { error: auditError } = await supabase.from('audit_log').insert({ entity_type: 'wedding_tables', entity_id: id, action: 'DELETE_TABLE', before_data: beforeTable, actor: auth.user.email, origin: 'dashboard' });
-    if (auditError) warnings.push('AUDIT_INSERT_FAILED');
-    const { error: outboxError } = await supabase.from('sync_outbox').insert({ entity_type: 'wedding_tables', entity_id: id, operation: 'DELETE', payload: beforeTable });
-    if (outboxError) warnings.push('OUTBOX_INSERT_FAILED');
-    return NextResponse.json({ ok: true, deleted: true, warnings });
-  } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Error interno.' }, { status: 500 });
-  }
-}
+export async function DELETE(request:Request){try{const blocked=writeBlockResponse();if(blocked)return blocked;const supabase=createClient(),auth=await checkAdminAuth(supabase);if(!auth.authorized)return NextResponse.json({ok:false,error:auth.error},{status:auth.status});if(auth.profile.role!=='owner')return NextResponse.json({ok:false,error:'ONLY_OWNER_CAN_DELETE_TABLES'},{status:403});const id=new URL(request.url).searchParams.get('id');if(!id)return NextResponse.json({ok:false,error:'ID de mesa faltante.'},{status:400});const{data:before}=await supabase.from('wedding_tables').select('*').eq('id',id).single();if(!before)return NextResponse.json({ok:false,error:'Mesa no encontrada.'},{status:404});const{count}=await supabase.from('seating_assignments').select('id',{count:'exact',head:true}).eq('table_id',id);if((count||0)>0)return NextResponse.json({ok:false,error:`La mesa tiene ${count} persona(s). Debes reasignarlas antes de eliminarla.`},{status:409});const{error}=await supabase.from('wedding_tables').delete().eq('id',id);if(error)return NextResponse.json({ok:false,error:error.message},{status:400});const warnings:string[]=[];const{error:auditError}=await supabase.from('audit_log').insert({entity_type:'wedding_tables',entity_id:id,action:'DELETE_TABLE',before_data:before,actor:auth.user.email,origin:'dashboard'});if(auditError)warnings.push('AUDIT_INSERT_FAILED');const{error:outboxError}=await supabase.from('sync_outbox').insert({entity_type:'wedding_tables',entity_id:id,operation:'DELETE',payload:before});if(outboxError)warnings.push('OUTBOX_INSERT_FAILED');return NextResponse.json({ok:true,deleted:true,warnings});}catch(error:any){return NextResponse.json({ok:false,error:error?.message||'Error interno.'},{status:500});}}
