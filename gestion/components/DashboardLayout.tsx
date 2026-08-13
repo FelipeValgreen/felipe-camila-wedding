@@ -23,6 +23,8 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 import PlanningCopilot from '@/components/PlanningCopilot';
+import VenueEditController from '@/components/VenueEditController';
+import SeatingIntelligenceDock from '@/components/SeatingIntelligenceDock';
 
 interface LayoutProps { children: React.ReactNode; }
 type NavItem = { label: string; href: string; icon: LucideIcon; description: string; };
@@ -179,6 +181,8 @@ export default function DashboardLayout({ children }: LayoutProps) {
       <header className="workspace-contextbar"><div><span>{pageContext.eyebrow}</span><strong>{pageContext.title}</strong></div><div className="workspace-context-meta"><span>23 · 10 · 26</span><span className="workspace-context-dot"/><span>{daysUntilWedding === 0 ? 'Hoy es el día' : `Faltan ${daysUntilWedding} días`}</span></div></header>
       <div className="workspace-main-inner">{children}</div>
     </main>
+    {pathname?.startsWith('/dashboard/venue') && <VenueEditController/>}
+    {pathname?.startsWith('/dashboard/tables') && <SeatingIntelligenceDock/>}
     <PlanningCopilot currentPath={pathname || '/dashboard'}/>
   </div>;
 }
