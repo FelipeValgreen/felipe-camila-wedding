@@ -26,6 +26,7 @@ import PlanningCopilot from '@/components/PlanningCopilot';
 import VenueEditController from '@/components/VenueEditController';
 import SeatingIntelligenceDock from '@/components/SeatingIntelligenceDock';
 import ManualTasksDock from '@/components/ManualTasksDock';
+import GuestQuickEditorDock from '@/components/GuestQuickEditorDock';
 
 interface LayoutProps { children: React.ReactNode; }
 type NavItem = { label: string; href: string; icon: LucideIcon; description: string; };
@@ -185,6 +186,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
     {pathname?.startsWith('/dashboard/venue') && <VenueEditController/>}
     {pathname?.startsWith('/dashboard/tables') && <SeatingIntelligenceDock/>}
     {pathname?.startsWith('/dashboard/planning') && <ManualTasksDock/>}
+    {pathname?.startsWith('/dashboard/guests') && <GuestQuickEditorDock/>}
     <PlanningCopilot currentPath={pathname || '/dashboard'}/>
   </div>;
 }
