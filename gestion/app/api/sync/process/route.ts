@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
+import { getExternalSyncBlock } from '@/lib/environment-guard';
 import { processSyncOutbox } from '@/lib/sync-outbox';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export async function POST() {
+  const environmentBlock = getExternalSyncBlock();
+  if (environmentBlock) {
+    return NextResponse.json(environmentBlock, { status: 403 });
+  }
+
   try {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
