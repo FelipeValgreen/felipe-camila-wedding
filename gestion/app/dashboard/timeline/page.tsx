@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Edit3, Loader2, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react';
 import './timeline-v2.css';
+import './timeline-edit.css';
 
 interface TimelineItem {
   id: string;
