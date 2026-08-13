@@ -140,7 +140,7 @@ function placeSocial(tables:Table[],units:Unit[],rules:Rules){
     const candidates=result.filter((candidate)=>remaining(candidate)>=unit.guests.length);
     if(!candidates.length){unplaced.push(unit);return;}
     const ranked=candidates.map((candidate)=>{
-      const affinities=new Set(candidate.guests.map(affinityForGuest));
+      const affinities=new Set<string>(candidate.guests.map((guest)=>affinityForGuest(guest)));
       const diversity=affinities.has(unit.affinity)?0:4;
       const hardAffinity=unit.hard&&candidate.affinity===unit.affinity?4:0;
       const load=(candidate.guests.length/candidate.table.capacity)*-2;
@@ -167,7 +167,7 @@ function scoreScenario(tables:ProposedTable[],groups:Group[],guests:Guest[],unpl
   const utilization=capacity?seated/capacity:0;
   const cohesionValues=tables.filter((table)=>table.guests.length>1).map((table)=>{const counts=new Map<string,number>();table.guests.forEach((guest)=>{const key=affinityForGuest(guest);counts.set(key,(counts.get(key)||0)+1);});const max=Math.max(...counts.values());return max/table.guests.length;});
   const cohesion=cohesionValues.length?cohesionValues.reduce((a,b)=>a+b,0)/cohesionValues.length:1;
-  const mixValues=tables.filter((table)=>table.guests.length>1).map((table)=>new Set(table.guests.map(affinityForGuest)).size);
+  const mixValues=tables.filter((table)=>table.guests.length>1).map((table)=>new Set<string>(table.guests.map((guest)=>affinityForGuest(guest))).size);
   const mix=mixValues.length?clamp((mixValues.reduce((a,b)=>a+b,0)/mixValues.length-1)/3,0,1):0;
   const hardScore=hardGroups.length?hardPreserved/hardGroups.length:1; const probableScore=probable.length?probablePreserved/probable.length:1;
   const placementPenalty=guests.length?unplaced/guests.length:0;
@@ -182,7 +182,7 @@ function buildScenarios(tables:Table[],guests:Guest[],groups:Group[],rules:Rules
     ['balanced','B · Equilibrada','Mantiene vínculos y busca mesas completas sin aislar ramas innecesariamente.',placeBalanced],
     ['social','C · Mezcla social','Conserva vínculos fuertes pero mezcla afinidades para una mesa más social.',placeSocial],
   ];
-  return builders.map(([key,label,description,builder])=>{const built=builder(tables,units,rules);return{key,label,description,tables:built.tables,unplaced:built.unplaced.reduce((sum,unit)=>sum+unit.guests.length,0),score:scoreScenario(built.tables,groups,guests,built.unplaced.reduce((sum,unit)=>sum+unit.guests.length,0))};});
+  return builders.map(([key,label,description,builder])=>{const built=builder(tables,units,rules);const unplaced=built.unplaced.reduce((sum,unit)=>sum+unit.guests.length,0);return{key,label,description,tables:built.tables,unplaced,score:scoreScenario(built.tables,groups,guests,unplaced)};});
 }
 
 export default function SeatingIntelligenceDock(){
