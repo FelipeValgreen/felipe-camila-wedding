@@ -14,21 +14,26 @@ async function googleAccessToken(email: string, privateKey: string) {
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
   const claims = Buffer.from(JSON.stringify({ iss: email, scope: 'https://www.googleapis.com/auth/spreadsheets.readonly', aud: 'https://oauth2.googleapis.com/token', exp: now + 3600, iat: now })).toString('base64url');
   const unsigned = `${header}.${claims}`;
-  const signer = crypto.createSign('RSA-SHA256'); signer.update(unsigned);
+  const signer = crypto.createSign('RSA-SHA256');
+  signer.update(unsigned);
   const signature = signer.sign(formatPrivateKey(privateKey), 'base64url');
-  const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth-type:jwt-bearer'.replace('oauth-type','oauth-type'), assertion: `${unsigned}.${signature}` }), cache: 'no-store' });
-  if (!response.ok) {
-    const retry = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${unsigned}.${signature}` }), cache: 'no-store' });
-    if (!retry.ok) throw new Error(`GOOGLE_OAUTH_FAILED_${retry.status}`);
-    const payload = await retry.json(); if (!payload.access_token) throw new Error('GOOGLE_OAUTH_TOKEN_MISSING'); return payload.access_token as string;
-  }
-  const payload = await response.json(); if (!payload.access_token) throw new Error('GOOGLE_OAUTH_TOKEN_MISSING'); return payload.access_token as string;
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${unsigned}.${signature}` }),
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`GOOGLE_OAUTH_FAILED_${response.status}`);
+  const payload = await response.json();
+  if (!payload.access_token) throw new Error('GOOGLE_OAUTH_TOKEN_MISSING');
+  return payload.access_token as string;
 }
 
 async function readRange(spreadsheetId: string, token: string, range: string) {
   const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?majorDimension=ROWS`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
   if (!response.ok) throw new Error(`GOOGLE_SHEETS_READ_FAILED_${response.status}`);
-  const payload = await response.json(); return (payload.values || []) as string[][];
+  const payload = await response.json();
+  return (payload.values || []) as string[][];
 }
 
 const VALID_ATTENDANCE = new Set(['Asiste', 'No asiste']);
@@ -70,7 +75,8 @@ export async function GET() {
 
     confirmedRows.forEach((row, index) => {
       if (index === 0 && looksLikeHeader) return;
-      const name = String(row[0] || '').trim(); const attendance = String(row[1] || '').trim();
+      const name = String(row[0] || '').trim();
+      const attendance = String(row[1] || '').trim();
       if (!name && VALID_ATTENDANCE.has(attendance)) dataQuality.push({ code: 'CONFIRMED_EMPTY_NAME', message: `Hay una fila marcada “${attendance}” sin nombre. No se cuenta hasta identificar a la persona.`, row: index + 1 });
     });
 
@@ -91,12 +97,17 @@ export async function GET() {
     const incomingAssociated = incomingAttending.filter((person) => Boolean(person.guestId));
     const incomingWithoutMaster = incomingAttending.filter((person) => !person.guestId);
     const incomingDietary = incomingAttending.filter((person) => person.dietaryType && person.dietaryType !== 'Ninguna');
-    const latestSheet = attending[attending.length - 1] || null; const latestIncoming = incomingAttending[incomingAttending.length - 1] || null;
+    const latestSheet = attending[attending.length - 1] || null;
+    const latestIncoming = incomingAttending[incomingAttending.length - 1] || null;
 
     const groupMembers = groupRows.slice(1).filter((row) => row[0] && row[2]).map((row, index) => ({ rowNumber: index + 2, groupId: row[0] || '', groupName: row[1] || '', person: row[2] || '', linkType: row[3] || '', relation: row[4] || '', rsvpStatus: row[5] || '', tableAssigned: row[6] || '', sourceNote: row[7] || '' }));
     const grouped = Array.from(groupMembers.reduce((map, member) => {
       const current = map.get(member.groupId) || { groupId: member.groupId, groupName: member.groupName, linkType: member.linkType, confirmed: member.linkType !== 'Por validar', people: [] as string[], sourceNotes: [] as string[] };
-      current.people.push(member.person); if (member.sourceNote && !current.sourceNotes.includes(member.sourceNote)) current.sourceNotes.push(member.sourceNote); if (member.linkType === 'Por validar') current.confirmed = false; map.set(member.groupId, current); return map;
+      current.people.push(member.person);
+      if (member.sourceNote && !current.sourceNotes.includes(member.sourceNote)) current.sourceNotes.push(member.sourceNote);
+      if (member.linkType === 'Por validar') current.confirmed = false;
+      map.set(member.groupId, current);
+      return map;
     }, new Map<string, { groupId: string; groupName: string; linkType: string; confirmed: boolean; people: string[]; sourceNotes: string[] }>()).values());
 
     return NextResponse.json({
