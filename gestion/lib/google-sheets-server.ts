@@ -49,6 +49,13 @@ export async function googleSheetsAccessToken(scope = 'https://www.googleapis.co
   return payload.access_token as string;
 }
 
+async function operationalSheetContext() {
+  const spreadsheetId = operationalSpreadsheetId();
+  if (!spreadsheetId) throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID_MISSING');
+  const token = await googleSheetsAccessToken();
+  return { spreadsheetId, token };
+}
+
 export async function readSheetRange(range: string) {
   const spreadsheetId = operationalSpreadsheetId();
   if (!spreadsheetId) throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID_MISSING');
@@ -63,9 +70,7 @@ export async function readSheetRange(range: string) {
 }
 
 export async function writeSheetRange(range: string, values: unknown[][]) {
-  const spreadsheetId = operationalSpreadsheetId();
-  if (!spreadsheetId) throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID_MISSING');
-  const token = await googleSheetsAccessToken();
+  const { spreadsheetId, token } = await operationalSheetContext();
   const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -77,9 +82,7 @@ export async function writeSheetRange(range: string, values: unknown[][]) {
 }
 
 export async function clearSheetRange(range: string) {
-  const spreadsheetId = operationalSpreadsheetId();
-  if (!spreadsheetId) throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID_MISSING');
-  const token = await googleSheetsAccessToken();
+  const { spreadsheetId, token } = await operationalSheetContext();
   const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:clear`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -88,4 +91,45 @@ export async function clearSheetRange(range: string) {
   });
   if (!response.ok) throw new Error(`GOOGLE_SHEETS_CLEAR_FAILED_${response.status}`);
   return response.json();
+}
+
+async function sheetIdByTitle(sheetTitle: string, spreadsheetId: string, token: string) {
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets(properties(sheetId,title))`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`GOOGLE_SHEETS_METADATA_FAILED_${response.status}`);
+  const payload = await response.json();
+  const sheet = (payload.sheets || []).find((item: any) => item?.properties?.title === sheetTitle);
+  if (!sheet) throw new Error(`GOOGLE_SHEET_NOT_FOUND_${sheetTitle}`);
+  return Number(sheet.properties.sheetId);
+}
+
+export async function insertSheetRow(sheetTitle: string, rowNumber: number, values: unknown[]) {
+  if (!Number.isInteger(rowNumber) || rowNumber < 2) throw new Error('INVALID_ROW_NUMBER');
+  const { spreadsheetId, token } = await operationalSheetContext();
+  const sheetId = await sheetIdByTitle(sheetTitle, spreadsheetId, token);
+  const startIndex = rowNumber - 1;
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requests: [{ insertDimension: { range: { sheetId, dimension: 'ROWS', startIndex, endIndex: startIndex + 1 }, inheritFromBefore: true } }] }),
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`GOOGLE_SHEETS_INSERT_ROW_FAILED_${response.status}`);
+  await writeSheetRange(`${sheetTitle}!A${rowNumber}:${String.fromCharCode(64 + Math.max(1, values.length))}${rowNumber}`, [values]);
+}
+
+export async function deleteSheetRow(sheetTitle: string, rowNumber: number) {
+  if (!Number.isInteger(rowNumber) || rowNumber < 2) throw new Error('INVALID_ROW_NUMBER');
+  const { spreadsheetId, token } = await operationalSheetContext();
+  const sheetId = await sheetIdByTitle(sheetTitle, spreadsheetId, token);
+  const startIndex = rowNumber - 1;
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requests: [{ deleteDimension: { range: { sheetId, dimension: 'ROWS', startIndex, endIndex: startIndex + 1 } } }] }),
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`GOOGLE_SHEETS_DELETE_ROW_FAILED_${response.status}`);
 }
