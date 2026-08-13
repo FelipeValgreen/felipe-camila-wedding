@@ -165,7 +165,7 @@ function scoreScenario(tables:ProposedTable[],groups:Group[],guests:Guest[],unpl
   const probablePreserved=probable.filter((group)=>groupPreserved(group,tables)).length;
   const capacity=tables.reduce((sum,table)=>sum+table.table.capacity,0); const seated=tables.reduce((sum,table)=>sum+table.guests.length,0);
   const utilization=capacity?seated/capacity:0;
-  const cohesionValues=tables.filter((table)=>table.guests.length>1).map((table)=>{const counts=new Map<string,number>();table.guests.forEach((guest)=>{const key=affinityForGuest(guest);counts.set(key,(counts.get(key)||0)+1);});const max=Math.max(...counts.values());return max/table.guests.length;});
+  const cohesionValues=tables.filter((table)=>table.guests.length>1).map((table)=>{const counts=new Map<string,number>();table.guests.forEach((guest)=>{const key=affinityForGuest(guest);counts.set(key,(counts.get(key)||0)+1);});const max=Math.max(...Array.from(counts.values()));return max/table.guests.length;});
   const cohesion=cohesionValues.length?cohesionValues.reduce((a,b)=>a+b,0)/cohesionValues.length:1;
   const mixValues=tables.filter((table)=>table.guests.length>1).map((table)=>new Set<string>(table.guests.map((guest)=>affinityForGuest(guest))).size);
   const mix=mixValues.length?clamp((mixValues.reduce((a,b)=>a+b,0)/mixValues.length-1)/3,0,1):0;
