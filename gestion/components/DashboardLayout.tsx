@@ -25,6 +25,7 @@ import { createClient } from '@/lib/supabase-browser';
 import PlanningCopilot from '@/components/PlanningCopilot';
 import VenueEditController from '@/components/VenueEditController';
 import SeatingIntelligenceDock from '@/components/SeatingIntelligenceDock';
+import ManualTasksDock from '@/components/ManualTasksDock';
 
 interface LayoutProps { children: React.ReactNode; }
 type NavItem = { label: string; href: string; icon: LucideIcon; description: string; };
@@ -183,6 +184,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
     </main>
     {pathname?.startsWith('/dashboard/venue') && <VenueEditController/>}
     {pathname?.startsWith('/dashboard/tables') && <SeatingIntelligenceDock/>}
+    {pathname?.startsWith('/dashboard/planning') && <ManualTasksDock/>}
     <PlanningCopilot currentPath={pathname || '/dashboard'}/>
   </div>;
 }
