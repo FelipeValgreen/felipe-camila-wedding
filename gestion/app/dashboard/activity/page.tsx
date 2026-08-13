@@ -2,122 +2,61 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { createClient } from '@/lib/supabase-browser';
-import { Activity as ActivityIcon, Filter, Clock, User, ShieldCheck } from 'lucide-react';
+import { Activity as ActivityIcon, Database, Globe2, Loader2, RefreshCw, ShieldCheck, UserRound } from 'lucide-react';
+import './activity-v2.css';
 
 interface AuditItem {
   id: string;
   entity_type: string;
   entity_id: string;
   action: string;
-  before_data: any;
-  after_data: any;
+  before_data: unknown;
+  after_data: unknown;
   actor: string | null;
   origin: string;
   created_at: string;
 }
 
-export default function ActivityPage() {
-  const [logs, setLogs] = useState<AuditItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filterOrigin, setFilterOrigin] = useState('all');
-
-  async function loadLogs() {
-    setLoading(true);
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('audit_log').select('*').order('created_at', { ascending: false }).limit(100);
-      if (!error && data) {
-        setLogs(data as AuditItem[]);
-      }
-    } catch (err) {
-      console.error('Error loading audit log:', err);
-    } finally {
-      setLoading(false);
-    }
+function friendlyAction(value:string){
+  const labels:Record<string,string>={CREATE_TABLE:'Mesa creada',UPDATE_TABLE:'Mesa actualizada',DELETE_TABLE:'Mesa eliminada',ASSIGN_GUEST:'Invitado asignado',UNASSIGN_GUEST:'Invitado quitado de mesa',CREATE_GUEST:'Invitado creado',UPDATE_GUEST:'Ficha actualizada'};
+  return labels[value]||value.replaceAll('_',' ').toLowerCase().replace(/^./,(char)=>char.toUpperCase());
+}
+function friendlyEntity(value:string){
+  const labels:Record<string,string>={wedding_guests:'Invitados',wedding_tables:'Mesas',seating_assignments:'Distribución',rsvp_responses:'RSVP',rsvp_response_members:'RSVP',expenses:'Presupuesto',vendors:'Proveedores'};
+  return labels[value]||value.replaceAll('_',' ');
+}
+function formatDate(value:string){
+  try{return new Intl.DateTimeFormat('es-CL',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'America/Santiago'}).format(new Date(value));}catch{return value;}
+}
+function summary(log:AuditItem){
+  if(!log.after_data)return 'Sin detalle adicional.';
+  if(typeof log.after_data==='object'&&log.after_data!==null){
+    const data=log.after_data as Record<string,unknown>;
+    const preferred=['name','first_name','concept','status','table_number','capacity','attendance_status'];
+    const parts=preferred.filter((key)=>data[key]!==undefined&&data[key]!==null).slice(0,3).map((key)=>`${key.replaceAll('_',' ')}: ${String(data[key])}`);
+    if(parts.length)return parts.join(' · ');
   }
+  return 'Cambio registrado y disponible en auditoría.';
+}
 
-  useEffect(() => {
-    loadLogs();
-  }, []);
+export default function ActivityPage(){
+  const [logs,setLogs]=useState<AuditItem[]>([]);const [loading,setLoading]=useState(true);const [filterOrigin,setFilterOrigin]=useState('all');const [refreshing,setRefreshing]=useState(false);
+  async function loadLogs(manual=false){if(manual)setRefreshing(true);setLoading(!manual);try{const supabase=createClient();const {data,error}=await supabase.from('audit_log').select('*').order('created_at',{ascending:false}).limit(100);if(error)throw error;setLogs((data||[]) as AuditItem[]);}finally{setLoading(false);setRefreshing(false);}}
+  useEffect(()=>{loadLogs();},[]);
+  const origins=useMemo(()=>Array.from(new Set(logs.map((log)=>log.origin).filter(Boolean))),[logs]);
+  const filtered=useMemo(()=>logs.filter((log)=>filterOrigin==='all'||log.origin===filterOrigin),[logs,filterOrigin]);
+  const today=useMemo(()=>{const now=new Date();return logs.filter((log)=>{const d=new Date(log.created_at);return d.toDateString()===now.toDateString();}).length;},[logs]);
 
-  const filteredLogs = logs.filter(l => filterOrigin === 'all' || l.origin === filterOrigin);
-
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
-          <div>
-            <span className="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-semibold block">
-              Registro de Auditoría Integral
-            </span>
-            <h1 className="font-serif text-3xl text-[var(--text-primary)] mt-1">
-              Actividad del Sistema
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <select
-              value={filterOrigin}
-              onChange={(e) => setFilterOrigin(e.target.value)}
-              className="bg-[var(--bg-card)] border border-[var(--border-color)] px-3 py-2 text-xs focus:outline-none"
-            >
-              <option value="all">Todos los orígenes</option>
-              <option value="dashboard">Dashboard</option>
-              <option value="website">Web pública</option>
-              <option value="sheets">Google Sheets</option>
-              <option value="system">Sistema</option>
-              <option value="import">Importación</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Activity Table */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Fecha & Hora</th>
-                <th>Acción</th>
-                <th>Entidad</th>
-                <th>Origen</th>
-                <th>Actor</th>
-                <th>Detalles de Cambio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-8 text-[var(--text-secondary)]">Cargando registro de actividad...</td>
-                </tr>
-              ) : filteredLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-8 text-[var(--text-secondary)]">No hay eventos de auditoría registrados.</td>
-                </tr>
-              ) : (
-                filteredLogs.map((log) => (
-                  <tr key={log.id}>
-                    <td className="text-xs font-mono">{new Date(log.created_at).toLocaleString('es-CL')}</td>
-                    <td className="font-semibold text-[var(--text-primary)]">{log.action}</td>
-                    <td><span className="badge badge-pending">{log.entity_type}</span></td>
-                    <td>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-gold)]">
-                        {log.origin}
-                      </span>
-                    </td>
-                    <td>{log.actor || 'Felipe & Camila'}</td>
-                    <td className="text-xs text-[var(--text-secondary)] font-mono">
-                      {log.after_data ? JSON.stringify(log.after_data) : '-'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </DashboardLayout>
-  );
+  return <DashboardLayout><div className="activity-v2">
+    <section className="activity-v2__hero"><div><span className="activity-v2__eyebrow">Trazabilidad</span><h1>Actividad</h1><p>Una línea de tiempo legible de los cambios importantes. La auditoría técnica sigue existiendo, pero la interfaz prioriza entender qué pasó.</p></div><button type="button" onClick={()=>loadLogs(true)} disabled={refreshing}><RefreshCw size={14} className={refreshing?'animate-spin':''}/>{refreshing?'Actualizando…':'Actualizar'}</button></section>
+    <section className="activity-v2__metrics"><article><span>Eventos visibles</span><strong>{logs.length}</strong><small>últimos registros</small></article><article><span>Hoy</span><strong>{today}</strong><small>movimientos registrados</small></article><article><span>Orígenes</span><strong>{origins.length}</strong><small>fuentes de cambios</small></article><article><span>Auditoría</span><strong className="activity-v2__word">Activa</strong><small>trazabilidad disponible</small></article></section>
+    <section className="activity-v2__toolbar"><div className="activity-v2__filters"><button className={filterOrigin==='all'?'is-active':''} onClick={()=>setFilterOrigin('all')}>Todos</button>{origins.map((origin)=><button key={origin} className={filterOrigin===origin?'is-active':''} onClick={()=>setFilterOrigin(origin)}>{origin}</button>)}</div><span><ShieldCheck size={14}/>Registro de auditoría</span></section>
+    {loading?<div className="activity-v2__loading"><Loader2 className="animate-spin" size={20}/>Cargando actividad…</div>:<section className="activity-v2__timeline">{filtered.map((log)=>{
+      const Icon=log.origin==='website'?Globe2:log.origin==='dashboard'?UserRound:log.origin==='system'||log.origin==='sheets'?Database:ActivityIcon;
+      return <article key={log.id} className="activity-v2__event"><span className="activity-v2__icon"><Icon size={15}/></span><div className="activity-v2__event-main"><div className="activity-v2__event-top"><div><strong>{friendlyAction(log.action)}</strong><span>{friendlyEntity(log.entity_type)}</span></div><time>{formatDate(log.created_at)}</time></div><p>{summary(log)}</p><footer><span>{log.origin||'sistema'}</span><span>{log.actor||'Sistema'}</span></footer></div></article>;
+    })}{!filtered.length&&<div className="activity-v2__empty">No hay actividad en este filtro.</div>}</section>}
+  </div></DashboardLayout>;
 }

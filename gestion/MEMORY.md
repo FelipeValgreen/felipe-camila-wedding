@@ -1,383 +1,281 @@
 # MEMORY.md — Memoria durable del Centro de Gestión
 
-**Versión:** 1.1 RC  
-**Fecha:** 12 de agosto de 2026
-
----
+**Versión:** 2.0  
+**Fecha:** 13 de agosto de 2026
 
 ## 1. Proyecto
 
-- Caso actual: Felipe & Camila
-- Fecha: 23 de octubre de 2026
+- Caso real: Felipe & Camila
+- Fecha del evento: 23 de octubre de 2026
+- Zona horaria: `America/Santiago`
 - Repo: `FelipeValgreen/felipe-camila-wedding`
-- App: `gestion/`
+- App de gestión: `gestion/`
 - Producción: `https://gestion.felipeycami.cl/dashboard`
 
----
+El repositorio es público. Nunca guardar aquí PII de invitados, teléfonos, alergias, relaciones nominales, secretos o datos financieros privados.
 
-## 2. Objetivo
+## 2. Objetivo permanente
 
-Evolucionar el Centro de Gestión hacia un producto integral de planificación y operación de bodas.
+Convertir el Centro de Gestión en un Wedding Planning OS reutilizable sin reconstruir desde cero.
 
-No reconstruir desde cero.
-
----
-
-## 3. Benchmark externo
-
-El sistema visual compartido por el usuario es **sólo un benchmark**.
-
-### Recordar
-
-- no es nuestra marca;
-- no es nuestro nombre;
-- su asistente no es nuestro asistente;
-- sus colores no son nuestros colores;
-- su navegación no debe copiarse literalmente;
-- sus presets no deben copiarse.
-
-### Sí podemos aprender
-
-- modularidad;
-- invitados/mesas/salón conectados;
-- importación;
-- proveedores;
-- presets;
-- ayuda contextual;
-- lenguaje simple.
-
----
-
-## 4. Decisión de diferenciación
+Prioridad actual:
 
 ```text
-Similar en capacidad.
-Diferente en identidad.
-Mejor en integración.
+primero excelente para Felipe & Camila
+→ después reusable para un segundo matrimonio
+→ recién después SaaS comercial completo
 ```
 
-Nuestro producto debe ser claramente reconocible como independiente.
-
----
-
-## 5. Arquitectura
+## 3. Arquitectura de datos
 
 ```text
-Supabase = fuente canónica
-Google Sheets = espejo
+Supabase = fuente canónica estructurada
+Google Sheets = espejo / fuente transitoria donde corresponda
 ```
 
----
+La UI debe distinguir cuando mezcla un consolidado de Sheets con un delta live de Supabase.
 
-## 6. Stack
+## 4. Reglas de dominio no negociables
 
-- Next.js 14
-- React 18
-- TypeScript 5
-- Tailwind/PostCSS
-- Supabase
-- Vercel
-- Sheets
-- GitHub
+- respuesta RSVP ≠ una persona necesariamente;
+- conservar evidencia original en `rsvp_responses`;
+- personas individuales en `rsvp_response_members` / `wedding_guests`;
+- no existe +1 implícito;
+- no fuzzy matching automático;
+- asistencia y reconfirmación son estados distintos;
+- sólo `attending` puede sentarse;
+- capacidad de mesa es dura;
+- restricciones alimentarias son sensibles;
+- relaciones conocidas pueden ser reglas fuertes;
+- relaciones `probable` nunca se convierten en parentesco confirmado por inferencia;
+- IA propone antes de aplicar;
+- cambios sensibles requieren confirmación explícita.
 
----
+## 5. Entidades canónicas relevantes
 
-## 7. Dominio
-
-### RSVP
-
-Respuesta ≠ persona.
-
-### Personas
-
-Una ficha individual por asistente.
-
-### +1
-
-No existe implícito.
-
-### Matching
-
-No fuzzy automático.
-
-### Asistencia
-
-Independiente de reconfirmación.
-
-### Mesas
-
-Sólo `attending`.
-
-No superar capacidad.
-
-### Restricciones
-
-Sensibles.
-
----
-
-## 8. Módulos objetivo
-
-- Inicio
-- Planificación
-- Presupuesto
-- Proveedores
-- Invitados
-- Mesas
-- Salón
-- Cronograma
-- Música
-- Documentos
-- Actividad
-- Configuración
-
----
-
-## 9. Asistente
-
-Nombre provisional:
+Además de la base histórica, la V2 incorpora:
 
 ```text
-Asistente de planificación
+event_tasks
+guest_relationship_groups
+guest_relationship_members
+wedding_guests.family_branch
+event_venue_layouts
+event_budget_items
+event_budget_payments
+event_timeline_items
+event_music_items
+event_documents
 ```
 
-No usar nombres del benchmark.
+Los datos privados usados para poblar relaciones o ramas familiares viven sólo en la base privada, no en migraciones públicas.
 
-Identidad definitiva pendiente.
+## 6. Invitados → Relaciones → Mesas → Salón
 
-Principio:
+Éste es un solo flujo conectado:
 
 ```text
-sugiere
-explica
-prepara
-no ejecuta cambios sensibles sin aprobación
+confirmado conocido
+→ ficha individual
+→ relación / rama explícita
+→ propuesta de mesa
+→ asignación real
+→ ubicación física en salón
 ```
 
----
+Un confirmado sin ficha puede entrar a Seating Intelligence como registro virtual de planificación, pero no puede persistirse en `seating_assignments` hasta conciliar su ficha.
 
-## 10. Invitados + Mesas + Salón
+## 7. Relaciones
 
-Deben estar conectados.
+Fuente canónica:
+
+- `guest_relationship_groups`
+- `guest_relationship_members`
+
+Estados:
 
 ```text
-persona
-→ asistencia
-→ mesa
-→ capacidad
-→ plano
+confirmed = relación conocida / regla fuerte
+probable  = vínculo por validar / preferencia blanda
 ```
 
----
+`wedding_guests.family_branch` permite afinidad explícita como “rama mamá/papá” sin inventar parentescos.
 
-## 11. Salón
+## 8. Mesas y Seating Intelligence
 
-Separar:
+La V2 dispone de:
+
+- CRUD de mesas;
+- banco de invitados;
+- drag & drop + selector alternativo;
+- asignar/quitar personas;
+- capacidad dura;
+- detección de grupos conocidos separados;
+- Preview persistente local;
+- escenarios IA: Cohesión, Equilibrada y Mezcla social;
+- score explicable;
+- mesas virtuales propuestas si falta capacidad;
+- borrador de propuesta conectado con Salón.
+
+La propuesta IA no debe escribir masivamente asignaciones reales durante su generación.
+
+## 9. Salón
+
+Separar siempre:
 
 ```text
-preview aspiracional
+referencia oficial / aspiracional
 ```
 
 de:
 
 ```text
-editor 2D operativo
+layout operativo editable
 ```
 
----
+`event_venue_layouts` persiste el layout canónico. El editor soporta posición, tamaño, rotación, bloqueo, duplicación, eliminación y versiones. Preview guarda un borrador local, no producción.
 
-## 12. Diseño
+## 10. Copiloto operacional
 
-No existe todavía paleta definitiva aprobada.
+Identidad propia; no copiar nombres/personajes del benchmark.
 
-Dirección:
+Principio:
 
-- premium;
-- elegante;
-- calmado;
+```text
+consulta
+explica
+sugiere
+prepara acciones
+pide confirmación
+recién después escribe si el entorno y rol lo permiten
+```
+
+Capacidades actuales:
+
+- preguntas grounded sobre confirmados, mesas, presupuesto, cronograma, música, documentos, incidencias y tareas;
+- fallback deterministic/grounded si el proveedor LLM externo falla;
+- preparar acciones para Música;
+- preparar bloques de Cronograma;
+- preparar Tareas.
+
+Nunca afirmar que un cambio se ejecutó antes de que el API confirme la escritura.
+
+## 11. Preview y producción
+
+Regla permanente:
+
+```text
+Preview / Development no escriben en producción.
+```
+
+`environment-guard.ts` bloquea:
+
+- escrituras DB fuera de producción salvo opt-in explícito;
+- sync externo fuera de producción salvo opt-in explícito.
+
+Los módulos interactivos nuevos usan borradores persistentes locales en Preview.
+
+Esto no reemplaza un staging full-stack. Un staging real sigue siendo requisito antes de probar mutaciones masivas fuera de producción.
+
+## 12. Diseño V2
+
+Dirección implementada:
+
 - editorial;
-- moderno;
-- propio.
+- elegante;
+- calmada;
+- crema/oliva/cobre como sistema propio;
+- jerarquía serif + UI sans;
+- navegación por Control / Personas y espacio / Operación.
 
-La referencia externa no define nuestros tokens.
+El benchmark externo sigue siendo referencia funcional, no especificación literal ni identidad.
 
----
+## 13. Módulos V2
 
-## 13. Estado reusable
+- Inicio
+- Necesita atención
+- Planificación
+- Estado del sistema
+- Invitados
+- Mesas
+- Salón
+- Cronograma
+- Música
+- Presupuesto y proveedores
+- Documentos
+- Actividad
+- Copiloto operacional transversal
 
-Existe base para:
+## 14. Operación autogestionable
 
-- auth;
-- dashboard;
-- invitados;
-- RSVP;
-- integrantes;
-- conciliación;
-- incidencias;
-- mesas;
-- finanzas;
-- proveedores;
-- actividad;
-- auditoría;
-- Sheets sync.
+La pareja/planner debe poder administrar el caso sin entrar a Supabase para tareas normales:
 
----
-
-## 14. Pendientes
-
-- staging;
-- typecheck;
-- tests;
-- sistema visual;
-- responsive;
-- proveedores completos;
-- cronograma;
+- editar fichas;
+- definir rama/afinidad;
+- mantener relaciones;
+- crear/editar mesas;
+- distribuir personas;
+- gestionar tareas;
+- mantener cronograma;
+- mantener música;
+- presupuesto/proveedores/pagos;
 - documentos;
-- editor 2D;
-- asistente;
-- IA de mesas;
-- multi-matrimonio.
+- layout del salón.
 
----
+## 15. Seguridad y privacidad
 
-## 15. Git baseline histórico
-
-```text
-main
-3c08cb05cdf0b2db636f89cf10dfe56ebfc23508
-```
-
-Verificar antes de cada tarea.
-
----
-
-## 16. Vercel baseline histórico
-
-```text
-project: gestion
-READY
-target: production
-commit: 3c08cb05cdf0b2db636f89cf10dfe56ebfc23508
-```
-
-Verificar nuevamente.
-
----
-
-## 17. Protección
-
-No modificar desde gestión:
+No modificar desde `gestion/**` sin un alcance separado:
 
 - sitio público;
 - RSVP público;
 - galería;
 - fotos.
 
-No usar producción como staging.
+No incluir en Git:
 
-No merge automático.
-
----
-
-## 18. Referencia externa
-
-Video:
-
-`https://www.youtube.com/watch?v=CoHKehTBP-Y`
-
-Uso:
-
-```text
-benchmark
-```
-
-No:
-
-```text
-especificación literal
-```
-
----
-
-## 19. Próximo proceso
-
-1. aprobar estos documentos;
-2. crear rama;
-3. incorporarlos al repo;
-4. verificar Preview/staging;
-5. construir identidad visual propia;
-6. primer PR funcional;
-7. Preview;
-8. revisión;
-9. merge con aprobación.
-
----
-
-## 20. Pendientes de decisión humana
-
-### Marca
-
-- nombre comercial;
-- identidad;
-- tono;
-- nombre del asistente.
-
-### Visual
-
-- paleta;
-- tipografías;
-- iconografía;
-- sistema gráfico.
-
-### Producto
-
-- alcance del primer MVP externo;
-- primer usuario piloto;
-- nivel de colaboración de proveedores.
-
-### Tecnología
-
-- staging;
-- editor 2D;
-- multi-wedding;
-- permisos granulares.
-
----
-
-## 21. Regla de actualización
-
-Guardar aquí decisiones duraderas.
-
-No guardar:
-
-- teléfonos;
-- correos;
-- alergias;
 - secretos;
-- conteos temporales;
-- estados momentáneos.
+- teléfonos/correos de invitados;
+- alergias o restricciones nominales;
+- parentescos nominales;
+- seed privado de relaciones;
+- extractos financieros privados.
 
----
+## 16. Validación
 
-## 22. Registro
+Comandos esperados:
 
-### 2026-08-12 — Corrección del benchmark
-
-Decisión:
-
-El producto compartido por el usuario es una referencia externa.
-
-Se eliminan del producto propio:
-
-- nombres;
-- identidad;
-- personaje/asistente;
-- paleta obligatoria;
-- presets obligatorios;
-- lenguaje copiado.
-
-Estado:
-
-```text
-APLICADO EN DOCUMENTACIÓN V2.
+```bash
+npm run lint
+npm run typecheck
+npm run build
+npm run check:ci
 ```
+
+Vercel Preview debe quedar `READY` antes de merge.
+
+## 17. Pendientes reales
+
+Para cerrar el caso real:
+
+- conciliar confirmados todavía sin ficha;
+- completar ramas familiares/sociales desconocidas;
+- ajustar escenario final de seating;
+- aplicar asignaciones finales sólo con fichas conciliadas;
+- terminar canciones/cues/horarios/responsables;
+- ajustar layout con decisiones reales del recinto.
+
+Para producto comercial:
+
+- staging aislado;
+- suite E2E;
+- multi-wedding;
+- permisos por boda/proveedor;
+- portal de proveedores;
+- onboarding segundo matrimonio;
+- billing posterior.
+
+## 18. Regla de actualización
+
+Guardar aquí sólo decisiones duraderas y arquitectura.
+
+No guardar estados temporales ni conteos que puedan cambiar con un RSVP.

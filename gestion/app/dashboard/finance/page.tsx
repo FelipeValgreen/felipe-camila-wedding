@@ -2,460 +2,51 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useEffect, useState } from 'react';
+import React,{useCallback,useEffect,useMemo,useState}from'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { createClient } from '@/lib/supabase-browser';
-import { Plus, DollarSign, Calendar, Tag, UserCheck, CreditCard, Building2, AlertCircle, Trash2, Edit, Save, X } from 'lucide-react';
+import {createClient}from'@/lib/supabase-browser';
+import{AlertCircle,Building2,CheckCircle2,DollarSign,Edit3,Loader2,Plus,RefreshCw,Trash2,WalletCards,X}from'lucide-react';
+import'./finance-v2.css';
+import'./finance-edit.css';
 
-interface Vendor {
-  id: string;
-  name: string;
-  category: string;
-  contact_name: string | null;
-  phone: string | null;
-  email: string | null;
-  status: string;
-  notes: string | null;
-}
+interface Vendor{id:string;name:string;category:string;contact_name:string|null;phone:string|null;email:string|null;status:string;notes:string|null;}
+interface BudgetItem{id:string;rowNumber:number;item:string;projectedQuantity:number|string;confirmedQuantity:number|string;unitNet:number|null;projectedGross:number|null;contractedAmount?:number|null;category:string;responsible:string;status:string;notes:string;advance:number|null;currency?:string;dueDate?:string|null;vendorId?:string|null;sortOrder?:number;}
+interface BudgetSource{ok:boolean;source:string;mirrorSource?:string;canonical?:boolean;items:BudgetItem[];summary:{paidOrPrepaid:number|null;remaining:number|null;totalBudget:number|null};fetchedAt:string;}
+interface BudgetPayment{id:string;budget_item_id:string;amount:number;currency:string;paid_at:string;payment_method:string|null;status:string;reference:string|null;notes:string|null;event_budget_items?:{id:string;concept:string;category:string}|null;}
+type Tab='budget'|'vendors'|'payments';type Editor={kind:'budget';data:BudgetItem}|{kind:'vendor';data:Vendor}|{kind:'payment';data:BudgetPayment}|null;type Notice={type:'success'|'error'|'info';text:string};
+type FinanceDrafts={budget:Record<string,BudgetItem>;vendors:Record<string,Vendor>;payments:Record<string,BudgetPayment>;deleted:{budget:string[];vendors:string[];payments:string[]}};
+const EMPTY_BUDGET:BudgetItem={id:'',rowNumber:0,item:'',projectedQuantity:1,confirmedQuantity:1,unitNet:null,projectedGross:null,contractedAmount:null,category:'General',responsible:'',status:'Pendiente',notes:'',advance:0,currency:'CLP',dueDate:null,vendorId:null,sortOrder:0};
+const EMPTY_VENDOR:Vendor={id:'',name:'',category:'General',contact_name:null,phone:null,email:null,status:'Evaluando',notes:null};
+const EMPTY_PAYMENT:BudgetPayment={id:'',budget_item_id:'',amount:0,currency:'CLP',paid_at:new Date().toISOString().slice(0,10),payment_method:'Transferencia',status:'Pagado',reference:null,notes:null};
+const PREVIEW_KEY='fc-preview-finance-v1';
+const EMPTY_DRAFTS:FinanceDrafts={budget:{},vendors:{},payments:{},deleted:{budget:[],vendors:[],payments:[]}};
+function money(value:number|null|undefined,currency='CLP'){if(value===null||value===undefined)return'Por confirmar';return new Intl.NumberFormat('es-CL',{style:'currency',currency,maximumFractionDigits:0}).format(value);}
+function formatDate(value:string|null){if(!value)return'Por definir';try{return new Intl.DateTimeFormat('es-CL',{day:'2-digit',month:'short',year:'numeric',timeZone:'America/Santiago'}).format(new Date(`${value}T12:00:00`));}catch{return value;}}
+function readDrafts():FinanceDrafts{try{const parsed=JSON.parse(window.localStorage.getItem(PREVIEW_KEY)||'null');return parsed&&parsed.deleted?parsed:structuredClone(EMPTY_DRAFTS);}catch{return structuredClone(EMPTY_DRAFTS);}}
+function writeDrafts(value:FinanceDrafts){try{window.localStorage.setItem(PREVIEW_KEY,JSON.stringify(value));}catch{/* optional */}}
+function mergeCollection<T extends{id:string}>(base:T[],overrides:Record<string,T>,deleted:string[]){const map=new Map(base.filter(item=>!deleted.includes(item.id)).map(item=>[item.id,item]));Object.values(overrides).forEach(item=>{if(!deleted.includes(item.id))map.set(item.id,item);});return Array.from(map.values());}
 
-interface Expense {
-  id: string;
-  vendor_id: string | null;
-  concept: string;
-  category: string;
-  currency: string;
-  budget_amount: number | null;
-  contracted_amount: number | null;
-  total_amount: number | null;
-  payment_status: string;
-  due_date: string | null;
-  responsible: string | null;
-  notes: string | null;
-}
+export default function FinancePage(){
+ const[vendors,setVendors]=useState<Vendor[]>([]),[payments,setPayments]=useState<BudgetPayment[]>([]),[budget,setBudget]=useState<BudgetSource|null>(null),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[tab,setTab]=useState<Tab>('budget'),[editor,setEditor]=useState<Editor>(null),[notice,setNotice]=useState<Notice|null>(null),[previewMode,setPreviewMode]=useState(false),[saving,setSaving]=useState(false);
+ useEffect(()=>setPreviewMode(window.location.hostname!=='gestion.felipeycami.cl'),[]);
+ function recalc(items:BudgetItem[],pay:BudgetPayment[]){const total=items.reduce((s,i)=>s+Number(i.projectedGross||0),0);const paidNow=pay.filter(p=>p.status.toLowerCase()==='pagado').reduce((s,p)=>s+Number(p.amount||0),0);return{paidOrPrepaid:paidNow,remaining:Math.max(0,total-paidNow),totalBudget:total};}
+ const loadData=useCallback(async(manual=false)=>{if(manual)setRefreshing(true);setLoading(!manual);setNotice(null);try{const supabase=createClient();const[v,b,p]=await Promise.all([supabase.from('vendors').select('*').order('name'),fetch('/api/budget-source',{cache:'no-store'}),fetch('/api/budget-payments',{cache:'no-store'})]);if(v.error)throw v.error;const[bp,pp]=await Promise.all([b.json(),p.json()]);if(!b.ok||!bp?.ok)throw new Error(bp?.error||'No fue posible leer presupuesto.');if(!p.ok||!pp?.ok)throw new Error(pp?.error||'No fue posible leer pagos.');let vv=(v.data||[])as Vendor[],bb=bp as BudgetSource,ppp=(pp.payments||[])as BudgetPayment[];if(window.location.hostname!=='gestion.felipeycami.cl'){const drafts=readDrafts();vv=mergeCollection(vv,drafts.vendors,drafts.deleted.vendors);const items=mergeCollection(bb.items,drafts.budget,drafts.deleted.budget);ppp=mergeCollection(ppp,drafts.payments,drafts.deleted.payments);bb={...bb,items,summary:recalc(items,ppp)};}setVendors(vv);setBudget(bb);setPayments(ppp);}catch(error:any){setNotice({type:'error',text:error?.message||'No fue posible cargar finanzas.'});}finally{setLoading(false);setRefreshing(false);}},[]);
+ useEffect(()=>{loadData();},[loadData]);
+ const paid=useMemo(()=>payments.filter(p=>p.status.toLowerCase()==='pagado').reduce((sum,p)=>sum+Number(p.amount||0),0),[payments]);
+ const contracted=vendors.filter(v=>v.status==='Contratado').length;const missing=(budget?.items||[]).filter(i=>i.projectedGross===null).length;
+ function openNew(kind:'budget'|'vendor'|'payment'){if(kind==='budget')setEditor({kind,data:{...EMPTY_BUDGET,id:`preview-${Date.now()}`,rowNumber:(budget?.items.length||0)+1,sortOrder:(budget?.items.length||0)*10+10}});if(kind==='vendor')setEditor({kind,data:{...EMPTY_VENDOR,id:`preview-${Date.now()}`}});if(kind==='payment')setEditor({kind,data:{...EMPTY_PAYMENT,id:`preview-${Date.now()}`}});}
+ function localSave(){if(!editor)return;const drafts=readDrafts();if(editor.kind==='budget'){const item=editor.data;drafts.budget[item.id]=item;drafts.deleted.budget=drafts.deleted.budget.filter(id=>id!==item.id);setBudget(current=>{if(!current)return current;const exists=current.items.some(i=>i.id===item.id);const items=exists?current.items.map(i=>i.id===item.id?item:i):[...current.items,item];return{...current,items,summary:recalc(items,payments)};});}else if(editor.kind==='vendor'){const item=editor.data;drafts.vendors[item.id]=item;drafts.deleted.vendors=drafts.deleted.vendors.filter(id=>id!==item.id);setVendors(current=>current.some(v=>v.id===item.id)?current.map(v=>v.id===item.id?item:v):[...current,item]);}else{const item=editor.data;drafts.payments[item.id]=item;drafts.deleted.payments=drafts.deleted.payments.filter(id=>id!==item.id);setPayments(current=>{const next=current.some(p=>p.id===item.id)?current.map(p=>p.id===item.id?item:p):[item,...current];setBudget(b=>b?{...b,summary:recalc(b.items,next)}:b);return next;});}writeDrafts(drafts);setEditor(null);setNotice({type:'info',text:'Cambio guardado localmente en Preview y persistirá al recargar.'});}
+ async function save(){if(!editor)return;if(editor.kind==='budget'&&!editor.data.item.trim()){setNotice({type:'error',text:'El concepto es obligatorio.'});return;}if(editor.kind==='vendor'&&!editor.data.name.trim()){setNotice({type:'error',text:'El nombre del proveedor es obligatorio.'});return;}if(editor.kind==='payment'&&(!editor.data.budget_item_id||Number(editor.data.amount)<0)){setNotice({type:'error',text:'Selecciona un ítem y un monto válido.'});return;}if(previewMode){localSave();return;}setSaving(true);try{const isNew=editor.data.id.startsWith('preview-');const path=editor.kind==='budget'?'/api/budget-source':editor.kind==='vendor'?'/api/vendors':'/api/budget-payments';const response=await fetch(path,{method:isNew?'POST':'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({...editor.data,id:isNew?undefined:editor.data.id})});const payload=await response.json();if(!response.ok||!payload?.ok)throw new Error(payload?.message||payload?.error||'No fue posible guardar.');setEditor(null);setNotice({type:'success',text:'Cambio guardado correctamente.'});await loadData();}catch(error:any){setNotice({type:'error',text:error?.message||'No fue posible guardar.'});}finally{setSaving(false);}}
+ async function remove(kind:'budget'|'vendor'|'payment',id:string,label:string){if(!window.confirm(`¿Eliminar “${label}”?`))return;if(previewMode){const drafts=readDrafts();drafts.deleted[kind==='budget'?'budget':kind==='vendor'?'vendors':'payments'].push(id);if(kind==='budget')delete drafts.budget[id];if(kind==='vendor')delete drafts.vendors[id];if(kind==='payment')delete drafts.payments[id];writeDrafts(drafts);if(kind==='budget')setBudget(current=>current?{...current,items:current.items.filter(i=>i.id!==id),summary:recalc(current.items.filter(i=>i.id!==id),payments)}:current);if(kind==='vendor')setVendors(current=>current.filter(v=>v.id!==id));if(kind==='payment'){const next=payments.filter(p=>p.id!==id);setPayments(next);setBudget(current=>current?{...current,summary:recalc(current.items,next)}:current);}setNotice({type:'info',text:'Eliminado localmente en Preview; seguirá oculto al recargar.'});return;}const path=kind==='budget'?'/api/budget-source':kind==='vendor'?'/api/vendors':'/api/budget-payments';const response=await fetch(`${path}?id=${id}`,{method:'DELETE'});const payload=await response.json();if(!response.ok||!payload?.ok){setNotice({type:'error',text:payload?.message||payload?.error||'No fue posible eliminar.'});return;}await loadData();}
+ const paymentByItem=useMemo(()=>{const map=new Map<string,number>();payments.filter(p=>p.status.toLowerCase()==='pagado').forEach(p=>map.set(p.budget_item_id,(map.get(p.budget_item_id)||0)+Number(p.amount||0)));return map;},[payments]);
 
-interface ExpensePayment {
-  id: string;
-  expense_id: string;
-  amount: number | null;
-  currency: string;
-  payment_date: string | null;
-  payment_type: string | null;
-  status: string;
-  reference: string | null;
-  notes: string | null;
-}
-
-export default function FinancePage() {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [payments, setPayments] = useState<ExpensePayment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'expenses' | 'vendors' | 'payments'>('expenses');
-
-  // Modal State
-  const [showAddVendor, setShowAddVendor] = useState(false);
-  const [showAddExpense, setShowAddExpense] = useState(false);
-  const [showAddPayment, setShowAddPayment] = useState(false);
-
-  const [vForm, setVForm] = useState({ name: '', category: 'Locación', status: 'Contratado', notes: '' });
-  const [eForm, setEForm] = useState({ concept: '', category: 'Locación', vendor_id: '', total_amount: '', due_date: '', responsible: 'Felipe & Camila' });
-  const [pForm, setPForm] = useState({ expense_id: '', amount: '', payment_type: 'Transferencia', status: 'Pagado', notes: '' });
-
-  async function loadFinanceData() {
-    setLoading(true);
-    try {
-      const supabase = createClient();
-      const { data: vData } = await supabase.from('vendors').select('*').order('name');
-      const { data: eData } = await supabase.from('expenses').select('*').order('created_at', { ascending: false });
-      const { data: pData } = await supabase.from('expense_payments').select('*').order('created_at', { ascending: false });
-
-      if (vData) setVendors(vData as Vendor[]);
-      if (eData) setExpenses(eData as Expense[]);
-      if (pData) setPayments(pData as ExpensePayment[]);
-    } catch (err) {
-      console.error('Error loading finance data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadFinanceData();
-  }, []);
-
-  // Financial Calculations Separated by Currency (CLP vs UF)
-  const paymentsCLP = payments.filter(p => p.currency === 'CLP' && p.status === 'Pagado');
-  const paymentsUF = payments.filter(p => p.currency === 'UF' && p.status === 'Pagado');
-
-  const totalPaidCLP = paymentsCLP.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-  const totalPaidUF = paymentsUF.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-
-  const expensesCLP = expenses.filter(e => e.currency === 'CLP');
-  const expensesUF = expenses.filter(e => e.currency === 'UF');
-
-  const totalContractedCLP = expensesCLP.reduce((sum, e) => sum + (Number(e.total_amount) || 0), 0);
-  const totalContractedUF = expensesUF.reduce((sum, e) => sum + (Number(e.total_amount) || 0), 0);
-
-  const itemsWithoutAmountCLP = expensesCLP.filter(e => e.total_amount === null || e.total_amount === undefined).length;
-  const itemsWithoutAmountUF = expensesUF.filter(e => e.total_amount === null || e.total_amount === undefined).length;
-
-  const totalBalanceCLP = totalContractedCLP - totalPaidCLP;
-  const totalBalanceUF = totalContractedUF - totalPaidUF;
-
-  async function handleAddVendor(e: React.FormEvent) {
-    e.preventDefault();
-    if (!vForm.name) return;
-    try {
-      const res = await fetch('/api/vendors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: vForm.name,
-          category: vForm.category,
-          status: vForm.status,
-          notes: vForm.notes || null
-        })
-      });
-
-      if (res.ok) {
-        setShowAddVendor(false);
-        setVForm({ name: '', category: 'Locación', status: 'Contratado', notes: '' });
-        loadFinanceData();
-      }
-    } catch (err) {
-      console.error('Error adding vendor:', err);
-    }
-  }
-
-  async function handleAddExpense(e: React.FormEvent) {
-    e.preventDefault();
-    if (!eForm.concept) return;
-    try {
-      const res = await fetch('/api/expenses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          concept: eForm.concept,
-          category: eForm.category,
-          vendor_id: eForm.vendor_id || null,
-          total_amount: eForm.total_amount ? Number(eForm.total_amount) : null,
-          due_date: eForm.due_date || null,
-          responsible: eForm.responsible || null,
-          payment_status: 'Pendiente'
-        })
-      });
-
-      if (res.ok) {
-        setShowAddExpense(false);
-        setEForm({ concept: '', category: 'Locación', vendor_id: '', total_amount: '', due_date: '', responsible: 'Felipe & Camila' });
-        loadFinanceData();
-      }
-    } catch (err) {
-      console.error('Error adding expense:', err);
-    }
-  }
-
-  async function handleAddPayment(e: React.FormEvent) {
-    e.preventDefault();
-    if (!pForm.expense_id || !pForm.amount) return;
-    try {
-      const res = await fetch('/api/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          expense_id: pForm.expense_id,
-          amount: Number(pForm.amount),
-          currency: 'CLP',
-          payment_date: new Date().toISOString().substring(0, 10),
-          payment_type: pForm.payment_type,
-          status: pForm.status,
-          notes: pForm.notes || null
-        })
-      });
-
-      if (res.ok) {
-        setShowAddPayment(false);
-        setPForm({ expense_id: '', amount: '', payment_type: 'Transferencia', status: 'Pagado', notes: '' });
-        loadFinanceData();
-      }
-    } catch (err) {
-      console.error('Error adding payment:', err);
-    }
-  }
-
-  async function handleDeletePayment(paymentId: string) {
-    if (!confirm('¿Confirmas que deseas eliminar este registro de pago?')) return;
-    try {
-      const res = await fetch(`/api/payments?id=${paymentId}`, { method: 'DELETE' });
-      if (res.ok) {
-        loadFinanceData();
-      }
-    } catch (err) {
-      console.error('Error deleting payment:', err);
-    }
-  }
-
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
-          <div>
-            <span className="text-xs uppercase tracking-[0.25em] text-[var(--accent-gold)] font-semibold block">
-              Control de Presupuesto & Pagos Multi-moneda
-            </span>
-            <h1 className="font-serif text-3xl text-[var(--text-primary)] mt-1">
-              Finanzas & Proveedores
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setShowAddVendor(true)} className="btn-secondary flex items-center gap-2">
-              <Building2 size={14} /> Nuevo Proveedor
-            </button>
-            <button onClick={() => setShowAddExpense(true)} className="btn-secondary flex items-center gap-2">
-              <Plus size={14} /> Registrar Gasto
-            </button>
-            <button onClick={() => setShowAddPayment(true)} className="btn-primary flex items-center gap-2">
-              <DollarSign size={14} /> Registrar Pago
-            </button>
-          </div>
-        </div>
-
-        {/* Financial KPI Cards - Separated by Currency */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="kpi-card">
-            <span className="kpi-title flex items-center gap-2 text-[#2D5A27]">
-              <DollarSign size={14} /> Pagado (CLP / UF)
-            </span>
-            <div className="kpi-value text-[#2D5A27] text-2xl">${totalPaidCLP.toLocaleString('es-CL')} CLP</div>
-            <span className="text-xs text-[var(--text-secondary)] mt-1 block">
-              {totalPaidUF > 0 ? `${totalPaidUF} UF pagadas` : '0 UF pagadas'}
-            </span>
-          </div>
-
-          <div className="kpi-card">
-            <span className="kpi-title flex items-center gap-2">
-              Contratado CLP
-            </span>
-            <div className="kpi-value text-2xl">${totalContractedCLP.toLocaleString('es-CL')} CLP</div>
-            <span className="text-xs text-[var(--text-secondary)] mt-1 block">
-              {totalContractedUF > 0 ? `${totalContractedUF} UF contratadas` : 'Sin contratos en UF'}
-            </span>
-          </div>
-
-          <div className="kpi-card">
-            <span className="kpi-title flex items-center gap-2 text-[#8E703E]">
-              Saldo CLP
-            </span>
-            <div className="kpi-value text-[#8E703E] text-2xl">
-              {itemsWithoutAmountCLP > 0 ? (
-                <span className="text-[#A83232] font-semibold italic text-lg">POR COMPLETAR</span>
-              ) : (
-                `$${totalBalanceCLP.toLocaleString('es-CL')} CLP`
-              )}
-            </div>
-            <span className="text-xs text-[var(--text-secondary)] mt-1 block">
-              {totalBalanceUF > 0 ? `Saldo UF: ${totalBalanceUF} UF` : 'Saldo UF: 0 UF'}
-            </span>
-          </div>
-
-          <div className="kpi-card border-l-4 border-l-[#A83232]">
-            <span className="kpi-title flex items-center gap-2 text-[#A83232]">
-              <AlertCircle size={14} /> Montos Por Confirmar
-            </span>
-            <div className="kpi-value text-[#A83232]">{itemsWithoutAmountCLP + itemsWithoutAmountUF}</div>
-            <span className="text-xs text-[var(--text-secondary)] mt-1 block">Conceptos sin monto total</span>
-          </div>
-        </div>
-
-        {/* View Selector Tabs */}
-        <div className="flex border-b border-[var(--border-color)]">
-          <button
-            onClick={() => setActiveTab('expenses')}
-            className={`px-4 py-3 font-semibold text-xs uppercase tracking-wider border-b-2 transition-all ${
-              activeTab === 'expenses' ? 'border-[var(--text-primary)] text-[var(--text-primary)]' : 'border-transparent text-[var(--text-secondary)]'
-            }`}
-          >
-            Gastos ({expenses.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('vendors')}
-            className={`px-4 py-3 font-semibold text-xs uppercase tracking-wider border-b-2 transition-all ${
-              activeTab === 'vendors' ? 'border-[var(--text-primary)] text-[var(--text-primary)]' : 'border-transparent text-[var(--text-secondary)]'
-            }`}
-          >
-            Proveedores ({vendors.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={`px-4 py-3 font-semibold text-xs uppercase tracking-wider border-b-2 transition-all ${
-              activeTab === 'payments' ? 'border-[var(--text-primary)] text-[var(--text-primary)]' : 'border-transparent text-[var(--text-secondary)]'
-            }`}
-          >
-            Historial de Pagos ({payments.length})
-          </button>
-        </div>
-
-        {/* TAB 1: GASTOS */}
-        {activeTab === 'expenses' && (
-          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] overflow-x-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Concepto</th>
-                  <th>Categoría</th>
-                  <th>Proveedor</th>
-                  <th>Monto Total</th>
-                  <th>Estado Pago</th>
-                  <th>Vencimiento</th>
-                  <th>Responsable</th>
-                  <th>Observaciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses.map((e) => {
-                  const vendor = vendors.find(v => v.id === e.vendor_id);
-                  return (
-                    <tr key={e.id}>
-                      <td className="font-semibold text-[var(--text-primary)]">{e.concept}</td>
-                      <td>{e.category}</td>
-                      <td>{vendor?.name || 'No asignado'}</td>
-                      <td>{e.total_amount ? `$${e.total_amount.toLocaleString('es-CL')} ${e.currency}` : <span className="text-[#A83232] font-semibold italic text-xs">POR COMPLETAR</span>}</td>
-                      <td>
-                        <span className="badge badge-pending">{e.payment_status}</span>
-                      </td>
-                      <td>{e.due_date || 'Por definir'}</td>
-                      <td>{e.responsible || 'Felipe & Camila'}</td>
-                      <td className="text-xs text-[var(--text-secondary)]">{e.notes || '-'}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* TAB 2: PROVEEDORES */}
-        {activeTab === 'vendors' && (
-          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] overflow-x-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Proveedor</th>
-                  <th>Categoría</th>
-                  <th>Contacto</th>
-                  <th>Teléfono</th>
-                  <th>Estado</th>
-                  <th>Notas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vendors.map((v) => (
-                  <tr key={v.id}>
-                    <td className="font-semibold text-[var(--text-primary)]">{v.name}</td>
-                    <td>{v.category}</td>
-                    <td>{v.contact_name || '-'}</td>
-                    <td>{v.phone || '-'}</td>
-                    <td>
-                      <span className="badge badge-confirmed">{v.status}</span>
-                    </td>
-                    <td className="text-xs text-[var(--text-secondary)]">{v.notes || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* TAB 3: PAGOS */}
-        {activeTab === 'payments' && (
-          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] overflow-x-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Fecha Pago</th>
-                  <th>Tipo / Concepto</th>
-                  <th>Monto</th>
-                  <th>Moneda</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((p) => (
-                  <tr key={p.id}>
-                    <td>{p.payment_date || 'Por definir'}</td>
-                    <td className="font-semibold">{p.payment_type}</td>
-                    <td className="font-semibold text-[#2D5A27]">
-                      {p.amount ? `$${p.amount.toLocaleString('es-CL')}` : <span className="text-[#A83232] italic">POR COMPLETAR</span>}
-                    </td>
-                    <td>{p.currency}</td>
-                    <td>
-                      <span className="badge badge-confirmed">{p.status}</span>
-                    </td>
-                    <td>
-                      <button onClick={() => handleDeletePayment(p.id)} className="text-[var(--text-muted)] hover:text-[#A83232] p-1">
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Modal Registrar Pago */}
-        {showAddPayment && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 w-full max-w-md space-y-4">
-              <h3 className="font-serif text-xl border-b border-[var(--border-color)] pb-3">Registrar Pago</h3>
-              <form onSubmit={handleAddPayment} className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Concepto de Gasto</label>
-                  <select
-                    required
-                    value={pForm.expense_id}
-                    onChange={(e) => setPForm({ ...pForm, expense_id: e.target.value })}
-                    className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                  >
-                    <option value="">Seleccionar gasto...</option>
-                    {expenses.map(e => (
-                      <option key={e.id} value={e.id}>{e.concept}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Monto CLP</label>
-                  <input
-                    type="number"
-                    required
-                    value={pForm.amount}
-                    onChange={(e) => setPForm({ ...pForm, amount: e.target.value })}
-                    className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Tipo de Pago</label>
-                  <select
-                    value={pForm.payment_type}
-                    onChange={(e) => setPForm({ ...pForm, payment_type: e.target.value })}
-                    className="w-full bg-transparent border border-[var(--border-color)] p-2 focus:outline-none"
-                  >
-                    <option value="Transferencia">Transferencia</option>
-                    <option value="Tarjeta">Tarjeta</option>
-                    <option value="Efectivo">Efectivo</option>
-                  </select>
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <button type="button" onClick={() => setShowAddPayment(false)} className="btn-secondary">Cancelar</button>
-                  <button type="submit" className="btn-primary">Guardar Pago</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
-    </DashboardLayout>
-  );
+ return <DashboardLayout><div className="finance-v2">
+  <section className="finance-v2__hero"><div><span className="finance-v2__eyebrow">Organización financiera</span><h1>Presupuesto y proveedores</h1><p>Presupuesto, proveedores y pagos se administran desde el Centro de Gestión. Supabase es la fuente canónica y Preview mantiene borradores persistentes sin tocar producción.</p></div><div className="finance-v2__actions">{previewMode&&<span className="finance-v2__preview">Preview · borradores persistentes</span>}<button type="button" onClick={()=>loadData(true)}><RefreshCw size={14} className={refreshing?'animate-spin':''}/>{refreshing?'Actualizando…':'Actualizar'}</button></div></section>
+  {notice&&<div className={`finance-v2__notice finance-v2__notice--${notice.type}`}>{notice.type==='success'?<CheckCircle2 size={16}/>:<AlertCircle size={16}/>}<span>{notice.text}</span></div>}
+  <section className="finance-v2__source"><div><span>Fuente canónica</span><strong>{budget?.source||'Supabase'}</strong><small>{budget?.mirrorSource||'Presupuesto operativo'}</small></div><div><span>Presupuesto total</span><strong>{money(budget?.summary.totalBudget)}</strong><small>proyección vigente</small></div><div><span>Pagado registrado</span><strong>{money(paid)}</strong><small>{payments.length} movimientos</small></div><div><span>Faltante estimado</span><strong>{money(Math.max(0,Number(budget?.summary.totalBudget||0)-paid))}</strong><small>total menos pagos registrados</small></div></section>
+  <section className="finance-v2__metrics"><article><span>Ítems presupuestados</span><strong>{budget?.items.length||0}</strong><small>{missing} con monto por completar</small></article><article><span>Proveedores</span><strong>{vendors.length}</strong><small>{contracted} contratados</small></article><article><span>Pagos</span><strong>{payments.length}</strong><small>{money(paid)} pagados</small></article><article><span>Autogestión</span><strong>CRUD</strong><small>crear · editar · eliminar</small></article></section>
+  <section className="finance-v2__toolbar"><div className="finance-v2__tabs"><button className={tab==='budget'?'is-active':''} onClick={()=>setTab('budget')}><WalletCards size={14}/>Presupuesto</button><button className={tab==='vendors'?'is-active':''} onClick={()=>setTab('vendors')}><Building2 size={14}/>Proveedores</button><button className={tab==='payments'?'is-active':''} onClick={()=>setTab('payments')}><DollarSign size={14}/>Pagos</button></div><div className="finance-v2__toolbar-actions"><button onClick={()=>openNew(tab==='budget'?'budget':tab==='vendors'?'vendor':'payment')}><Plus size={13}/>{tab==='budget'?'Nuevo ítem':tab==='vendors'?'Nuevo proveedor':'Registrar pago'}</button></div></section>
+  {loading?<div className="finance-v2__loading"><Loader2 className="animate-spin" size={20}/>Cargando finanzas…</div>:tab==='budget'?<section className="finance-v2__budget"><div className="finance-v2__budget-head"><div><span>Ítem</span><span>Categoría</span><span>Responsable</span><span>Estado</span><span>Total / pagado</span></div></div><div className="finance-v2__budget-list">{(budget?.items||[]).map(item=><article key={item.id} className="finance-v2__editable-row" onDoubleClick={()=>setEditor({kind:'budget',data:item})}><div className="finance-v2__budget-name"><strong>{item.item}</strong><small>{item.notes||`${item.projectedQuantity||'—'} unidades`}</small></div><span>{item.category||'—'}</span><span>{item.responsible||'—'}</span><span className="finance-v2__status">{item.status||'Sin estado'}</span><div className="finance-v2__money-actions"><strong className={item.projectedGross===null?'is-missing':''}>{money(item.projectedGross,item.currency||'CLP')}</strong><small>{money(paymentByItem.get(item.id)||0)} pagado</small><button onClick={()=>setEditor({kind:'budget',data:item})}><Edit3 size={12}/></button><button onClick={()=>remove('budget',item.id,item.item)}><Trash2 size={12}/></button></div></article>)}</div></section>:tab==='vendors'?<section className="finance-v2__vendor-grid">{vendors.map(vendor=><article key={vendor.id}><div className="finance-v2__vendor-top"><span><Building2 size={16}/></span><div className="finance-v2__card-actions"><small>{vendor.status}</small><button onClick={()=>setEditor({kind:'vendor',data:vendor})}><Edit3 size={12}/></button><button onClick={()=>remove('vendor',vendor.id,vendor.name)}><Trash2 size={12}/></button></div></div><h2>{vendor.name}</h2><p>{vendor.category}</p><dl><div><dt>Contacto</dt><dd>{vendor.contact_name||'Por completar'}</dd></div><div><dt>Teléfono</dt><dd>{vendor.phone||'Por completar'}</dd></div><div><dt>Email</dt><dd>{vendor.email||'Por completar'}</dd></div></dl>{vendor.notes&&<footer>{vendor.notes}</footer>}</article>)}</section>:<section className="finance-v2__payments">{payments.map(payment=><article key={payment.id}><span className="finance-v2__payment-icon"><DollarSign size={15}/></span><div><strong>{payment.event_budget_items?.concept||budget?.items.find(i=>i.id===payment.budget_item_id)?.item||'Pago'}</strong><small>{formatDate(payment.paid_at)} · {payment.payment_method||'Sin medio'}</small></div><strong>{money(payment.amount,payment.currency)}</strong><div className="finance-v2__payment-actions"><span className="finance-v2__status">{payment.status}</span><button onClick={()=>setEditor({kind:'payment',data:payment})}><Edit3 size={12}/></button><button onClick={()=>remove('payment',payment.id,payment.event_budget_items?.concept||'Pago')}><Trash2 size={12}/></button></div></article>)}{!payments.length&&<div className="finance-v2__empty">Aún no hay pagos registrados.</div>}</section>}
+  {editor&&<><button type="button" className="finance-v2__backdrop" aria-label="Cerrar" onClick={()=>!saving&&setEditor(null)}/><aside className="finance-v2__drawer"><header><div><span className="finance-v2__eyebrow">{editor.kind==='budget'?'Presupuesto':editor.kind==='vendor'?'Proveedores':'Pagos'}</span><h2>{editor.data.id.startsWith('preview-')?'Crear':'Editar'} {editor.kind==='budget'?'ítem':editor.kind==='vendor'?'proveedor':'pago'}</h2></div><button type="button" onClick={()=>setEditor(null)}><X size={18}/></button></header>{editor.kind==='budget'?<div className="finance-v2__form"><label><span>Concepto *</span><input value={editor.data.item} onChange={e=>setEditor({kind:'budget',data:{...editor.data,item:e.target.value}})}/></label><div className="finance-v2__form-grid"><label><span>Categoría</span><input value={editor.data.category} onChange={e=>setEditor({kind:'budget',data:{...editor.data,category:e.target.value}})}/></label><label><span>Estado</span><select value={editor.data.status} onChange={e=>setEditor({kind:'budget',data:{...editor.data,status:e.target.value}})}><option>Pendiente</option><option>Dinámico</option><option>Opcional</option><option>Confirmado</option><option>Contratado</option><option>Pagado</option></select></label></div><div className="finance-v2__form-grid"><label><span>Responsable</span><input value={editor.data.responsible} onChange={e=>setEditor({kind:'budget',data:{...editor.data,responsible:e.target.value}})}/></label><label><span>Proveedor</span><select value={editor.data.vendorId||''} onChange={e=>setEditor({kind:'budget',data:{...editor.data,vendorId:e.target.value||null}})}><option value="">Sin proveedor</option>{vendors.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label></div><div className="finance-v2__form-grid"><label><span>Cantidad</span><input type="number" value={editor.data.projectedQuantity??''} onChange={e=>setEditor({kind:'budget',data:{...editor.data,projectedQuantity:e.target.value}})}/></label><label><span>Costo unitario neto</span><input type="number" value={editor.data.unitNet??''} onChange={e=>setEditor({kind:'budget',data:{...editor.data,unitNet:e.target.value?Number(e.target.value):null}})}/></label></div><div className="finance-v2__form-grid"><label><span>Total proyectado</span><input type="number" value={editor.data.projectedGross??''} onChange={e=>setEditor({kind:'budget',data:{...editor.data,projectedGross:e.target.value?Number(e.target.value):null}})}/></label><label><span>Monto contratado</span><input type="number" value={editor.data.contractedAmount??''} onChange={e=>setEditor({kind:'budget',data:{...editor.data,contractedAmount:e.target.value?Number(e.target.value):null}})}/></label></div><label><span>Fecha de pago / vencimiento</span><input type="date" value={editor.data.dueDate||''} onChange={e=>setEditor({kind:'budget',data:{...editor.data,dueDate:e.target.value||null}})}/></label><label><span>Notas</span><textarea rows={4} value={editor.data.notes} onChange={e=>setEditor({kind:'budget',data:{...editor.data,notes:e.target.value}})}/></label><footer><button onClick={()=>setEditor(null)}>Cancelar</button><button className="is-primary" onClick={save} disabled={saving}>{saving?<Loader2 size={14} className="animate-spin"/>:null}Guardar</button></footer></div>:editor.kind==='vendor'?<div className="finance-v2__form"><label><span>Nombre *</span><input value={editor.data.name} onChange={e=>setEditor({kind:'vendor',data:{...editor.data,name:e.target.value}})}/></label><div className="finance-v2__form-grid"><label><span>Categoría</span><input value={editor.data.category} onChange={e=>setEditor({kind:'vendor',data:{...editor.data,category:e.target.value}})}/></label><label><span>Estado</span><select value={editor.data.status} onChange={e=>setEditor({kind:'vendor',data:{...editor.data,status:e.target.value}})}><option>Por buscar</option><option>Contactado</option><option>Cotizando</option><option>Evaluando</option><option>Seleccionado</option><option>Contratado</option><option>Finalizado</option><option>Descartado</option></select></label></div><label><span>Contacto</span><input value={editor.data.contact_name||''} onChange={e=>setEditor({kind:'vendor',data:{...editor.data,contact_name:e.target.value||null}})}/></label><div className="finance-v2__form-grid"><label><span>Teléfono</span><input value={editor.data.phone||''} onChange={e=>setEditor({kind:'vendor',data:{...editor.data,phone:e.target.value||null}})}/></label><label><span>Email</span><input type="email" value={editor.data.email||''} onChange={e=>setEditor({kind:'vendor',data:{...editor.data,email:e.target.value||null}})}/></label></div><label><span>Notas</span><textarea rows={4} value={editor.data.notes||''} onChange={e=>setEditor({kind:'vendor',data:{...editor.data,notes:e.target.value||null}})}/></label><footer><button onClick={()=>setEditor(null)}>Cancelar</button><button className="is-primary" onClick={save} disabled={saving}>Guardar</button></footer></div>:<div className="finance-v2__form"><label><span>Ítem *</span><select value={editor.data.budget_item_id} onChange={e=>setEditor({kind:'payment',data:{...editor.data,budget_item_id:e.target.value}})}><option value="">Seleccionar…</option>{(budget?.items||[]).map(i=><option key={i.id} value={i.id}>{i.item}</option>)}</select></label><div className="finance-v2__form-grid"><label><span>Monto *</span><input type="number" min="0" value={editor.data.amount} onChange={e=>setEditor({kind:'payment',data:{...editor.data,amount:Number(e.target.value)}})}/></label><label><span>Fecha</span><input type="date" value={editor.data.paid_at} onChange={e=>setEditor({kind:'payment',data:{...editor.data,paid_at:e.target.value}})}/></label></div><div className="finance-v2__form-grid"><label><span>Medio</span><select value={editor.data.payment_method||''} onChange={e=>setEditor({kind:'payment',data:{...editor.data,payment_method:e.target.value||null}})}><option>Transferencia</option><option>Tarjeta</option><option>Efectivo</option><option>Otro</option></select></label><label><span>Estado</span><select value={editor.data.status} onChange={e=>setEditor({kind:'payment',data:{...editor.data,status:e.target.value}})}><option>Pagado</option><option>Pendiente</option><option>Anulado</option></select></label></div><label><span>Referencia</span><input value={editor.data.reference||''} onChange={e=>setEditor({kind:'payment',data:{...editor.data,reference:e.target.value||null}})}/></label><label><span>Notas</span><textarea rows={4} value={editor.data.notes||''} onChange={e=>setEditor({kind:'payment',data:{...editor.data,notes:e.target.value||null}})}/></label><footer><button onClick={()=>setEditor(null)}>Cancelar</button><button className="is-primary" onClick={save} disabled={saving}>Guardar pago</button></footer></div>}</aside></>}
+ </div></DashboardLayout>;
 }
