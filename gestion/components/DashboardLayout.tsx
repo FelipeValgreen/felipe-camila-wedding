@@ -12,6 +12,7 @@ import {
   FileText,
   Grid,
   LayoutDashboard,
+  Link2,
   LogOut,
   Menu,
   Music,
@@ -40,6 +41,7 @@ const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
     label: 'Personas y espacio',
     items: [
       { label: 'Invitados', href: '/dashboard/guests', icon: Users, description: 'Personas, RSVP y restricciones' },
+      { label: 'Grupos', href: '/dashboard/groups', icon: Link2, description: 'Parejas, familias y vínculos' },
       { label: 'Mesas', href: '/dashboard/tables', icon: Grid, description: 'Grupos, asignación y capacidad' },
       { label: 'Salón', href: '/dashboard/venue', icon: Grid, description: 'Plano, flujo y composición espacial' },
     ],
@@ -61,6 +63,7 @@ const routeTitles: Record<string, { eyebrow: string; title: string }> = {
   '/dashboard/issues': { eyebrow: 'Control', title: 'Necesita atención' },
   '/dashboard/planning': { eyebrow: 'Control', title: 'Planificación' },
   '/dashboard/guests': { eyebrow: 'Personas', title: 'Invitados' },
+  '/dashboard/groups': { eyebrow: 'Personas', title: 'Grupos de mesa' },
   '/dashboard/tables': { eyebrow: 'Espacio', title: 'Mesas' },
   '/dashboard/venue': { eyebrow: 'Espacio', title: 'Salón' },
   '/dashboard/timeline': { eyebrow: 'Operación', title: 'Cronograma' },
@@ -158,7 +161,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
       </nav>
     </div>
     <div className="workspace-sidebar-footer">
-      <button type="button" className="workspace-assistant-status" onClick={() => window.dispatchEvent(new CustomEvent('fc-open-copilot'))} aria-label="Abrir copiloto operacional"><span className="workspace-assistant-icon"><Sparkles size={16}/></span><div><strong>Copiloto operacional</strong><small>Datos conectados · beta</small></div></button>
+      <button type="button" className="workspace-assistant-status" onClick={() => window.dispatchEvent(new CustomEvent('fc-open-copilot'))} aria-label="Abrir copiloto operacional"><span className="workspace-assistant-icon"><Sparkles size={16}/></span><div><strong>Copiloto operacional</strong><small>IA conectada · solo lectura</small></div></button>
       <div className="workspace-footer-actions">
         <button type="button" onClick={handleSyncNow} disabled={syncing} className="workspace-sync-button"><RefreshCw size={15} className={syncing ? 'animate-spin' : ''}/><span>{syncing ? 'Sincronizando…' : 'Sincronizar datos'}</span></button>
         <a href="https://felipeycami.cl" target="_blank" rel="noreferrer" className="workspace-invite-link"><ExternalLink size={14}/><span>Ver invitación</span></a>
