@@ -1,101 +1,39 @@
-import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
+import { getDatabaseWriteBlock } from '@/lib/environment-guard';
 
 export const dynamic = 'force-dynamic';
 
-function formatPrivateKey(key: string) { return key.replace(/\\n/g, '\n'); }
-
-async function googleAccessToken(email: string, privateKey: string) {
-  const now = Math.floor(Date.now() / 1000);
-  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
-  const claims = Buffer.from(JSON.stringify({
-    iss: email,
-    scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now,
-  })).toString('base64url');
-  const unsigned = `${header}.${claims}`;
-  const signer = crypto.createSign('RSA-SHA256');
-  signer.update(unsigned);
-  const signature = signer.sign(formatPrivateKey(privateKey), 'base64url');
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${unsigned}.${signature}` }),
-    cache: 'no-store',
-  });
-  if (!response.ok) throw new Error(`GOOGLE_OAUTH_FAILED_${response.status}`);
-  const payload = await response.json();
-  if (!payload.access_token) throw new Error('GOOGLE_OAUTH_TOKEN_MISSING');
-  return payload.access_token as string;
+async function auth() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, response: NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 }) };
+  const { data: profile } = await supabase.from('admin_profiles').select('role, active').eq('id', user.id).single();
+  if (!profile?.active) return { ok: false as const, response: NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 }) };
+  return { ok: true as const, supabase, user, profile };
 }
 
-function clp(value: unknown): number | null {
-  if (value === null || value === undefined || value === '') return null;
-  const cleaned = String(value).replace(/[^0-9-]/g, '');
-  if (!cleaned) return null;
-  const number = Number(cleaned);
-  return Number.isFinite(number) ? number : null;
+function toItem(row:any,index=0){return{
+  id:row.id,rowNumber:index+1,item:row.concept||'',projectedQuantity:row.quantity??'',confirmedQuantity:row.quantity??'',unitNet:row.unit_net===null?null:Number(row.unit_net),vat:'',projectedGross:row.projected_gross===null?null:Number(row.projected_gross),contractedAmount:row.contracted_amount===null?null:Number(row.contracted_amount),category:row.category||'',responsible:row.responsible||'',status:row.status||'',notes:row.notes||'',advance:Number(row.paid_amount||0),currency:row.currency||'CLP',dueDate:row.due_date||null,vendorId:row.vendor_id||null,sortOrder:row.sort_order||0,source:row.source||'dashboard'
+};}
+
+function numeric(value:any){if(value===null||value===undefined||value==='')return null;const n=Number(value);return Number.isFinite(n)?n:null;}
+
+export async function GET(){
+  try{const session=await auth();if(!session.ok)return session.response;const {data,error}=await session.supabase.from('event_budget_items').select('*').order('sort_order').order('created_at');if(error)throw error;const items=(data||[]).map(toItem);const totalBudget=items.reduce((s,i)=>s+Number(i.projectedGross||0),0);const paidOrPrepaid=items.reduce((s,i)=>s+Number(i.advance||0),0);return NextResponse.json({ok:true,source:'Supabase · event_budget_items',mirrorSource:'F&C Centro Comandos · PRESUPUESTO_IGLESIA',canonical:true,items,summary:{paidOrPrepaid,remaining:Math.max(0,totalBudget-paidOrPrepaid),totalBudget},fetchedAt:new Date().toISOString()});}catch(error:any){return NextResponse.json({ok:false,error:error?.message||'No fue posible leer el presupuesto operativo.'},{status:500});}
 }
 
-export async function GET() {
-  try {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
-    const { data: profile } = await supabase.from('admin_profiles').select('active').eq('id', user.id).single();
-    if (!profile?.active) return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
+export async function POST(request:Request){
+  const block=getDatabaseWriteBlock();if(block)return NextResponse.json(block,{status:409});
+  try{const session=await auth();if(!session.ok)return session.response;if(session.profile.role==='viewer')return NextResponse.json({ok:false,error:'VIEWER_MUTATION_DENIED'},{status:403});const body=await request.json();if(!body?.item)return NextResponse.json({ok:false,error:'El concepto es obligatorio.'},{status:400});const payload={concept:String(body.item).trim(),category:String(body.category||'General'),vendor_id:body.vendorId||null,responsible:body.responsible||null,status:String(body.status||'Pendiente'),currency:String(body.currency||'CLP'),quantity:numeric(body.projectedQuantity),unit_net:numeric(body.unitNet),projected_gross:numeric(body.projectedGross),contracted_amount:numeric(body.contractedAmount),paid_amount:numeric(body.advance)||0,due_date:body.dueDate||null,notes:body.notes||null,source:'dashboard',sort_order:Number(body.sortOrder||Date.now()%1000000)};const {data,error}=await session.supabase.from('event_budget_items').insert(payload).select().single();if(error)throw error;await session.supabase.from('audit_log').insert({entity_type:'event_budget_items',entity_id:data.id,action:'CREATE_BUDGET_ITEM',after_data:payload,actor:session.user.email,origin:'dashboard'});return NextResponse.json({ok:true,item:toItem(data)});}catch(error:any){return NextResponse.json({ok:false,error:error?.message||'No fue posible crear el ítem.'},{status:500});}
+}
 
-    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '';
-    const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
-    const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '';
-    if (!spreadsheetId || !serviceAccountEmail || !serviceAccountKey) throw new Error('GOOGLE_SHEETS_NOT_CONFIGURED');
+export async function PATCH(request:Request){
+  const block=getDatabaseWriteBlock();if(block)return NextResponse.json(block,{status:409});
+  try{const session=await auth();if(!session.ok)return session.response;if(session.profile.role==='viewer')return NextResponse.json({ok:false,error:'VIEWER_MUTATION_DENIED'},{status:403});const body=await request.json();if(!body?.id)return NextResponse.json({ok:false,error:'ID_REQUIRED'},{status:400});const {data:before}=await session.supabase.from('event_budget_items').select('*').eq('id',body.id).single();if(!before)return NextResponse.json({ok:false,error:'NOT_FOUND'},{status:404});const updates:Record<string,any>={};const direct:Record<string,string>={item:'concept',category:'category',vendorId:'vendor_id',responsible:'responsible',status:'status',currency:'currency',dueDate:'due_date',notes:'notes',sortOrder:'sort_order'};for(const [k,db]of Object.entries(direct))if(k in body)updates[db]=body[k]===''?null:body[k];const nums:Record<string,string>={projectedQuantity:'quantity',unitNet:'unit_net',projectedGross:'projected_gross',contractedAmount:'contracted_amount',advance:'paid_amount'};for(const [k,db]of Object.entries(nums))if(k in body)updates[db]=numeric(body[k]);updates.updated_at=new Date().toISOString();const {data,error}=await session.supabase.from('event_budget_items').update(updates).eq('id',body.id).select().single();if(error)throw error;await session.supabase.from('audit_log').insert({entity_type:'event_budget_items',entity_id:body.id,action:'UPDATE_BUDGET_ITEM',before_data:before,after_data:updates,actor:session.user.email,origin:'dashboard'});return NextResponse.json({ok:true,item:toItem(data)});}catch(error:any){return NextResponse.json({ok:false,error:error?.message||'No fue posible actualizar el ítem.'},{status:500});}
+}
 
-    const token = await googleAccessToken(serviceAccountEmail, serviceAccountKey);
-    const range = 'PRESUPUESTO_IGLESIA!A1:L80';
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?majorDimension=ROWS`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-    });
-    if (!response.ok) throw new Error(`GOOGLE_SHEETS_READ_FAILED_${response.status}`);
-    const payload = await response.json();
-    const rows = (payload.values || []) as string[][];
-
-    const itemRows = rows.slice(1).map((row, index) => ({ rowNumber: index + 2, row })).filter(({ rowNumber, row }) => rowNumber >= 2 && rowNumber <= 18 && row[0]);
-    const items = itemRows.map(({ rowNumber, row }) => ({
-      rowNumber,
-      item: row[0] || '',
-      projectedQuantity: row[1] || '',
-      confirmedQuantity: row[2] || '',
-      unitNet: clp(row[3]),
-      vat: row[4] || '',
-      projectedGross: clp(row[5]),
-      category: row[6] || '',
-      responsible: row[7] || '',
-      status: row[8] || '',
-      notes: row[9] || '',
-      advance: clp(row[10]),
-    }));
-
-    const findValue = (label: string) => {
-      const row = rows.find((candidate) => String(candidate?.[0] || '').trim().toLowerCase() === label.toLowerCase());
-      return clp(row?.[5]);
-    };
-
-    return NextResponse.json({
-      ok: true,
-      source: 'F&C Centro Comandos · PRESUPUESTO_IGLESIA',
-      items,
-      summary: {
-        paidOrPrepaid: findValue('Pagados o prepagados'),
-        remaining: findValue('Faltante x pagar'),
-        totalBudget: findValue('TOTAL PRESUPUESTO IGLESIA'),
-      },
-      fetchedAt: new Date().toISOString(),
-    });
-  } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error?.message || 'No fue posible leer el presupuesto operativo.' }, { status: 500 });
-  }
+export async function DELETE(request:Request){
+  const block=getDatabaseWriteBlock();if(block)return NextResponse.json(block,{status:409});
+  try{const session=await auth();if(!session.ok)return session.response;if(session.profile.role!=='owner')return NextResponse.json({ok:false,error:'ONLY_OWNER_CAN_DELETE'},{status:403});const id=new URL(request.url).searchParams.get('id');if(!id)return NextResponse.json({ok:false,error:'ID_REQUIRED'},{status:400});const {data:before}=await session.supabase.from('event_budget_items').select('*').eq('id',id).single();if(!before)return NextResponse.json({ok:false,error:'NOT_FOUND'},{status:404});const {error}=await session.supabase.from('event_budget_items').delete().eq('id',id);if(error)throw error;await session.supabase.from('audit_log').insert({entity_type:'event_budget_items',entity_id:id,action:'DELETE_BUDGET_ITEM',before_data:before,actor:session.user.email,origin:'dashboard'});return NextResponse.json({ok:true,deleted:true});}catch(error:any){return NextResponse.json({ok:false,error:error?.message||'No fue posible eliminar el ítem.'},{status:500});}
 }
