@@ -26,7 +26,15 @@ export async function GET(request:Request){
   checks.push({key:'guest_reconciliation',label:'Conciliación de invitados',ok:missingMaster===0,detail:`${operational} fichas asistentes · ${missingMaster} confirmados pendientes de ficha`,severity:missingMaster?'warning':'ok'});
   checks.push({key:'seating',label:'Asignaciones persistidas',ok:assigned>0,detail:`${assigned} asignaciones reales; las propuestas IA son borradores`,severity:assigned>0?'ok':'warning'});
   checks.push({key:'relationships',label:'Relaciones canónicas',ok:(relations.count||0)>0,detail:`${relations.count||0} grupos · ${relationMembers.count||0} miembros`,severity:(relations.count||0)>0?'ok':'warning'});
-  const dbBlock=getDatabaseWriteBlock(),syncBlock=getExternalSyncBlock();checks.push({key:'write_safety',label:'Guard de base de datos',ok:Boolean(dbBlock),detail:dbBlock?'Escrituras protegidas en este entorno':'Escrituras habilitadas para este entorno',severity:dbBlock?'ok':'warning'});checks.push({key:'sync_safety',label:'Guard de sincronización',ok:Boolean(syncBlock),detail:syncBlock?'Sync externo protegido en este entorno':'Sync externo habilitado para este entorno',severity:syncBlock?'ok':'warning'});
-  return NextResponse.json({ok:true,checks,summary:{healthy:checks.filter(c=>c.severity==='ok').length,warnings:checks.filter(c=>c.severity==='warning').length,errors:checks.filter(c=>c.severity==='error').length,knownAttending:known,operationalGuests:operational,tables:tableRows.length,capacity,assigned,openIssues:issues.count||0,vendors:vendors.count||0,tasks:tasks.count||0,relationshipGroups:relations.count||0,relationshipMembers:relationMembers.count||0},fetchedAt:new Date().toISOString()});
+
+  const environment=process.env.VERCEL_ENV||process.env.NODE_ENV||'unknown';
+  const isProduction=environment==='production';
+  const dbBlock=getDatabaseWriteBlock(),syncBlock=getExternalSyncBlock();
+  const dbSafetyOk=isProduction?!dbBlock:Boolean(dbBlock);
+  const syncSafetyOk=isProduction?!syncBlock:Boolean(syncBlock);
+  checks.push({key:'write_safety',label:'Guard de base de datos',ok:dbSafetyOk,detail:isProduction?(dbBlock?'Producción está bloqueada inesperadamente':'Producción: escrituras habilitadas sólo para usuarios autorizados'):(dbBlock?'Preview/Development: escrituras a DB protegidas':'Advertencia: entorno no productivo podría escribir en DB'),severity:dbSafetyOk?'ok':'error'});
+  checks.push({key:'sync_safety',label:'Guard de sincronización',ok:syncSafetyOk,detail:isProduction?(syncBlock?'Producción tiene sync externo bloqueado':'Producción: sincronización externa habilitada'):(syncBlock?'Preview/Development: sync externo protegido':'Advertencia: sync externo habilitado fuera de producción'),severity:syncSafetyOk?'ok':'error'});
+
+  return NextResponse.json({ok:true,environment,checks,summary:{healthy:checks.filter(c=>c.severity==='ok').length,warnings:checks.filter(c=>c.severity==='warning').length,errors:checks.filter(c=>c.severity==='error').length,knownAttending:known,operationalGuests:operational,tables:tableRows.length,capacity,assigned,openIssues:issues.count||0,vendors:vendors.count||0,tasks:tasks.count||0,relationshipGroups:relations.count||0,relationshipMembers:relationMembers.count||0},fetchedAt:new Date().toISOString()});
  }catch(error:any){return NextResponse.json({ok:false,error:error?.message||'No fue posible revisar el sistema.'},{status:500});}
 }
