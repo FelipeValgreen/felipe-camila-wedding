@@ -1,6 +1,7 @@
 import './globals.css';
 import './workspace-shell.css';
 import './design-polish-v2.css';
+import './qa-fixes.css';
 import React from 'react';
 
 export const metadata = {
