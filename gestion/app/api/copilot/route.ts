@@ -5,17 +5,6 @@ export const dynamic = 'force-dynamic';
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string };
 
-function responseText(payload: any) {
-  if (typeof payload?.output_text === 'string') return payload.output_text;
-  const parts: string[] = [];
-  for (const item of payload?.output || []) {
-    for (const content of item?.content || []) {
-      if (content?.type === 'output_text' && content?.text) parts.push(content.text);
-    }
-  }
-  return parts.join('\n').trim();
-}
-
 async function fetchJson(origin: string, path: string, cookie: string) {
   const response = await fetch(`${origin}${path}`, { headers: { cookie }, cache: 'no-store' });
   const payload = await response.json().catch(() => null);
@@ -110,49 +99,47 @@ export async function POST(request: Request) {
       payments: paymentsResult.data || [],
     };
 
-    const apiKey = process.env.OPENAI_API_KEY || '';
-    if (!apiKey) {
-      return NextResponse.json({
-        ok: false,
-        error: 'COPILOT_NOT_CONFIGURED',
-        message: 'El Copiloto real está implementado, pero falta configurar OPENAI_API_KEY en Vercel.',
-      }, { status: 503 });
+    const gatewayToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || '';
+    if (!gatewayToken) {
+      return NextResponse.json({ ok: false, error: 'COPILOT_NOT_CONFIGURED', message: 'No hay credencial OIDC/API disponible para Vercel AI Gateway.' }, { status: 503 });
     }
 
-    const model = process.env.OPENAI_MODEL || 'gpt-5.1';
-    const instructions = `Eres el Copiloto Operacional de la boda de Felipe y Camila. Tu función es ayudar a gestionar el evento con precisión.
+    const model = process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.6-sol';
+    const system = `Eres el Copiloto Operacional de la boda de Felipe y Camila. Ayudas a gestionar el evento con precisión.
 
 REGLAS OBLIGATORIAS:
-1. Responde SÓLO con hechos respaldados por SNAPSHOT. Nunca completes huecos con conocimiento general o memoria.
-2. Si un dato no está en SNAPSHOT, dilo explícitamente: “No está registrado en las fuentes conectadas”.
-3. Distingue claramente Hecho, Inferencia y Recomendación cuando corresponda.
-4. Nunca afirmes haber modificado datos, enviado mensajes, movido invitados, registrado pagos o ejecutado acciones. Este endpoint es de SOLO LECTURA.
-5. Para cambios, explica exactamente qué propones cambiar y termina con “Requiere confirmación en la interfaz”.
-6. Si existen dataQuality issues, adviértelos cuando afecten la respuesta.
-7. No expongas IDs internos, teléfonos ni datos sensibles salvo que el usuario lo pida y sea necesario para la gestión.
-8. Para mesas, respeta capacidad y relaciones de GRUPOS_MESA; las relaciones confirmadas son restricciones fuertes y “Por validar” son sugerencias.
-9. Cuando te pregunten por confirmados, usa currentKnownAttending como cifra operacional actual y explica consolidado/delta si es relevante.
-10. Sé conciso, accionable y en español de Chile. No inventes canciones, costos, responsables, horarios ni parentescos.
+1. Responde SÓLO con hechos respaldados por SNAPSHOT. No rellenes huecos con conocimiento general ni memoria.
+2. Si un dato no está en SNAPSHOT, responde “No está registrado en las fuentes conectadas”.
+3. Distingue Hecho, Inferencia y Recomendación cuando corresponda.
+4. Nunca afirmes haber modificado datos, enviado mensajes, movido invitados, registrado pagos ni ejecutado acciones: este endpoint es de SOLO LECTURA.
+5. Si propones un cambio, describe exactamente qué cambiarías y termina con “Requiere confirmación en la interfaz”.
+6. Si dataQuality contiene incidencias relevantes, menciónalas cuando afecten la respuesta.
+7. No expongas IDs internos, teléfonos ni datos sensibles salvo petición explícita y necesidad operativa.
+8. En mesas, respeta capacidad y GRUPOS_MESA: relaciones confirmadas son restricciones fuertes; “Por validar” son sugerencias.
+9. Para confirmados usa currentKnownAttending como cifra operacional actual y explica consolidado/delta cuando ayude.
+10. No inventes canciones, costos, responsables, horarios, parentescos ni estados.
+11. Responde en español de Chile, claro, concreto y orientado a una decisión.
 
 SNAPSHOT ACTUAL:\n${JSON.stringify(snapshot)}`;
 
-    const input = [
-      ...history.map((message) => ({ role: message.role, content: [{ type: 'input_text', text: message.text }] })),
-      { role: 'user', content: [{ type: 'input_text', text: question }] },
+    const messages = [
+      { role: 'system', content: system },
+      ...history.map((message) => ({ role: message.role, content: message.text })),
+      { role: 'user', content: question },
     ];
 
-    const aiResponse = await fetch('https://api.openai.com/v1/responses', {
+    const aiResponse = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, instructions, input, store: false, reasoning: { effort: 'low' }, text: { verbosity: 'medium' } }),
+      headers: { Authorization: `Bearer ${gatewayToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages, stream: false, reasoning: { effort: 'low' } }),
       cache: 'no-store',
     });
     const aiPayload = await aiResponse.json().catch(() => null);
-    if (!aiResponse.ok) throw new Error(`OPENAI_${aiResponse.status}: ${aiPayload?.error?.message || 'request failed'}`);
-    const answer = responseText(aiPayload);
-    if (!answer) throw new Error('OPENAI_EMPTY_RESPONSE');
+    if (!aiResponse.ok) throw new Error(`AI_GATEWAY_${aiResponse.status}: ${aiPayload?.error?.message || 'request failed'}`);
+    const answer = String(aiPayload?.choices?.[0]?.message?.content || '').trim();
+    if (!answer) throw new Error('AI_GATEWAY_EMPTY_RESPONSE');
 
-    return NextResponse.json({ ok: true, answer, model, groundedAt: snapshot.generatedAt, readOnly: true });
+    return NextResponse.json({ ok: true, answer, model: aiPayload?.model || model, groundedAt: snapshot.generatedAt, readOnly: true });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error?.message || 'No fue posible responder con el Copiloto.' }, { status: 500 });
   }
