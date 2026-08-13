@@ -4,158 +4,43 @@ export const dynamic = 'force-dynamic';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Clock3,
-  DollarSign,
-  Loader2,
-  Music2,
-  RefreshCw,
-  Sparkles,
-  Volume2,
-} from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock3, DollarSign, Edit3, ExternalLink, Loader2, Music2, Plus, RefreshCw, Sparkles, Trash2, Volume2, X } from 'lucide-react';
 import './music-v2.css';
+import './music-edit.css';
 
 interface MusicMoment {
-  rowNumber: number;
-  dateTime: string;
-  block: string;
-  owner: string;
-  duration: string;
-  status: string;
-  dependencies: string;
-  notes: string;
+  id:string;rowNumber:number;dateTime:string;block:string;owner:string;duration:string;status:string;dependencies:string;notes:string;song:string;artist:string;version:string;url:string;provider:string;cue:string;priority:string;sortOrder:number;
 }
+interface MusicBudgetItem {id:string;rowNumber:number;item:string;projectedQuantity:string|number;confirmedQuantity:string|number;unitNet:number|null;vat:string;projectedGross:number|null;category:string;responsible:string;status:string;notes:string;advance:number|null;}
+interface MusicSource {ok:boolean;sources:string[];canonical?:boolean;moments:MusicMoment[];budgetItems:MusicBudgetItem[];summary:{moments:number;confirmedMoments:number;pendingMoments:number;budgetItems:number;confirmedBudget:number;pendingBudget:number;budgetTotal:number;hasDetailedPlaylist:boolean};fetchedAt:string;}
+type FormState=Omit<MusicMoment,'rowNumber'|'duration'|'dependencies'|'owner'>;
+const EMPTY:FormState={id:'',dateTime:'',block:'',status:'Pendiente',notes:'',song:'',artist:'',version:'',url:'',provider:'',cue:'',priority:'Normal',sortOrder:0};
 
-interface MusicBudgetItem {
-  rowNumber: number;
-  item: string;
-  projectedQuantity: string;
-  confirmedQuantity: string;
-  unitNet: number | null;
-  vat: string;
-  projectedGross: number | null;
-  category: string;
-  responsible: string;
-  status: string;
-  notes: string;
-  advance: number | null;
-}
+function money(value:number|null|undefined){if(value===null||value===undefined)return'Por confirmar';return new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(value);}
+function time(value:string){if(!value)return'—';const date=new Date(value);if(!Number.isNaN(date.getTime()))return new Intl.DateTimeFormat('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Santiago'}).format(date);const match=value.match(/(\d{2}:\d{2})/);return match?.[1]||'—';}
+function toInput(value:string){if(!value)return'';const date=new Date(value);if(Number.isNaN(date.getTime()))return value.slice(0,16);const parts=new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Santiago'}).formatToParts(date);const m=Object.fromEntries(parts.map(p=>[p.type,p.value]));return`${m.year}-${m.month}-${m.day}T${m.hour}:${m.minute}`;}
+function statusClass(value:string){return value.toLowerCase()==='confirmado'?'is-confirmed':'is-pending';}
 
-interface MusicSource {
-  ok: boolean;
-  sources: string[];
-  moments: MusicMoment[];
-  budgetItems: MusicBudgetItem[];
-  summary: {
-    moments: number;
-    confirmedMoments: number;
-    pendingMoments: number;
-    budgetItems: number;
-    confirmedBudget: number;
-    pendingBudget: number;
-    budgetTotal: number;
-    hasDetailedPlaylist: boolean;
-  };
-  fetchedAt: string;
-}
-
-function money(value: number | null | undefined) {
-  if (value === null || value === undefined) return 'Por confirmar';
-  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(value);
-}
-
-function time(value: string) {
-  const match = value.match(/(\d{2}:\d{2})/);
-  return match?.[1] || '—';
-}
-
-function statusClass(value: string) {
-  return value.toLowerCase() === 'confirmado' ? 'is-confirmed' : 'is-pending';
-}
-
-export default function MusicPage() {
-  const [data, setData] = useState<MusicSource | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async (manual = false) => {
-    if (manual) setRefreshing(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/music-source', { cache: 'no-store' });
-      const payload = await response.json();
-      if (!response.ok || !payload?.ok) throw new Error(payload?.error || 'No fue posible cargar Música.');
-      setData(payload as MusicSource);
-    } catch (err: any) {
-      setError(err?.message || 'No fue posible cargar Música.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  const pendingDecisions = useMemo(() => {
-    if (!data) return [];
-    const decisions: Array<{ title: string; detail: string; source: string }> = [];
-    data.moments.filter((item) => item.status.toLowerCase() !== 'confirmado').forEach((item) => decisions.push({
-      title: `Cerrar ${item.block}`,
-      detail: item.notes || item.dependencies || 'El bloque musical todavía figura pendiente.',
-      source: 'TIMELINE',
-    }));
-    data.budgetItems.filter((item) => item.status.toLowerCase() !== 'confirmado').forEach((item) => decisions.push({
-      title: `Resolver ${item.item}`,
-      detail: item.notes || `${item.responsible || 'Responsable por definir'} · ${money(item.projectedGross)}`,
-      source: 'PRESUPUESTO_IGLESIA',
-    }));
-    if (!data.summary.hasDetailedPlaylist) decisions.push({
-      title: 'Construir repertorio y canciones por momento',
-      detail: 'Las fuentes operativas actuales definen bloques, responsables y servicios, pero todavía no contienen una playlist canción por canción.',
-      source: 'Brecha de información',
-    });
-    return decisions;
-  }, [data]);
+export default function MusicPage(){
+  const[data,setData]=useState<MusicSource|null>(null),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[error,setError]=useState<string|null>(null),[notice,setNotice]=useState<string|null>(null),[editor,setEditor]=useState<FormState|null>(null),[previewMode,setPreviewMode]=useState(false),[saving,setSaving]=useState(false);
+  useEffect(()=>setPreviewMode(window.location.hostname!=='gestion.felipeycami.cl'),[]);
+  const loadData=useCallback(async(manual=false)=>{if(manual)setRefreshing(true);setError(null);try{const response=await fetch('/api/music-source',{cache:'no-store'});const payload=await response.json();if(!response.ok||!payload?.ok)throw new Error(payload?.error||'No fue posible cargar Música.');setData(payload);}catch(err:any){setError(err?.message||'No fue posible cargar Música.');}finally{setLoading(false);setRefreshing(false);}},[]);
+  useEffect(()=>{loadData();},[loadData]);
+  const pendingDecisions=useMemo(()=>{if(!data)return[];const decisions:Array<{title:string;detail:string;source:string}>=[];data.moments.filter(i=>i.status.toLowerCase()!=='confirmado').forEach(i=>decisions.push({title:`Cerrar ${i.block}`,detail:i.notes||i.cue||'El momento todavía figura pendiente.',source:'Plan musical'}));data.budgetItems.filter(i=>i.status.toLowerCase()!=='confirmado').forEach(i=>decisions.push({title:`Resolver ${i.item}`,detail:i.notes||`${i.responsible||'Responsable por definir'} · ${money(i.projectedGross)}`,source:'Presupuesto'}));if(!data.summary.hasDetailedPlaylist)decisions.push({title:'Completar canciones por momento',detail:'Ya puedes registrar canción, artista, versión, link y cue directamente en este módulo.',source:'Repertorio'});return decisions;},[data]);
+  function newMoment(){setEditor({...EMPTY,id:`preview-${Date.now()}`,sortOrder:(data?.moments.length||0)*10+10});}
+  function editMoment(item:MusicMoment){setEditor({id:item.id,dateTime:toInput(item.dateTime),block:item.block,status:item.status,notes:item.notes,song:item.song,artist:item.artist,version:item.version,url:item.url,provider:item.provider, cue:item.cue,priority:item.priority,sortOrder:item.sortOrder});}
+  function localSave(form:FormState){setData(current=>{if(!current)return current;const exists=current.moments.some(i=>i.id===form.id);const nextItem:MusicMoment={...form,rowNumber:exists?(current.moments.find(i=>i.id===form.id)?.rowNumber||1):current.moments.length+1,owner:form.provider,duration:'',dependencies:form.song?[form.song,form.artist].filter(Boolean).join(' · '):''};const moments=exists?current.moments.map(i=>i.id===form.id?nextItem:i):[...current.moments,nextItem];const confirmed=moments.filter(i=>i.status.toLowerCase()==='confirmado').length;return{...current,moments,summary:{...current.summary,moments:moments.length,confirmedMoments:confirmed,pendingMoments:moments.length-confirmed,hasDetailedPlaylist:moments.some(i=>Boolean(i.song))}};});setEditor(null);setNotice('Cambio guardado localmente en Preview.');}
+  async function save(){if(!editor?.block.trim()){setError('El momento musical es obligatorio.');return;}if(previewMode){localSave(editor);return;}setSaving(true);setError(null);try{const isNew=editor.id.startsWith('preview-');const response=await fetch('/api/music-source',{method:isNew?'POST':'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({...editor,id:isNew?undefined:editor.id})});const payload=await response.json();if(!response.ok||!payload?.ok)throw new Error(payload?.message||payload?.error||'No fue posible guardar.');setEditor(null);setNotice('Plan musical actualizado.');await loadData();}catch(err:any){setError(err?.message||'No fue posible guardar.');}finally{setSaving(false);}}
+  async function remove(item:MusicMoment){if(!window.confirm(`¿Eliminar “${item.block}”?`))return;if(previewMode){setData(current=>current?{...current,moments:current.moments.filter(i=>i.id!==item.id),summary:{...current.summary,moments:current.summary.moments-1}}:current);setNotice('Momento eliminado localmente en Preview.');return;}const response=await fetch(`/api/music-source?id=${item.id}`,{method:'DELETE'});const payload=await response.json();if(!response.ok||!payload?.ok){setError(payload?.message||payload?.error||'No fue posible eliminar.');return;}await loadData();}
 
   return <DashboardLayout><div className="music-v2">
-    <section className="music-v2__hero">
-      <div><span className="music-v2__eyebrow">Banda sonora operativa</span><h1>Música</h1><p>Conecta los momentos musicales del cronograma con los servicios presupuestados, sin inventar canciones que todavía no estén documentadas.</p></div>
-      <button type="button" onClick={() => loadData(true)} disabled={refreshing}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Actualizando…' : 'Actualizar'}</button>
-    </section>
-
-    {error && <div className="music-v2__error"><AlertTriangle size={16}/><span>{error}</span></div>}
-
-    {loading ? <div className="music-v2__loading"><Loader2 className="animate-spin" size={21}/>Cargando operación musical…</div> : <>
-      <section className="music-v2__source">
-        <div><span>Fuentes</span><strong>{data?.sources.join(' + ')}</strong><small>lectura en vivo</small></div>
-        <div><span>Momentos musicales</span><strong>{data?.summary.moments || 0}</strong><small>{data?.summary.confirmedMoments || 0} confirmados</small></div>
-        <div className={(data?.summary.pendingMoments || 0) > 0 ? 'is-attention' : ''}><span>Momentos pendientes</span><strong>{data?.summary.pendingMoments || 0}</strong><small>requieren cierre</small></div>
-        <div><span>Presupuesto asociado</span><strong>{money(data?.summary.budgetTotal)}</strong><small>{data?.summary.budgetItems || 0} ítems detectados</small></div>
-      </section>
-
-      <section className="music-v2__section">
-        <header><div><span className="music-v2__eyebrow">Secuencia</span><h2>Cómo entra la música durante el evento</h2></div></header>
-        <div className="music-v2__moments">{(data?.moments || []).map((item) => <article key={item.rowNumber} className={statusClass(item.status)}>
-          <div className="music-v2__moment-time"><strong>{time(item.dateTime)}</strong><small>{item.duration || '—'}</small></div>
-          <span className="music-v2__moment-icon"><Volume2 size={16}/></span>
-          <div className="music-v2__moment-main"><div className="music-v2__moment-top"><div><span>{item.owner || 'Responsable por definir'}</span><h3>{item.block}</h3></div><span className="music-v2__status">{item.status || 'Pendiente'}</span></div><div className="music-v2__moment-meta"><span><b>Dependencia</b>{item.dependencies || 'Sin dependencia declarada'}</span><span><b>Dirección</b>{item.notes || 'Sin nota ejecutiva'}</span></div></div>
-        </article>)}</div>
-      </section>
-
-      <section className="music-v2__grid">
-        <div className="music-v2__panel">
-          <header><div><span className="music-v2__eyebrow">Servicios</span><h2>Proveedores y costos musicales</h2></div><DollarSign size={18}/></header>
-          <div className="music-v2__budget-list">{(data?.budgetItems || []).map((item) => <article key={item.rowNumber}><span className="music-v2__service-icon"><Music2 size={15}/></span><div><strong>{item.item}</strong><small>{item.category} · {item.responsible || 'Responsable por definir'}</small>{item.notes && <p>{item.notes}</p>}</div><strong className="music-v2__amount">{money(item.projectedGross)}</strong><span className={`music-v2__status ${statusClass(item.status)}`}>{item.status || 'Pendiente'}</span></article>)}</div>
-        </div>
-
-        <div className="music-v2__panel music-v2__decisions">
-          <header><div><span className="music-v2__eyebrow">Decisiones</span><h2>Qué falta definir</h2></div><Sparkles size={18}/></header>
-          <div>{pendingDecisions.map((decision, index) => <article key={`${decision.title}-${index}`}><span className="music-v2__decision-icon">{decision.source === 'Brecha de información' ? <Music2 size={15}/> : <Clock3 size={15}/>}</span><div><span>{decision.source}</span><strong>{decision.title}</strong><p>{decision.detail}</p></div></article>)}{!pendingDecisions.length && <div className="music-v2__complete"><CheckCircle2 size={20}/><strong>Operación musical cerrada.</strong></div>}</div>
-        </div>
-      </section>
+    <section className="music-v2__hero"><div><span className="music-v2__eyebrow">Banda sonora operativa</span><h1>Música</h1><p>Gestiona momentos, canciones, versiones, links y cues desde una sola vista. Supabase es ahora la fuente canónica.</p></div><div className="music-v2__hero-actions">{previewMode&&<span className="music-v2__preview">Preview</span>}<button type="button" onClick={()=>loadData(true)} disabled={refreshing}><RefreshCw size={14} className={refreshing?'animate-spin':''}/>{refreshing?'Actualizando…':'Actualizar'}</button><button type="button" className="is-primary" onClick={newMoment}><Plus size={14}/>Nuevo momento</button></div></section>
+    {error&&<div className="music-v2__error"><AlertTriangle size={16}/><span>{error}</span></div>}{notice&&<div className="music-v2__notice"><CheckCircle2 size={15}/>{notice}</div>}
+    {loading?<div className="music-v2__loading"><Loader2 className="animate-spin" size={21}/>Cargando operación musical…</div>:<>
+      <section className="music-v2__source"><div><span>Fuentes</span><strong>{data?.sources.join(' + ')}</strong><small>{data?.canonical?'Supabase canónico':'lectura operativa'}</small></div><div><span>Momentos musicales</span><strong>{data?.summary.moments||0}</strong><small>{data?.summary.confirmedMoments||0} confirmados</small></div><div className={(data?.summary.pendingMoments||0)>0?'is-attention':''}><span>Momentos pendientes</span><strong>{data?.summary.pendingMoments||0}</strong><small>requieren cierre</small></div><div><span>Presupuesto asociado</span><strong>{money(data?.summary.budgetTotal)}</strong><small>{data?.summary.budgetItems||0} ítems detectados</small></div></section>
+      <section className="music-v2__section"><header><div><span className="music-v2__eyebrow">Secuencia</span><h2>Momentos y canciones</h2></div></header><div className="music-v2__moments">{(data?.moments||[]).map(item=><article key={item.id} className={statusClass(item.status)}><div className="music-v2__moment-time"><strong>{time(item.dateTime)}</strong><small>{item.priority}</small></div><span className="music-v2__moment-icon"><Volume2 size={16}/></span><div className="music-v2__moment-main"><div className="music-v2__moment-top"><div><span>{item.provider||'Responsable por definir'}</span><h3>{item.block}</h3></div><div className="music-v2__moment-actions"><span className="music-v2__status">{item.status||'Pendiente'}</span><button onClick={()=>editMoment(item)} aria-label="Editar"><Edit3 size={13}/></button><button onClick={()=>remove(item)} aria-label="Eliminar"><Trash2 size={13}/></button></div></div><div className="music-v2__song"><Music2 size={15}/><div><strong>{item.song||'Canción por definir'}</strong><small>{[item.artist,item.version].filter(Boolean).join(' · ')||'Artista / versión pendientes'}</small></div>{item.url&&<a href={item.url} target="_blank" rel="noreferrer"><ExternalLink size={13}/></a>}</div><div className="music-v2__moment-meta"><span><b>Cue</b>{item.cue||'Sin cue definido'}</span><span><b>Notas</b>{item.notes||'Sin nota ejecutiva'}</span></div></div></article>)}</div></section>
+      <section className="music-v2__grid"><div className="music-v2__panel"><header><div><span className="music-v2__eyebrow">Servicios</span><h2>Proveedores y costos musicales</h2></div><DollarSign size={18}/></header><div className="music-v2__budget-list">{(data?.budgetItems||[]).map(item=><article key={item.id}><span className="music-v2__service-icon"><Music2 size={15}/></span><div><strong>{item.item}</strong><small>{item.category} · {item.responsible||'Responsable por definir'}</small>{item.notes&&<p>{item.notes}</p>}</div><strong className="music-v2__amount">{money(item.projectedGross)}</strong><span className={`music-v2__status ${statusClass(item.status)}`}>{item.status||'Pendiente'}</span></article>)}</div></div><div className="music-v2__panel music-v2__decisions"><header><div><span className="music-v2__eyebrow">Decisiones</span><h2>Qué falta definir</h2></div><Sparkles size={18}/></header><div>{pendingDecisions.map((decision,index)=><article key={`${decision.title}-${index}`}><span className="music-v2__decision-icon">{decision.source==='Repertorio'?<Music2 size={15}/>:<Clock3 size={15}/>}</span><div><span>{decision.source}</span><strong>{decision.title}</strong><p>{decision.detail}</p></div></article>)}{!pendingDecisions.length&&<div className="music-v2__complete"><CheckCircle2 size={20}/><strong>Operación musical cerrada.</strong></div>}</div></div></section>
     </>}
+    {editor&&<><button className="music-v2__backdrop" aria-label="Cerrar" onClick={()=>!saving&&setEditor(null)}/><aside className="music-v2__drawer"><header><div><span className="music-v2__eyebrow">Repertorio</span><h2>{editor.id.startsWith('preview-')?'Nuevo momento':'Editar momento'}</h2></div><button onClick={()=>setEditor(null)}><X size={18}/></button></header><div className="music-v2__form"><label><span>Momento *</span><input value={editor.block} onChange={e=>setEditor({...editor,block:e.target.value})} placeholder="Ej. Primer baile"/></label><div className="music-v2__form-grid"><label><span>Fecha / hora</span><input type="datetime-local" value={editor.dateTime} onChange={e=>setEditor({...editor,dateTime:e.target.value})}/></label><label><span>Estado</span><select value={editor.status} onChange={e=>setEditor({...editor,status:e.target.value})}><option>Pendiente</option><option>Confirmado</option><option>Descartado</option></select></label></div><label><span>Canción</span><input value={editor.song} onChange={e=>setEditor({...editor,song:e.target.value})} placeholder="Título"/></label><div className="music-v2__form-grid"><label><span>Artista</span><input value={editor.artist} onChange={e=>setEditor({...editor,artist:e.target.value})}/></label><label><span>Versión</span><input value={editor.version} onChange={e=>setEditor({...editor,version:e.target.value})} placeholder="Original, acústica, remix…"/></label></div><div className="music-v2__form-grid"><label><span>Responsable / proveedor</span><input value={editor.provider} onChange={e=>setEditor({...editor,provider:e.target.value})}/></label><label><span>Prioridad</span><select value={editor.priority} onChange={e=>setEditor({...editor,priority:e.target.value})}><option>Normal</option><option>Alta</option><option>Must play</option><option>No tocar</option></select></label></div><label><span>Link</span><input type="url" value={editor.url} onChange={e=>setEditor({...editor,url:e.target.value})} placeholder="Spotify / YouTube"/></label><label><span>Cue / instrucción</span><input value={editor.cue} onChange={e=>setEditor({...editor,cue:e.target.value})} placeholder="Ej. iniciar desde 00:42"/></label><label><span>Notas</span><textarea rows={4} value={editor.notes} onChange={e=>setEditor({...editor,notes:e.target.value})}/></label><footer><button onClick={()=>setEditor(null)}>Cancelar</button><button className="is-primary" onClick={save} disabled={saving}>{saving?<Loader2 size={14} className="animate-spin"/>:null}Guardar</button></footer></div></aside></>}
   </div></DashboardLayout>;
 }
