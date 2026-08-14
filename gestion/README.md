@@ -58,7 +58,27 @@ npm run start
 - `npm run qa`: lint + typecheck + build con tests incluidos.
 - `npm run check:ci`: alias estable del gate completo para agentes y automatizaciones.
 
-La primera suite cubre normalización de teléfonos y, especialmente, la política fail-closed que impide escrituras y sincronización externa en Preview/Development salvo habilitación explícita de un staging aislado.
+La suite protege actualmente política de entornos, normalización de teléfonos, guards obligatorios de rutas de escritura/sync, contratos del Copiloto y coordinación exclusiva de paneles flotantes.
+
+## Estrategia de QA costo 0
+
+Por decisión de producto no se mantendrá por ahora un branch Supabase de staging de pago.
+
+El flujo de trabajo es:
+
+```text
+rama de desarrollo
+→ Vercel Preview
+→ lectura de fuentes reales
+→ mutaciones bloqueadas por servidor
+→ borradores locales para interacción
+→ tests automáticos
+→ build/typecheck
+→ revisión
+→ merge controlado
+```
+
+Esto mantiene el costo incremental en **US$0** y evita escribir en producción desde Preview. La contrapartida es que no se realizan E2E de escritura real fuera de producción. Esa brecha se compensa con tests de contratos y lógica pura; si más adelante una migración o feature necesita mutaciones completas, el staging se levanta sólo temporalmente.
 
 ## Variables de entorno
 
@@ -150,8 +170,8 @@ Antes de modificar código, leer en este orden:
 ## Evolución prioritaria
 
 1. Cerrar quality gates y regresiones del caso Felipe/Camila.
-2. Completar staging full-stack aislado de producción.
-3. Ampliar pruebas automatizadas hacia dominio, API e interacción crítica.
+2. Ampliar pruebas automatizadas de conciliación, seating y acciones del Copiloto.
+3. Mantener Preview en modo costo 0: lectura real + borradores locales + writes bloqueadas.
 4. Terminar conciliación operativa de confirmados y seating final.
 5. Ajustar salón, cronograma, música, proveedores y documentos con datos definitivos.
 6. Validar la experiencia completa con Felipe/Camila como primer caso real.
