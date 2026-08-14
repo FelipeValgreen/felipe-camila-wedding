@@ -11,6 +11,12 @@
     "types": ["node"],
     "allowJs": false
   },
-  "include": ["lib/runtime-policy.ts", "lib/phone.ts", "tests/**/*.test.ts"],
+  "include": [
+    "lib/runtime-policy.ts",
+    "lib/phone.ts",
+    "lib/copilot-operations.ts",
+    "lib/preview-entity-state.ts",
+    "tests/**/*.test.ts"
+  ],
   "exclude": ["node_modules", ".next", ".test-build"]
 }
