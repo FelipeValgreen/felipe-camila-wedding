@@ -13,11 +13,11 @@ Aplicación interna para operar el matrimonio de Felipe y Camila y base del futu
 - Google Sheets: espejo operativo, nunca fuente primaria
 - Hosting: Vercel
 
-La producción está activa y recibe confirmaciones reales. Ningún desarrollo o preview debe escribir en la base productiva salvo una operación aprobada, respaldada y verificada explícitamente.
+La producción está activa y recibe confirmaciones reales. Ningún desarrollo o Preview debe escribir en la base productiva salvo una operación aprobada, respaldada y verificada explícitamente.
 
 ## Dirección de producto
 
-El Centro de Gestión debe evolucionar hacia un sistema integral de planificación y operación de bodas, conservando la lógica fiable ya existente.
+El Centro de Gestión evoluciona hacia un Wedding Planning OS: planificación, personas, presupuesto, proveedores, seating, salón, cronograma, música, documentos, operación del evento y Copiloto conectados sobre una única fuente de verdad.
 
 Las referencias externas compartidas por el usuario son **benchmarks**, no especificaciones literales. Se pueden reutilizar patrones de producto, pero la marca, identidad visual, navegación, microcopy, asistente y presets deben ser propios.
 
@@ -32,6 +32,7 @@ Las referencias externas compartidas por el usuario son **benchmarks**, no espec
 - Vercel y Vercel Cron
 - Google Sheets API mediante cuenta de servicio
 - Lucide React
+- Node test runner + TypeScript para pruebas automatizadas sin dependencias de test adicionales
 
 ## Comandos actuales
 
@@ -41,13 +42,23 @@ Desde `gestion/`:
 npm install
 npm run dev
 npm run lint
+npm run typecheck
+npm test
 npm run build
+npm run qa
+npm run check:ci
 npm run start
 ```
 
-### Brecha conocida
+### Quality gates
 
-El `package.json` actual no contiene scripts formales de `test` ni `typecheck`. Hasta incorporarlos, el build de Next.js no debe considerarse la única garantía de calidad.
+- `npm test`: compila una suite aislada y ejecuta pruebas automatizadas de contratos críticos.
+- `npm run typecheck`: valida TypeScript sin emitir archivos.
+- `npm run build`: ejecuta primero `npm test` y sólo después genera el build de Next.js.
+- `npm run qa`: lint + typecheck + build con tests incluidos.
+- `npm run check:ci`: alias estable del gate completo para agentes y automatizaciones.
+
+La primera suite cubre normalización de teléfonos y, especialmente, la política fail-closed que impide escrituras y sincronización externa en Preview/Development salvo habilitación explícita de un staging aislado.
 
 ## Variables de entorno
 
@@ -63,9 +74,15 @@ GOOGLE_SHEETS_SPREADSHEET_ID=
 GOOGLE_SERVICE_ACCOUNT_EMAIL=
 GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY=
 CRON_SECRET=
+ALLOW_NON_PRODUCTION_WRITES=
+ALLOW_NON_PRODUCTION_EXTERNAL_SYNC=
+OPENAI_API_KEY=
+OPENAI_COPILOT_MODEL=
+AI_GATEWAY_API_KEY=
+AI_GATEWAY_MODEL=
 ```
 
-Production, Preview y Development deben usar valores independientes. Preview nunca debe heredar credenciales productivas.
+Production, Preview y Development deben usar valores independientes. Preview nunca debe heredar credenciales productivas con capacidad de escritura. Los flags `ALLOW_NON_PRODUCTION_*` sólo se habilitan cuando exista un staging realmente aislado.
 
 ## Flujo de datos principal
 
@@ -74,9 +91,26 @@ Centro de Gestión
 → sesión Supabase Auth
 → rutas API / RPC con RLS
 → Supabase como fuente canónica
+→ audit_log
 → sync_outbox
 → worker idempotente
 → Google Sheets como espejo
+```
+
+## Política de entorno
+
+`lib/runtime-policy.ts` contiene la lógica pura y testeable de clasificación del entorno y autorización de escrituras. `lib/environment-guard.ts` es el adaptador server-only que aplica esa política a `process.env`.
+
+Regla:
+
+```text
+Production
+→ escrituras canónicas permitidas según rol/RLS
+
+Preview / Development / unknown
+→ escrituras bloqueadas por defecto
+→ sync externo bloqueado por defecto
+→ sólo se habilitan con flags explícitos en staging aislado
 ```
 
 ## Documentación obligatoria
@@ -95,37 +129,44 @@ Antes de modificar código, leer en este orden:
 
 ## Módulos actuales
 
-- Resumen operativo
-- Invitados individuales
-- Respuestas RSVP originales
-- Integrantes de respuestas conjuntas
-- Bandeja de incidencias
+- Inicio / Command Center
+- Necesita atención / conciliación RSVP
+- Planificación y tareas
+- Invitados y editor rápido
+- Relaciones y ramas familiares/sociales
 - Mesas y asignaciones
-- Vista gráfica referencial
-- Finanzas y pagos
-- Proveedores en base de datos
-- Auditoría
+- Seating Intelligence con escenarios explicables
+- Diseño del salón 2D y layout versionado
+- Presupuesto, pagos y proveedores
+- Equipo / producción de proveedores
+- Cronograma / Run of Show
+- Música / repertorio / cues
+- Documentos
+- Actividad y auditoría
+- Copiloto operacional grounded con acciones confirmables
+- Estado del sistema
 - Sincronización con Google Sheets
 
 ## Evolución prioritaria
 
-1. Documentación y baseline.
-2. Aislamiento seguro de Preview y staging.
-3. Sistema visual y navegación propios.
-4. Inicio, planificación, presupuesto y proveedores.
-5. Invitados, mesas y salón conectados.
-6. Cronograma, música y documentos.
-7. Inteligencia asistida con aprobación humana.
-8. Segundo matrimonio piloto.
-9. Multi-matrimonio.
+1. Cerrar quality gates y regresiones del caso Felipe/Camila.
+2. Completar staging full-stack aislado de producción.
+3. Ampliar pruebas automatizadas hacia dominio, API e interacción crítica.
+4. Terminar conciliación operativa de confirmados y seating final.
+5. Ajustar salón, cronograma, música, proveedores y documentos con datos definitivos.
+6. Validar la experiencia completa con Felipe/Camila como primer caso real.
+7. Preparar segundo matrimonio piloto.
+8. Multi-matrimonio y permisos por evento.
+9. Portal de proveedores.
 10. Comercialización y facturación posterior.
 
 ## Regla esencial
 
 ```text
 No romper lo que ya funciona.
-No probar sobre producción.
+No probar escrituras reales sobre producción.
 No confundir una respuesta RSVP con una persona.
 No modificar el sitio público desde trabajos del Centro de Gestión.
 No copiar literalmente el benchmark externo.
+Toda IA propone; los cambios sensibles requieren confirmación explícita.
 ```
