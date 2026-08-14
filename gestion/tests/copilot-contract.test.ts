@@ -7,7 +7,7 @@ function source(path: string) {
   return readFileSync(resolve(process.cwd(), path), 'utf8');
 }
 
-test('Copiloto keeps all current confirmable action types', () => {
+test('Copiloto keeps all current confirmable backend action types', () => {
   const content = source('app/api/copilot/route.ts');
   const expected = [
     'guest.create',
@@ -56,4 +56,42 @@ test('Copiloto UI keeps visible operational shortcuts for list review and attent
 
   assert.match(normalized, /revisar lista actualizada/);
   assert.match(normalized, /que cambio desde mi ultima revision|que requiere atencion ahora/);
+});
+
+test('Copiloto UI can prepare cost-zero create update delete and seating actions', () => {
+  const content = source('components/PlanningCopilot.tsx');
+  const expected = [
+    'guest.create',
+    'guest.update',
+    'guest.delete',
+    'table.rename',
+    'table.create',
+    'table.update',
+    'table.delete',
+    'seating.assign',
+    'seating.unassign'
+  ];
+
+  for (const action of expected) {
+    assert.match(content, new RegExp(action.replace('.', '\\.')), `Copiloto UI must keep operational action ${action}`);
+  }
+  assert.match(content, /\/api\/guests/);
+  assert.match(content, /\/api\/tables/);
+  assert.match(content, /\/api\/seating/);
+  assert.match(content, /fc-preview-guests-v1/);
+  assert.match(content, /fc-preview-tables-v2/);
+  assert.match(content, /Confirmar/, 'Mutations must remain behind explicit confirmation');
+});
+
+test('Copiloto UI recognizes direct guest table seating and venue-position commands', () => {
+  const content = source('components/PlanningCopilot.tsx');
+  const normalized = content.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  assert.match(normalized, /mueve|posiciona/);
+  assert.match(normalized, /gira|rota/);
+  assert.match(normalized, /asigna|sienta/);
+  assert.match(normalized, /elimina|borra/);
+  assert.match(normalized, /confirmad|no asiste|pendiente/);
+  assert.match(normalized, /position_x_m/);
+  assert.match(normalized, /position_y_m/);
 });
