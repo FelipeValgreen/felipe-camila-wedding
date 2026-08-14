@@ -10,6 +10,8 @@ type CopilotAction = { id: string; type: ActionType; label: string; description:
 type ReviewPerson = { name: string; attendance?: string; confirmedAt?: string | null; source?: string; guestId?: string | null };
 type AiResult = { answer: string; model: string; action?: CopilotAction | null };
 
+const EXTERNAL_AI_ENABLED = process.env.ENABLE_EXTERNAL_AI === 'true';
+
 async function fetchJsonSafe(origin: string, path: string, cookie: string) {
   try {
     const response = await fetch(`${origin}${path}`, { headers: { cookie }, cache: 'no-store' });
@@ -50,7 +52,6 @@ function attendanceFromText(q: string) {
 function parseAction(question: string, history: ChatMessage[]): CopilotAction | null {
   const text = question.trim();
   const q = normalize(text);
-
   const renameA = text.match(/(?:renombra|nombra|llama)\s+(?:la\s+)?mesa\s+(\d+)\s+(?:a|como)?\s*[“\"]?(.+?)[”\"]?[.!?]?$/i);
   if (renameA) return action('table', 'table.rename', `Renombrar Mesa ${renameA[1]}`, `Nuevo nombre: ${renameA[2].trim()}`, { tableNumber: Number(renameA[1]), name: renameA[2].trim() });
   const renameB = text.match(/ponle\s+[“\"]?(.+?)[”\"]?\s+a\s+(?:la\s+)?mesa\s+(\d+)[.!?]?$/i);
@@ -130,7 +131,6 @@ function extractResponseText(payload: any) {
   }
   return '';
 }
-
 async function askOpenAI(token: string, model: string, messages: Array<{ role: string; content: string }>): Promise<AiResult> {
   const input = messages.map((message) => ({ role: message.role, content: [{ type: 'input_text', text: message.content }] }));
   const response = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, input, tools: OPENAI_TOOLS, tool_choice: 'auto', parallel_tool_calls: false, store: false, reasoning: { effort: 'low' }, text: { verbosity: 'low' } }), cache: 'no-store' });
@@ -206,7 +206,7 @@ function groundedFallback(question: string, snapshot: any, unavailable: string[]
   else if (/(tarea|checklist|planificacion|planificación)/.test(q)) answer = `Hecho: ${tasks.filter((task: any) => task.status !== 'Completada').length} tareas manuales pendientes.`;
   else if (/(document|archivo|contrato)/.test(q)) answer = `Hecho: el registro documental contiene ${documents.total ?? documents.items ?? 0} elementos según las fuentes disponibles.`;
   else if (/(atencion|atención|pendiente|falta|prioridad)/.test(q)) answer = `Hecho: ${issues.length} incidencias abiertas; además ${confirmed.currentKnownWithoutMaster ?? 0} asistentes pendientes de ficha y ${timeline.pending ?? 0} bloques pendientes. ${coordinationBrief(snapshot)}`;
-  else answer = 'Puedo ayudarte a operar la boda con datos reales: invitados, incidencias, mesas, presupuesto, cronograma, música, proveedores, tareas y memoria. También puedo preparar cambios para que tú los confirmes.';
+  else answer = 'Puedo operar la boda con los datos conectados: revisar cambios, coordinar pendientes y preparar modificaciones confirmables. En modo costo 0, las operaciones frecuentes no dependen de un LLM externo.';
   if (unavailable.length) answer += ` Nota: ${unavailable.length} fuente(s) no respondieron; usé sólo las disponibles.`;
   return answer;
 }
@@ -229,7 +229,7 @@ export async function POST(request: Request) {
     const origin = new URL(request.url).origin;
     const [confirmedResult, budgetResult, timelineResult, musicResult, documentsResult, tablesResult, guestsResult, seatingResult, issuesResult, vendorsResult, expensesResult, paymentsResult, tasksResult, memoryResult] = await Promise.all([
       fetchJsonSafe(origin, '/api/confirmed-source', cookie), fetchJsonSafe(origin, '/api/budget-source', cookie), fetchJsonSafe(origin, '/api/timeline-source', cookie), fetchJsonSafe(origin, '/api/music-source', cookie), fetchJsonSafe(origin, '/api/documents-source', cookie),
-      supabase.from('wedding_tables').select('id,table_number,name,capacity,table_type,zone,position_x,position_y,rotation,locked').order('table_number'),
+      supabase.from('wedding_tables').select('id,table_number,name,capacity,table_type,zone,position_x,position_y,position_x_m,position_y_m,width_m,height_m,rotation,locked').order('table_number'),
       supabase.from('wedding_guests').select('id,first_name,last_name,group_name,family_side,family_branch,attendance_status,dietary_type,dietary_detail,table_id,guest_status').eq('guest_status', 'active').order('first_name'),
       supabase.from('seating_assignments').select('guest_id,table_id,seat_number'),
       supabase.from('management_issues').select('id,issue_type,severity,title,description,status').eq('status', 'open'),
@@ -261,31 +261,33 @@ export async function POST(request: Request) {
       const delta = guestDelta(state?.last_snapshot, people);
       const writeBlocked = Boolean(getDatabaseWriteBlock());
       if (!writeBlocked) await supabase.from('copilot_review_state').upsert({ user_id: user.id, domain: 'guest_list', last_reviewed_at: new Date().toISOString(), last_snapshot: { people, summary: confirmed.summary || {} }, updated_at: new Date().toISOString() }, { onConflict: 'user_id,domain' });
-      return NextResponse.json({ ok: true, answer: reviewAnswer(confirmed.summary || {}, delta, !state, !writeBlocked), model: 'deterministic-delta', mode: 'grounded-delta', groundedAt: snapshot.generatedAt, readOnly: true, action: null, unavailableSources: unavailable, reviewPersisted: !writeBlocked });
+      return NextResponse.json({ ok: true, answer: reviewAnswer(confirmed.summary || {}, delta, !state, !writeBlocked), model: 'deterministic-delta', mode: 'grounded-delta', groundedAt: snapshot.generatedAt, readOnly: true, action: null, unavailableSources: unavailable, reviewPersisted: !writeBlocked, externalAIEnabled: EXTERNAL_AI_ENABLED });
     }
 
     const deterministicAction = parseAction(question, history);
-    const system = `Eres el Copiloto Operacional del matrimonio. Usa exclusivamente SNAPSHOT y MEMORIA ACTIVA como hechos. Distingue Hecho / Inferencia / Recomendación. Nunca inventes parentescos, canciones, costos, horarios, documentos o proveedores. Para confirmados usa currentKnownAttending. Cuando el usuario pida una modificación soportada, usa una herramienta propose_*; sólo prepara la acción y nunca afirmes que la ejecutaste. Si pide ayuda general para coordinar, prioriza bloqueos y siguientes acciones. Español de Chile, concreto y orientado a decisiones.\nSNAPSHOT:\n${JSON.stringify(snapshot)}`;
+    const system = `Eres el Copiloto Operacional del matrimonio. Usa exclusivamente SNAPSHOT y MEMORIA ACTIVA como hechos. Distingue Hecho / Inferencia / Recomendación. Nunca inventes parentescos, canciones, costos, horarios, documentos o proveedores. Para confirmados usa currentKnownAttending. Cuando el usuario pida una modificación soportada, usa una herramienta propose_*; sólo prepara la acción y nunca afirmes que la ejecutaste. Español de Chile, concreto y orientado a decisiones.\nSNAPSHOT:\n${JSON.stringify(snapshot)}`;
     const messages = [{ role: 'system', content: system }, ...history.map((message) => ({ role: message.role, content: message.text })), { role: 'user', content: question }];
 
-    let answer = '', model = 'operational-engine', mode = 'operational-engine', aiError: string | null = null, aiAction: CopilotAction | null = null;
-    const openAIKey = process.env.OPENAI_API_KEY || '';
-    if (openAIKey) {
-      try { const result = await askOpenAI(openAIKey, process.env.OPENAI_COPILOT_MODEL || 'gpt-5.6', messages); answer = result.answer; model = result.model; mode = 'openai-responses-tools'; aiAction = result.action || null; }
-      catch (error: any) { aiError = error?.message || 'OpenAI no disponible'; }
-    }
-    if (!answer) {
-      const gatewayToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || '';
-      if (gatewayToken) {
-        for (const candidate of Array.from(new Set([process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.6', 'openai/gpt-5.6', 'anthropic/claude-sonnet-5', 'google/gemini-3.1-pro-preview']))) {
-          try { const result = await askGateway(gatewayToken, candidate, messages); answer = result.answer; model = result.model; mode = 'ai-gateway'; break; }
-          catch (error: any) { aiError = error?.message || 'AI Gateway no disponible'; }
-        }
+    let answer = '', model = 'operational-engine-zero-cost', mode = 'operational-engine', aiError: string | null = null, aiAction: CopilotAction | null = null;
+    if (EXTERNAL_AI_ENABLED) {
+      const openAIKey = process.env.OPENAI_API_KEY || '';
+      if (openAIKey) {
+        try { const result = await askOpenAI(openAIKey, process.env.OPENAI_COPILOT_MODEL || 'gpt-5.6', messages); answer = result.answer; model = result.model; mode = 'openai-responses-tools'; aiAction = result.action || null; }
+        catch (error: any) { aiError = error?.message || 'OpenAI no disponible'; }
+      }
+      if (!answer) {
+        const gatewayToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || '';
+        if (gatewayToken) {
+          for (const candidate of Array.from(new Set([process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.6-sol', 'openai/gpt-5.6-sol', 'google/gemini-3.1-pro-preview']))) {
+            try { const result = await askGateway(gatewayToken, candidate, messages); answer = result.answer; model = result.model; mode = 'ai-gateway'; break; }
+            catch (error: any) { aiError = error?.message || 'AI Gateway no disponible'; }
+          }
+        } else aiError = 'ENABLE_EXTERNAL_AI activo, pero no existe credencial de proveedor.';
       }
     }
     const proposedAction = aiAction || deterministicAction;
     if (!answer) answer = groundedFallback(question, snapshot, unavailable, proposedAction);
-    return NextResponse.json({ ok: true, answer, model, mode, groundedAt: snapshot.generatedAt, readOnly: !proposedAction, action: proposedAction, unavailableSources: unavailable, aiError: mode === 'operational-engine' ? aiError : null });
+    return NextResponse.json({ ok: true, answer, model, mode, groundedAt: snapshot.generatedAt, readOnly: !proposedAction, action: proposedAction, unavailableSources: unavailable, aiError: EXTERNAL_AI_ENABLED && mode === 'operational-engine' ? aiError : null, externalAIEnabled: EXTERNAL_AI_ENABLED });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error?.message || 'No fue posible responder con el Copiloto.' }, { status: 500 });
   }
