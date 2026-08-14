@@ -1,0 +1,59 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+function source(path: string) {
+  return readFileSync(resolve(process.cwd(), path), 'utf8');
+}
+
+test('Copiloto keeps all current confirmable action types', () => {
+  const content = source('app/api/copilot/route.ts');
+  const expected = [
+    'guest.create',
+    'music.create',
+    'timeline.create',
+    'task.create',
+    'memory.create',
+    'table.rename'
+  ];
+
+  for (const action of expected) {
+    assert.match(content, new RegExp(action.replace('.', '\\.')), `Copiloto must keep action ${action}`);
+  }
+  assert.match(content, /requiresConfirmation:\s*true/, 'Copiloto mutations must remain confirmable, never silent');
+});
+
+test('Copiloto keeps the grounded operational review intents that previously failed in UI', () => {
+  const content = source('app/api/copilot/route.ts');
+  const normalized = content.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  assert.match(normalized, /revis[a-z]*\s+lista|lista\s+actualizada/, 'Copiloto must recognize updated guest-list review');
+  assert.match(normalized, /que\s+cambio|cambios\s+desde|ultima\s+revision/, 'Copiloto must support delta review');
+  assert.match(normalized, /coordina|coordinacion|requiere\s+atencion/, 'Copiloto must keep operational coordination fallback');
+});
+
+test('OpenAI tool mode proposes rather than directly mutating data', () => {
+  const content = source('app/api/copilot/route.ts');
+  const toolNames = [
+    'propose_guest',
+    'propose_table_rename',
+    'propose_memory',
+    'propose_music_item',
+    'propose_timeline_block',
+    'propose_task'
+  ];
+
+  for (const tool of toolNames) {
+    assert.match(content, new RegExp(tool), `OpenAI tool ${tool} must remain available`);
+  }
+  assert.doesNotMatch(content, /function\s+direct_(?:insert|update|delete)/i, 'LLM tool layer must not expose silent direct mutation helpers');
+});
+
+test('Copiloto UI keeps visible operational shortcuts for list review and attention', () => {
+  const content = source('components/PlanningCopilot.tsx');
+  const normalized = content.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  assert.match(normalized, /revisar lista actualizada/);
+  assert.match(normalized, /que cambio desde mi ultima revision|que requiere atencion ahora/);
+});
