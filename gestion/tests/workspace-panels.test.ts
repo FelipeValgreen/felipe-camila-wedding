@@ -18,22 +18,40 @@ function source(path: string) {
   return readFileSync(resolve(process.cwd(), path), 'utf8');
 }
 
-test('all floating workspaces participate in the exclusive-panel protocol', () => {
+function panelId(content: string) {
+  return content.match(/const\s+(?:PANEL_ID|OVERLAY_ID)\s*=\s*['\"]([^'\"]+)['\"]/i)?.[1] ||
+    content.match(/(?:PANEL_ID|OVERLAY_ID)\s*=\s*['\"]([^'\"]+)['\"]/i)?.[1] ||
+    null;
+}
+
+test('all floating workspaces participate in both exclusive-panel event protocols', () => {
+  const missing: string[] = [];
+
   for (const path of PANELS) {
     const content = source(path);
-    assert.match(content, /fc-workspace-panel-open/, `${path} must participate in exclusive panel coordination`);
+    if (!content.includes('fc-workspace-panel-open')) missing.push(`${path}: fc-workspace-panel-open`);
+    if (!content.includes('fc-management-overlay-open')) missing.push(`${path}: fc-management-overlay-open`);
   }
+
+  assert.deepEqual(missing, [], `Missing exclusive-panel coordination:\n${missing.join('\n')}`);
 });
 
 test('every floating workspace has a stable unique panel id', () => {
   const ids = new Map<string, string>();
+  const missing: string[] = [];
+  const duplicated: string[] = [];
 
   for (const path of PANELS) {
     const content = source(path);
-    const match = content.match(/const\s+PANEL_ID\s*=\s*['\"]([^'\"]+)['\"]/);
-    assert.ok(match?.[1], `${path} must define PANEL_ID`);
-    const id = match[1];
-    assert.equal(ids.has(id), false, `${path} reuses PANEL_ID “${id}” from ${ids.get(id)}`);
-    ids.set(id, path);
+    const id = panelId(content);
+    if (!id) {
+      missing.push(path);
+      continue;
+    }
+    if (ids.has(id)) duplicated.push(`${path} reuses “${id}” from ${ids.get(id)}`);
+    else ids.set(id, path);
   }
+
+  assert.deepEqual(missing, [], `Panels without stable id:\n${missing.join('\n')}`);
+  assert.deepEqual(duplicated, [], `Duplicate panel ids:\n${duplicated.join('\n')}`);
 });
