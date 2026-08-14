@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-
-const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+import {
+  resolveGestionRuntimeEnvironment,
+  shouldBlockNonProductionApiWrite,
+} from '@/lib/environment-policy';
 
 type CookieToSet = {
   name: string;
@@ -10,11 +12,12 @@ type CookieToSet = {
 };
 
 function nonProductionApiWriteBlocked(request: NextRequest): boolean {
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
-  if (!isApiRoute || SAFE_METHODS.has(request.method.toUpperCase())) return false;
-
-  if (process.env.VERCEL_ENV === 'production') return false;
-  return process.env.ALLOW_NON_PRODUCTION_WRITES !== 'true';
+  return shouldBlockNonProductionApiWrite({
+    pathname: request.nextUrl.pathname,
+    method: request.method,
+    environment: resolveGestionRuntimeEnvironment(process.env.VERCEL_ENV, process.env.NODE_ENV),
+    allowNonProductionWrites: process.env.ALLOW_NON_PRODUCTION_WRITES,
+  });
 }
 
 export async function middleware(request: NextRequest) {
@@ -72,9 +75,7 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Authenticate user with getUser()
   const { data: { user } } = await supabase.auth.getUser();
-
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
 
   if (isDashboardRoute) {
