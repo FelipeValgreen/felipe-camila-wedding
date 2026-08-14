@@ -38,7 +38,7 @@
 | Auditoría | ✅ | `audit_log` para cambios relevantes |
 | Preview seguro | ✅ / 🟡 | Escrituras DB/Sheets bloqueadas por defecto; módulos usan borradores locales. Falta staging full-stack |
 | Typecheck separado | ✅ | `npm run typecheck` |
-| Tests automatizados base | ✅ / 🟡 | 10 pruebas de contratos críticos; aún falta cobertura amplia de dominio/API/E2E |
+| Tests automatizados base | ✅ / 🟡 | 12 pruebas de contratos críticos; aún falta cobertura amplia de dominio/API/E2E |
 | Quality gate de build | 🧪 | `npm run build` ejecuta `npm test` antes de `next build`; `npm run check:ci` consolida lint/typecheck/build |
 | Staging full-stack aislado | 🔴 | Requerido antes de probar mutaciones reales fuera de producción |
 | Portal de proveedores | ⚪ | Requiere roles y vistas acotadas |
@@ -194,6 +194,8 @@ La política se separó en dos capas:
 
 La política falla cerrada: cualquier entorno no identificado se trata como no productivo y bloquea escrituras.
 
+Además, una prueba contractual recorre las rutas API con mutaciones y exige que mantengan el guard de escritura; las rutas de sincronización externa deben mantener un guard de entorno equivalente.
+
 Limitación conocida: los guards **no equivalen a un staging full-stack**. Para pruebas de mutaciones reales fuera de producción todavía se necesita un proyecto/branch Supabase aislado y un Sheet de prueba.
 
 ## 10. Quality gates
@@ -208,7 +210,9 @@ Cobertura inicial:
 - bloqueo de escrituras por defecto en Preview;
 - habilitación explícita de staging;
 - bloqueo independiente de sincronización externa;
-- fail-closed en entornos desconocidos.
+- fail-closed en entornos desconocidos;
+- presencia obligatoria del guard en las rutas API que mutan datos;
+- presencia obligatoria de guard de entorno en las rutas de sincronización externa.
 
 Comandos:
 
