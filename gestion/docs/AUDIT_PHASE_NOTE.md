@@ -1,0 +1,1 @@
+Temporary note: code audit in progress; consolidate before merge.
