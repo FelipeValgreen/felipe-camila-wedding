@@ -21,6 +21,7 @@ function source(path: string) {
 function panelId(content: string) {
   return content.match(/const\s+(?:PANEL_ID|OVERLAY_ID)\s*=\s*['\"]([^'\"]+)['\"]/i)?.[1] ||
     content.match(/(?:PANEL_ID|OVERLAY_ID)\s*=\s*['\"]([^'\"]+)['\"]/i)?.[1] ||
+    content.match(/fc-workspace-panel-open['\"],?\s*\{detail:['\"]([^'\"]+)['\"]/i)?.[1] ||
     null;
 }
 
