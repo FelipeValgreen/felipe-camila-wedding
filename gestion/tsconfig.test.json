@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".test-build",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "isolatedModules": false,
+    "incremental": false,
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "allowJs": false
+  },
+  "include": ["lib/runtime-policy.ts", "lib/phone.ts", "tests/**/*.test.ts"],
+  "exclude": ["node_modules", ".next", ".test-build"]
+}
