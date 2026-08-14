@@ -50,6 +50,18 @@ test('OpenAI tool mode proposes rather than directly mutating data', () => {
   assert.doesNotMatch(content, /function\s+direct_(?:insert|update|delete)/i, 'LLM tool layer must not expose silent direct mutation helpers');
 });
 
+test('external generative AI is explicit opt-in so zero-cost mode cannot call it accidentally', () => {
+  const backend = source('app/api/copilot/route.ts');
+  const health = source('app/api/system-health/route.ts');
+
+  assert.match(backend, /ENABLE_EXTERNAL_AI/);
+  assert.match(backend, /EXTERNAL_AI_ENABLED/);
+  assert.match(backend, /if \(EXTERNAL_AI_ENABLED\)/);
+  assert.match(backend, /openai\/gpt-5\.6-sol/);
+  assert.match(health, /ENABLE_EXTERNAL_AI/);
+  assert.match(health, /Motor operacional costo 0/);
+});
+
 test('Copiloto UI keeps visible operational shortcuts for list review and attention', () => {
   const content = source('components/PlanningCopilot.tsx');
   const normalized = content.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
