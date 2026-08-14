@@ -7,7 +7,7 @@ import styles from'./RelationshipEditorDock.module.css';
 type Member={id:string;guestId:string|null;personName:string;relation:string;rsvpStatus:string;sourceNote:string};
 type Group={id:string;externalKey:string;name:string;linkType:string;confidence:'confirmed'|'probable';status:string;source:string;notes:string;members:Member[]};
 type GroupForm={id:string;name:string;linkType:string;confidence:'confirmed'|'probable';notes:string;memberNames:string};
-const KEY='fc-preview-relationships-v1',OVERLAY_ID='relationships';
+const KEY='fc-preview-relationships-v1',PANEL_ID='relationships';
 const EMPTY:GroupForm={id:'',name:'',linkType:'Familia',confidence:'confirmed',notes:'',memberNames:''};
 function readLocal():Group[]{try{const parsed=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(parsed)?parsed:[]}catch{return[]}}
 function writeLocal(groups:Group[]){try{localStorage.setItem(KEY,JSON.stringify(groups));dispatchEvent(new CustomEvent('fc-relationships-changed'))}catch{}}
@@ -15,12 +15,12 @@ function writeLocal(groups:Group[]){try{localStorage.setItem(KEY,JSON.stringify(
 export default function RelationshipEditorDock(){
  const[open,setOpen]=useState(false),[groups,setGroups]=useState<Group[]>([]),[loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[preview,setPreview]=useState(false),[search,setSearch]=useState(''),[editor,setEditor]=useState<GroupForm|null>(null),[expanded,setExpanded]=useState<string|null>(null),[error,setError]=useState<string|null>(null),[notice,setNotice]=useState<string|null>(null),[memberInput,setMemberInput]=useState('');
  useEffect(()=>setPreview(location.hostname!=='gestion.felipeycami.cl'),[]);
- useEffect(()=>{const close=(event:Event)=>{if((event as CustomEvent<string>).detail!==OVERLAY_ID){setOpen(false);setEditor(null)}};addEventListener('fc-management-overlay-open',close);return()=>removeEventListener('fc-management-overlay-open',close)},[]);
+ useEffect(()=>{const close=(event:Event)=>{if((event as CustomEvent<string>).detail!==PANEL_ID){setOpen(false);setEditor(null)}};addEventListener('fc-workspace-panel-open',close);addEventListener('fc-management-overlay-open',close);return()=>{removeEventListener('fc-workspace-panel-open',close);removeEventListener('fc-management-overlay-open',close)}},[]);
  const load=useCallback(async()=>{setLoading(true);setError(null);try{const response=await fetch('/api/relationships',{cache:'no-store'});const payload=await response.json();if(!response.ok||!payload?.ok)throw new Error(payload?.error||'No fue posible leer relaciones.');let next=(payload.groups||[])as Group[];if(location.hostname!=='gestion.felipeycami.cl'){const local=readLocal();if(local.length)next=local}setGroups(next)}catch(err:any){setError(err?.message||'No fue posible leer relaciones.')}finally{setLoading(false)}},[]);
  useEffect(()=>{if(open)void load()},[open,load]);
  const filtered=useMemo(()=>{const q=search.toLowerCase().trim();return groups.filter(group=>!q||`${group.name} ${group.linkType} ${group.members.map(m=>m.personName).join(' ')}`.toLowerCase().includes(q))},[groups,search]);
  const confirmed=groups.filter(g=>g.confidence==='confirmed').length;
- function openDock(){if(open){setOpen(false);setEditor(null);return}dispatchEvent(new CustomEvent('fc-management-overlay-open',{detail:OVERLAY_ID}));setOpen(true)}
+ function openDock(){if(open){setOpen(false);setEditor(null);return}dispatchEvent(new CustomEvent('fc-workspace-panel-open',{detail:PANEL_ID}));dispatchEvent(new CustomEvent('fc-management-overlay-open',{detail:PANEL_ID}));setOpen(true)}
  function create(){setEditor({...EMPTY,id:`preview-rel-${Date.now()}`});setError(null);setNotice(null)}
  function edit(group:Group){setEditor({id:group.id,name:group.name,linkType:group.linkType,confidence:group.confidence,notes:group.notes,memberNames:''});setError(null);setNotice(null)}
  function localSave(form:GroupForm){setGroups(current=>{const found=current.find(g=>g.id===form.id);const supplied=form.memberNames.split(/[\n,]+/).map(v=>v.trim()).filter(Boolean);const members=found?.members||supplied.map((personName,index)=>({id:`preview-member-${Date.now()}-${index}`,guestId:null,personName,relation:'',rsvpStatus:'Confirmado',sourceNote:'Agregado manualmente en Preview'}));const group:Group={id:form.id,externalKey:found?.externalKey||'',name:form.name,linkType:form.linkType,confidence:form.confidence,status:'active',source:found?.source||'manual-preview',notes:form.notes,members};const next=found?current.map(g=>g.id===group.id?group:g):[...current,group];writeLocal(next);return next});setEditor(null);setNotice('Grupo guardado en el borrador persistente de Preview.')}
