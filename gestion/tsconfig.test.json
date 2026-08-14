@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".test-dist",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "isolatedModules": false,
+    "incremental": false,
+    "plugins": []
+  },
+  "include": [
+    "tests/**/*.ts",
+    "lib/phone.ts",
+    "lib/environment-policy.ts"
+  ],
+  "exclude": ["node_modules", ".next", ".test-dist"]
+}
