@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm test && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "node -e \"require('fs').rmSync('.test-build',{recursive:true,force:true})\" && tsc -p tsconfig.test.json && node --test .test-build/tests/*.test.js",
-    "qa": "npm run lint && npm run typecheck && npm test && npm run build"
+    "qa": "npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
