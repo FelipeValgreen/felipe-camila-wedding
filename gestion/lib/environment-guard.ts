@@ -1,33 +1,27 @@
 import 'server-only';
 
-export type GestionRuntimeEnvironment = 'production' | 'preview' | 'development' | 'unknown';
+import {
+  resolveGestionRuntimeEnvironment,
+  shouldBlockDatabaseWrite,
+  shouldBlockExternalSync,
+  type GestionRuntimeEnvironment,
+} from './environment-policy';
 
-const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on']);
-
-function envFlag(name: string): boolean {
-  const value = process.env[name];
-  return Boolean(value && TRUE_VALUES.has(value.trim().toLowerCase()));
-}
+export type { GestionRuntimeEnvironment } from './environment-policy';
 
 export function getGestionRuntimeEnvironment(): GestionRuntimeEnvironment {
-  const vercelEnv = process.env.VERCEL_ENV;
-
-  if (vercelEnv === 'production' || vercelEnv === 'preview' || vercelEnv === 'development') {
-    return vercelEnv;
-  }
-
-  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-    return 'development';
-  }
-
-  return 'unknown';
+  return resolveGestionRuntimeEnvironment(process.env.VERCEL_ENV, process.env.NODE_ENV);
 }
 
 export function getDatabaseWriteBlock() {
   const environment = getGestionRuntimeEnvironment();
 
-  if (environment === 'production') return null;
-  if (envFlag('ALLOW_NON_PRODUCTION_WRITES')) return null;
+  if (!shouldBlockDatabaseWrite({
+    environment,
+    allowNonProductionWrites: process.env.ALLOW_NON_PRODUCTION_WRITES,
+  })) {
+    return null;
+  }
 
   return {
     ok: false as const,
@@ -38,12 +32,18 @@ export function getDatabaseWriteBlock() {
 }
 
 export function getExternalSyncBlock() {
+  const environment = getGestionRuntimeEnvironment();
+
+  if (!shouldBlockExternalSync({
+    environment,
+    allowNonProductionWrites: process.env.ALLOW_NON_PRODUCTION_WRITES,
+    allowNonProductionExternalSync: process.env.ALLOW_NON_PRODUCTION_EXTERNAL_SYNC,
+  })) {
+    return null;
+  }
+
   const writeBlock = getDatabaseWriteBlock();
   if (writeBlock) return writeBlock;
-
-  const environment = getGestionRuntimeEnvironment();
-  if (environment === 'production') return null;
-  if (envFlag('ALLOW_NON_PRODUCTION_EXTERNAL_SYNC')) return null;
 
   return {
     ok: false as const,
