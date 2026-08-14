@@ -1,10 +1,11 @@
 import { createBrowserClient } from '@supabase/ssr';
+import { parseBooleanFlag } from './environment-policy';
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const PRODUCTION_HOSTNAME = 'gestion.felipeycami.cl';
 
 function allowsNonProductionWrites(): boolean {
-  return process.env.NEXT_PUBLIC_ALLOW_NON_PRODUCTION_WRITES === 'true';
+  return parseBooleanFlag(process.env.NEXT_PUBLIC_ALLOW_NON_PRODUCTION_WRITES);
 }
 
 function isCanonicalProductionHost(): boolean {
