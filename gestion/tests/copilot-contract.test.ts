@@ -67,7 +67,8 @@ test('Copiloto zero-cost operations cover all editable management domains', () =
 
 test('Copiloto parser recognizes direct table, seating, planning and finance commands', () => {
   const content = source('lib/copilot-operations.ts').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  for (const term of ['mueve','gira','asigna','cancion','bloque','tarea','presupuesto','proveedor','pago']) assert.match(content, new RegExp(term));
+  for (const term of ['mueve','gira','asigna','bloque','tarea','presupuesto','proveedor','pago']) assert.match(content, new RegExp(term));
+  assert.match(content, /cancion|canci\[oo\]n/);
   assert.match(content, /position_x_m/);
   assert.match(content, /position_y_m/);
 });
@@ -77,7 +78,11 @@ test('Preview CRUD domains use persistent structured state', () => {
   const music = source('app/dashboard/music/page.tsx');
   const timeline = source('app/dashboard/timeline/page.tsx');
   const tasks = source('components/ManualTasksDock.tsx');
-  for (const content of [component,music,timeline,tasks]) {
-    assert.match(content, /readPreviewEntityState|mergePreviewEntities|upsertPreviewEntity|removePreviewEntity/);
+  assert.match(component, /readPreviewEntityState/);
+  for (const content of [music,timeline,tasks]) {
+    assert.match(content, /readPreviewEntityState/);
+    assert.match(content, /mergePreviewEntities/);
+    assert.match(content, /upsertPreviewEntity/);
+    assert.match(content, /removePreviewEntity/);
   }
 });
