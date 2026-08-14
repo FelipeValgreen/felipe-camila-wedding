@@ -8,7 +8,7 @@ import styles from'./GuestQuickEditorDock.module.css';
 type Guest={id:string;first_name:string;last_name:string;phone_e164:string|null;group_name:string;family_side:string;family_branch:string|null;guest_category:string;invitation_status:string;attendance_status:string;dietary_type:string|null;dietary_detail:string|null;reconfirmation_status:string;table_id:string|null;rsvp_id:string|null;guest_status:string;notes:string|null};
 type Confirmed={summary:{currentKnownAttending:number;currentKnownWithoutMaster:number}};
 type DraftState={overrides:Record<string,Guest>;deleted:string[]};
-const KEY='fc-preview-guests-v1',OVERLAY_ID='guest-editor';
+const KEY='fc-preview-guests-v1',PANEL_ID='guest-editor';
 const EMPTY:Guest={id:'',first_name:'',last_name:'',phone_e164:null,group_name:'General',family_side:'Compartido',family_branch:null,guest_category:'Adulto',invitation_status:'not_sent',attendance_status:'pending',dietary_type:'Ninguna',dietary_detail:null,reconfirmation_status:'pending',table_id:null,rsvp_id:null,guest_status:'active',notes:null};
 const BRANCHES=['Cami · Kalbhenn / Muga','Cami · Vargas / Riffka','Cami · Mamá','Cami · Papá','Felipe · Garay / Bustos','Felipe · Valverde / Espinoza','Felipe · Cerda / Escobedo','Felipe · Mamá','Felipe · Papá','Compartido · amigos','Compartido · trabajo','Por clasificar'];
 function name(g:Guest){return`${g.first_name} ${g.last_name||''}`.trim()}
@@ -19,12 +19,12 @@ function merge(base:Guest[],draft:DraftState){const map=new Map(base.filter(g=>!
 export default function GuestQuickEditorDock(){
  const[open,setOpen]=useState(false),[guests,setGuests]=useState<Guest[]>([]),[confirmed,setConfirmed]=useState<Confirmed|null>(null),[loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[preview,setPreview]=useState(false),[search,setSearch]=useState(''),[editor,setEditor]=useState<Guest|null>(null),[error,setError]=useState<string|null>(null),[notice,setNotice]=useState<string|null>(null);
  useEffect(()=>setPreview(location.hostname!=='gestion.felipeycami.cl'),[]);
- useEffect(()=>{const close=(event:Event)=>{const id=(event as CustomEvent<string>).detail;if(id!==OVERLAY_ID){setOpen(false);setEditor(null)}};addEventListener('fc-management-overlay-open',close);return()=>removeEventListener('fc-management-overlay-open',close)},[]);
+ useEffect(()=>{const close=(event:Event)=>{const id=(event as CustomEvent<string>).detail;if(id!==PANEL_ID){setOpen(false);setEditor(null)}};addEventListener('fc-workspace-panel-open',close);addEventListener('fc-management-overlay-open',close);return()=>{removeEventListener('fc-workspace-panel-open',close);removeEventListener('fc-management-overlay-open',close)}},[]);
  const load=useCallback(async()=>{setLoading(true);setError(null);try{const supabase=createClient();const[g,c]=await Promise.all([supabase.from('wedding_guests').select('*').eq('guest_status','active').order('first_name'),fetch('/api/confirmed-source',{cache:'no-store'})]);const cp=await c.json().catch(()=>null);if(g.error)throw g.error;if(!c.ok||!cp?.ok)throw new Error(cp?.error||'No fue posible leer confirmados.');let next=(g.data||[])as Guest[];if(location.hostname!=='gestion.felipeycami.cl')next=merge(next,readDrafts());setGuests(next);setConfirmed(cp)}catch(err:any){setError(err?.message||'No fue posible cargar invitados.')}finally{setLoading(false)}},[]);
  useEffect(()=>{if(open)void load()},[open,load]);
  const filtered=useMemo(()=>{const q=search.toLowerCase().trim();return guests.filter(g=>!q||`${name(g)} ${g.group_name} ${g.family_side} ${g.family_branch||''} ${g.phone_e164||''}`.toLowerCase().includes(q)).slice(0,100)},[guests,search]);
  const attending=guests.filter(g=>g.attendance_status==='attending').length;
- function openDock(){if(open){setOpen(false);setEditor(null);return}dispatchEvent(new CustomEvent('fc-management-overlay-open',{detail:OVERLAY_ID}));setOpen(true)}
+ function openDock(){if(open){setOpen(false);setEditor(null);return}dispatchEvent(new CustomEvent('fc-workspace-panel-open',{detail:PANEL_ID}));dispatchEvent(new CustomEvent('fc-management-overlay-open',{detail:PANEL_ID}));setOpen(true)}
  function create(){setEditor({...EMPTY,id:`preview-guest-${Date.now()}`,attendance_status:'attending'});setError(null);setNotice(null)}
  function edit(g:Guest){setEditor({...g,family_branch:g.family_branch||null});setError(null);setNotice(null)}
  function localSave(g:Guest){const drafts=readDrafts();drafts.overrides[g.id]=g;drafts.deleted=drafts.deleted.filter(id=>id!==g.id);writeDrafts(drafts);setGuests(current=>merge(current.filter(item=>item.id!==g.id),{overrides:{[g.id]:g},deleted:[]}));setEditor(null);setNotice('Ficha guardada como borrador persistente de Preview.')}
