@@ -11,9 +11,12 @@ export type RuntimePolicyBlock = {
 
 const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on']);
 
-function envFlag(env: RuntimeEnvInput, name: string): boolean {
-  const value = env[name];
+export function parseBooleanFlag(value: string | null | undefined): boolean {
   return Boolean(value && TRUE_VALUES.has(value.trim().toLowerCase()));
+}
+
+function envFlag(env: RuntimeEnvInput, name: string): boolean {
+  return parseBooleanFlag(env[name]);
 }
 
 export function resolveGestionRuntimeEnvironment(env: RuntimeEnvInput): GestionRuntimeEnvironment {
