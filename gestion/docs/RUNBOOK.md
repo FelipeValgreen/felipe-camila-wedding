@@ -1,385 +1,289 @@
 # RUNBOOK.md — Operación segura del Centro de Gestión
 
-Este documento explica cómo actuar ante despliegues, migraciones, sincronización e incidentes sin afectar el RSVP activo.
+**Actualizado:** 17 de agosto de 2026
 
-## 1. Principio de operación
+Este runbook define cómo desarrollar, desplegar, migrar, sincronizar y recuperar el Centro de Gestión sin poner en riesgo el RSVP ni la base productiva.
+
+## 1. Principio operativo
 
 ```text
-Primero preservar datos.
-Después diagnosticar.
-Luego cambiar.
-Finalmente verificar.
+Preservar datos → diagnosticar → cambiar lo mínimo → verificar → auditar
 ```
 
-No ejecutar una acción irreversible durante una investigación.
+Reglas permanentes:
+- Supabase es la fuente de verdad.
+- Google Sheets es espejo parcial.
+- No usar producción como entorno de pruebas de escritura.
+- Preview puede leer datos reales sólo mientras todas las mutaciones permanezcan bloqueadas.
+- Ninguna acción del Copiloto salta RBAC, guards o confirmación humana.
+- No tocar el sitio/RSVP público desde cambios exclusivos del Centro de Gestión.
 
-## 2. Entornos
+## 2. Entornos actuales
 
 ### Producción
+- `gestion.felipeycami.cl`;
+- Supabase productivo;
+- Google Sheets real;
+- mutaciones habilitadas según rol;
+- sync externo habilitado.
 
-- `gestion.felipeycami.cl`
-- Supabase real
-- Google Sheets real
-- confirmaciones activas
+### Vercel Preview — modo costo 0 actual
+- puede usar lecturas reales para validar UI y datos;
+- `ALLOW_NON_PRODUCTION_WRITES=false` por defecto;
+- `NEXT_PUBLIC_ALLOW_NON_PRODUCTION_WRITES=false` por defecto;
+- `ALLOW_NON_PRODUCTION_EXTERNAL_SYNC=false`;
+- API, cliente Supabase y sync fallan cerrados ante escritura;
+- las simulaciones editables deben usar borradores locales, no producción.
 
-### Preview
+### Staging aislado
+No existe hoy como dependencia obligatoria. Si en el futuro se habilita un Supabase branch/staging:
+- usar sólo datos ficticios;
+- habilitar `ALLOW_NON_PRODUCTION_WRITES` sólo en ese entorno;
+- mantener sync externo apagado salvo que exista una Google Sheet de prueba dedicada.
 
-Debe apuntar a:
-
-- Supabase staging;
-- datos ficticios;
-- planilla de prueba o sync desactivado.
-
-### Local
-
-Preferir:
-
-- Supabase local;
-- seed ficticio;
-- integraciones externas desactivadas.
-
-## 3. Comprobación previa a cualquier tarea
-
-Verificar:
-
-- [ ] rama distinta de `main`;
-- [ ] alcance limitado a `gestion/**`;
-- [ ] variables del entorno;
-- [ ] proyecto Supabase correcto;
-- [ ] Sheets correcto;
-- [ ] ausencia de secretos productivos en Preview;
-- [ ] estado de RSVP y outbox;
-- [ ] respaldo si habrá escritura de datos;
-- [ ] rollback definido.
-
-## 4. Desarrollo con Antigravity IDE u otro agente
-
-Antes de permitir edición:
-
-1. Abrir el repositorio.
-2. Seleccionar la rama de trabajo.
-3. Pedir lectura de todos los Markdown de `gestion/`.
-4. Pedir auditoría de solo lectura.
-5. Revisar el plan propuesto.
-6. Confirmar que no tocará frontend público.
-7. Confirmar staging.
-8. Autorizar un cambio acotado.
-
-Si el agente pierde contexto, detener y crear handoff.
-
-## 5. Crear respaldo de Supabase
-
-Antes de migraciones o cambios masivos:
-
-1. Crear una migración de respaldo o proceso controlado.
-2. Usar esquema `internal_backup`.
-3. Copiar las tablas críticas necesarias.
-4. Revocar acceso a `public`, `anon` y `authenticated`.
-5. Verificar conteos.
-6. Registrar fecha y propósito.
-7. No exponer el esquema por API.
-
-Tablas críticas mínimas:
-
-- `wedding_guests`
-- `rsvp_responses`
-- `rsvp_response_members`
-- `management_issues`
-- `wedding_tables`
-- `seating_assignments`
-- `vendors`
-- `expenses`
-- `sync_outbox`
-- `audit_log`
-- `admin_profiles`
-
-## 6. Crear respaldo de Google Sheets
-
-Antes de reconstruir pestañas o realizar cambios amplios:
-
-1. Duplicar el archivo completo.
-2. Nombrarlo con fecha y propósito.
-3. Verificar que la copia abre.
-4. Guardar su ID en el PR o handoff.
-5. No eliminar respaldos antiguos durante la misma operación.
-
-## 7. Migraciones
-
-### Flujo obligatorio
-
-```text
-Crear SQL
-→ revisar SQL
-→ aplicar local
-→ seed ficticio
-→ pruebas
-→ staging
-→ Preview
-→ revisión humana
-→ respaldo productivo
-→ aprobación
-→ producción
-→ verificación
-```
-
-### No ejecutar en primer paso
-
-- `DROP TABLE`;
-- `DROP COLUMN`;
-- cambios de tipo;
-- `NOT NULL` inmediato;
-- reemplazo de triggers productivos;
-- backfill masivo;
-- cambios al contrato de RSVP.
-
-### Después de migrar
-
-Verificar:
-
-- tablas y columnas;
-- constraints;
-- índices;
-- RLS;
-- grants;
-- funciones;
-- conteos;
-- reconfirmación sin cambios involuntarios;
-- outbox;
-- logs de errores.
-
-## 8. Despliegue
-
-### Antes del PR
+## 3. Quality gate obligatorio
 
 Desde `gestion/`:
 
 ```bash
-npm install
-npm run lint
-npm run build
+npm ci
+npm run check:ci
 ```
 
-Cuando existan:
+`check:ci` cubre lint, typecheck, tests y build mediante los scripts del proyecto. GitHub Actions ejecuta el mismo gate en cambios a `gestion/**`, migraciones Supabase y el workflow de CI.
 
-```bash
-npm run typecheck
-npm test
+No mergear con gate rojo.
+
+## 4. Antes de modificar código o datos
+
+Verificar:
+- [ ] rama distinta de `main`;
+- [ ] alcance del cambio;
+- [ ] proyecto Supabase correcto;
+- [ ] variables y entorno correctos;
+- [ ] ausencia de secretos/PII en el diff;
+- [ ] guard de Preview vigente;
+- [ ] rollback definido;
+- [ ] respaldo si habrá cambio productivo de datos de riesgo medio/alto.
+
+## 5. Cambios de esquema
+
+### Regla general
+Toda DDL debe vivir en `supabase/migrations/` y revisarse como código.
+
+Preferir cambios:
+- aditivos;
+- compatibles hacia atrás;
+- con constraints verificables;
+- con grants/RLS explícitos;
+- sin seeds de PII.
+
+### RPC `SECURITY DEFINER`
+Antes de aprobar una RPC privilegiada, comprobar:
+1. `auth.uid()` no nulo;
+2. rol/perfil activo;
+3. `search_path` explícito;
+4. `REVOKE` a `PUBLIC`/`anon` cuando corresponda;
+5. `GRANT` sólo a roles necesarios;
+6. auditoría de negocio;
+7. comportamiento transaccional.
+
+### Cambios atómicos
+Si una operación lógica requiere múltiples escrituras que deben suceder juntas, implementarla en una transacción/RPC, no como varias llamadas independientes desde Next.js.
+
+Ejemplo vigente: crear una nueva versión de `event_venue_layouts` debe archivar la anterior y crear la nueva atómicamente mediante `create_venue_layout_version`.
+
+## 6. Aplicación de migraciones productivas
+
+Secuencia:
+
+```text
+SQL versionado
+→ revisión estática/tests
+→ CI verde
+→ verificar impacto y rollback
+→ aplicar migración
+→ comprobar función/tabla/índice/RLS/grants
+→ desplegar código consumidor
+→ smoke test
 ```
 
-### PR
+Para cambios aditivos cuyo código antiguo no utiliza la nueva función/columna, es válido aplicar la migración antes del deploy para eliminar la ventana “código nuevo sin esquema”.
 
-Debe incluir:
+No ejecutar sin plan explícito:
+- `DROP TABLE`;
+- `DROP COLUMN`;
+- cambio destructivo de tipo;
+- backfill masivo;
+- sustitución riesgosa de triggers;
+- cambios del contrato RSVP público.
 
+## 7. Respaldo
+
+Antes de operaciones destructivas o backfills amplios:
+- usar respaldo administrado de Supabase o snapshot/export verificado;
+- registrar hora de corte;
+- validar que el respaldo sea restaurable;
+- no copiar PII a repositorios ni artefactos públicos.
+
+Tablas prioritarias:
+- `wedding_guests`;
+- `rsvp_responses`;
+- `rsvp_response_members`;
+- `wedding_tables`;
+- `seating_assignments`;
+- `guest_relationship_groups` / `guest_relationship_members`;
+- `vendors`;
+- presupuesto/pagos;
+- cronograma/música/documentos/tareas/memoria;
+- `sync_outbox`;
+- `audit_log`;
+- `admin_profiles`.
+
+Para Google Sheets, duplicar el archivo sólo antes de reconstrucciones o cambios masivos de pestañas.
+
+## 8. PR y Preview
+
+El PR debe explicar:
 - alcance;
 - riesgo;
-- archivos;
 - migraciones;
 - pruebas;
 - datos afectados;
 - rollback;
 - fuera de alcance.
 
-### Preview
-
-Comprobar:
-
+En Preview verificar como mínimo:
 - login;
-- navegación;
-- permisos;
-- móvil;
-- escritorio;
-- errores de consola;
-- llamadas a Supabase staging;
-- ausencia de escritura en producción.
+- navegación principal;
+- consola sin errores críticos;
+- dashboard y fuentes cargando;
+- responsive básico;
+- mutaciones bloqueadas cuando no existe staging;
+- ausencia de llamadas de escritura a Supabase/Sheets productivos.
 
-### Producción
+## 9. Deploy productivo
 
-Solo después de aprobación explícita.
+Después de merge:
+- comprobar Vercel `READY`;
+- abrir `https://gestion.felipeycami.cl/dashboard`;
+- validar login;
+- validar `/api/system-health` mediante la UI autenticada;
+- revisar Command Center;
+- ejecutar una mutación de bajo riesgo sólo si el release la requiere;
+- comprobar `audit_log`;
+- comprobar `sync_outbox` si la entidad tiene espejo Sheets;
+- revisar errores runtime recientes.
 
-Verificar:
-
-- despliegue verde;
-- dominio correcto;
-- login;
-- métricas;
-- creación/edición controlada cuando corresponda;
-- outbox;
-- Sheets;
-- errores de Vercel;
-- ausencia de regresión pública.
-
-## 9. Diagnóstico de RSVP
+## 10. Diagnóstico RSVP
 
 Ante una confirmación aparentemente perdida:
+1. consultar `rsvp_responses` por rango horario;
+2. consultar `rsvp_events`;
+3. revisar `rsvp_response_members`;
+4. comprobar conciliación;
+5. revisar `management_issues`;
+6. revisar `sync_outbox` y `sheet_sync_status`;
+7. revisar logs de Vercel sólo si el intento pudo fallar antes de persistir.
 
-1. Consultar `rsvp_responses` por rango horario.
-2. Consultar `rsvp_events`.
-3. Comprobar evento `created`.
-4. Consultar `rsvp_response_members`.
-5. Comprobar estado de conciliación.
-6. Consultar `management_issues`.
-7. Consultar `sync_outbox`.
-8. Revisar logs de Vercel si el intento pudo fallar antes de persistir.
+Supabase prueba respuestas persistidas; no prueba un intento de navegador que nunca llegó al backend.
 
-Supabase prueba respuestas guardadas. No prueba intentos del navegador que no llegaron a insertarse.
+## 11. Conciliación
 
-## 10. Diagnóstico de conciliación
+Si un RSVP no está vinculado:
+1. preferir coincidencia exacta de teléfono/nombre cuando sea inequívoca;
+2. detectar respuestas con múltiples personas;
+3. no inventar vínculos por proximidad temporal solamente;
+4. revisar si la ficha ya tiene otro RSVP;
+5. resolver mediante flujo/RPC auditado;
+6. verificar que reconfirmación no cambió accidentalmente.
 
-Si un RSVP aparece sin vincular:
-
-1. No usar similitud difusa automática.
-2. Buscar teléfono exacto y único.
-3. Buscar nombre normalizado exacto y único.
-4. Revisar si contiene varias personas.
-5. Revisar si la ficha ya está vinculada a otra respuesta.
-6. Crear incidencia si no es inequívoco.
-7. Resolver mediante flujo auditado.
-8. Verificar que reconfirmación no cambió.
-
-## 11. Diagnóstico de mesas
+## 12. Seating
 
 Si una asignación falla:
+1. verificar invitado activo;
+2. verificar `attendance_status = attending`;
+3. verificar mesa;
+4. verificar capacidad;
+5. revisar asignación previa;
+6. usar RPC de asignación/desasignación;
+7. revisar auditoría y outbox;
+8. comprobar coherencia entre `seating_assignments` y `wedding_guests.table_id`.
 
-1. Verificar `attendance_status = attending`.
-2. Verificar ficha activa.
-3. Verificar mesa existente.
-4. Verificar capacidad.
-5. Verificar asignación previa.
-6. Revisar RPC o ruta transaccional.
-7. Revisar `audit_log`.
-8. Revisar `sync_outbox`.
-9. Verificar consistencia entre asignación y `guest.table_id`.
+Nunca reparar manualmente una sola columna dejando la relación inconsistente.
 
-No reparar manualmente una sola columna sin corregir la relación completa.
+## 13. Salón
 
-## 12. Diagnóstico de Google Sheets
+Al crear una nueva versión:
+- validar elementos y dimensiones;
+- usar `POST /api/venue-layout`;
+- la ruta debe delegar en `create_venue_layout_version`;
+- verificar que existe exactamente un layout `active` después de la operación;
+- ante error, confirmar que el layout previo sigue activo.
 
-### Cola pendiente
+## 14. Google Sheets sync
 
-Revisar:
+El worker automático sólo cubre las entidades declaradas en `gestion/lib/sync-outbox.ts`.
 
-- estado;
-- intentos;
-- próximo reintento;
-- entidad;
-- error sin PII.
+Para una cola pendiente revisar:
+- `status`;
+- `attempts`;
+- `next_retry_at`;
+- `last_error`;
+- entidad/operación.
 
-### Procesamiento manual
-
-La ruta manual requiere usuario autorizado:
+Procesamiento manual autenticado:
 
 ```text
 POST /api/sync/process
 ```
 
-No ejecutarla desde Preview contra producción.
-
-### Cron
-
-Ruta conocida:
+Cron:
 
 ```text
 /api/cron/sync-outbox
 ```
 
-Frecuencia conocida:
-
-```text
-0 * * * *
-```
-
-Usar respuestas `no-store` y, durante diagnóstico, nonce único para descartar caché.
-
-### Reconstrucción baseline
-
-Solo si:
-
-- existe respaldo de Sheets;
-- existe corte consistente de Supabase;
-- se conocen encabezados;
-- se verifican conteos;
-- se separa cola histórica de operaciones nuevas;
-- se documenta el reemplazo.
-
-## 13. Restauración
-
-Antes de restaurar:
-
-1. detener nuevas escrituras si es necesario;
-2. identificar alcance exacto;
-3. comparar backup con producción;
-4. hacer dry-run;
-5. restaurar solo entidades afectadas;
-6. mantener IDs y relaciones;
-7. verificar auditoría;
-8. reconstruir Sheets si corresponde;
-9. reactivar operaciones;
-10. documentar incidente.
-
-No restaurar una tabla completa si el problema afecta solo unas filas sin evaluar cambios posteriores al respaldo.
-
-## 14. Reversión de código
-
-Opciones:
-
-- revertir PR;
-- desplegar commit estable;
-- desactivar feature flag;
-- retirar ruta nueva;
-- mantener migración aditiva si no causa daño.
-
-No revertir automáticamente una migración destructiva sin plan de datos.
+Nunca habilitar sync externo desde Preview contra la planilla real.
 
 ## 15. Incidente de seguridad
 
 Ante sospecha de exposición:
+1. detener el despliegue/automatización afectada;
+2. revocar o rotar credenciales;
+3. revisar sesiones y accesos;
+4. revisar RLS/grants/RPC;
+5. revisar logs/auditoría;
+6. determinar datos leídos o modificados;
+7. restaurar sólo si es necesario;
+8. documentar incidente sin copiar secretos ni PII a GitHub/chat.
 
-1. detener agente o despliegue;
-2. revocar o rotar secreto;
-3. revisar logs;
-4. revisar accesos;
-5. revisar RLS;
-6. invalidar sesiones si corresponde;
-7. comprobar datos leídos o modificados;
-8. documentar incidente;
-9. no publicar secretos en PR o chat.
+## 16. Rollback
 
-## 16. Handoff obligatorio
+### Código
+- revertir PR o desplegar el último commit estable.
 
-Cuando una tarea quede incompleta, crear:
+### Migración aditiva
+- si la nueva estructura no causa daño, puede permanecer mientras se revierte el código.
 
-```text
-gestion/docs/handoffs/YYYY-MM-DD-tarea.md
-```
+### Datos
+- detener escrituras sólo si es necesario;
+- identificar filas/entidades afectadas;
+- comparar contra backup/auditoría;
+- restaurar el alcance mínimo;
+- verificar relaciones y sync.
 
-Contenido mínimo:
+No ejecutar un rollback destructivo automático de base de datos.
 
-- objetivo;
-- rama;
-- último commit;
-- estado del PR;
-- archivos;
-- migraciones;
-- entornos tocados;
-- pruebas;
-- datos modificados;
-- pendientes;
-- rollback;
-- siguiente acción exacta.
+## 17. Cierre de una entrega
 
-## 17. Checklist de cierre
-
-- [ ] No se modificó el sitio público.
-- [ ] No se cambió el contrato RSVP.
-- [ ] No se usó producción como staging.
-- [ ] Respaldo creado si correspondía.
-- [ ] Build ejecutado.
-- [ ] Pruebas ejecutadas si existen.
-- [ ] RLS revisada.
-- [ ] Sin secretos en diff.
-- [ ] Preview verificado.
-- [ ] Producción verificada solo con autorización.
-- [ ] Supabase consistente.
-- [ ] Sheets consistente.
-- [ ] Auditoría presente.
-- [ ] Rollback documentado.
+- [ ] CI verde.
+- [ ] Preview `READY` y smoke test completado.
+- [ ] Sin secretos/PII nuevos.
+- [ ] Migraciones versionadas y verificadas.
+- [ ] RLS/grants revisados si hubo DDL/RPC.
+- [ ] Producción `READY` después del merge.
+- [ ] Smoke test productivo realizado.
+- [ ] `audit_log`/`sync_outbox` coherentes cuando corresponde.
+- [ ] Documentación canónica actualizada.
+- [ ] No se introdujo regresión al RSVP/sitio público.

@@ -1,225 +1,215 @@
-# DATA_MODEL.md — Modelo de datos
+# DATA_MODEL.md — Modelo de datos canónico
 
-> Este documento describe el modelo usado por el Centro de Gestión y la dirección de evolución. Verificar siempre el esquema real antes de migrar.
+**Verificado contra Supabase productivo:** 17 de agosto de 2026
+
+> Supabase PostgreSQL es la fuente de verdad. Este documento describe el esquema operativo actual; cualquier cambio posterior debe contrastarse con `supabase/migrations/` y con el esquema desplegado.
 
 ## 1. Principios
 
 - Supabase PostgreSQL es canónico.
-- Google Sheets es espejo.
-- Cada persona tiene una ficha individual.
-- Una respuesta RSVP puede tener varios integrantes.
+- Google Sheets es un espejo operacional parcial, no una segunda fuente de verdad.
+- Cada persona tiene una ficha individual en `wedding_guests`.
+- Una respuesta RSVP puede representar una o varias personas.
 - Asistencia y reconfirmación son estados independientes.
-- Cambios operativos deben ser auditables.
-- El modelo futuro debe aislar datos por `wedding_id`.
+- Las mutaciones administrativas relevantes deben quedar en `audit_log`.
+- Las escrituras que requieren espejo externo se publican mediante `sync_outbox`.
+- Preview/Development fallan cerrados y no deben escribir producción.
+- El modelo actual está optimizado para un matrimonio; el aislamiento por `wedding_id` es una evolución futura.
 
-## 2. Entidades actuales principales
+## 2. Núcleo de identidad y RSVP
 
 ### `admin_profiles`
+Perfil administrativo ligado a Supabase Auth.
 
-Propósito:
+Campos clave: `id = auth.users.id`, `role`, `active`.
 
-- perfil administrativo asociado a Supabase Auth;
-- rol actual;
-- activación o desactivación.
-
-Campos conceptuales relevantes:
-
-- `id` → `auth.users.id`
-- `role`
-- `active`
-
-Riesgo actual:
-
-- roles globales demasiado generales para proveedores y multi-matrimonio.
+Roles operativos actuales:
+- `owner`: control completo y eliminaciones sensibles;
+- `editor`: lectura + creación/edición;
+- `viewer`: sólo lectura.
 
 ### `wedding_guests`
+Ficha individual canónica de cada invitado.
 
-Persona individual operativa.
-
-Datos conceptuales:
-
-- identidad;
-- teléfono normalizado;
-- grupo;
-- lado familiar;
-- categoría;
-- asistencia;
-- restricción alimentaria;
-- reconfirmación;
-- estado de ficha;
-- vínculo RSVP;
-- mesa;
-- versión;
-- actualización.
+Contiene identidad, teléfono normalizado, grupo, lado/rama familiar, categoría, estados de invitación/asistencia/reconfirmación, restricciones alimentarias, vínculo RSVP, mesa, notas, versión y timestamps.
 
 Reglas:
-
-- no representar dos personas en una ficha;
-- no alterar reconfirmación indirectamente;
-- usar soft delete;
-- la asignación de mesa requiere asistencia confirmada.
+- una fila representa una persona;
+- no fusionar personas para “hacer calzar” un RSVP conjunto;
+- seating persistente requiere `attendance_status = attending`;
+- conservar trazabilidad de cambios.
 
 ### `rsvp_responses`
+Respuesta original recibida desde web/u otros canales.
 
-Respuesta original enviada al sistema.
+Conserva nombre declarado, teléfono, asistencia, restricción, origen, conciliación, vínculo directo cuando aplica, estado de sync y timestamps.
 
-Datos conceptuales:
-
-- nombre escrito;
-- teléfono;
-- asistencia;
-- restricción declarada;
-- origen;
-- estado de conciliación;
-- vínculo individual cuando aplica;
-- estado de sincronización;
-- timestamps.
-
-Regla:
-
-- conservar como evidencia original.
+Regla: es evidencia de la respuesta original y no debe reescribirse para simular una ficha individual.
 
 ### `rsvp_response_members`
+Integrantes individualizados dentro de una respuesta RSVP conjunta.
 
-Integrantes individuales detectados dentro de una respuesta.
+Campos relevantes: `rsvp_id`, `guest_id`, nombre, asistencia, restricción, `resolution_status`, `match_method`, `confidence`, notas y datos de resolución.
 
-Datos conceptuales:
-
-- `rsvp_id`
-- `guest_id`
-- nombre mostrado y normalizado;
-- asistencia;
-- restricción;
-- estado de resolución;
-- método de coincidencia;
-- confianza;
-- notas;
-- actor y fecha de resolución.
-
-Regla:
-
-- es la capa que permite separar parejas y respuestas familiares.
+Es la capa correcta para separar parejas/familias antes de vincular cada persona a `wedding_guests`.
 
 ### `rsvp_events`
-
-Eventos del ciclo de vida de RSVP.
-
-Usos:
-
-- confirmar que una creación tuvo evento correspondiente;
-- monitoreo de salud;
-- trazabilidad.
-
-No sustituye `audit_log` para operaciones administrativas.
+Eventos del ciclo de vida RSVP. Sirve para trazabilidad de recepción/cambios y no reemplaza `audit_log` administrativo.
 
 ### `management_issues`
+Incidencias operativas: RSVP no conciliado, respuesta conjunta pendiente, fallas de sync y otros casos que requieren intervención.
 
-Incidencias operativas.
+## 3. Relaciones y afinidades
 
-Campos conceptuales:
+### `guest_relationship_groups`
+Grupo de relación explícito o probable.
 
-- tipo;
-- entidad;
-- severidad;
-- estado;
-- título;
-- descripción;
-- metadata;
-- resolución;
-- actor;
-- timestamps.
+Campos clave: `name`, `link_type`, `confidence` (`confirmed`/`probable`), `status`, `source`, `notes`.
 
-Debe evolucionar hacia el motor de “Necesita tu atención”.
+### `guest_relationship_members`
+Miembros de cada grupo relacional.
+
+Puede enlazar a `wedding_guests` mediante `guest_id`, pero también conserva `person_name` para casos aún no conciliados.
+
+Regla: una relación probable ayuda a planificar, pero no debe presentarse como parentesco/pareja confirmada sin evidencia.
+
+## 4. Mesas y salón
 
 ### `wedding_tables`
-
-Mesas configuradas.
-
-Datos conceptuales:
-
-- número;
-- nombre;
-- capacidad;
-- tipo;
-- zona;
-- posición;
-- bloqueo;
-- notas;
-- versión.
+Mesas persistidas con número, nombre, capacidad, tipo, zona, geometría porcentual y métrica, rotación, bloqueo, notas y versión.
 
 ### `seating_assignments`
-
-Asignación individual de una persona a una mesa.
+Asignación canónica de una persona a una mesa.
 
 Reglas:
-
 - una persona, una mesa;
 - validar capacidad;
 - validar asistencia;
 - mantener consistencia con `wedding_guests.table_id`;
-- auditar movimientos.
+- auditar asignaciones, movimientos y desasignaciones.
+
+### `event_venue_layouts`
+Versiones del layout operativo del recinto.
+
+Campos desplegados:
+- `name`, `venue_name`, `status`, `version`;
+- `elements` JSONB;
+- `reference_url`, `notes`, `template_key`;
+- `space_width_m`, `space_height_m`, `grid_step_m`, `unit_system`;
+- timestamps.
+
+Existe un índice único parcial que permite como máximo un layout `active`.
+
+La creación de una nueva versión debe usar la RPC `create_venue_layout_version`, que serializa y ejecuta atómicamente el reemplazo del layout activo.
+
+## 5. Operación del evento
 
 ### `vendors`
+Proveedor operativo con contacto, categoría, estado y coordinación de producción.
 
-Proveedores del matrimonio.
+Además de los campos base, producción ya incluye:
+- `day_of_contact`;
+- `arrival_at`, `setup_at`, `teardown_at`;
+- `location`;
+- `deliverables` y `equipment` JSONB;
+- `technical_requirements`;
+- `contract_url`;
+- `production_status`.
 
-Debe evolucionar para incluir:
+### `event_timeline_items`
+Cronograma canónico con inicio/fin, título, categoría, responsable, proveedor, ubicación, estado, dependencias, notas y orden.
 
-- categoría;
-- contacto;
-- estado;
-- contrato;
-- montos;
-- responsable;
-- acceso al portal;
-- actividad;
-- documentos.
+### `event_tasks`
+Tareas operativas con título, descripción, categoría, responsable, prioridad, vencimiento, estado, fuente, entidad relacionada, proveedor y fecha de completitud.
 
-### `expenses`
+### `event_music_items`
+Momentos musicales/canciones con planificación, artista, versión, URL, cue, prioridad, proveedor, `vendor_id`, tipo de acto, set y notas técnicas.
 
-Compromisos financieros asociados a conceptos o proveedores.
+### `event_documents`
+Registro canónico de documentos y enlaces: categoría, título, URL, tipo, estado, fuente, notas y timestamps.
 
-### `expense_payments`
+## 6. Presupuesto y pagos
 
-Pagos vinculados a gastos.
+Hay dos familias que no deben confundirse.
 
-La facturación comercial de la plataforma no debe mezclarse con estos gastos del matrimonio.
+### Presupuesto operativo del evento
+- `event_budget_items`
+- `event_budget_payments`
+
+`event_budget_items` incluye concepto, categoría, proveedor, responsable, estado, moneda, cantidades, neto unitario, bruto proyectado, monto contratado, pagado, vencimiento, notas y orden.
+
+`event_budget_payments` registra pagos contra un ítem presupuestario con monto, moneda, fecha, método, estado, referencia y notas.
+
+### Gastos operativos históricos/integrados
+- `expenses`
+- `expense_payments`
+
+Siguen activos para flujos existentes y espejo Sheets. No representan facturación comercial de una futura plataforma SaaS.
+
+## 7. Memoria y Copiloto
+
+### `event_memory`
+Memoria durable y explícita del evento.
+
+Tipos permitidos: `fact`, `decision`, `preference`, `relationship`, `constraint`, `rejected_option`, `learning`.
+
+Incluye sujeto, contenido JSONB, confianza (`confirmed`/`probable`/`inferred`), fuente, referencia, estado y actor.
+
+### `copilot_review_state`
+Estado de revisión por usuario y dominio: última revisión, snapshot y timestamp de actualización.
+
+Regla: el Copiloto puede proponer acciones, pero las mutaciones requieren confirmación y pasan por APIs/RBAC/guards normales.
+
+## 8. Auditoría, sincronización e integración
 
 ### `audit_log`
-
-Historial de cambios de negocio.
+Historial administrativo de negocio con entidad, acción, before/after, actor, origen y timestamp.
 
 ### `sync_outbox`
-
-Cola de sincronización con sistemas externos.
-
-Reglas:
-
-- idempotencia;
-- claim transaccional;
-- reintentos;
-- no procesar desde Preview productivo;
-- no marcar `processed` antes de verificar.
+Cola durable para sincronización externa con claim transaccional, estados, reintentos y backoff.
 
 ### `sync_conflicts`
+Conflictos detectados durante sincronización/integración.
 
-Conflictos detectados durante sincronización o integración.
+### Espejo automático actual a Google Sheets
+El worker `gestion/lib/sync-outbox.ts` tiene mapeo automático para:
 
-### `guest_photos`
+```text
+wedding_guests        → INVITADOS_NUEVO
+rsvp_responses        → CONFIRMACIONES_RSVP
+wedding_tables        → MESAS_NUEVO
+seating_assignments   → ASIGNACIONES_MESA
+vendors               → PROVEEDORES
+expenses              → GASTOS
+expense_payments      → PAGOS
+```
 
-Fotografías de invitados. Pertenece al ecosistema general, pero cualquier cambio de galería pública está fuera del alcance actual del dashboard.
+Los módulos `event_*`, relaciones, memoria y layout son canónicos en Supabase pero **no forman parte hoy de ese mapa automático del worker**. Cualquier referencia a una pestaña histórica/importada debe tratarse como referencia operacional, no como garantía de sync bidireccional.
 
-### WhatsApp
+## 9. WhatsApp y otros datos auxiliares
 
-Tablas conocidas:
+Tablas existentes:
+- `whatsapp_sessions`;
+- `whatsapp_processed_messages`;
+- `guest_contact_events`;
+- `guest_photos`.
 
-- `whatsapp_sessions`
-- `whatsapp_processed_messages`
-- `guest_contact_events`
+Su existencia no implica que todos esos canales estén activos en la operación actual.
 
-La integración real aún no está operativa.
+## 10. Seguridad de datos
 
-## 3. Relaciones principales
+Las tablas operativas críticas verificadas en producción usan RLS y políticas basadas en rol administrativo. Las RPC `SECURITY DEFINER` sensibles deben:
+
+1. comprobar `auth.uid()`;
+2. validar `security.get_my_role()` o perfil activo;
+3. usar `search_path` explícito;
+4. revocar ejecución pública;
+5. conceder sólo a roles necesarios;
+6. auditar la mutación cuando corresponda.
+
+Nunca exponer `service_role` al navegador.
+
+## 11. Relaciones principales
 
 ```text
 auth.users
@@ -230,240 +220,50 @@ rsvp_responses
     └── wedding_guests
 
 wedding_guests
+├── guest_relationship_members
+│   └── guest_relationship_groups
 ├── seating_assignments
 │   └── wedding_tables
-└── rsvp_responses / rsvp_response_members
+└── RSVP / restricciones / reconfirmación
 
 vendors
-├── expenses
-│   └── expense_payments
-└── futuro vendor_access
+├── event_budget_items
+│   └── event_budget_payments
+├── event_timeline_items
+├── event_tasks
+└── event_music_items
 
-cambios de entidades
+event_venue_layouts
+└── versions del plano operativo
+
+event_memory
+└── memoria durable del Copiloto
+
+mutaciones relevantes
 ├── audit_log
-└── sync_outbox
+└── sync_outbox (cuando la entidad tiene espejo externo)
 ```
 
-## 4. Vistas y RPC
+## 12. Evolución futura: multi-matrimonio
 
-Elementos conocidos o esperados:
+No es requisito para cerrar el caso Felipe/Camila. Cuando exista necesidad comercial, la migración debe ser gradual:
 
-- vista de resumen de gestión RSVP;
-- conciliación de integrante;
-- creación de integrante;
-- actualización de incidencias;
-- asignación transaccional a mesa;
-- desasignación;
-- claim de lote `sync_outbox`.
+1. crear `weddings`;
+2. crear `wedding_members`;
+3. agregar `wedding_id` nullable a módulos nuevos;
+4. backfill con validación;
+5. actualizar consultas y RLS;
+6. probar aislamiento con un segundo matrimonio;
+7. convertir `wedding_id` en obligatorio sólo al final.
 
-Toda RPC debe verificarse en el esquema real antes de documentar su firma definitiva.
+Nunca ejecutar esta evolución como una migración masiva sin staging, respaldo y pruebas de aislamiento.
 
-## 5. Tablas nuevas recomendadas
+## 13. Regla de cambio de esquema
 
-### `weddings`
-
-```text
-id
-slug
-couple_names
-event_date
-timezone
-status
-venue_name
-settings
-created_at
-archived_at
-```
-
-Primer registro:
-
-- Felipe y Camila
-- 23 de octubre de 2026
-- zona horaria `America/Santiago`
-
-### `wedding_members`
-
-```text
-wedding_id
-user_id
-role
-permissions
-active
-invited_by
-created_at
-```
-
-### `vendor_access`
-
-```text
-wedding_id
-vendor_id
-user_id
-access_role
-permissions
-active
-expires_at
-last_access_at
-```
-
-### `timeline_events`
-
-```text
-wedding_id
-title
-category
-start_at
-end_at
-location
-description
-responsible_user_id
-status
-visibility
-```
-
-### `timeline_event_vendors`
-
-Relación muchos-a-muchos entre cronograma y proveedores.
-
-### `deliverables`
-
-```text
-wedding_id
-vendor_id
-title
-deliverable_type
-url
-version
-status
-visibility
-due_at
-uploaded_by
-created_at
-updated_at
-```
-
-### `venue_layouts`
-
-```text
-wedding_id
-name
-venue_name
-width
-height
-measurement_unit
-background_url
-scale
-version
-status
-```
-
-### `venue_layout_objects`
-
-```text
-layout_id
-object_type
-name
-position_x
-position_y
-width
-height
-rotation
-capacity
-locked
-layer
-metadata
-```
-
-### `seating_rules`
-
-```text
-wedding_id
-rule_type
-guest_id
-related_guest_id
-group_name
-table_id
-priority
-hard_constraint
-reason
-active
-```
-
-### `seating_suggestion_runs`
-
-Debe guardar:
-
-- snapshot o versión de entradas;
-- reglas;
-- algoritmo/modelo;
-- puntuación;
-- advertencias;
-- explicación;
-- estado;
-- actor;
-- timestamps.
-
-### `seating_suggestion_assignments`
-
-Asignaciones propuestas, separadas de `seating_assignments`.
-
-## 6. Estrategia multi-matrimonio
-
-No migrar todo en una sola operación.
-
-Orden:
-
-1. Crear `weddings`.
-2. Crear el matrimonio actual.
-3. Crear `wedding_members`.
-4. Agregar `wedding_id` nullable a módulos nuevos.
-5. Agregar `wedding_id` nullable progresivamente a tablas existentes.
-6. Backfill por lotes con dry-run.
-7. Validar conteos y relaciones.
-8. Actualizar consultas y RLS.
-9. Probar aislamiento con un segundo matrimonio.
-10. Convertir a obligatorio solo al final.
-
-## 7. RLS objetivo
-
-Toda tabla multi-matrimonio debe verificar:
-
-- usuario autenticado;
-- membresía activa;
-- `wedding_id`;
-- rol;
-- permiso específico.
-
-No confiar únicamente en filtros frontend.
-
-## 8. Datos sensibles
-
-Clasificación alta:
-
-- teléfonos;
-- correos;
-- alergias;
-- notas personales;
-- documentos;
-- pagos;
-- relaciones o incompatibilidades entre invitados.
-
-Aplicar:
-
-- vistas limitadas;
-- columnas seleccionadas;
-- logs anonimizados;
-- mínimo privilegio;
-- datos ficticios en staging.
-
-## 9. Regla de migración
-
-El esquema documentado como “objetivo” no implica autorización para crearlo completo.
-
-Cada incorporación debe:
-
-- pertenecer a un PR pequeño;
-- ser aditiva;
-- tener rollback;
-- probarse fuera de producción;
-- aplicarse a producción únicamente con respaldo y aprobación.
+Toda modificación debe:
+- ser aditiva o tener plan explícito de compatibilidad;
+- vivir en `supabase/migrations/`;
+- revisar RLS/grants/RPC;
+- incluir verificación automatizada cuando sea posible;
+- evitar PII o seeds reales en el repositorio;
+- documentar impacto en sync y rollback.

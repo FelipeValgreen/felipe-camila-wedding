@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { evaluateDatabaseWritePolicy } from '@/lib/runtime-policy';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -13,8 +14,7 @@ function nonProductionApiWriteBlocked(request: NextRequest): boolean {
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
   if (!isApiRoute || SAFE_METHODS.has(request.method.toUpperCase())) return false;
 
-  if (process.env.VERCEL_ENV === 'production') return false;
-  return process.env.ALLOW_NON_PRODUCTION_WRITES !== 'true';
+  return Boolean(evaluateDatabaseWritePolicy(process.env));
 }
 
 export async function middleware(request: NextRequest) {
@@ -72,7 +72,6 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Authenticate user with getUser()
   const { data: { user } } = await supabase.auth.getUser();
 
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
