@@ -4,8 +4,19 @@ import assert from 'node:assert/strict';
 import {
   evaluateDatabaseWritePolicy,
   evaluateExternalSyncPolicy,
+  parseBooleanFlag,
   resolveGestionRuntimeEnvironment
 } from '../lib/runtime-policy';
+
+test('boolean flags accept the supported truthy spellings consistently', () => {
+  for (const value of ['true', 'TRUE', '1', 'yes', 'YES', 'on', ' On ']) {
+    assert.equal(parseBooleanFlag(value), true, value);
+  }
+
+  for (const value of [undefined, null, '', '0', 'false', 'off', 'no']) {
+    assert.equal(parseBooleanFlag(value), false, String(value));
+  }
+});
 
 test('production is detected and allows canonical writes', () => {
   const env = { VERCEL_ENV: 'production' };
