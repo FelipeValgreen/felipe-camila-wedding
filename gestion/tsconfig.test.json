@@ -16,6 +16,7 @@
     "lib/phone.ts",
     "lib/copilot-operations.ts",
     "lib/preview-entity-state.ts",
+    "lib/name-similarity.ts",
     "tests/**/*.test.ts"
   ],
   "exclude": ["node_modules", ".next", ".test-build"]
