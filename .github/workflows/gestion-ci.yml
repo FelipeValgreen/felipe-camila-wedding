@@ -1,0 +1,50 @@
+name: Gestion CI
+
+on:
+  pull_request:
+    paths:
+      - 'gestion/**'
+      - 'supabase/migrations/**'
+      - '.github/workflows/gestion-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'gestion/**'
+      - 'supabase/migrations/**'
+      - '.github/workflows/gestion-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: gestion
+    env:
+      VERCEL_ENV: preview
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-key
+      SUPABASE_SECRET_KEY: ci-placeholder-secret
+      ALLOW_NON_PRODUCTION_WRITES: 'false'
+      NEXT_PUBLIC_ALLOW_NON_PRODUCTION_WRITES: 'false'
+      ALLOW_NON_PRODUCTION_EXTERNAL_SYNC: 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: gestion/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Quality gate
+        run: npm run check:ci
