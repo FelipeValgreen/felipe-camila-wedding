@@ -1,285 +1,199 @@
 # STATUS_AND_ROADMAP.md — Estado y hoja de ruta
 
-**Actualizado:** 14 de agosto de 2026
+**Actualizado:** 17 de agosto de 2026
 
-> Los conteos de RSVP, pagos, incidencias y asignaciones cambian continuamente. Este documento registra capacidades de producto y arquitectura, no conteos operativos en tiempo real.
+> Este documento registra capacidades y arquitectura. Los conteos operativos de invitados, RSVP, pagos, incidencias y mesas deben consultarse en las fuentes live.
 
-## 1. Leyenda
+## 1. Estado ejecutivo
 
-- ✅ Implementado y con base productiva
-- 🧪 Implementado en rama/Preview y pendiente de merge
-- 🟡 Funcional con una limitación conocida
-- ⚪ Futuro
-- 🔴 Bloqueante para una capacidad específica
+El Centro de Gestión para Felipe & Camila está en **fase operativa y estabilizada** para el matrimonio actual. El cierre técnico de agosto incorpora CI reproducible, guards coherentes de Preview, documentación alineada al esquema real y reemplazo atómico del layout del salón.
 
-## 2. Estado de producto
+Supabase continúa como fuente de verdad; Google Sheets es espejo parcial y Vercel aloja la aplicación privada.
 
-| Módulo | Estado | Estado técnico |
+## 2. Capacidades actuales
+
+| Módulo | Estado | Nota |
 |---|---|---|
 | Autenticación administrativa | ✅ | Supabase Auth + `admin_profiles` + RLS |
-| Inicio / Command Center | ✅ | Resumen conectado de confirmados, mesas, cronograma, música, presupuesto, documentos e incidencias |
-| Necesita atención | ✅ | Conciliación e incidencias con acciones auditadas |
-| Planificación | ✅ | Prioridades derivadas + tareas manuales autogestionables |
-| Invitados | ✅ / 🧪 | Directorio, edición rápida, restricciones, clasificación familiar/social, conciliación y coordinación de paneles corregida |
-| Relaciones de invitados | ✅ / 🧪 | Grupos canónicos editables; conocidos = regla fuerte; probables = preferencia; coordinación de paneles corregida |
-| Mesas | ✅ | CRUD, capacidad, asignar/quitar, drag & drop y avisos de grupos separados |
-| Seating Intelligence | ✅ / 🟡 | Tres escenarios, score explicable, confirmados y mesas propuestas; aplicación masiva real sigue protegida |
-| Salón | ✅ | Editor 2D operativo, layout canónico, referencia de recinto, drag/resize/rotación/bloqueo/versionado |
-| Cronograma | ✅ | Fuente canónica en Supabase + CRUD + borradores seguros en Preview |
-| Música | ✅ | Momentos/canciones/cues/proveedor + CRUD + acciones del Copiloto |
-| Presupuesto | ✅ | `event_budget_items` canónico + CRUD |
-| Proveedores | ✅ | CRUD, coordinación operativa, estados y auditoría |
-| Pagos | ✅ | Registro, edición y eliminación con permisos/auditoría |
-| Documentos | ✅ | Registro canónico + búsqueda/filtros + CRUD |
-| Actividad | ✅ | `audit_log` presentado como timeline operativo |
-| Copiloto operacional | ✅ / 🟡 | Grounding obligatorio, memoria, fallback seguro y acciones confirmables; LLM externo es opcional |
-| Estado del sistema | ✅ | Diagnóstico de fuentes, integridad, capacidad, conciliación, Copiloto y guards de entorno |
-| Google Sheets sync | ✅ | `sync_outbox`; bloqueado fuera de producción por guard |
-| Auditoría | ✅ | `audit_log` para cambios relevantes |
-| Preview seguro costo 0 | ✅ / 🟡 | Lectura real + borradores locales persistentes; escrituras DB/Sheets bloqueadas. No se contratará branch Supabase de pago por ahora |
-| Typecheck separado | ✅ | `npm run typecheck` |
-| Tests automatizados base | ✅ / 🟡 | 18 pruebas de contratos críticos; aún falta cobertura amplia de dominio/API/E2E |
-| Quality gate de build | 🧪 | `npm run build` ejecuta `npm test` antes de `next build`; `npm run check:ci` consolida lint/typecheck/build |
-| Staging full-stack aislado | ⚪ | Pospuesto por decisión de costo; sólo se evaluará si necesitamos mutaciones reales fuera de producción |
-| Portal de proveedores | ⚪ | Requiere roles y vistas acotadas |
-| Multi-matrimonio | ⚪ | Siguiente etapa comercial, no necesaria para el caso Felipe/Camila |
-| Facturación comercial | ⚪ | Pospuesta |
+| Command Center | ✅ | Resúmenes y fuentes operativas conectadas |
+| Necesita atención | ✅ | Incidencias y conciliación auditables |
+| Planificación / tareas | ✅ | `event_tasks` + acciones confirmables del Copiloto |
+| Invitados | ✅ | Directorio, edición, clasificación, restricciones y conciliación |
+| Relaciones de invitados | ✅ | Grupos confirmados/probables editables |
+| Mesas | ✅ | CRUD, capacidad, asignar/quitar y controles de grupos |
+| Seating Intelligence | ✅ / 🟡 | Escenarios explicables; aplicación real sigue protegida y depende de fichas conciliadas |
+| Salón | ✅ | Editor métrico, versionado y reemplazo activo atómico |
+| Cronograma | ✅ | `event_timeline_items` canónico + CRUD |
+| Música | ✅ | Momentos, canciones, cues, proveedores y notas técnicas |
+| Presupuesto | ✅ | `event_budget_items` + `event_budget_payments` |
+| Proveedores | ✅ | CRUD + coordinación de producción |
+| Pagos/gastos históricos | ✅ | `expenses` + `expense_payments` siguen soportados |
+| Documentos | ✅ | Registro canónico y CRUD |
+| Actividad / auditoría | ✅ | `audit_log` |
+| Memoria IA | ✅ | `event_memory` |
+| Copiloto operacional | ✅ / 🟡 | Grounded y confirmable; el LLM externo es opcional |
+| Estado del sistema | ✅ | Diagnóstico de fuentes, integridad y guards |
+| Google Sheets sync | ✅ / 🟡 | Worker automático para entidades mapeadas; no todos los módulos `event_*` se espejan |
+| Preview seguro costo 0 | ✅ | Lectura permitida; DB/Sheets bloqueados por defecto |
+| Tests automatizados | ✅ | Contratos de runtime, Copiloto, UI operativa, teléfonos, guards y venue |
+| GitHub CI | ✅ | lint de higiene + typecheck + tests + build en PR/push |
+| Vercel Preview | ✅ | Build real y smoke de autenticación verificados |
 
-## 3. Modelo canónico
-
-Supabase sigue siendo la fuente de verdad para entidades estructuradas. Google Sheets permanece como espejo o como fuente operacional transitoria sólo donde todavía corresponde.
-
-Entidades relevantes:
+## 3. Arquitectura canónica actual
 
 ```text
-rsvp_responses
-rsvp_response_members
-wedding_guests
-wedding_tables
-seating_assignments
-management_issues
-vendors
-expenses / expense_payments
-event_budget_items / event_budget_payments
-event_timeline_items
-event_music_items
-event_documents
-event_tasks
-guest_relationship_groups
-guest_relationship_members
-event_venue_layouts
-event_memory
-copilot_review_state
-audit_log
-sync_outbox
+Vercel / Next.js Centro de Gestión
+        │
+        ├── Supabase Auth
+        │
+        ├── Supabase PostgreSQL  ← fuente de verdad
+        │     ├── RSVP / invitados
+        │     ├── relaciones
+        │     ├── mesas / seating
+        │     ├── salón
+        │     ├── proveedores
+        │     ├── presupuesto / pagos
+        │     ├── cronograma / tareas / música
+        │     ├── documentos / memoria
+        │     ├── audit_log
+        │     └── sync_outbox
+        │
+        └── Google Sheets ← espejo parcial vía outbox worker
 ```
 
-Las migraciones de esquema están versionadas en `supabase/migrations/`. Datos personales y backfills privados **no** se incluyen en el repositorio público.
+El detalle de tablas y relaciones está en `DATA_MODEL.md`.
 
-## 4. Confirmados y fichas
-
-La experiencia diferencia explícitamente:
-
-1. asistentes conocidos en el consolidado + delta live;
-2. personas con ficha operativa en `wedding_guests`;
-3. personas todavía pendientes de conciliación;
-4. personas realmente persistibles en `seating_assignments`.
-
-Seating Intelligence puede incluir a un confirmado sin ficha como **registro virtual de planificación**, pero ese registro no puede escribirse como asignación real hasta ser conciliado.
-
-## 5. Relaciones y familias
-
-Las relaciones no dependen de una inferencia oculta del algoritmo.
-
-```text
-Relación conocida
-→ regla fuerte
-
-Relación por validar
-→ preferencia blanda
-
-family_branch explícito
-→ afinidad operativa para seating
-```
-
-El usuario puede editar relaciones y ramas desde Invitados. Esto permite separar ramas familiares/sociales sin que el sistema invente quién es madre, padre, pareja, hermano o amigo.
-
-## 6. Mesas y Seating Intelligence
-
-La página de Mesas es un workspace autogestionable:
-
-- banco de invitados;
-- búsqueda y filtros;
-- drag & drop;
-- selector alternativo;
-- CRUD de mesas;
-- capacidad dura;
-- grupos conocidos visibles;
-- aviso cuando un grupo conocido queda separado;
-- Preview persistente sin escribir producción.
-
-Seating Intelligence genera tres escenarios:
-
-- **Cohesión familiar**;
-- **Equilibrada**;
-- **Mezcla social**.
-
-Cada escenario incluye score, razones, cupos y mesas adicionales propuestas cuando la capacidad real no alcanza. Guardar una propuesta crea un borrador que Salón puede visualizar; no ejecuta silenciosamente asignaciones reales.
-
-## 7. Salón
-
-El editor del Salón mantiene dos capas distintas:
-
-### Referencia
-
-Plano o imagen del recinto como overlay/guía.
-
-### Layout operativo
-
-Elementos editables con:
-
-- posición;
-- tamaño;
-- rotación;
-- bloqueo;
-- duplicación;
-- eliminación;
-- biblioteca de objetos;
-- medidas métricas;
-- versión canónica en producción;
-- borrador local persistente en Preview.
-
-El borrador de Seating Intelligence puede visualizar mesas adicionales propuestas sobre el Salón sin confundirlas con mesas persistidas.
-
-## 8. Copiloto operacional
-
-El Copiloto es **data-first** y no depende de que un LLM externo responda para seguir siendo útil.
-
-Flujo:
-
-```text
-pregunta
-→ consulta fuentes conectadas
-→ snapshot actual
-→ memoria activa
-→ respuesta grounded
-→ acción propuesta, si corresponde
-→ confirmación explícita
-→ escritura permitida sólo en entorno y rol correctos
-```
-
-Acciones actualmente preparables incluyen:
-
-- crear ficha de invitado;
-- renombrar mesa;
-- guardar memoria;
-- canción/momento de Música;
-- bloque de Cronograma;
-- tarea de Planificación.
-
-En Preview la confirmación crea borradores locales donde corresponde. En producción llama al API canónico correspondiente, con guard, permisos y auditoría.
-
-## 9. Estrategia costo 0
-
-Mientras no exista staging de pago, el flujo de QA queda así:
-
-```text
-rama de trabajo
-→ Vercel Preview
-→ lecturas desde fuentes reales
-→ toda mutación bloqueada por server guard
-→ cambios de interfaz se prueban con borradores localStorage
-→ tests automáticos antes del build
-→ revisión de Preview
-→ merge controlado
-→ validación productiva de cambios reales de bajo riesgo
-```
-
-No se crea ningún branch Supabase ni recurso pagado. La limitación asumida es que no tendremos E2E de escrituras reales fuera de producción. Para compensarlo se refuerzan tests de contratos, guards, lógica pura y smoke checks de lectura.
-
-## 10. Seguridad de entornos
+## 4. Seguridad de entornos
 
 Regla permanente:
 
 ```text
-Preview / Development nunca deben escribir en la base o Sheets de producción.
+Preview / Development no escriben producción salvo opt-in explícito en un staging aislado.
 ```
 
-La política se separó en dos capas:
+Controles:
+- `lib/runtime-policy.ts`: política pura y testeable;
+- `lib/environment-guard.ts`: evaluación server-only;
+- middleware: bloquea métodos mutantes de `/api/**` fuera de producción;
+- cliente Supabase: bloquea REST/Storage mutante fuera del hostname productivo;
+- sync externo: requiere opt-in independiente;
+- los valores truthy soportados (`1`, `true`, `yes`, `on`) se interpretan igual en las capas relevantes.
 
-- `lib/runtime-policy.ts`: lógica pura y testeable;
-- `lib/environment-guard.ts`: adaptador server-only que evalúa `process.env`.
+## 5. Salón: garantía de versión activa
 
-La política falla cerrada: cualquier entorno no identificado se trata como no productivo y bloquea escrituras.
+`event_venue_layouts` mantiene como máximo un registro `active` mediante índice único parcial.
 
-Además, una prueba contractual recorre las rutas API con mutaciones y exige que mantengan el guard de escritura; las rutas de sincronización externa deben mantener un guard de entorno equivalente.
+La creación de una nueva versión usa `create_venue_layout_version`:
 
-## 11. Quality gates
+```text
+validar rol y payload
+→ lock de tabla
+→ snapshot del activo anterior
+→ archivar activo
+→ insertar nueva versión activa
+→ auditar before/after
+→ commit
+```
 
-La rama de quality gates incorpora una suite automatizada sin dependencias de testing adicionales.
+Si cualquier paso falla, PostgreSQL revierte la transacción y el layout anterior continúa activo.
 
-Cobertura actual:
+## 6. Quality gate
 
-- teléfonos chilenos e internacionales;
-- formatos inválidos;
-- detección de Production/Preview/Development/unknown;
-- bloqueo de escrituras por defecto en Preview;
-- habilitación explícita de staging;
-- bloqueo independiente de sincronización externa;
-- fail-closed en entornos desconocidos;
-- presencia obligatoria del guard en rutas API que mutan datos;
-- guard de entorno en rutas de sincronización externa;
-- contratos del Copiloto para revisión de lista, cambios desde última revisión y coordinación;
-- presencia de acciones confirmables del Copiloto;
-- protocolo exclusivo de paneles flotantes para evitar drawers superpuestos;
-- IDs estables y no duplicados para los workspaces flotantes.
-
-Comandos:
+Comando local/canónico:
 
 ```bash
-npm run lint
-npm run typecheck
-npm test
-npm run build
-npm run qa
+cd gestion
+npm ci
 npm run check:ci
 ```
 
-`npm run build` ejecuta `npm test` antes de compilar Next.js. Un deployment no puede quedar verde si falla esta suite.
+GitHub Actions ejecuta de forma explícita:
+1. lint de higiene del repositorio;
+2. `tsc --noEmit`;
+3. suite `node:test`;
+4. `next build`.
 
-### Siguiente cobertura a incorporar
+El lint de higiene es deliberadamente dependency-free y detecta, entre otros, marcadores de merge, `debugger` y tests enfocados accidentalmente. La corrección semántica de TypeScript se valida de forma separada con `typecheck`.
 
-1. reglas de conciliación RSVP;
-2. capacidad y consistencia de seating;
-3. serialización de propuestas del Copiloto;
-4. CRUD de presupuesto/proveedores/timeline/música mediante lógica aislada;
-5. smoke tests autenticados de rutas críticas cuando tengamos un mecanismo de sesión de prueba seguro;
-6. responsive y accesibilidad;
-7. E2E de escritura sólo si en el futuro se habilita staging aislado.
+## 7. Preview costo 0
 
-## 12. Checklist antes de merge
+Mientras no exista staging pagado:
 
+```text
+branch
+→ GitHub CI
+→ Vercel Preview
+→ lectura de fuentes reales
+→ mutaciones bloqueadas
+→ borradores locales para interacción de UI
+→ revisión
+→ merge controlado
+```
+
+Esto evita pagar infraestructura extra y, al mismo tiempo, impide usar producción como sandbox de escritura.
+
+## 8. Google Sheets
+
+El espejo automático actual está limitado al mapa declarado en `lib/sync-outbox.ts`:
+- invitados;
+- RSVP;
+- mesas;
+- asignaciones de mesa;
+- proveedores;
+- gastos;
+- pagos.
+
+Cronograma, música, presupuesto `event_*`, relaciones, memoria y layout permanecen canónicos en Supabase aunque puedan existir pestañas históricas o referencias manuales en Sheets.
+
+## 9. Pendientes operativos antes del evento
+
+Estos no son defectos del software; son trabajo de planificación que cambia con el matrimonio:
+
+1. conciliar cualquier confirmado que todavía no tenga ficha individual;
+2. completar relaciones/ramas familiares que sólo Felipe y Camila pueden confirmar;
+3. escoger y ajustar el seating definitivo;
+4. persistir asignaciones finales una vez conciliadas las fichas;
+5. cargar medidas y decisiones definitivas del montaje;
+6. cerrar canciones, cues, responsables y horarios;
+7. completar entregables, contactos y coordinación de proveedores;
+8. mantener documentos, tareas y memoria operacional actualizados.
+
+## 10. Evolución deliberadamente futura
+
+No bloquea el matrimonio actual:
+- staging full-stack dedicado de pago;
+- portal externo de proveedores;
+- multi-matrimonio / `wedding_id` transversal;
+- facturación SaaS;
+- automatizaciones comerciales multi-cliente;
+- E2E de mutaciones reales fuera de producción.
+
+## 11. Criterio de release
+
+Antes de merge:
+- CI verde;
 - Preview `READY`;
-- `npm test` verde;
-- `next build` verde;
-- typecheck verde;
-- revisar warnings del build;
-- errores runtime recientes revisados;
-- guards de mutación vigentes;
-- migraciones versionadas cuando existan;
-- ausencia de PII/secrets nuevos;
-- diff limitado a `gestion/**`;
-- no tocar frontend/RSVP público.
+- login/sesión protegida verificados;
+- sin errores runtime críticos del Preview;
+- sin PII/secrets nuevos;
+- migraciones revisadas y seguras.
 
-## 13. Pendientes reales para cerrar el caso Felipe/Camila
+Después de merge:
+- migración requerida aplicada/verificada;
+- deployment productivo `READY`;
+- smoke test del dominio productivo;
+- revisión de errores runtime;
+- verificación de consistencia en Supabase.
 
-No son todos bloqueantes de producto, pero sí tareas operativas antes del evento:
+## 12. Estado del closeout de agosto 2026
 
-1. conciliar confirmados que todavía no tienen ficha individual;
-2. completar ramas familiares/sociales que el algoritmo no puede conocer por sí solo;
-3. elegir y ajustar un escenario de seating;
-4. persistir asignaciones finales sólo cuando las fichas estén conciliadas;
-5. ajustar el layout del Salón con medidas/decisiones reales del montaje;
-6. completar canciones, cues, responsables y horarios pendientes;
-7. completar coordinación de proveedores y documentos;
-8. mantener tareas y memoria operacional al día.
+Completado:
+- documentación canónica alineada a producción;
+- CI GitHub reproducible;
+- lint limpio sin dependencia faltante;
+- flags de Preview consistentes entre capas;
+- tests de contrato adicionales;
+- creación de versiones del Salón transaccional;
+- Preview smoke verificado.
+
+La siguiente prioridad del proyecto deja de ser “estabilizar la plataforma” y pasa a ser **operar el matrimonio con datos reales y cerrar decisiones pendientes**.
