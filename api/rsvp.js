@@ -1,6 +1,10 @@
 import { createRSVP, updateRSVP, readRSVP } from './_lib/rsvp-service.js';
 import { getSupabaseServerKey, sanitizeSupabaseError } from './_lib/supabase-admin.js';
 
+function logRSVPAction(event, details = {}) {
+    console.info(event, JSON.stringify(details));
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         res.setHeader('Allow', ['POST']);
@@ -36,8 +40,16 @@ export default async function handler(req, res) {
         if (action === 'read') {
             const result = await readRSVP(body.rsvp_id, body.manage_token);
             if (!result.ok) {
+                console.warn('RSVP_READ_REJECTED', JSON.stringify({
+                    rsvp_id: body.rsvp_id || null,
+                    error: result.error || 'UNKNOWN'
+                }));
                 return res.status(result.status || 401).json({ ok: false, error: result.error });
             }
+
+            logRSVPAction('RSVP_READ_SUCCESS', {
+                rsvp_id: body.rsvp_id
+            });
             return res.status(200).json({ ok: true, rsvp: result.rsvp });
 
         } else if (action === 'create') {
@@ -51,6 +63,9 @@ export default async function handler(req, res) {
             }, 'web');
 
             if (!result.ok) {
+                console.warn('RSVP_CREATE_REJECTED', JSON.stringify({
+                    error: result.error || 'UNKNOWN'
+                }));
                 return res.status(result.status || 400).json({
                     ok: false,
                     error: result.error,
@@ -58,6 +73,12 @@ export default async function handler(req, res) {
                 });
             }
 
+            logRSVPAction('RSVP_CREATE_SUCCESS', {
+                rsvp_id: result.rsvp_id,
+                attendance_status: result.attendance_status,
+                reconciliation_status: result.reconciliation_status,
+                sheet_sync_status: result.sheet_sync_status
+            });
             return res.status(200).json({
                 ok: true,
                 rsvp_id: result.rsvp_id,
@@ -75,12 +96,20 @@ export default async function handler(req, res) {
             });
 
             if (!result.ok) {
+                console.warn('RSVP_UPDATE_REJECTED', JSON.stringify({
+                    rsvp_id: body.rsvp_id || null,
+                    error: result.error || 'UNKNOWN'
+                }));
                 return res.status(result.status || 400).json({
                     ok: false,
                     error: result.error
                 });
             }
 
+            logRSVPAction('RSVP_UPDATE_SUCCESS', {
+                rsvp_id: result.rsvp_id,
+                attendance_status: result.attendance_status
+            });
             return res.status(200).json({
                 ok: true,
                 rsvp_id: result.rsvp_id,
@@ -90,6 +119,7 @@ export default async function handler(req, res) {
             });
 
         } else {
+            console.warn('RSVP_ACTION_REJECTED', JSON.stringify({ action }));
             return res.status(400).json({ ok: false, error: 'ACTION_NOT_SUPPORTED' });
         }
 
