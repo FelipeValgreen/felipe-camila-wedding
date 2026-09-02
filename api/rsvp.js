@@ -1,6 +1,16 @@
 import { createRSVP, updateRSVP, readRSVP } from './_lib/rsvp-service.js';
 import { getSupabaseServerKey, sanitizeSupabaseError } from './_lib/supabase-admin.js';
 
+function logSuccessfulRSVPAction(action, rsvpId) {
+    // Deliberately log only the opaque RSVP UUID. Never log manage tokens,
+    // names, phone numbers, dietary information or other guest PII.
+    console.info('RSVP_AUDIT', JSON.stringify({
+        action,
+        rsvp_id: rsvpId || null,
+        outcome: 'success'
+    }));
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         res.setHeader('Allow', ['POST']);
@@ -38,6 +48,7 @@ export default async function handler(req, res) {
             if (!result.ok) {
                 return res.status(result.status || 401).json({ ok: false, error: result.error });
             }
+            logSuccessfulRSVPAction('read', body.rsvp_id);
             return res.status(200).json({ ok: true, rsvp: result.rsvp });
 
         } else if (action === 'create') {
@@ -58,6 +69,7 @@ export default async function handler(req, res) {
                 });
             }
 
+            logSuccessfulRSVPAction('create', result.rsvp_id);
             return res.status(200).json({
                 ok: true,
                 rsvp_id: result.rsvp_id,
@@ -81,6 +93,7 @@ export default async function handler(req, res) {
                 });
             }
 
+            logSuccessfulRSVPAction('update', result.rsvp_id);
             return res.status(200).json({
                 ok: true,
                 rsvp_id: result.rsvp_id,
