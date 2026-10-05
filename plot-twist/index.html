@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Plot Twist | Felipe & Camila</title>
+<link rel="icon" href="/favicon.ico?v=4"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/tailwind.min.css">
+<style>
+:root{--dark:#0F0C0B;--cream:#F3EFE7;--light:#FAF8F3;--muted:#918D85;--wine:#5C1D24;--gold:#C5A059}
+*{box-sizing:border-box}body{margin:0;background:var(--light);color:var(--dark);font-family:Inter,sans-serif}.serif{font-family:Newsreader,serif}
+.shell{max-width:520px;margin:auto;min-height:100vh;padding-bottom:92px}.top{position:sticky;top:0;z-index:5;background:rgba(250,248,243,.94);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,12,11,.08);padding:13px 18px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}.brand img{width:38px;height:38px;border-radius:50%;border:1px solid rgba(197,160,89,.45)}.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}.pts{font-size:12px;font-weight:700}
+main{padding:28px 18px}.intro{text-align:center;margin:12px 0 28px}.intro h1{font-size:43px;font-weight:400;margin:3px 0 5px}.intro p{font-size:13px;color:var(--muted);margin:0}
+.now{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 10px}
+.card{background:var(--cream);border:1px solid rgba(15,12,11,.09);border-radius:22px;padding:24px;box-shadow:0 10px 35px rgba(15,12,11,.05)}.card h2{font-family:Newsreader,serif;font-size:29px;font-weight:400;line-height:1.08;margin:0 0 12px}.card p{font-size:14px;line-height:1.55;color:#5e5a54}
+.options{display:grid;gap:10px;margin-top:20px}.opt{border:1px solid rgba(15,12,11,.16);background:var(--light);padding:15px 16px;border-radius:14px;text-align:left;font-size:14px}.opt:hover{border-color:var(--gold)}
+.hint{margin:14px 4px 0;font-size:11px;color:var(--muted);text-align:center}.strip{margin-top:24px;border-top:1px solid rgba(15,12,11,.09);padding-top:20px;display:flex;justify-content:space-between;gap:8px}.pill{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(250,248,243,.97);backdrop-filter:blur(12px);border-top:1px solid rgba(15,12,11,.1);height:72px;display:flex;justify-content:center}.navin{width:min(520px,100%);display:grid;grid-template-columns:repeat(3,1fr)}.tab{border:0;background:none;font-size:11px;color:var(--muted);font-family:Inter}.tab.active{color:var(--wine);font-weight:700}.dot{display:block;width:5px;height:5px;background:var(--gold);border-radius:50%;margin:0 auto 6px}
+.offline{display:none;background:var(--wine);color:white;text-align:center;padding:7px;font-size:11px}
+</style></head>
+<body>
+<div id="offline" class="offline">Sin señal. Guardaremos lo posible y reconectaremos automáticamente.</div>
+<div class="shell">
+<header class="top"><div class="brand"><img src="/images/isotype-fc-200w.png" alt="F&C"><div><div class="eyebrow">Plot Twist</div><div id="team" style="font-size:13px;font-weight:600">Mesa en preparación</div></div></div><div class="pts"><span id="score">0</span> pts</div></header>
+<main>
+<section class="intro"><div class="eyebrow">23 · 10 · 26</div><h1 class="serif">Plot Twist</h1><p>El juego de las mesas</p></section>
+<div class="now">Ahora</div>
+<section class="card" id="state-card">
+<h2>Todo parte por su mesa.</h2>
+<p>Inventen un nombre que los represente esta noche. Después elegirán a dos personas para manejar las decisiones del equipo.</p>
+<div class="options">
+<button class="opt" data-demo="1">Somos <strong>Los Inubicables</strong></button>
+<button class="opt" data-demo="2">Escribir otro nombre →</button>
+</div>
+</section>
+<p class="hint">No memoricen nada. Plot Twist les dirá qué hacer cuando llegue el momento.</p>
+<div class="strip"><span class="pill">Cómplice + Dupla</span><span class="pill">Fotos opcionales</span><span class="pill">Sorpresas activas</span></div>
+</main></div>
+<nav class="nav"><div class="navin"><button class="tab active"><span class="dot"></span>Ahora</button><button class="tab">La noche</button><button class="tab">Mi mesa</button></div></nav>
+<script>
+const offline=document.getElementById('offline');function net(){offline.style.display=navigator.onLine?'none':'block'}addEventListener('online',net);addEventListener('offline',net);net();
+document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{document.getElementById('team').textContent='Los Inubicables';document.getElementById('state-card').innerHTML='<h2>Elijan a su Cómplice y su Dupla.</h2><p>Ambos podrán responder por la mesa. Cuando uno confirme una decisión, quedará cerrada para los dos.</p><div class="options"><button class="opt">Ya tenemos a los dos →</button></div>';});
+</script></body></html>
