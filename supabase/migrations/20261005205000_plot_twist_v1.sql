@@ -50,6 +50,8 @@ create table if not exists public.plot_twist_actions (
  unique(game_id,idempotency_key)
 );
 create unique index if not exists plot_twist_one_table_decision_per_stage on public.plot_twist_actions(stage_id,table_id,kind) where status='accepted' and kind='table_decision';
+create unique index if not exists plot_twist_one_individual_vote_per_stage on public.plot_twist_actions(stage_id,player_id,kind) where status='accepted' and kind='individual_vote';
+create unique index if not exists plot_twist_one_wager_per_stage on public.plot_twist_actions(stage_id,table_id,kind) where status='accepted' and kind='wager';
 
 create table if not exists public.plot_twist_score_ledger (
  id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
