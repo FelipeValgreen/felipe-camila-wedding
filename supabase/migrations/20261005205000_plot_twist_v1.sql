@@ -131,3 +131,19 @@ begin
 end $$;
 revoke all on function public.plot_twist_apply_score(uuid,uuid,uuid,integer,integer,text,uuid,jsonb) from public,anon,authenticated;
 comment on function public.plot_twist_apply_score is '[PLOT TWIST] Server-only atomic ledger + cache projection; idempotent by UUID.';
+
+create or replace function public.plot_twist_resolve_stage(p_stage_id uuid,p_correct_answer text,p_points integer default 0,p_secret_correct integer default 0)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare a record; awarded integer:=0;
+begin
+ for a in select * from public.plot_twist_actions where stage_id=p_stage_id and kind='table_decision' and status='accepted' loop
+  if a.payload->>'answer'=p_correct_answer then
+   perform public.plot_twist_apply_score(a.game_id,a.table_id,a.id,p_points,p_secret_correct,'stage_correct:'||p_stage_id::text,gen_random_uuid(),jsonb_build_object('answer',p_correct_answer));
+   awarded:=awarded+1;
+  end if;
+ end loop;
+ update public.plot_twist_stages set status='revealed' where id=p_stage_id and status in ('open','resolving');
+ return jsonb_build_object('awarded_tables',awarded,'correct_answer',p_correct_answer);
+end $$;
+revoke all on function public.plot_twist_resolve_stage(uuid,text,integer,integer) from public,anon,authenticated;
+comment on function public.plot_twist_resolve_stage is '[PLOT TWIST] Operator/server-only resolution of an answer stage.';
