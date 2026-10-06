@@ -1,6 +1,6 @@
 import * as PT from './client.js';
 const card=document.querySelector('#card'),status=document.querySelector('#status'),q=new URLSearchParams(location.search),tableToken=q.get('m')||q.get('mesa')||'';let s;
-const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isResponsible=()=>['complice','dupla'].includes(s?.player?.role);\nconst esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function shell(t,b){card.innerHTML='<div style="background:#f3efe7;border-radius:20px;padding:24px;margin-top:24px"><h2>'+t+'</h2>'+b+'</div>'}
 function error(e){const el=document.querySelector('#err');if(el)el.textContent=({NICKNAME_TAKEN:'Ese nombre ya está usado en esta mesa. Prueba otro apodo.',TABLE_NOT_FOUND:'No encontramos esa mesa. Revisa el QR o código.',ROLE_TAKEN:'Ya hay dos responsables en esta mesa.',RESPONSIBLE_SLOTS_FULL:'Ya hay dos responsables en esta mesa.'}[e.message]||'No pudimos completar eso. Intenta nuevamente.')}
 function render(){status.textContent=s?.table?(s.table.team_name||'Mesa en preparación')+' · '+(s.table.score||0)+' pts':'El juego de las mesas';
