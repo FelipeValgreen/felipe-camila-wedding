@@ -29,11 +29,13 @@ create table if not exists public.plot_twist_players (
 );
 create unique index if not exists plot_twist_one_complice_per_table on public.plot_twist_players(table_id) where role='complice' and active;
 create unique index if not exists plot_twist_one_dupla_per_table on public.plot_twist_players(table_id) where role='dupla' and active;
+create unique index if not exists plot_twist_unique_nickname_per_table on public.plot_twist_players(table_id,lower(nickname)) where active;
+create unique index if not exists plot_twist_unique_join_code_per_game on public.plot_twist_tables(game_id,join_code_hash) where join_code_hash is not null;
 
 create table if not exists public.plot_twist_stages (
  id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
  stage_key text not null, position integer not null, type text not null,
- status text not null default 'draft' check(status in ('draft','queued','open','resolving','revealed','closed')),
+ status text not null default 'draft' check(status in ('draft','queued','open','resolving','revealed','closed','archived')),
  payload jsonb not null default '{}'::jsonb, opened_at timestamptz, closes_at timestamptz, created_at timestamptz not null default now(),
  unique(game_id,stage_key), unique(game_id,position)
 );
@@ -147,3 +149,10 @@ begin
 end $$;
 revoke all on function public.plot_twist_resolve_stage(uuid,text,integer,integer) from public,anon,authenticated;
 comment on function public.plot_twist_resolve_stage is '[PLOT TWIST] Operator/server-only resolution of an answer stage.';
+
+create or replace function public.plot_twist_ledger_immutable() returns trigger language plpgsql as $$ begin raise exception 'PLOT_TWIST_LEDGER_APPEND_ONLY'; end $$;
+drop trigger if exists plot_twist_ledger_no_mutation on public.plot_twist_score_ledger;
+create trigger plot_twist_ledger_no_mutation before update or delete on public.plot_twist_score_ledger for each row execute function public.plot_twist_ledger_immutable();
+create index if not exists plot_twist_actions_stage_table_status on public.plot_twist_actions(stage_id,table_id,status);
+create index if not exists plot_twist_events_game_created on public.plot_twist_events(game_id,created_at desc);
+create index if not exists plot_twist_media_game_status on public.plot_twist_media(game_id,status,created_at desc);
