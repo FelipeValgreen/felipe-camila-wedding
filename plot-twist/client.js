@@ -14,6 +14,8 @@ export const ready=(ready=true)=>call({op:'ready',ready}).then(save);
 export const feed=()=>call({op:'feed'});
 export const chronicle=()=>call({op:'chronicle'});
 export const react=(eventId,emoji)=>call({op:'react',eventId,emoji});
+export const callbackState=(stageId)=>call({op:'callback_state',stageId});
+export const callbackTie=(stageId,targetPlayerId)=>call({op:'callback_tie',stageId,targetPlayerId});
 export const usePower=(powerId,targetTableId)=>call({op:'power',powerId,targetTableId});
 export const spin=(idempotencyKey)=>call({op:'spin',idempotencyKey});
 export async function action(stageId,kind,payload){
