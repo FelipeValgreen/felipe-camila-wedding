@@ -8,9 +8,10 @@ export const join=(x)=>call({op:'join',...x}).then(save);
 export const claimRole=(role)=>call({op:'claim_role',role}).then(save);
 export const claimResponsible=()=>call({op:'claim_responsible'}).then(save);
 export const teamName=(name)=>call({op:'team_name',name}).then(save);
+export const ready=(ready=true)=>call({op:'ready',ready}).then(save);
 export async function action(stageId,kind,payload){
  const item={op:'action',stageId,kind,payload,idempotencyKey:crypto.randomUUID(),clientCreatedAt:new Date().toISOString()};
- try{return await call(item)}catch(e){if(!navigator.onLine && kind!=='spin' && kind!=='power' && kind!=='wager'){const q=JSON.parse(localStorage.getItem(OUT)||'[]');q.push(item);localStorage.setItem(OUT,JSON.stringify(q));return {accepted:false,queued:true}}throw e}
+ try{const r=await call(item);if(r.snapshot)save(r.snapshot);return r}catch(e){if(!navigator.onLine && kind!=='spin' && kind!=='power' && kind!=='wager'){const q=JSON.parse(localStorage.getItem(OUT)||'[]');q.push(item);localStorage.setItem(OUT,JSON.stringify(q));return {accepted:false,queued:true}}throw e}
 }
 export async function flush(){if(!navigator.onLine)return;let q=JSON.parse(localStorage.getItem(OUT)||'[]'),left=[];for(const x of q){try{await call(x)}catch(e){if(e.status>=500)left.push(x)}}localStorage.setItem(OUT,JSON.stringify(left))}
 addEventListener('online',flush);
