@@ -142,7 +142,7 @@ declare a record; awarded integer:=0;
 begin
  for a in select * from public.plot_twist_actions where stage_id=p_stage_id and kind='table_decision' and status='accepted' loop
   if a.payload->>'answer'=p_correct_answer then
-   perform public.plot_twist_apply_score(a.game_id,a.table_id,a.id,p_points,p_secret_correct,'stage_correct:'||p_stage_id::text,gen_random_uuid(),jsonb_build_object('answer',p_correct_answer));
+   perform public.plot_twist_apply_score(a.game_id,a.table_id,a.id,p_points,p_secret_correct,'stage_correct:'||p_stage_id::text,a.id,jsonb_build_object('answer',p_correct_answer));
    awarded:=awarded+1;
   end if;
  end loop;
