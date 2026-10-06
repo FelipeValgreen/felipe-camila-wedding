@@ -25,3 +25,26 @@ Puede pausar/reanudar, abrir/cerrar etapa, otorgar giro, invalidar pregunta, tra
 - Afirmar “guardado” sin ACK.
 - Resolver caída pidiendo a todos registrarse de nuevo.
 - Convertir fotos o alcohol en requisito.
+
+
+## Preflight sin costo
+1. Mantener desarrollo en `feat/plot-twist-v1` + Vercel Preview.
+2. No aplicar migración a producción hasta gate explícito.
+3. Validar que `PLOT_TWIST_OPERATOR_KEY` exista en Preview antes de usar `/plot-twist/operator.html`.
+4. Aplicar `20261005205000_plot_twist_v1.sql` y luego `seed-plot-twist-v1.sql` solo en el E2E autorizado.
+5. No inventar mapping de mesas: generar QR/código cuando `wedding_tables` final esté confirmado.
+
+## Ensayo P0 obligatorio
+- cerrar Safari durante una pregunta y volver;
+- modo avión 5 minutos y reconectar;
+- reload repetido después de respuesta confirmada;
+- dos responsables respondiendo casi simultáneamente;
+- diez envíos simultáneos;
+- un solo teléfono para toda la mesa;
+- nombre repetido;
+- cambio de teléfono usando recuperación física;
+- caída de backend: nunca mostrar confirmación falsa;
+- retry de puntaje: ledger debe registrar una sola mutación.
+
+## Operación
+El panel `/plot-twist/operator.html` es contingencia. Permite ver readiness, abrir/cerrar stages y resolver preguntas. La cena no debe depender de que Felipe/Cami lo operen.
