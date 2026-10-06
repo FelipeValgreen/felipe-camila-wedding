@@ -158,3 +158,21 @@ create trigger plot_twist_ledger_no_mutation before update or delete on public.p
 create index if not exists plot_twist_actions_stage_table_status on public.plot_twist_actions(stage_id,table_id,status);
 create index if not exists plot_twist_events_game_created on public.plot_twist_events(game_id,created_at desc);
 create index if not exists plot_twist_media_game_status on public.plot_twist_media(game_id,status,created_at desc);
+
+create or replace function public.plot_twist_resolve_wager(p_stage_id uuid,p_correct_answer text)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare a record; w record; amount integer; correct boolean; n integer:=0;
+begin
+ for a in select * from public.plot_twist_actions where stage_id=p_stage_id and kind='table_decision' and status='accepted' loop
+  select * into w from public.plot_twist_actions where game_id=a.game_id and table_id=a.table_id and kind='wager' and status='accepted' order by created_at desc limit 1;
+  if w.id is not null then
+   amount:=floor(greatest(0,(w.payload->>'scoreSnapshot')::integer)*(w.payload->>'fraction')::numeric);
+   correct:=a.payload->>'answer'=p_correct_answer;
+   perform public.plot_twist_apply_score(a.game_id,a.table_id,a.id,case when correct then amount else -amount end,0,'final_wager:'||p_stage_id::text,a.id,jsonb_build_object('correct',correct,'amount',amount));
+   n:=n+1;
+  end if;
+ end loop;
+ update public.plot_twist_stages set status='revealed' where id=p_stage_id;
+ return jsonb_build_object('resolved_tables',n);
+end $$;
+revoke all on function public.plot_twist_resolve_wager(uuid,text) from public,anon,authenticated;
