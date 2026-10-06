@@ -5,7 +5,7 @@ export default async function handler(req,res){
   if(req.method==='GET'){const d=String(req.query?.device||'');return send(res,200,await snapshot(d))}
   if(req.method!=='POST')return send(res,405,{error:'METHOD_NOT_ALLOWED'});
   const b=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{}); const op=b.op;
-  if(op==='join')return send(res,200,await join(b));
+  if(op==='join')return send(res,200,await join(b));\n  if(op==='recovery_candidates')return send(res,200,await recoveryCandidates(b));\n  if(op==='recover')return send(res,200,await recover(b));
   if(op==='claim_role')return send(res,200,await claimRole(b));
   if(op==='claim_responsible')return send(res,200,await claimResponsible(b));
   if(op==='team_name')return send(res,200,await setTeamName(b));
