@@ -13,6 +13,7 @@ export const teamName=(name)=>call({op:'team_name',name}).then(save);
 export const ready=(ready=true)=>call({op:'ready',ready}).then(save);
 export const feed=()=>call({op:'feed'});
 export const chronicle=()=>call({op:'chronicle'});
+export const react=(eventId,emoji)=>call({op:'react',eventId,emoji});
 export async function action(stageId,kind,payload){
  const item={op:'action',stageId,kind,payload,idempotencyKey:crypto.randomUUID(),clientCreatedAt:new Date().toISOString()};
  try{const r=await call(item);if(r.snapshot)save(r.snapshot);return r}catch(e){if((!navigator.onLine||!e.status) && !['spin','power','wager','table_decision'].includes(kind)){const q=JSON.parse(localStorage.getItem(OUT)||'[]');q.push(item);localStorage.setItem(OUT,JSON.stringify(q));return {accepted:false,queued:true}}throw e}
