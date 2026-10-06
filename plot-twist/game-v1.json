@@ -70,7 +70,20 @@
       "type": "clue_question",
       "mode": "async",
       "title": "Lean la pista",
-      "windowSeconds": 240
+      "windowSeconds": 240,
+      "prompt": "Una de estas dos personas es mucho más probable que diga «ya, vámonos»… y termine quedándose una hora más. ¿Quién?",
+      "options": [
+        {
+          "value": "felipe",
+          "label": "Felipe"
+        },
+        {
+          "value": "cami",
+          "label": "Cami"
+        }
+      ],
+      "points": 400,
+      "clue": "Piensen en quién necesita menos convencimiento cuando la noche se alarga."
     },
     {
       "key": "moment-couple-photo",
@@ -86,7 +99,9 @@
       "type": "individual_callback",
       "mode": "async",
       "title": "¿Quién es el más competitivo?",
-      "callbackKey": "final_wagerer"
+      "callbackKey": "final_wagerer",
+      "prompt": "Esta vez no conversen: cada uno elige en privado a la persona más competitiva de su mesa.",
+      "callback": "La persona más votada decidirá cuánto arriesga la mesa en Todo o Nada."
     },
     {
       "key": "power-window",
@@ -112,14 +127,35 @@
         0.25,
         0.5,
         1
-      ]
+      ],
+      "prompt": "La persona que ustedes mismos marcaron como la más competitiva decide. ¿Cuánto arriesgan antes de ver la última pregunta?"
     },
     {
       "key": "final-question",
       "position": 110,
       "type": "table_decision",
       "mode": "live",
-      "title": "La última pregunta"
+      "title": "La última pregunta",
+      "prompt": "Última decisión. Si Felipe y Cami pudieran guardar una sola cosa de esta noche, ¿qué creen que elegirían?",
+      "options": [
+        {
+          "value": "perfecta",
+          "label": "Que todo saliera perfecto"
+        },
+        {
+          "value": "gente",
+          "label": "Ver a su gente junta"
+        },
+        {
+          "value": "fiesta",
+          "label": "La fiesta hasta el final"
+        },
+        {
+          "value": "fotos",
+          "label": "Las fotos"
+        }
+      ],
+      "points": 1000
     },
     {
       "key": "locked",
