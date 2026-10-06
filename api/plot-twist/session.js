@@ -1,4 +1,4 @@
-import { join,claimRole,claimResponsible,setTeamName,setReady,submitAction,snapshot,uuid } from '../_lib/plot-twist-engine.js';
+import { join,claimRole,claimResponsible,setTeamName,setReady,submitAction,snapshot,recover,recoveryCandidates,uuid } from '../_lib/plot-twist-engine.js';
 function send(res,status,body){res.statusCode=status;res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(body))}
 export default async function handler(req,res){
  try{
