@@ -6,6 +6,7 @@ async function call(body){const r=await fetch('/api/plot-twist/session',{method:
 export async function restore(){try{const r=await fetch('/api/plot-twist/session?device='+encodeURIComponent(deviceToken()),{cache:'no-store'});const j=await r.json();if(r.ok)return save(j)}catch{}return cached()}
 export const join=(x)=>call({op:'join',...x}).then(save);
 export const claimRole=(role)=>call({op:'claim_role',role}).then(save);
+export const claimResponsible=()=>call({op:'claim_responsible'}).then(save);
 export const teamName=(name)=>call({op:'team_name',name}).then(save);
 export async function action(stageId,kind,payload){
  const item={op:'action',stageId,kind,payload,idempotencyKey:crypto.randomUUID(),clientCreatedAt:new Date().toISOString()};
