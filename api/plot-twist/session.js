@@ -1,4 +1,4 @@
-import {join,claimResponsible,setTeamName,setReady,submitAction,snapshot,recover,recoveryCandidates,feed,chronicle,react,uuid} from '../_lib/plot-twist-engine.js';
+import {join,claimResponsible,setTeamName,setReady,submitAction,snapshot,recover,recoveryCandidates,feed,chronicle,react,usePower,spin,uuid} from '../_lib/plot-twist-engine.js';
 function send(res,status,body){res.statusCode=status;res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(body))}
 export default async function handler(req,res){try{
  if(req.method==='GET')return send(res,200,await snapshot(String(req.query?.device||'')));
@@ -10,6 +10,8 @@ export default async function handler(req,res){try{
  if(op==='feed')return send(res,200,await feed(b.deviceToken));
  if(op==='chronicle')return send(res,200,await chronicle(b.deviceToken));
  if(op==='react')return send(res,200,await react(b));
+ if(op==='power')return send(res,200,await usePower(b));
+ if(op==='spin')return send(res,200,await spin({...b,idempotencyKey:b.idempotencyKey||uuid()}));
  if(op==='claim_responsible')return send(res,200,await claimResponsible(b));
  if(op==='team_name')return send(res,200,await setTeamName(b));
  if(op==='ready')return send(res,200,await setReady(b));
