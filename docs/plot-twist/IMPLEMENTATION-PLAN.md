@@ -5,18 +5,18 @@ Actualizado contra PRD Maestro V2. Estados: TODO / DOING / BLOCKED / DONE.
 ## P0 — invariantes
 | ID | Slice | Estado | Gate |
 |---|---|---|---|
-| P0-A1 | constraints nickname/código/ledger append-only | TODO | migration review |
+| P0-A1 | constraints nickname/código/ledger append-only | DONE | migration review |
 | P0-A2 | score RPC idempotente | DOING | no prod apply |
 | P0-B1 | join + restore same-device | DOING | AC-01/05 |
-| P0-B2 | recovery cross-device | TODO | AC-06 |
-| P0-B3 | offline/outbox correcto | TODO | AC-09/10 |
+| P0-B2 | recovery cross-device | DOING | AC-06 |
+| P0-B3 | offline/outbox correcto | DOING | AC-09/10 |
 | P0-C1 | stage state machine | DOING | AC-11 |
 | P0-C2 | readiness 75% + timeout + auto-advance | TODO | simulation |
 | P0-D1 | collective decision | DOING | AC-07/08 |
-| P0-D2 | individual vote | TODO | callback test |
-| P0-D3 | callback resolver/ties/fallback | TODO | callback test |
-| P0-E1 | wager snapshot/freeze | TODO | AC-13 |
-| P0-E2 | final resolution +/- wager | TODO | ledger replay |
+| P0-D2 | individual vote | DONE base | callback test |
+| P0-D3 | callback resolver/ties/fallback | DOING | callback test |
+| P0-E1 | wager snapshot/freeze | DONE base | AC-13 |
+| P0-E2 | final resolution +/- wager | DONE base | ledger replay |
 
 ## P1 — juego completo
 | ID | Slice | Estado |
@@ -24,10 +24,10 @@ Actualizado contra PRD Maestro V2. Estados: TODO / DOING / BLOCKED / DONE.
 | P1-A1 | powers inventory/use/target/caps | TODO |
 | P1-A2 | tombola entitlement + deterministic spin | TODO |
 | P1-B1 | media opportunity/upload metadata | TODO |
-| P1-B2 | reactions + curated moments feed | TODO |
-| P1-B3 | Mi mesa chronicle | TODO |
+| P1-B2 | reactions + curated moments feed | DOING |
+| P1-B3 | Mi mesa chronicle | DONE base |
 | P1-C1 | operator audit/compensation/role transfer | TODO |
-| P1-C2 | hall screen + no-leak policy | TODO |
+| P1-C2 | hall screen + no-leak policy | DOING |
 | P1-D1 | QR/recovery cards generator | BLOCKED seating freeze |
 | P1-D2 | final physical pieces generator | TODO design approval |
 
