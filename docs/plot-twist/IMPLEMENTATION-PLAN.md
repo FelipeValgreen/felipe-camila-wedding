@@ -11,7 +11,7 @@ Actualizado contra PRD Maestro V2. Estados: TODO / DOING / BLOCKED / DONE.
 | P0-B2 | recovery cross-device | DOING | AC-06 |
 | P0-B3 | offline/outbox correcto | DOING | AC-09/10 |
 | P0-C1 | stage state machine | DOING | AC-11 |
-| P0-C2 | readiness 75% + timeout + auto-advance | TODO | simulation |
+| P0-C2 | readiness 75% + timeout + auto-advance | DOING | simulation |
 | P0-D1 | collective decision | DOING | AC-07/08 |
 | P0-D2 | individual vote | DONE base | callback test |
 | P0-D3 | callback resolver/ties/fallback | DOING | callback test |
@@ -26,7 +26,7 @@ Actualizado contra PRD Maestro V2. Estados: TODO / DOING / BLOCKED / DONE.
 | P1-B1 | media opportunity/upload metadata | TODO |
 | P1-B2 | reactions + curated moments feed | DOING |
 | P1-B3 | Mi mesa chronicle | DONE base |
-| P1-C1 | operator audit/compensation/role transfer | TODO |
+| P1-C1 | operator audit/compensation/role transfer | DOING |
 | P1-C2 | hall screen + no-leak policy | DOING |
 | P1-D1 | QR/recovery cards generator | BLOCKED seating freeze |
 | P1-D2 | final physical pieces generator | TODO design approval |
