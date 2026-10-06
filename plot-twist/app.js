@@ -1,6 +1,7 @@
 import * as PT from './client.js';
 const card=document.querySelector('#card'),status=document.querySelector('#status'),q=new URLSearchParams(location.search),tableToken=q.get('m')||q.get('mesa')||'';let s,view='now';
-const isResponsible=()=>['complice','dupla'].includes(s?.player?.role);\nconst esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isResponsible=()=>['complice','dupla'].includes(s?.player?.role);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function shell(t,b){card.innerHTML='<div style="background:#f3efe7;border-radius:20px;padding:24px;margin-top:24px"><h2>'+t+'</h2>'+b+'</div>'}
 function error(e){const el=document.querySelector('#err');if(el)el.textContent=({NICKNAME_TAKEN:'Ese nombre ya está usado en esta mesa. Prueba otro apodo.',TABLE_NOT_FOUND:'No encontramos esa mesa. Revisa el QR o código.',ROLE_TAKEN:'Ya hay dos responsables en esta mesa.',RESPONSIBLE_SLOTS_FULL:'Ya hay dos responsables en esta mesa.'}[e.message]||'No pudimos completar eso. Intenta nuevamente.')}
 async function renderNight(){const d=await PT.feed();shell('La noche',(d.events.length?d.events.map(e=>'<article><strong>'+esc(e.payload?.title||e.event_type)+'</strong><p>'+esc(e.payload?.text||'')+'</p></article>').join(''):'<p>Todavía no hay momentos públicos. Vuelvan a disfrutar la mesa.</p>'))}
