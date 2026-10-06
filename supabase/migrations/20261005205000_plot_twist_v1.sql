@@ -116,3 +116,18 @@ alter table public.plot_twist_operator_log enable row level security;
 -- No anon policies intentionally: guest writes will go through narrowly scoped server/API/RPC logic.
 comment on table public.plot_twist_score_ledger is '[PLOT TWIST] Append-only source of truth for visible and hidden scoring. Corrections are compensating entries.';
 comment on table public.plot_twist_actions is '[PLOT TWIST] Idempotent player/table actions. Do not trust client scoring.';
+
+-- Atomic, idempotent score application. Never mutate score without a ledger row.
+create or replace function public.plot_twist_apply_score(
+ p_game_id uuid,p_table_id uuid,p_action_id uuid,p_delta integer,p_secret_delta integer,p_reason text,p_idempotency_key uuid,p_metadata jsonb default '{}'::jsonb
+) returns void language plpgsql security definer set search_path=public as $$
+begin
+ insert into public.plot_twist_score_ledger(game_id,table_id,action_id,delta,secret_delta,reason,idempotency_key,metadata)
+ values(p_game_id,p_table_id,p_action_id,p_delta,coalesce(p_secret_delta,0),p_reason,p_idempotency_key,coalesce(p_metadata,'{}'::jsonb))
+ on conflict(idempotency_key) do nothing;
+ if found then
+  update public.plot_twist_tables set score_cache=score_cache+p_delta,secret_score_cache=secret_score_cache+coalesce(p_secret_delta,0),updated_at=now() where id=p_table_id and game_id=p_game_id;
+ end if;
+end $$;
+revoke all on function public.plot_twist_apply_score(uuid,uuid,uuid,integer,integer,text,uuid,jsonb) from public,anon,authenticated;
+comment on function public.plot_twist_apply_score is '[PLOT TWIST] Server-only atomic ledger + cache projection; idempotent by UUID.';
