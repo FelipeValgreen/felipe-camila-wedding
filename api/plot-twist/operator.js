@@ -1,0 +1,17 @@
+import { supabaseRequest } from '../_lib/supabase-admin.js';
+import { getGame } from '../_lib/plot-twist-engine.js';
+function send(res,status,body){res.statusCode=status;res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(body))}
+function authorized(req){const expected=process.env.PLOT_TWIST_OPERATOR_KEY;if(!expected)return false;const supplied=String(req.headers?.['x-plot-twist-key']||'');return supplied.length===expected.length&&supplied===expected}
+export default async function handler(req,res){try{
+ if(!authorized(req))return send(res,401,{error:'UNAUTHORIZED'});
+ const game=await getGame();if(!game)return send(res,404,{error:'GAME_NOT_FOUND'});
+ if(req.method==='GET'){const stages=await supabaseRequest('plot_twist_stages?game_id=eq.'+game.id+'&order=position.asc&select=*'),tables=await supabaseRequest('plot_twist_tables?game_id=eq.'+game.id+'&select=id,team_name,ready,score_cache,secret_score_cache'),actions=await supabaseRequest('plot_twist_actions?game_id=eq.'+game.id+'&select=id,stage_id,table_id,kind,status');return send(res,200,{game,stages,tables,actions})}
+ if(req.method!=='POST')return send(res,405,{error:'METHOD_NOT_ALLOWED'});
+ const b=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
+ if(b.op==='open'){await supabaseRequest('plot_twist_stages?game_id=eq.'+game.id+'&status=eq.open',{method:'PATCH',body:{status:'closed'}});await supabaseRequest('plot_twist_stages?id=eq.'+b.stageId+'&game_id=eq.'+game.id,{method:'PATCH',body:{status:'open',opened_at:new Date().toISOString()}});const s=await supabaseRequest('plot_twist_stages?id=eq.'+b.stageId+'&select=stage_key');await supabaseRequest('plot_twist_games?id=eq.'+game.id,{method:'PATCH',body:{status:'live',current_stage_key:s?.[0]?.stage_key}});await supabaseRequest('plot_twist_tables?game_id=eq.'+game.id,{method:'PATCH',body:{ready:false}});return send(res,200,{ok:true})}
+ if(b.op==='close'){await supabaseRequest('plot_twist_stages?id=eq.'+b.stageId+'&game_id=eq.'+game.id,{method:'PATCH',body:{status:'closed',closes_at:new Date().toISOString()}});return send(res,200,{ok:true})}
+ if(b.op==='resolve'){const r=await supabaseRequest('rpc/plot_twist_resolve_stage',{method:'POST',body:{p_stage_id:b.stageId,p_correct_answer:String(b.correctAnswer),p_points:Number(b.points||0),p_secret_correct:Number(b.secretPoints||0)}});return send(res,200,{ok:true,result:r})}
+ if(b.op==='pause'){await supabaseRequest('plot_twist_games?id=eq.'+game.id,{method:'PATCH',body:{status:'locked'}});return send(res,200,{ok:true})}
+ if(b.op==='end'){await supabaseRequest('plot_twist_games?id=eq.'+game.id,{method:'PATCH',body:{status:'ended'}});return send(res,200,{ok:true})}
+ return send(res,400,{error:'UNKNOWN_OPERATION'});
+}catch(e){console.error('Plot Twist operator:',e.message);return send(res,e.status||500,{error:e.message||'INTERNAL_ERROR'})}}
