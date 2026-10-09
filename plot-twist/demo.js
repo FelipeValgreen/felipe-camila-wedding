@@ -14,8 +14,8 @@ const steps=[
 {tag:'CAMPEONES',title:'Los Inubicables',body:'2.775 puntos',meta:'Ganaron el juego visible',cta:'¿Y LA MESA DE LA NOCHE?'},
 {tag:'MESA DE LA NOCHE',title:'Los Sin Señal',body:'No fue la que más puntos consiguió. Fue la que más colaboró, participó y ayudó a que la noche ocurriera.',cta:'FINAL'},
 {tag:'FELIPE & CAMI · 23.10.26',title:'Siempre hubo un solo equipo.',body:'Nuestra gente.',meta:'Gracias por ser parte de esta noche.'}
-];let i=0;
+];let i=0,score=0,selection='';
 const card=document.querySelector('#demo-card'),prog=document.querySelector('#demo-progress'),back=document.querySelector('#demo-back');
 function esc(x){return String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-function draw(){const s=steps[i];prog.textContent=(i+1)+' / '+steps.length;back.hidden=i===0;card.innerHTML='<span class="demo-tag">'+esc(s.tag)+'</span><h2>'+esc(s.title)+'</h2><p>'+esc(s.body)+'</p>'+(s.meta?'<small>'+esc(s.meta)+'</small>':'')+(s.choices?'<div class="demo-choices">'+s.choices.map(x=>'<button>'+esc(x)+'</button>').join('')+'</div>':'')+(s.cta?'<button class="demo-next">'+esc(s.cta)+'</button>':'<button class="demo-next">VOLVER AL INICIO</button>');card.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(i===steps.length-1)i=0;else i++;draw()})}
+function draw(){const s=steps[i];prog.textContent=(i+1)+' / '+steps.length;back.hidden=i===0;card.innerHTML='<span class="demo-tag">'+esc(s.tag)+'</span><h2>'+esc(s.title)+'</h2><p>'+esc(s.body)+'</p>'+(s.meta?'<small>'+esc(s.meta)+'</small>':'')+(s.choices?'<div class="demo-choices">'+s.choices.map(x=>'<button>'+esc(x)+'</button>').join('')+'</div>':'')+(s.cta?'<button class="demo-next">'+esc(s.cta)+'</button>':'<button class="demo-next">VOLVER AL INICIO</button>');card.querySelectorAll('button').forEach(b=>b.onclick=()=>{selection=b.textContent;if(i===3)score+=300;if(i===6)score+=500;if(i===7)score+=150;if(i===9)score=Math.round(score*(selection==='100%'?2:selection==='50%'?1.5:1.25));if(i===steps.length-1){i=0;score=0}else i++;draw()})}
 back.onclick=()=>{i=Math.max(0,i-1);draw()};draw();
