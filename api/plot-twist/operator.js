@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import {supabaseRequest} from '../_lib/supabase-admin.js';
-import {getGame,readiness} from '../_lib/plot-twist-engine.js';
+import {getGame,readiness,reveal} from '../_lib/plot-twist-engine.js';
 function send(res,s,b){res.statusCode=s;res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(b))}
 function auth(req){const a=process.env.PLOT_TWIST_OPERATOR_KEY,b=String(req.headers?.['x-plot-twist-key']||'');return !!a&&a.length===b.length&&crypto.timingSafeEqual(Buffer.from(a),Buffer.from(b))}
 async function audit(g,action,payload={}){return supabaseRequest('plot_twist_operator_log',{method:'POST',body:{game_id:g.id,actor:'operator',action,payload}})}
@@ -8,6 +8,7 @@ export default async function handler(req,res){try{
  if(!auth(req))return send(res,401,{error:'UNAUTHORIZED'});const g=await getGame();if(!g)return send(res,404,{error:'GAME_NOT_FOUND'});
  if(req.method==='GET'){const stages=await supabaseRequest('plot_twist_stages?game_id=eq.'+g.id+'&order=position.asc&select=*'),tables=await supabaseRequest('plot_twist_tables?game_id=eq.'+g.id+'&select=id,team_name,ready,score_cache,secret_score_cache');return send(res,200,{game:g,readiness:await readiness(g.id),stages,tables})}
  if(req.method!=='POST')return send(res,405,{error:'METHOD_NOT_ALLOWED'});const b=typeof req.body==='string'?JSON.parse(req.body||'{}'):(req.body||{});
+ if(b.op==='preview_reveal')return send(res,200,{preview:true,result:await reveal()});
  if(b.op==='advance'){const r=await supabaseRequest('rpc/plot_twist_advance_stage',{method:'POST',body:{p_game_id:g.id,p_force:!!b.force}});if(r?.advanced)await audit(g,'advance_stage',{stageKey:r.stage_key,forced:!!b.force});return send(res,r?.advanced?200:409,r)}
  if(b.op==='resolve'){const r=await supabaseRequest('rpc/plot_twist_resolve_stage_private',{method:'POST',body:{p_stage_id:b.stageId}});await audit(g,'resolve_stage',{stageId:b.stageId});return send(res,200,{ok:true,result:r})}
  if(b.op==='resolve_wager'){const stages=await supabaseRequest('plot_twist_stages?game_id=eq.'+g.id+'&stage_key=in.(final-wager,final-question)&select=id,stage_key'),w=(stages||[]).find(x=>x.stage_key==='final-wager');if(!w)return send(res,409,{error:'WAGER_STAGE_NOT_FOUND'});const r=await supabaseRequest('rpc/plot_twist_resolve_wager_private',{method:'POST',body:{p_stage_id:b.stageId,p_wager_stage_id:w.id}});await audit(g,'resolve_wager',{stageId:b.stageId});return send(res,200,{ok:true,result:r})}
