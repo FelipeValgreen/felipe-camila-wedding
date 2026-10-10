@@ -54,3 +54,5 @@ jobs:
             IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid='public.plot_twist_alliances'::regclass) THEN RAISE EXCEPTION 'Alliance RLS off'; END IF;
           END $$;
           SQL
+
+# CI runs only on GitHub-hosted disposable PostgreSQL; never touches production.
