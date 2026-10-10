@@ -1,4 +1,4 @@
-import {join,claimResponsible,setTeamName,setReady,submitAction,snapshot,recover,recoveryCandidates,feed,chronicle,react,usePower,spin,callbackState,chooseCallbackTie,uuid} from '../_lib/plot-twist-engine.js';
+import {join,claimResponsible,setTeamName,setReady,submitAction,snapshot,recover,recoveryCandidates,feed,chronicle,react,usePower,spin,callbackState,chooseCallbackTie,alliances,allianceAction,uuid} from '../_lib/plot-twist-engine.js';
 function send(res,status,body){res.statusCode=status;res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(body))}
 export default async function handler(req,res){try{
  if(req.method==='GET')return send(res,200,await snapshot(String(req.query?.device||'')));
@@ -7,6 +7,8 @@ export default async function handler(req,res){try{
  if(op==='join')return send(res,200,await join(b));
  if(op==='recovery_candidates')return send(res,200,await recoveryCandidates(b));
  if(op==='recover')return send(res,200,await recover(b));
+ if(op==='alliances')return send(res,200,await alliances(b.deviceToken));
+ if(op==='alliance_action')return send(res,200,await allianceAction(b));
  if(op==='feed')return send(res,200,await feed(b.deviceToken));
  if(op==='chronicle')return send(res,200,await chronicle(b.deviceToken));
  if(op==='react')return send(res,200,await react(b));
