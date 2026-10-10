@@ -5,7 +5,7 @@ export const hash=v=>crypto.createHash('sha256').update(String(v)).digest('hex')
 export const cleanName=v=>String(v||'').trim().replace(/\s+/g,' ').slice(0,32);
 export const uuid=()=>crypto.randomUUID();
 // Stage configuration is trusted server data, but must never expose answer keys.
-const PUBLIC_STAGE_BLOCKED_KEYS=new Set(['correctanswer','correct_answer','answerkey','answer_key','is_correct','iscorrect','secret','secretanswer','secret_answer','resolution','solution','private','hidden']);
+const PUBLIC_STAGE_BLOCKED_KEYS=new Set(['correctanswer','correct_answer','correctoption','correct_option','answerkey','answer_key','is_correct','iscorrect','secret','secretanswer','secret_answer','resolution','solution','private','hidden','explanation_private','scoring_key']);
 export function publicStagePayload(input){if(Array.isArray(input))return input.map(publicStagePayload);if(input&&typeof input==='object')return Object.fromEntries(Object.entries(input).filter(([k])=>!PUBLIC_STAGE_BLOCKED_KEYS.has(k.toLowerCase())).map(([k,v])=>[k,publicStagePayload(v)]));return input}
 
 export async function getGame(){const r=await supabaseRequest('plot_twist_games?slug=eq.'+GAME_SLUG+'&select=*');return r?.[0]||null}
