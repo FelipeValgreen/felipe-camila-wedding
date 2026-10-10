@@ -1,0 +1,61 @@
+import * as PT from './client.js';
+const card=document.querySelector('#card'),status=document.querySelector('#status'),q=new URLSearchParams(location.search),tableToken=q.get('m')||q.get('mesa')||'';let s,view='now';
+const isResponsible=()=>['complice','dupla'].includes(s?.player?.role);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function shell(t,b){card.innerHTML='<div style="background:#f3efe7;border-radius:20px;padding:24px;margin-top:24px"><h2>'+t+'</h2>'+b+'</div>'}
+function error(e){const el=document.querySelector('#err');if(el)el.textContent=({NICKNAME_TAKEN:'Ese nombre ya está usado en esta mesa. Prueba otro apodo.',TEAM_NAME_TAKEN:'Otra mesa ya eligió ese nombre. Prueben uno diferente.',TABLE_NOT_FOUND:'No encontramos esa mesa. Revisa el QR o código.',ROLE_TAKEN:'Ya hay dos responsables en esta mesa.',RESPONSIBLE_SLOTS_FULL:'Ya hay dos responsables en esta mesa.'}[e.message]||'No pudimos completar eso. Intenta nuevamente.')}
+async function renderNight(){const d=await PT.feed();shell('La noche',(d.events.length?d.events.map(e=>'<article><strong>'+esc(e.payload?.title||e.event_type)+'</strong><p>'+esc(e.payload?.text||'')+'</p><div><button class=rx data-id="'+esc(e.id)+'" data-e="😂">😂</button><button class=rx data-id="'+esc(e.id)+'" data-e="❤️">❤️</button><button class=rx data-id="'+esc(e.id)+'" data-e="🔥">🔥</button></div></article>').join(''):'<p>Todavía no hay momentos públicos. Vuelvan a disfrutar la mesa.</p>'));document.querySelectorAll('.rx').forEach(b=>b.onclick=async()=>{try{await PT.react(b.dataset.id,b.dataset.e);b.disabled=true}catch{}})}
+async function renderAlliances(){
+ const d=await PT.alliances();
+ if(!d.enabled){shell('Alianzas','<p>Las alianzas estarán disponibles cuando el operador active esta etapa.</p>');return}
+ const names=Object.fromEntries((d.tables||[]).map(t=>[t.id,t.team_name||'Otra mesa']));
+ const incoming=(d.incoming||[]).map(a=>'<p>Invitación de '+esc(names[a.source_table_id]||'otra mesa')+(isResponsible()?' <button class=accept data-id="'+esc(a.id)+'">ACEPTAR</button> <button class=decline data-id="'+esc(a.id)+'">RECHAZAR</button>':' · Pide a un responsable que responda')+'</p>').join('');
+ const outgoing=(d.outgoing||[]).map(a=>'<p>Esperando a '+esc(names[a.target_table_id]||'otra mesa')+'</p>').join('');
+ const accepted=(d.accepted||[]).map(a=>'<p>🤝 '+esc(names[a.source_table_id]||'Tu mesa')+' ↔ '+esc(names[a.target_table_id]||'Tu mesa')+'</p>').join('');
+ const choices=(d.tables||[]).map(t=>'<option value="'+esc(t.id)+'">'+esc(t.team_name||'Mesa sin nombre')+'</option>').join('');
+ shell('Alianzas','<p>Conecten con otra mesa. La otra mesa decide si acepta.</p>'+(isResponsible()?'<select id=ally-target>'+choices+'</select><button id=ally-send>INVITAR</button>':'<p>Un responsable puede enviar o responder invitaciones.</p>')+'<h3>Invitaciones recibidas</h3>'+(incoming||'<p>Ninguna por ahora.</p>')+'<h3>Enviadas</h3>'+(outgoing||'<p>Ninguna.</p>')+'<h3>Conexiones reales</h3>'+(accepted||'<p>Pronto habrá conexiones.</p>')+'<p id=err></p>');
+ const run=async(action,targetTableId,allianceId)=>{try{await PT.allianceAction(action,targetTableId,allianceId);await renderAlliances()}catch(e){error(e)}};
+ const send=document.querySelector('#ally-send');if(send)send.onclick=()=>run('invite',document.querySelector('#ally-target').value,null);
+ document.querySelectorAll('.accept,.decline').forEach(b=>b.onclick=()=>run(b.classList.contains('accept')?'accept':'decline',null,b.dataset.id));
+}
+async function renderTable(){const d=await PT.chronicle();const points=d.ledger.reduce((a,x)=>a+Number(x.delta||0),0);shell('Mi mesa','<p><strong>'+esc(s.table.team_name)+'</strong> · '+points+' pts</p><p>'+d.actions.length+' acciones · '+d.powers.filter(x=>x.status==='available').length+' poderes disponibles</p>'+d.ledger.slice(0,8).map(x=>'<p>'+((x.delta||0)>0?'+':'')+x.delta+' · '+esc(x.reason)+'</p>').join(''))}
+async function render(){document.querySelector('#nav').hidden=!s?.player;document.querySelector('#offline').classList.toggle('on',!navigator.onLine);document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));status.textContent=s?.table?(s.table.team_name||'Mesa en preparación')+' · '+(s.table.score||0)+' pts':'El juego de las mesas';
+if(s?.player&&view==='alliances'){renderAlliances().catch(error);return}if(s?.player&&view==='night'){renderNight().catch(error);return}if(s?.player&&view==='table'){renderTable().catch(error);return}
+if(!s?.player){shell('¿Cómo te llamas?','<p>Solo necesitamos tu nombre o apodo.</p><form id=f><input id=n required maxlength=32 placeholder="Tu nombre o apodo">'+(tableToken?'':'<input id=code required inputmode=numeric placeholder="Código de mesa">')+'<button>ENTRAR AL JUEGO</button></form><button id=recover>¿Ya estabas jugando?</button><p id=err></p>');document.querySelector('#recover').onclick=()=>{shell('Recuperar acceso','<p>Por seguridad, el código compartido de la mesa no permite tomar la identidad de otra persona.</p><p>Si perdiste tu teléfono o cambiaste de dispositivo, pide ayuda al encargado del juego. Puedes seguir participando con tu mesa mientras se recupera el acceso.</p><button id=back>VOLVER</button>');document.querySelector('#back').onclick=render};document.querySelector('#f').onsubmit=async e=>{e.preventDefault();try{s=await PT.join({tableToken:tableToken||undefined,tableCode:document.querySelector('#code')?.value,nickname:document.querySelector('#n').value});render()}catch(x){error(x)}};return}
+if(!s.table.team_name&&!['complice','dupla'].includes(s.player.role)){shell('Ya estás en tu mesa.','<p>Todos pueden jugar. Solo necesitamos dos responsables para confirmar las decisiones oficiales.</p><button id=r>SER RESPONSABLE DE MESA</button><p id=err></p>');document.querySelector('#r').onclick=async()=>{try{s=await PT.claimResponsible();render()}catch(x){error(x)}};return}
+if(!s.table.team_name){shell('Su mesa necesita un nombre','<p>Conversen y elijan juntos un nombre que los represente. Será visible para los demás equipos durante los desafíos y las alianzas.</p><form id=f><input id=n required maxlength=32 placeholder="Inventen un nombre juntos"><button>CONFIRMAR</button><p id=err></p></form>');document.querySelector('#f').onsubmit=async e=>{e.preventDefault();try{s=await PT.teamName(document.querySelector('#n').value);render()}catch(x){error(x)}};return}
+const st=s.stage;if(!st){shell('Ahora','<p>No necesitan quedarse mirando el teléfono. Volveremos cuando pase algo.</p>');return}
+const title=esc(st.payload?.title||st.key?.replaceAll('-',' ')||'Plot Twist'),prompt=esc(st.payload?.prompt||'Hablen entre ustedes. Plot Twist les avisará cuando haya que decidir algo.');
+if(st.type==='live_tombola'&&st.status==='open'){shell(title,'<p><strong>Antes de girar:</strong> puede tocarles un premio, un poder, una misión sorpresa o una penitencia amable. Ninguna requiere beber alcohol ni hacer algo incómodo.</p><p>El resultado se determina una sola vez y se guarda en el servidor.</p>'+(isResponsible()?'<button id=spin>GIRAR TÓMBOLA</button>':'<p>Prepárense 👀</p>')+'<p id=err></p>');const b=document.querySelector('#spin');if(b)b.onclick=async()=>{b.disabled=true;b.textContent='GIRANDO…';try{const r=await PT.spin(crypto.randomUUID());shell('Plot Twist','<p><strong>'+esc(r.resultKey.replaceAll('_',' '))+'</strong></p><p>Quedó guardado para su mesa.</p>')}catch(x){error(x)}};return}
+if(st.type==='powers'&&st.status==='open'){
+ let d;try{d=await PT.chronicle()}catch(e){shell(title,'<p>No pudimos consultar los poderes. Intenta recargar.</p>');return}
+ const available=(d.powers||[]).filter(x=>x.status==='available');
+ const supported=available.filter(x=>x.power_key==='bonus_300');
+ shell(title,'<p>Solo los premios de 300 puntos están habilitados. Los demás quedan reservados hasta completar sus efectos.</p>'+(isResponsible()?supported.map(x=>'<button class=pw data-id="'+esc(x.id)+'">SUMAR 300 PUNTOS</button>').join(''):'<p>Un responsable puede activar el premio.</p>')+'<p id=err></p>');
+ document.querySelectorAll('.pw').forEach(b=>b.onclick=async()=>{
+  if(!confirm('¿Confirmas activar este premio de 300 puntos para tu mesa?'))return;
+  b.disabled=true;
+  try{await PT.usePower(b.dataset.id,null);s=await PT.restore();await render()}
+  catch(e){b.disabled=false;error(e)}
+ });return
+}
+if(st.type==='individual_callback'&&st.status==='open'){const opts=(s.players||[]).filter(p=>p.id!==s.player.id).map(p=>'<button class=vote data-v="'+esc(p.id)+'">'+esc(p.nickname)+'</button>').join('');shell(title,'<p>'+prompt+'</p><p><strong>Esta vez no conversen.</strong> Tu respuesta es privada.</p>'+opts+'<p id=err></p>');document.querySelectorAll('.vote').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await PT.action(st.id,'individual_vote',{targetPlayerId:b.dataset.v});s=await PT.restore();shell('Voto guardado','<p>Listo. No mostraremos el resultado todavía.</p>')}catch(x){error(x)}});return}
+if(st.type==='wager'&&st.status==='open'){const buttons=[.25,.5,1].map(v=>'<button class=wager data-v="'+v+'">'+(v*100)+'%</button>').join('');shell(title,'<p>'+prompt+'</p>'+(isResponsible()?buttons:'<p>Un responsable confirmará la apuesta.</p>')+'<p id=err></p>');if(isResponsible())document.querySelectorAll('.wager').forEach(b=>b.onclick=async()=>{if(!confirm('Esta apuesta compromete '+Math.round(Number(b.dataset.v)*100)+'% de los puntos actuales. Si fallan la respuesta final, perderán esa cantidad. ¿Confirmas?'))return;b.disabled=true;try{await PT.action(st.id,'wager',{fraction:Number(b.dataset.v)});s=await PT.restore();shell('Apuesta cerrada','<p>La decisión quedó guardada. Ya no se puede cambiar.</p>')}catch(x){error(x)}});return}
+if(st.type==='table_decision'&&s.action){shell('Respuesta guardada','<p><strong>'+esc(s.action.payload?.answer||'Respuesta confirmada')+'</strong></p><p>Ya quedó registrada para esta mesa. Pueden cerrar el teléfono.</p>');return}
+if(st.type==='table_decision'&&st.status==='open'){const opts=(st.payload?.options||['A','B','C','D']).map(o=>'<button class=ans data-v="'+esc(typeof o==='string'?o:o.value)+'">'+esc(typeof o==='string'?o:(o.label||o.value))+'</button>').join('');shell(title,'<p>'+prompt+'</p>'+(isResponsible()?'<div>'+opts+'</div><p id=err></p>':'<p><strong>Hablen todos.</strong> Un responsable confirmará la respuesta oficial.</p>'));if(isResponsible())document.querySelectorAll('.ans').forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent='ENVIANDO…';try{const r=await PT.action(st.id,'table_decision',{answer:b.dataset.v});s=r.snapshot||await PT.restore();shell('Respuesta confirmada','<p>Listo. Ya quedó guardada para '+esc(s.table.team_name)+'.</p>')}catch(x){error(x);render()}});return}
+shell(title,'<p>'+prompt+'</p>'+(isResponsible()&&!s.table.ready?'<button id=ready>ESTAMOS LISTOS</button>':'') );const rb=document.querySelector('#ready');if(rb)rb.onclick=async()=>{rb.disabled=true;rb.textContent='GUARDANDO…';try{s=await PT.ready(true);render()}catch(x){error(x)}}}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});
+addEventListener('offline',()=>document.querySelector('#offline').classList.add('on'));
+(async()=>{s=await PT.restore();render()})();addEventListener('online',async()=>{await PT.flush();s=await PT.restore();render()});
+// Refresh game stages without disturbing an active answer or form.
+let ptRefreshing=false;
+setInterval(async()=>{
+ if(ptRefreshing||document.hidden||!navigator.onLine||!s?.player||view!=='now')return;
+ if(card.querySelector('form')||card.querySelector('button:focus'))return;
+ ptRefreshing=true;
+ try{
+  const next=await PT.restore();
+  const key=x=>JSON.stringify([x?.game?.status,x?.stage?.id,x?.stage?.status,x?.table?.team_name,x?.table?.score,x?.table?.ready,x?.action?.id]);
+  if(next?.player&&key(next)!==key(s)){s=next;render()}
+ }catch{}finally{ptRefreshing=false}
+},12000);

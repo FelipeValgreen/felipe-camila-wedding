@@ -6,7 +6,9 @@
   "scripts": {
     "verify:public": "node scripts/verify_public_regressions.mjs",
     "build:images": "node scripts/build_responsive_images.js",
-    "build:css": "npx tailwindcss -i ./css/input.css -o ./css/tailwind.min.css -m"
+    "build:css": "npx tailwindcss -i ./css/input.css -o ./css/tailwind.min.css -m",
+    "test:plot-twist": "node --test tests/plot-twist-*.test.mjs",
+    "check:plot-twist": "node --check api/_lib/plot-twist-engine.js && node --check api/plot-twist/session.js && node --check api/plot-twist/operator.js && node --check api/plot-twist/screen.js && node --check plot-twist/app.js && node --check plot-twist/client.js && npm run test:plot-twist"
   },
   "dependencies": {
     "pg": "^8.22.0",
