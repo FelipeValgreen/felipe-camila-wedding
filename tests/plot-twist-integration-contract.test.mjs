@@ -23,3 +23,13 @@ test('individual vote snapshot scopes query to current player',()=>{
  const engine=file('api/_lib/plot-twist-engine.js');
  assert.match(engine,/stage\.type==='individual_callback'\?'&player_id=eq\.'\+player\.id/);
 });
+
+test('wager UI requires explicit confirmation of loss risk',()=>{
+ const app=file('plot-twist/app.js');
+ assert.match(app,/Esta apuesta compromete/);
+ assert.match(app,/perderán esa cantidad/);
+});
+test('only responsible players see alliance acceptance controls',()=>{
+ const app=file('plot-twist/app.js');
+ assert.match(app,/isResponsible\(\)\?' <button class=accept/);
+});
