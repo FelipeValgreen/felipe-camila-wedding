@@ -9,7 +9,7 @@ begin
  if g.status in ('ended','locked') then return jsonb_build_object('advanced',false,'reason','GAME_NOT_ACTIVE'); end if;
  select * into cur from public.plot_twist_stages where game_id=g.id and stage_key=g.current_stage_key;
  if cur.id is not null and cur.status in ('open','resolving')
-    and cur.type in ('table_decision','wager') then
+    and cur.type='table_decision' then
   return jsonb_build_object('advanced',false,'reason','SCORING_STAGE_NOT_RESOLVED');
  end if;
  select count(*),count(*) filter(where ready) into total,ready_count
