@@ -59,3 +59,6 @@ jobs:
             IF to_regprocedure('public.plot_twist_alliance_action(uuid,uuid,text,uuid,uuid)') IS NULL THEN RAISE EXCEPTION 'Missing alliance RPC'; END IF;
           END $$;
           SQL
+
+      - name: Run real SQL behavioral smoke tests
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/plot-twist-db-smoke.sql
