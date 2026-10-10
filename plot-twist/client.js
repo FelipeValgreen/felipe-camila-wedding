@@ -24,3 +24,5 @@ export async function action(stageId,kind,payload){
 }
 export async function flush(){if(!navigator.onLine)return;let q=JSON.parse(localStorage.getItem(OUT)||'[]'),left=[];for(const x of q){try{await call(x)}catch(e){if(!e.status||e.status>=500)left.push(x)}}localStorage.setItem(OUT,JSON.stringify(left))}
 addEventListener('online',flush);
+export const alliances=()=>call({op:'alliances'});
+export const allianceAction=(action,targetTableId=null,allianceId=null)=>call({op:'alliance_action',action,targetTableId,allianceId});
