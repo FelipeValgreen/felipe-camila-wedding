@@ -34,6 +34,11 @@ begin
   if t.id is null then raise exception 'INVALID_TARGET_TABLE'; end if;
   -- Prevent duplicate or reverse-direction pending invitations.
   perform pg_advisory_xact_lock(hashtext(p_game_id::text||least(p.table_id,p_target_table_id)::text||greatest(p.table_id,p_target_table_id)::text));
+  -- Clear expired pending rows before unique-index insertion.
+  update public.plot_twist_alliances set status='expired',resolved_at=now()
+   where game_id=p_game_id and status='pending' and expires_at<=now()
+    and ((source_table_id=p.table_id and target_table_id=p_target_table_id)
+     or (source_table_id=p_target_table_id and target_table_id=p.table_id));
   select * into a from public.plot_twist_alliances
    where game_id=p_game_id and status='pending' and expires_at>now()
     and ((source_table_id=p.table_id and target_table_id=p_target_table_id)
