@@ -1,0 +1,61 @@
+name: Plot Twist PostgreSQL (gratis)
+on:
+  push:
+    branches: [feat/plot-twist-v1]
+    paths:
+      - 'supabase/migrations/*plot_twist*'
+      - '.github/workflows/plot-twist-postgres.yml'
+  pull_request:
+    paths:
+      - 'supabase/migrations/*plot_twist*'
+      - '.github/workflows/plot-twist-postgres.yml'
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: plot_twist_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d plot_twist_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: plot_twist_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare compatibility schema for isolated migrations
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$ BEGIN CREATE ROLE anon NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+          DO $$ BEGIN CREATE ROLE authenticated NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+          CREATE TABLE IF NOT EXISTS public.wedding_tables(id uuid primary key);
+          SQL
+      - name: Apply Plot Twist migrations in chronological order
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(supabase/migrations/*plot_twist*.sql)
+          test ${#files[@]} -gt 0
+          for file in "${files[@]}"; do
+            echo "::group::Applying ${file}"
+            psql -v ON_ERROR_STOP=1 -1 -f "${file}"
+            echo "::endgroup::"
+          done
+      - name: Verify schema and functions
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$ BEGIN
+            IF to_regclass('public.plot_twist_alliances') IS NULL THEN RAISE EXCEPTION 'Missing alliances'; END IF;
+            IF to_regclass('public.plot_twist_score_ledger') IS NULL THEN RAISE EXCEPTION 'Missing score ledger'; END IF;
+            IF to_regprocedure('public.plot_twist_spin_atomic(uuid,uuid,uuid,uuid)') IS NULL THEN RAISE EXCEPTION 'Missing atomic spin'; END IF;
+            IF to_regprocedure('public.plot_twist_alliance_action(uuid,uuid,text,uuid,uuid)') IS NULL THEN RAISE EXCEPTION 'Missing alliance RPC'; END IF;
+          END $$;
+          SQL
