@@ -59,6 +59,11 @@ begin
    set status=case when p_action='accept' then 'accepted' else 'declined' end,resolved_at=now()
    where id=a.id returning * into a;
   if a.status='accepted' then
+   -- Two independent, deterministic ledger keys make retries harmless.
+   perform public.plot_twist_apply_score(p_game_id,a.source_table_id,null,0,100,
+    'alliance_verified',md5(a.id::text||':source')::uuid,jsonb_build_object('allianceId',a.id));
+   perform public.plot_twist_apply_score(p_game_id,a.target_table_id,null,0,100,
+    'alliance_verified',md5(a.id::text||':target')::uuid,jsonb_build_object('allianceId',a.id));
    insert into public.plot_twist_events(game_id,table_id,event_type,visibility,payload)
     values(p_game_id,a.source_table_id,'alliance_accepted','public',
      jsonb_build_object('sourceTableId',a.source_table_id,'targetTableId',a.target_table_id));
