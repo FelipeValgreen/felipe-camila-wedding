@@ -36,3 +36,15 @@ shell(title,'<p>'+prompt+'</p>'+(isResponsible()&&!s.table.ready?'<button id=rea
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{view=b.dataset.view;render()});
 addEventListener('offline',()=>document.querySelector('#offline').classList.add('on'));
 (async()=>{s=await PT.restore();render()})();addEventListener('online',async()=>{await PT.flush();s=await PT.restore();render()});
+// Refresh game stages without disturbing an active answer or form.
+let ptRefreshing=false;
+setInterval(async()=>{
+ if(ptRefreshing||document.hidden||!navigator.onLine||!s?.player||view!=='now')return;
+ if(card.querySelector('form')||card.querySelector('button:focus'))return;
+ ptRefreshing=true;
+ try{
+  const next=await PT.restore();
+  const key=x=>JSON.stringify([x?.game?.status,x?.stage?.id,x?.stage?.status,x?.table?.team_name,x?.table?.score,x?.table?.ready,x?.action?.id]);
+  if(next?.player&&key(next)!==key(s)){s=next;render()}
+ }catch{}finally{ptRefreshing=false}
+},12000);
