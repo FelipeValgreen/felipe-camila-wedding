@@ -10,7 +10,7 @@ begin
   raise exception 'INVALID_WAGER_STAGE_PAIR';
  end if;
  if stage_row.status='revealed' then return jsonb_build_object('resolved_tables',0,'replayed',true); end if;
- if stage_row.status not in ('closed','resolving') or wager_row.status not in ('closed','revealed') then
+ if stage_row.status not in ('open','closed','resolving') or wager_row.status not in ('closed','revealed') then
   raise exception 'WAGER_STAGES_MUST_BE_CLOSED';
  end if;
  select * into s from public.plot_twist_stage_secrets where stage_id=p_stage_id;
