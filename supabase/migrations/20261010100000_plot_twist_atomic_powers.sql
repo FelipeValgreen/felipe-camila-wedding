@@ -4,7 +4,7 @@
 create or replace function public.plot_twist_use_power_atomic(
  p_game_id uuid, p_player_id uuid, p_power_id uuid, p_target_table_id uuid default null
 ) returns jsonb language plpgsql security definer set search_path=public as $$
-declare g record; s record; p record; pw record; target record;
+declare g record; s record; p record; pw record;
 begin
  select * into p from public.plot_twist_players
   where id=p_player_id and game_id=p_game_id and active
@@ -27,11 +27,6 @@ begin
  -- Until every effect has an audited resolver, never consume an unusable power.
  if pw.power_key<>'bonus_300' then raise exception 'POWER_EFFECT_NOT_READY'; end if;
  if p_target_table_id is not null then raise exception 'TARGET_NOT_ALLOWED'; end if;
- if p_target_table_id is not null then
-  select * into target from public.plot_twist_tables
-   where id=p_target_table_id and game_id=p_game_id and id<>p.table_id;
-  if target.id is null then raise exception 'INVALID_TARGET_TABLE'; end if;
- end if;
  -- The power UUID is the ledger idempotency key: retries cannot double-credit.
  perform public.plot_twist_apply_score(p_game_id,p.table_id,null,300,0,
   'power_bonus_300',p_power_id,jsonb_build_object('powerId',p_power_id));
