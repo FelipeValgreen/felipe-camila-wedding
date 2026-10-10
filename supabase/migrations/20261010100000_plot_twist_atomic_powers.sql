@@ -1,4 +1,4 @@
--- PLOT TWIST draft only. REVIEW/TEST BEFORE APPLYING. Does not settle power effects.
+-- PLOT TWIST draft only. REVIEW/TEST BEFORE APPLYING. Settles only bonus_300; other effects fail closed.
 -- The server owns the authorization check; this RPC additionally checks game,
 -- ownership, target and active stage, and serializes concurrent requests.
 create or replace function public.plot_twist_use_power_atomic(
@@ -24,11 +24,17 @@ begin
   return jsonb_build_object('ok',true,'power',pw.power_key,'replayed',true);
  end if;
  if pw.status<>'available' then raise exception 'POWER_UNAVAILABLE'; end if;
+ -- Until every effect has an audited resolver, never consume an unusable power.
+ if pw.power_key<>'bonus_300' then raise exception 'POWER_EFFECT_NOT_READY'; end if;
+ if p_target_table_id is not null then raise exception 'TARGET_NOT_ALLOWED'; end if;
  if p_target_table_id is not null then
   select * into target from public.plot_twist_tables
    where id=p_target_table_id and game_id=p_game_id and id<>p.table_id;
   if target.id is null then raise exception 'INVALID_TARGET_TABLE'; end if;
  end if;
+ -- The power UUID is the ledger idempotency key: retries cannot double-credit.
+ perform public.plot_twist_apply_score(p_game_id,p.table_id,null,300,0,
+  'power_bonus_300',p_power_id,jsonb_build_object('powerId',p_power_id));
  update public.plot_twist_powers set status='used',
   target_table_id=p_target_table_id, used_at=now() where id=p_power_id;
  insert into public.plot_twist_events
@@ -40,4 +46,4 @@ end $$;
 revoke all on function public.plot_twist_use_power_atomic(uuid,uuid,uuid,uuid)
  from public,anon,authenticated;
 comment on function public.plot_twist_use_power_atomic(uuid,uuid,uuid,uuid) is
- '[PLOT TWIST] Atomically consumes power and emits one event. Does not apply score effects.';
+ '[PLOT TWIST] Atomically consumes power and emits one event. Applies bonus_300 through append-only ledger; rejects other effects.';
