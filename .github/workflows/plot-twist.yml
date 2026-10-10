@@ -35,7 +35,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -c "CREATE ROLE anon NOLOGIN;"
           psql -v ON_ERROR_STOP=1 -c "CREATE ROLE authenticated NOLOGIN;"
           psql -v ON_ERROR_STOP=1 -c "CREATE ROLE service_role NOLOGIN;"
-      - name: Apply Plot Twist migrations on disposable database
+      - name: Create local wedding table stub (no guest data)\n        run: psql -v ON_ERROR_STOP=1 -c "CREATE TABLE IF NOT EXISTS public.wedding_tables(id uuid primary key);"\n      - name: Apply Plot Twist migrations on disposable database
         run: |
           set -euo pipefail
           for file in $(find supabase/migrations -maxdepth 1 -name '*plot_twist*.sql' | sort); do
