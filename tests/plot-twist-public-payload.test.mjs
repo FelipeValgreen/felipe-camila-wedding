@@ -11,3 +11,8 @@ test('redacts nested answer keys from guest stage payload', () => {
 test('retains normal stage prompts and choice values',()=>{
  assert.deepEqual(publicStagePayload({prompt:'¿Dónde?',options:['A','B'],closes_at:null}),{prompt:'¿Dónde?',options:['A','B'],closes_at:null});
 });
+
+test('redacts correct-option aliases in nested objects',()=>{
+ const safe=publicStagePayload({correctOption:'B',correct_option:'C',options:[{value:'A',correctOption:true}],scoring_key:'private',title:'Trivia'});
+ assert.deepEqual(safe,{options:[{value:'A'}],title:'Trivia'});
+});
