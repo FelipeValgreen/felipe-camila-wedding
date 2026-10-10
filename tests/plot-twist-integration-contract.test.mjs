@@ -18,3 +18,8 @@ test('projection hides finale until reveal or ended',()=>{
  const screen=file('api/plot-twist/screen.js');
  assert.match(screen,/\['reveal','ended'\]\.includes\(g\.status\)/);
 });
+
+test('individual vote snapshot scopes query to current player',()=>{
+ const engine=file('api/_lib/plot-twist-engine.js');
+ assert.match(engine,/stage\.type==='individual_callback'\?'&player_id=eq\.'\+player\.id/);
+});
