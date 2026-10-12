@@ -1,0 +1,261 @@
+{
+  "version": 1,
+  "game": {
+    "slug": "matri-2026",
+    "title": "Plot Twist",
+    "readinessThreshold": 0.75
+  },
+  "stages": [
+    {
+      "key": "lobby",
+      "position": 0,
+      "type": "lobby",
+      "mode": "async",
+      "title": "Pónganle nombre a su mesa"
+    },
+    {
+      "key": "icebreaker",
+      "position": 10,
+      "type": "conversation",
+      "mode": "async",
+      "title": "Algo en común",
+      "points": 0,
+      "prompt": "Descubran algo que TODOS en la mesa tengan en común. No vale conocer a los novios.",
+      "payload": {
+        "prompt": "Descubran algo que TODOS en la mesa tengan en común. No vale conocer a Felipe y Cami."
+      }
+    },
+    {
+      "key": "couple-1",
+      "position": 20,
+      "type": "table_decision",
+      "mode": "async",
+      "title": "¿Quién es más probable que…?",
+      "windowSeconds": 180,
+      "prompt": "Si llegan tarde a algo importante, ¿quién tuvo más probabilidades de causar el atraso?",
+      "options": [
+        {
+          "value": "felipe",
+          "label": "Felipe"
+        },
+        {
+          "value": "cami",
+          "label": "Cami"
+        }
+      ],
+      "points": 300,
+      "reveal": {
+        "copy": "La respuesta que dejaron los novios se revela después de que cierre la ronda."
+      }
+    },
+    {
+      "key": "social-1",
+      "position": 30,
+      "type": "individual_callback",
+      "mode": "async",
+      "title": "¿Quién sigue bailando hasta el final?",
+      "callbackKey": "last_dancer",
+      "prompt": "Sin ponerse de acuerdo: ¿quién de esta mesa tiene más probabilidades de seguir bailando cuando prendan las luces?"
+    },
+    {
+      "key": "tombola-1",
+      "position": 40,
+      "type": "live_tombola",
+      "mode": "live",
+      "title": "Primer giro"
+    },
+    {
+      "key": "couple-2",
+      "position": 50,
+      "type": "clue_question",
+      "mode": "async",
+      "title": "Lean la pista",
+      "windowSeconds": 240,
+      "prompt": "Una de estas dos personas es mucho más probable que diga «ya, vámonos»… y termine quedándose una hora más. ¿Quién?",
+      "options": [
+        {
+          "value": "felipe",
+          "label": "Felipe"
+        },
+        {
+          "value": "cami",
+          "label": "Cami"
+        }
+      ],
+      "points": 400,
+      "clue": "Piensen en quién necesita menos convencimiento cuando la noche se alarga."
+    },
+    {
+      "key": "moment-couple-photo",
+      "position": 60,
+      "type": "optional_media",
+      "mode": "async",
+      "title": "Momento con los novios",
+      "points": 100
+    },
+    {
+      "key": "social-2",
+      "position": 70,
+      "type": "individual_callback",
+      "mode": "async",
+      "title": "¿Quién es el más competitivo?",
+      "callbackKey": "final_wagerer",
+      "prompt": "Esta vez no conversen: cada uno elige en privado a la persona más competitiva de su mesa.",
+      "callback": "La persona más votada decidirá cuánto arriesga la mesa en Todo o Nada."
+    },
+    {
+      "key": "power-window",
+      "position": 80,
+      "type": "powers",
+      "mode": "async",
+      "title": "Algo cambió"
+    },
+    {
+      "key": "tombola-2",
+      "position": 90,
+      "type": "live_tombola",
+      "mode": "live",
+      "title": "Plot Twist"
+    },
+    {
+      "key": "final-wager",
+      "position": 100,
+      "type": "wager",
+      "mode": "live",
+      "title": "Todo o Nada",
+      "wagers": [
+        0.25,
+        0.5,
+        1
+      ],
+      "prompt": "La persona que ustedes mismos marcaron como la más competitiva decide. ¿Cuánto arriesgan antes de ver la última pregunta?"
+    },
+    {
+      "key": "final-question",
+      "position": 110,
+      "type": "table_decision",
+      "mode": "live",
+      "title": "La última pregunta",
+      "prompt": "Última decisión. Si Felipe y Cami pudieran guardar una sola cosa de esta noche, ¿qué creen que elegirían?",
+      "options": [
+        {
+          "value": "perfecta",
+          "label": "Que todo saliera perfecto"
+        },
+        {
+          "value": "gente",
+          "label": "Ver a su gente junta"
+        },
+        {
+          "value": "fiesta",
+          "label": "La fiesta hasta el final"
+        },
+        {
+          "value": "fotos",
+          "label": "Las fotos"
+        }
+      ],
+      "points": 1000
+    },
+    {
+      "key": "locked",
+      "position": 120,
+      "type": "locked",
+      "mode": "live",
+      "title": "Juego cerrado"
+    },
+    {
+      "key": "reveal",
+      "position": 130,
+      "type": "reveal",
+      "mode": "live",
+      "title": "El verdadero Plot Twist"
+    }
+  ],
+  "tombola": {
+    "maxImpactFraction": 0.15,
+    "families": [
+      "premio",
+      "penitencia",
+      "plot_twist"
+    ],
+    "results": [
+      {
+        "key": "bonus_300",
+        "family": "premio",
+        "label": "+300 puntos",
+        "weight": 12
+      },
+      {
+        "key": "immunity",
+        "family": "premio",
+        "label": "Inmunidad",
+        "weight": 8
+      },
+      {
+        "key": "gift_shot",
+        "family": "plot_twist",
+        "label": "Regala un shot",
+        "weight": 8,
+        "nonAlcoholAlternative": true
+      },
+      {
+        "key": "steal_10",
+        "family": "plot_twist",
+        "label": "Roba 10%",
+        "weight": 5,
+        "capFraction": 0.1
+      },
+      {
+        "key": "half_next",
+        "family": "penitencia",
+        "label": "La próxima vale la mitad",
+        "weight": 5
+      },
+      {
+        "key": "duel",
+        "family": "plot_twist",
+        "label": "Duelo de mesas",
+        "weight": 6
+      }
+    ]
+  },
+  "scoring": {
+    "mediaPerOpportunity": true,
+    "participationCapPerStage": 100,
+    "hiddenMetricVisible": false
+  },
+  "finalReveal": {
+    "concept": "20 mesas. Un solo equipo.",
+    "visibleWinner": {
+      "title": "Campeones de Plot Twist",
+      "source": "visible_score",
+      "preservesCompetition": true
+    },
+    "hiddenWinner": {
+      "title": "Mesa de la Noche",
+      "source": "secret_score",
+      "signals": [
+        "colaboracion",
+        "generosidad",
+        "participacion",
+        "riesgo_por_otros",
+        "interaccion"
+      ]
+    },
+    "physicalCallback": {
+      "piecePerTable": true,
+      "assembly": "F+C · 23.10.26",
+      "instruction": "Cada mesa conserva su pieza durante la noche. En el reveal, las 20 piezas se unen en pantalla/físicamente para completar el símbolo."
+    },
+    "revealBeats": [
+      "Toda la noche creyeron que había 20 equipos.",
+      "Y sí: hubo una mesa que ganó el juego.",
+      "Pero mientras competían, Plot Twist estaba mirando otra cosa.",
+      "Cada ayuda, riesgo compartido y gesto con otra mesa fue construyendo una segunda historia.",
+      "Las piezas que tuvieron desde el comienzo nunca fueron premios individuales.",
+      "Creyeron que había 20 equipos. Siempre hubo uno solo: nuestra gente."
+    ],
+    "fairnessRule": "El puntaje secreto nunca reemplaza ni altera al campeón visible."
+  }
+}

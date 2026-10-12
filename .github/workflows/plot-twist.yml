@@ -1,0 +1,58 @@
+name: Plot Twist
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: plot_twist_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: plot_twist_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript and regression checks
+        run: npm run check:plot-twist
+      - name: Create Supabase role stubs in isolated PostgreSQL
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "CREATE ROLE anon NOLOGIN;"
+          psql -v ON_ERROR_STOP=1 -c "CREATE ROLE authenticated NOLOGIN;"
+          psql -v ON_ERROR_STOP=1 -c "CREATE ROLE service_role NOLOGIN;"
+      - name: Create local wedding table stub (no guest data)\n        run: psql -v ON_ERROR_STOP=1 -c "CREATE TABLE IF NOT EXISTS public.wedding_tables(id uuid primary key);"\n      - name: Apply Plot Twist migrations on disposable database
+        run: |
+          set -euo pipefail
+          for file in $(find supabase/migrations -maxdepth 1 -name '*plot_twist*.sql' | sort); do
+            echo "Applying $file"
+            psql -X -v ON_ERROR_STOP=1 -1 -f "$file"
+          done
+      - name: Assert transactional functions and RLS exist
+        run: |
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regclass('public.plot_twist_alliances') IS NULL THEN RAISE EXCEPTION 'Missing alliances'; END IF;
+            IF to_regprocedure('public.plot_twist_spin_atomic(uuid,uuid,uuid,uuid)') IS NULL THEN RAISE EXCEPTION 'Missing atomic spin'; END IF;
+            IF to_regprocedure('public.plot_twist_use_power_atomic(uuid,uuid,uuid,uuid)') IS NULL THEN RAISE EXCEPTION 'Missing atomic powers'; END IF;
+            IF to_regprocedure('public.plot_twist_alliance_action(uuid,uuid,text,uuid,uuid)') IS NULL THEN RAISE EXCEPTION 'Missing alliance action'; END IF;
+            IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid='public.plot_twist_alliances'::regclass) THEN RAISE EXCEPTION 'Alliance RLS off'; END IF;
+          END $$;
+          SQL
+
+# CI runs only on GitHub-hosted disposable PostgreSQL; never touches production.
