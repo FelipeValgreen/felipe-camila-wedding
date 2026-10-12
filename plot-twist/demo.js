@@ -3,14 +3,14 @@ const card=document.querySelector('#demo-card'),progress=document.querySelector(
 const phases=['Bienvenida','Equipo','Foto','Conexión','Trivia 1','Trivia 2','Trivia 3','Tómbola','Regalo','Alianza','Clasificación','Apuesta','Pregunta final','Campeones','Mesa de la Noche','La revelación'];
 const clean=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const other=[{id:'04',name:'Los Primos',score:1450,social:5},{id:'12',name:'Los Sin Señal',score:1350,social:9},{id:'17',name:'Los Tíos',score:1150,social:6}];
-const initial=()=>({step:0,name:'',members:'',photo:'',common:'',answers:[],wheel:null,wheelBusy:false,gift:null,alliance:null,score:0,social:0,bet:25,final:null,finalApplied:false,history:[],confirmed:false});
+const initial=()=>({step:0,name:'',members:'',photo:'',common:'',answers:[],wheel:null,wheelBusy:false,gift:null,alliance:null,score:0,social:0,bet:25,final:null,finalApplied:false,history:[],awards:{},confirmed:false});
 let s=initial();
 const questions=[
 {q:'¿Quién es más probable que proponga un viaje improvisado?',a:['Felipe','Cami'],correct:1,note:'Respuesta ficticia para probar la experiencia. Sustituir por respuesta aprobada.'},
 {q:'¿Qué plan elegirían para un domingo libre?',a:['Escapada sorpresa','Almuerzo con familia','Maratón de películas'],correct:1,note:'Pregunta y respuesta ficticias pendientes de aprobación.'},
 {q:'¿Qué canción abre mejor una noche inolvidable?',a:['Una romántica','Una bachata','Un clásico para bailar'],correct:1,note:'Ejemplo sin respuesta real validada.'}
 ];
-function add(n,why,social=0){s.score+=n;s.social+=social;s.history.push({n,why});}
+function add(n,why,social=0){if(s.awards[why])return;s.awards[why]=true;s.score+=n;s.social+=social;s.history.push({n,why});}
 function base(tag,title,body){card.innerHTML='<div class="tag">'+clean(tag)+'</div><h2>'+clean(title)+'</h2><p>'+body+'</p>';}
 function button(label,fn,cls='primary'){const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=label;b.addEventListener('click',fn);card.append(b);return b;}
 function input(label,value,onInput,placeholder='',multi=false){const l=document.createElement('label');l.textContent=label;card.append(l);const el=document.createElement(multi?'textarea':'input');el.value=value;el.placeholder=placeholder;el.addEventListener('input',()=>onInput(el.value));card.append(el);return el;}
