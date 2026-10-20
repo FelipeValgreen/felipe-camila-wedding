@@ -60,7 +60,7 @@ assertInvariant(galeriaHtml.includes('href="/?open=1#hero"'), 'galeria/index.htm
 assertInvariant(fotosHtml.includes('href="/?open=1#hero"'), 'fotos/index.html back links point to /?open=1#hero');
 
 // 5b. Post-upload view photos button & instant refresh checks
-assertInvariant(fotosHtml.includes('href="/galeria/?filtro=civil&refresh=1"'), 'fotos/index.html view-photos-btn points to /galeria/?filtro=civil&refresh=1');
+assertInvariant(fotosHtml.includes('href="/galeria/?filtro=matrimonio&refresh=1"'), 'fotos/index.html view-photos-btn points to /galeria/?filtro=matrimonio&refresh=1');
 assertInvariant(fotosHtml.includes('VER FOTOS EN LA GALERÍA'), 'fotos/index.html view-photos-btn displays VER FOTOS EN LA GALERÍA');
 assertInvariant(!fotosHtml.includes('href="/#galeria-compartidas"'), 'fotos/index.html no longer points to old /#galeria-compartidas');
 assertInvariant(!fotosHtml.includes('target="_blank"'), 'fotos/index.html contains no target="_blank" links');
