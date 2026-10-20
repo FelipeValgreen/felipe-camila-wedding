@@ -141,6 +141,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Compress and Upload
             const uploadJob = () => new Promise((resolve) => {
+            if (typeof Compressor === 'undefined') {
+                uploadToSupabase(file, file.name, guestName, itemId).finally(resolve);
+                return;
+            }
+            try {
             new Compressor(file, {
                 quality: 0.8,
                 maxWidth: 1920,
@@ -149,11 +154,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadToSupabase(compressedResult, file.name, guestName, itemId).finally(resolve);
                 },
                 error(err) {
-                    console.error('Compression error:', err);
-                    onUploadFinished(itemId, false);
-                    resolve();
+                    console.warn('Compression unavailable; trying original image:', err);
+                    uploadToSupabase(file, file.name, guestName, itemId).finally(resolve);
                 },
             });
+            } catch (err) {
+                console.warn('Compression failed; trying original image:', err);
+                uploadToSupabase(file, file.name, guestName, itemId).finally(resolve);
+            }
             });
             retryJobs.set(itemId, uploadJob);
             scheduleUpload(uploadJob);
