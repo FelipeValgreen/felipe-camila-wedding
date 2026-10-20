@@ -54,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Keep network and compression pressure predictable on crowded mobile networks.
     const MAX_CONCURRENT_UPLOADS = 3;
+    // Supabase bucket currently allows only JPEG, PNG and WebP, max 10 MB per object.
+    const STORAGE_MAX_BYTES = 10 * 1024 * 1024;
+    const STORAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
     const uploadQueue = [];
     const retryJobs = new Map();
     let activeUploads = 0;
@@ -235,6 +238,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const client = typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient;
 
         try {
+            const mimeType = (fileBlob.type || '').toLowerCase();
+            if (!STORAGE_MIME_TYPES.has(mimeType)) {
+                throw new Error('Formato no compatible con la galería. En iPhone, comparte la foto como JPEG o selecciona una versión convertida.');
+            }
+            if (fileBlob.size > STORAGE_MAX_BYTES) {
+                throw new Error('La foto supera el límite de 10 MB. Prueba con una versión más pequeña.');
+            }
             if (progressBar) progressBar.style.width = '30%';
 
             const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now();
@@ -291,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Upload Failed:', error);
+            showUploadToast(error?.message || 'No se pudo subir la foto. Reintenta en unos momentos.');
             onUploadFinished(itemId, false);
         }
     }
