@@ -88,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (pendingCount === 0) {
-            retryJobs.clear();
             successfulCount = 0;
             failedCount = 0;
             queueList.innerHTML = '';
@@ -104,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         validFiles.forEach((file, index) => {
             // Create UI Item
-            const itemId = `upload-${Date.now()}-${index}`;
+            const itemId = `upload-${crypto.randomUUID()}-${index}`;
             const safeName = file.name.replace(/[&<>"\x27]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "\x27":"&#39;" }[c]));
             const itemHtml = `
                 <div id="${itemId}" class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100 shadow-sm transition-all">
@@ -242,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .getPublicUrl(storagePath);
 
             // 3. Save to guest_photos
-            const finalUrl = publicUrl.includes('?') ? publicUrl + '&source=qr' : publicUrl + '?source=qr';
+            const finalUrl = publicUrl + (publicUrl.includes('?') ? '&' : '?') + 'source=qr&event=matri2026';
 
             const { error: dbError } = await client
                 .from('guest_photos')
