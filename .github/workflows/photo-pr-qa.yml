@@ -1,0 +1,31 @@
+name: Wedding photo PR QA
+on:
+  pull_request:
+    paths:
+      - 'fotos/**'
+      - 'galeria/**'
+      - 'js/feature/upload.js'
+      - 'api/gallery.js'
+      - 'scripts/verify_public_regressions.mjs'
+      - 'scripts/test_gallery_event.mjs'
+      - '.github/workflows/photo-pr-qa.yml'
+  workflow_dispatch:
+jobs:
+  static-qa:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check js/feature/upload.js
+          node --check api/gallery.js
+          node --check scripts/verify_public_regressions.mjs
+      - name: Test wedding gallery API categorization
+        run: node scripts/test_gallery_event.mjs
+      - name: Verify public-site regressions
+        run: npm run verify:public

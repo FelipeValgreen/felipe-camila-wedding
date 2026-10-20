@@ -40,10 +40,40 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof showToast === 'function') {
             showToast(msg);
         } else {
-            alert(msg);
+            let notice = document.getElementById('upload-notice');
+            if (!notice) {
+                notice = document.createElement('p');
+                notice.id = 'upload-notice';
+                notice.setAttribute('role', 'alert');
+                notice.className = 'text-sm text-red-700 mt-3';
+                nameInput.parentElement.appendChild(notice);
+            }
+            notice.textContent = msg;
         }
     }
 
+    // Keep network and compression pressure predictable on crowded mobile networks.
+    const MAX_CONCURRENT_UPLOADS = 3;
+    // Supabase bucket currently allows only JPEG, PNG and WebP, max 10 MB per object.
+    const STORAGE_MAX_BYTES = 10 * 1024 * 1024;
+    const STORAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    const uploadQueue = [];
+    const retryJobs = new Map();
+    let activeUploads = 0;
+    function scheduleUpload(job) {
+        uploadQueue.push(job);
+        pumpUploads();
+    }
+    function pumpUploads() {
+        while (activeUploads < MAX_CONCURRENT_UPLOADS && uploadQueue.length) {
+            const job = uploadQueue.shift();
+            activeUploads++;
+            Promise.resolve().then(job).catch(console.error).finally(() => {
+                activeUploads--;
+                pumpUploads();
+            });
+        }
+    }
     let pendingCount = 0;
     let successfulCount = 0;
     let failedCount = 0;
@@ -53,6 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!files || files.length === 0) return;
         
         const guestName = nameInput.value.trim();
+        const notice = document.getElementById('upload-notice');
+        if (notice) notice.textContent = '';
         if (!guestName) {
             showUploadToast("¡Por favor ingresa tu nombre primero para saber quién nos comparte la foto!", "error");
             cameraInput.value = '';
@@ -61,12 +93,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+        const validFiles = Array.from(files).filter(f => f.type.startsWith('image/') && f.size <= 25 * 1024 * 1024);
+        if (validFiles.length < files.length) showUploadToast('Algunas fotos no son imágenes válidas o superan 25 MB.');
         if (validFiles.length === 0) {
             showUploadToast("Ninguno de los archivos seleccionados es una imagen válida.");
             return;
         }
 
+        if (pendingCount === 0 && retryJobs.size === 0) {
+            successfulCount = 0;
+            failedCount = 0;
+            queueList.innerHTML = '';
+        }
         pendingCount += validFiles.length;
 
         const queueTitle = document.getElementById('queue-title');
@@ -78,14 +116,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         validFiles.forEach((file, index) => {
             // Create UI Item
-            const itemId = `upload-${Date.now()}-${index}`;
+            const itemId = `upload-${crypto.randomUUID()}-${index}`;
+            const safeName = file.name.replace(/[&<>"\x27]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "\x27":"&#39;" }[c]));
             const itemHtml = `
                 <div id="${itemId}" class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100 shadow-sm transition-all">
                     <div class="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                         <img id="preview-${itemId}" src="" class="w-full h-full object-cover">
                     </div>
                     <div class="flex-grow text-left">
-                        <p class="text-xs font-bold text-charcoal truncate w-40">${file.name}</p>
+                        <p class="text-xs font-bold text-charcoal truncate w-40">${safeName}</p>
                         <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
                             <div id="progress-${itemId}" class="bg-sage h-1.5 rounded-full" style="width: 10%"></div>
                         </div>
@@ -104,18 +143,31 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.readAsDataURL(file);
 
             // Compress and Upload
+            const uploadJob = () => new Promise((resolve) => {
+            if (typeof Compressor === 'undefined') {
+                uploadToSupabase(file, file.name, guestName, itemId).finally(resolve);
+                return;
+            }
+            try {
             new Compressor(file, {
                 quality: 0.8,
                 maxWidth: 1920,
                 maxHeight: 1920,
                 success(compressedResult) {
-                    uploadToSupabase(compressedResult, file.name, guestName, itemId);
+                    uploadToSupabase(compressedResult, file.name, guestName, itemId).finally(resolve);
                 },
                 error(err) {
-                    console.error('Compression error:', err);
-                    onUploadFinished(itemId, false);
+                    console.warn('Compression unavailable; trying original image:', err);
+                    uploadToSupabase(file, file.name, guestName, itemId).finally(resolve);
                 },
             });
+            } catch (err) {
+                console.warn('Compression failed; trying original image:', err);
+                uploadToSupabase(file, file.name, guestName, itemId).finally(resolve);
+            }
+            });
+            retryJobs.set(itemId, uploadJob);
+            scheduleUpload(uploadJob);
         });
 
         // Reset inputs
@@ -129,6 +181,27 @@ document.addEventListener('DOMContentLoaded', () => {
             successfulCount++;
         } else {
             failedCount++;
+            const row = document.getElementById(itemId);
+            if (row && retryJobs.has(itemId) && !row.querySelector('[data-retry]')) {
+                const retry = document.createElement('button');
+                retry.type = 'button';
+                retry.dataset.retry = 'true';
+                retry.textContent = 'Reintentar';
+                retry.className = 'text-xs underline text-dark ml-2';
+                retry.addEventListener('click', () => {
+                    retry.remove();
+                    failedCount = Math.max(0, failedCount - 1);
+                    pendingCount++;
+                    const title = document.getElementById('queue-title');
+                    if (title) title.textContent = 'Reintentando…';
+                    const view = document.getElementById('view-photos-btn');
+                    if (view) view.classList.add('hidden');
+                    const bar = document.getElementById('progress-' + itemId);
+                    if (bar) bar.style.width = '10%';
+                    scheduleUpload(retryJobs.get(itemId));
+                });
+                row.appendChild(retry);
+            }
             const statusIcon = document.getElementById(`status-${itemId}`);
             const progressBar = document.getElementById(`progress-${itemId}`);
             if (progressBar) progressBar.classList.replace('bg-sage', 'bg-red-500');
@@ -146,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (queueTitle) queueTitle.innerHTML = 'Subida completada con algunas observaciones.';
                 if (viewBtn) viewBtn.classList.remove('hidden');
             } else {
-                if (queueTitle) queueTitle.innerHTML = '¡Subida Exitosa! 🎉';
+                if (queueTitle) queueTitle.textContent = '¡Listo! Tus fotos ya son parte de nuestra historia ♡';
                 if (viewBtn) viewBtn.classList.remove('hidden');
             }
         }
@@ -165,10 +238,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const client = typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient;
 
         try {
+            const mimeType = (fileBlob.type || '').toLowerCase();
+            if (!STORAGE_MIME_TYPES.has(mimeType)) {
+                throw new Error('Formato no compatible con la galería. En iPhone, comparte la foto como JPEG o selecciona una versión convertida.');
+            }
+            if (fileBlob.size > STORAGE_MAX_BYTES) {
+                throw new Error('La foto supera el límite de 10 MB. Prueba con una versión más pequeña.');
+            }
             if (progressBar) progressBar.style.width = '30%';
 
             const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now();
-            const extension = originalFilename.split('.').pop() || 'jpg';
+            const mime = (fileBlob.type || '').toLowerCase();
+            const extension = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : mime.includes('heic') ? 'heic' : mime.includes('heif') ? 'heif' : 'jpg';
             const storagePath = `guest_uploads/guest_${uniqueId}.${extension}`;
 
             // 1. Storage Upload
@@ -188,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .getPublicUrl(storagePath);
 
             // 3. Save to guest_photos
-            const finalUrl = publicUrl.includes('?') ? publicUrl + '&source=qr' : publicUrl + '?source=qr';
+            const finalUrl = publicUrl + (publicUrl.includes('?') ? '&' : '?') + 'source=qr&event=matri2026';
 
             const { error: dbError } = await client
                 .from('guest_photos')
@@ -206,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-check-circle text-green-500"></i>`;
             
+            retryJobs.delete(itemId);
             onUploadFinished(itemId, true);
 
             // Auto hide after 5 seconds to keep queue clean
@@ -219,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Upload Failed:', error);
+            showUploadToast(error?.message || 'No se pudo subir la foto. Reintenta en unos momentos.');
             onUploadFinished(itemId, false);
         }
     }

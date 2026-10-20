@@ -65,7 +65,10 @@ export default async function handler(req, res) {
             let category = 'historia';
             let alt = 'Recuerdo de nuestra historia';
 
-            if (createdAt >= '2026-03-28') {
+            if ((item.url || '').includes('event=matri2026')) {
+                category = 'matrimonio';
+                alt = 'Recuerdo de nuestro matrimonio religioso';
+            } else if (createdAt >= '2026-03-28') {
                 category = 'civil';
                 alt = 'Recuerdo de nuestro matrimonio civil';
             }
