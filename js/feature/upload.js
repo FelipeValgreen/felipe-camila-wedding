@@ -40,7 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof showToast === 'function') {
             showToast(msg);
         } else {
-            alert(msg);
+            let notice = document.getElementById('upload-notice');
+            if (!notice) {
+                notice = document.createElement('p');
+                notice.id = 'upload-notice';
+                notice.setAttribute('role', 'alert');
+                notice.className = 'text-sm text-red-700 mt-3';
+                nameInput.parentElement.appendChild(notice);
+            }
+            notice.textContent = msg;
         }
     }
 
@@ -72,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!files || files.length === 0) return;
         
         const guestName = nameInput.value.trim();
+        const notice = document.getElementById('upload-notice');
+        if (notice) notice.textContent = '';
         if (!guestName) {
             showUploadToast("¡Por favor ingresa tu nombre primero para saber quién nos comparte la foto!", "error");
             cameraInput.value = '';
@@ -87,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (pendingCount === 0) {
+        if (pendingCount === 0 && retryJobs.size === 0) {
             successfulCount = 0;
             failedCount = 0;
             queueList.innerHTML = '';
