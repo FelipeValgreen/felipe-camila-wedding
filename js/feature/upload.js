@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Keep network and compression pressure predictable on crowded mobile networks.
     const MAX_CONCURRENT_UPLOADS = 3;
     const uploadQueue = [];
+    const retryJobs = new Map();
     let activeUploads = 0;
     function scheduleUpload(job) {
         uploadQueue.push(job);
@@ -87,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (pendingCount === 0) {
+            retryJobs.clear();
             successfulCount = 0;
             failedCount = 0;
             queueList.innerHTML = '';
@@ -129,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.readAsDataURL(file);
 
             // Compress and Upload
-            scheduleUpload(() => new Promise((resolve) => {
+            const uploadJob = () => new Promise((resolve) => {
             new Compressor(file, {
                 quality: 0.8,
                 maxWidth: 1920,
@@ -143,7 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     resolve();
                 },
             });
-            }));
+            });
+            retryJobs.set(itemId, uploadJob);
+            scheduleUpload(uploadJob);
         });
 
         // Reset inputs
@@ -157,6 +161,27 @@ document.addEventListener('DOMContentLoaded', () => {
             successfulCount++;
         } else {
             failedCount++;
+            const row = document.getElementById(itemId);
+            if (row && retryJobs.has(itemId) && !row.querySelector('[data-retry]')) {
+                const retry = document.createElement('button');
+                retry.type = 'button';
+                retry.dataset.retry = 'true';
+                retry.textContent = 'Reintentar';
+                retry.className = 'text-xs underline text-dark ml-2';
+                retry.addEventListener('click', () => {
+                    retry.remove();
+                    failedCount = Math.max(0, failedCount - 1);
+                    pendingCount++;
+                    const title = document.getElementById('queue-title');
+                    if (title) title.textContent = 'Reintentando…';
+                    const view = document.getElementById('view-photos-btn');
+                    if (view) view.classList.add('hidden');
+                    const bar = document.getElementById('progress-' + itemId);
+                    if (bar) bar.style.width = '10%';
+                    scheduleUpload(retryJobs.get(itemId));
+                });
+                row.appendChild(retry);
+            }
             const statusIcon = document.getElementById(`status-${itemId}`);
             const progressBar = document.getElementById(`progress-${itemId}`);
             if (progressBar) progressBar.classList.replace('bg-sage', 'bg-red-500');
@@ -196,7 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (progressBar) progressBar.style.width = '30%';
 
             const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now();
-            const extension = originalFilename.split('.').pop() || 'jpg';
+            const mime = (fileBlob.type || '').toLowerCase();
+            const extension = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : mime.includes('heic') ? 'heic' : mime.includes('heif') ? 'heif' : 'jpg';
             const storagePath = `guest_uploads/guest_${uniqueId}.${extension}`;
 
             // 1. Storage Upload
@@ -234,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-check-circle text-green-500"></i>`;
             
+            retryJobs.delete(itemId);
             onUploadFinished(itemId, true);
 
             // Auto hide after 5 seconds to keep queue clean
