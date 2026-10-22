@@ -30,3 +30,15 @@ body:has(#guest-name-input) label:has(#gallery-input){background:var(--fc-paper)
 body:has(#guest-name-input) label:has(#gallery-input) i{color:var(--fc-gold)!important}
 body:has(#guest-name-input) #view-photos-btn{border-radius:4px!important}
 @media(max-width:640px){nav img[src*="fc-monogram"]{height:46px!important;width:46px!important}body:has(#guest-name-input) main{padding-top:2.5rem!important}}
+
+/* Wedding experiences: coordinated editorial palette */
+body.wedding-editorial{--ivory:#faf6ee;--paper:#fffcf7;--ink:#251c1b;--muted:#75675e;--gold:#ad8c5d;--line:#e3d5c1;--wine:#5b1521}
+.wedding-nav .wedding-brand img{display:block;max-height:64px;object-fit:contain}
+.wedding-action,.wedding-mobile-cta{background:#5b1521!important;color:#fff9ef!important}
+.wedding-tile{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.wedding-tile:hover{transform:translateY(-3px);border-color:#ad8c5d}
+.wedding-kicker,.wedding-discover{color:#926f40!important}
+.wedding-hero h1,.wedding-section-title{color:#5b1521}
+.wedding-field-label{color:#5b1521}
+.wedding-identity-field input:focus-visible{outline:2px solid #ad8c5d;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.wedding-tile{transition:none}.wedding-tile:hover{transform:none}}
