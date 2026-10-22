@@ -27,3 +27,18 @@ body.wedding-editorial{background:radial-gradient(ellipse at 50% 0%,#fffdf9 0%,#
 .wedding-name-input:focus{border-color:var(--atelier-wine)!important}
 @media(max-width:520px){.wedding-feature{grid-template-columns:minmax(0,1fr) 43px!important}.wedding-feature-body{padding:38px 6px 41px 24px!important}.wedding-feature-signoff{writing-mode:vertical-rl!important;transform:none;font-size:29px!important}.wedding-feature h2{font-size:clamp(37px,10vw,48px)!important}.wedding-experience-list .wedding-tile:hover{padding-left:0!important}}
 @media(prefers-reduced-motion:reduce){.wedding-action,.wedding-experience-list .wedding-tile,.wedding-experience-list .wedding-arrow,.wedding-upload-section .wedding-upload-button{transition:none!important;transform:none!important}}
+
+.wedding-experience-list{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px!important;border:0!important}
+.wedding-experience-list .wedding-tile{display:flex!important;flex-direction:column!important;gap:0!important;padding:22px!important;min-height:285px!important;border:1px solid #d8c8b4!important;background:#f3eadd!important;box-shadow:none!important}
+.wedding-experience-list .wedding-tile:nth-child(2){background:#eee4e0!important}
+.wedding-experience-list .wedding-tile:nth-child(3){background:#eae2e5!important}
+.wedding-experience-list .wedding-tile:nth-child(4){background:#f0eadb!important}
+.wedding-experience-art{display:flex;justify-content:center;align-items:center;min-height:125px;color:#703b40}
+.wedding-experience-art svg{width:100px;height:100px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.wedding-experience-copy{flex:1}
+.wedding-experience-copy h3{font-size:32px!important;margin:10px 0!important}
+.wedding-discover{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #cbbbaa;padding-top:12px;margin-top:16px;color:#5c1d24;font:600 11px Inter,sans-serif;letter-spacing:.06em}
+.wedding-discover span{font-size:20px}
+.wedding-experience-list .wedding-tile:hover{padding:22px!important;transform:translateY(-3px)!important}
+.wedding-experience-list .wedding-tile:hover svg{transform:rotate(-6deg) scale(1.07)}
+@media(max-width:520px){.wedding-experience-list{grid-template-columns:1fr!important;gap:12px!important}.wedding-experience-list .wedding-tile{display:grid!important;grid-template-columns:90px minmax(0,1fr)!important;gap:12px!important;min-height:160px!important;padding:18px!important}.wedding-experience-art{grid-row:1/3;min-height:100px}.wedding-experience-art svg{width:82px;height:82px}.wedding-experience-copy h3{font-size:28px!important}.wedding-discover{margin-top:6px}.wedding-experience-list .wedding-tile:hover{padding:18px!important;transform:none!important}}
