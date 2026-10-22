@@ -53,3 +53,56 @@ body.wedding-editorial h1,body.wedding-editorial h2,body.wedding-editorial h3{fo
 .wedding-mobile-cta{background:#5C1D24!important;border-radius:0!important;box-shadow:0 3px 16px rgba(0,0,0,.12)!important}
 .wedding-footer{border-top:1px solid #E4DED4!important;margin-top:65px!important;padding:33px 0 44px!important;color:#756C64!important}
 @media(max-width:520px){.wedding-nav{padding:13px 16px!important}.wedding-hero{padding:46px 0 44px!important}.wedding-feature{margin-bottom:53px!important}.wedding-feature-art{min-height:180px!important}.wedding-feature-body{padding:29px 25px 33px!important}.wedding-grid{grid-template-columns:1fr!important}.wedding-tile{padding:27px 25px!important}.wedding-inner{padding-top:37px!important}.wedding-inner>.wedding-lead{margin-bottom:30px!important}.wedding-panel{padding:25px 22px!important}.wedding-section-title{margin-bottom:22px!important}}
+
+/* 2026 editorial direction — typography, whitespace and chapter list */
+body.wedding-editorial{background:#FAF8F3!important}
+.wedding-hero{padding:65px 0 77px!important}
+.wedding-hero h1{font-size:clamp(56px,12vw,84px)!important;letter-spacing:-.065em!important}
+.wedding-hero>p:last-child{max-width:340px!important;margin:15px auto 0!important}
+.wedding-feature{display:grid!important;grid-template-columns:minmax(0,1fr) 126px;align-items:stretch;overflow:hidden;margin:0 0 104px!important;border:0!important;border-top:1px solid #C9BCA8!important;border-bottom:1px solid #C9BCA8!important;background:transparent!important}
+.wedding-feature-body{padding:49px 28px 54px 0!important;max-width:490px}
+.wedding-feature h2{font-size:clamp(42px,8vw,59px)!important;line-height:1.03!important;letter-spacing:-.052em!important;margin:19px 0 20px!important}
+.wedding-feature p{max-width:350px;margin:0 0 29px!important}
+.wedding-feature-signoff{align-self:center;justify-self:center;display:flex;align-items:baseline;gap:3px;font:400 clamp(48px,8vw,72px)/1 Newsreader,Georgia,serif;letter-spacing:-.075em;color:#5C1D24;opacity:.78}
+.wedding-feature-signoff-amp{font-size:.42em;color:#A88C62;font-style:italic;letter-spacing:-.025em}
+.wedding-action{font-weight:500!important;display:inline-flex!important;gap:22px!important;justify-content:space-between!important}
+.wedding-experiences{margin:0 0 104px!important}
+.wedding-section-heading{margin:0 0 38px}
+.wedding-section-heading>.wedding-section-title{margin:18px 0 14px!important}
+.wedding-section-heading>p{font-size:14px;line-height:1.7;color:#625d58;max-width:330px}
+.wedding-experience-list{border-top:1px solid #C9BCA8}
+.wedding-experience-list .wedding-tile{display:grid!important;grid-template-columns:44px minmax(0,1fr) 24px;align-items:start;gap:12px;min-height:unset!important;margin:0!important;padding:29px 4px 29px 0!important;border:0!important;border-bottom:1px solid #DDD4C7!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;text-align:left;transition:background .15s ease!important}
+.wedding-experience-list .wedding-tile:hover{background:rgba(92,29,36,.025)!important}
+.wedding-experience-index{font:500 10px/1.5 Inter,Arial,sans-serif;letter-spacing:.08em;color:#A88C62;padding-top:7px}
+.wedding-experience-copy{min-width:0}
+.wedding-experience-copy h3{font-size:clamp(29px,5.5vw,39px)!important;line-height:1.06!important;margin:0 0 8px!important}
+.wedding-experience-copy p{font-size:13px!important;line-height:1.6!important;margin:0!important;max-width:360px}
+.wedding-experience-list .wedding-arrow{font-family:Inter,Arial,sans-serif;font-size:20px!important;font-weight:400!important;line-height:1.2;color:#5C1D24!important;margin:0!important;padding:4px 0 0!important;text-align:right}
+.wedding-upload-section{margin-top:0!important;padding-top:0!important}
+.wedding-upload-section>.wedding-kicker{display:block;margin-bottom:13px}
+.wedding-upload-section .wedding-section-title{margin:0 0 16px!important}
+.wedding-upload-intro{color:#625d58;font-size:14px;line-height:1.75;margin:0 0 30px;max-width:390px}
+.wedding-identity-field{padding:0!important;margin:0 0 25px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.wedding-field-label{display:block;font:500 12px/1.5 Inter,Arial,sans-serif;color:#3F3733;letter-spacing:.01em;margin-bottom:10px}
+.wedding-name-input{display:block;width:100%;min-height:54px;padding:14px 15px;border:1px solid #C9BCA8!important;background:#FFFEFC!important;color:#181513;font:400 16px/1.5 Inter,Arial,sans-serif;border-radius:0!important;box-shadow:none!important}
+.wedding-upload-hint{font-size:12px!important;color:#625d58!important;letter-spacing:0!important;margin-bottom:13px!important}
+.wedding-upload-section .wedding-upload-button{justify-content:flex-start!important;padding:18px 21px!important;min-height:60px!important;font-size:14px!important}
+.wedding-upload-section .wedding-upload-button i{font-size:17px!important}
+.wedding-privacy-note{text-align:left!important;padding:0!important;margin-top:23px!important}
+.wedding-footer{margin-top:95px!important}
+@media(max-width:520px){
+.wedding-hero{padding:54px 0 64px!important}
+.wedding-feature{grid-template-columns:minmax(0,1fr) 48px;margin-bottom:78px!important}
+.wedding-feature-body{padding:37px 4px 43px 0!important}
+.wedding-feature h2{font-size:clamp(40px,10.5vw,53px)!important}
+.wedding-feature-signoff{font-size:32px!important;writing-mode:vertical-rl;align-items:center;gap:0}
+.wedding-feature-signoff-amp{font-size:17px}
+.wedding-experiences{margin-bottom:82px!important}
+.wedding-section-heading{margin-bottom:29px}
+.wedding-experience-list .wedding-tile{grid-template-columns:27px minmax(0,1fr) 20px;gap:9px;padding:25px 0!important}
+.wedding-experience-copy h3{font-size:clamp(27px,7vw,35px)!important}
+.wedding-experience-copy p{font-size:12px!important}
+.wedding-experience-index{font-size:9px}
+.wedding-experience-list .wedding-arrow{font-size:17px!important}
+.wedding-footer{margin-top:75px!important}
+}
