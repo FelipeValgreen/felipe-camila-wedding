@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin de Fotos | F&C</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { theme: { extend: { fontFamily: { sans: ['"Montserrat"', 'sans-serif'] } } } }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['"Inter"', 'sans-serif'] } } } }
     </script>
-</head>
+<link rel="icon" type="image/svg+xml" href="/assets/fc-monogram.svg"><link rel="stylesheet" href="/css/fc-brand-preview.css?v=3"><style>body{background:#faf6ee!important;color:#171211!important}#auth-overlay{background:#100d0c!important}#auth-overlay>div{background:#faf6ee!important;border:1px solid #ad8c5d;border-radius:4px!important}#auth-overlay h2{font-family:Newsreader,Georgia,serif!important;font-size:2rem!important;color:#5b1521!important}#login-btn{background:#5b1521!important;border-radius:4px!important}#admin-panel button{border-radius:4px!important}#admin-panel h1,#admin-panel h2{font-family:Newsreader,Georgia,serif!important}</style></head>
 <body class="bg-gray-50 text-slate-800 font-sans min-h-screen">
 
     <!-- Auth Overlay -->
     <div id="auth-overlay" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center">
-            <h2 class="text-2xl font-bold mb-2">Panel Moderador</h2>
+            <img src="/assets/fc-monogram.svg?v=3" alt="Felipe y Camila" width="90" height="90" style="display:block;margin:0 auto 12px"><h2 class="text-2xl font-bold mb-2">Panel Moderador</h2>
             <p class="text-sm text-gray-500 mb-6">Ingresa la contraseña para revisar las fotos.</p>
             <input type="password" id="admin-pass" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-center tracking-widest focus:border-blue-500 focus:outline-none mb-4" placeholder="••••••••">
             <button id="login-btn" class="w-full bg-blue-600 font-bold text-white rounded-lg py-3 hover:bg-blue-700 transition">Entrar</button>
