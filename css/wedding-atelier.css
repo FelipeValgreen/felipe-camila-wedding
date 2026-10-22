@@ -42,3 +42,17 @@ body.wedding-editorial{background:radial-gradient(ellipse at 50% 0%,#fffdf9 0%,#
 .wedding-experience-list .wedding-tile:hover{padding:22px!important;transform:translateY(-3px)!important}
 .wedding-experience-list .wedding-tile:hover svg{transform:rotate(-6deg) scale(1.07)}
 @media(max-width:520px){.wedding-experience-list{grid-template-columns:1fr!important;gap:12px!important}.wedding-experience-list .wedding-tile{display:grid!important;grid-template-columns:90px minmax(0,1fr)!important;gap:12px!important;min-height:160px!important;padding:18px!important}.wedding-experience-art{grid-row:1/3;min-height:100px}.wedding-experience-art svg{width:82px;height:82px}.wedding-experience-copy h3{font-size:28px!important}.wedding-discover{margin-top:6px}.wedding-experience-list .wedding-tile:hover{padding:18px!important;transform:none!important}}
+
+/* Photo-led wedding identity: authentic portraits and original stationery mark */
+.wedding-real-logo{display:block;width:56px;height:56px;object-fit:contain}
+.wedding-nav .wedding-brand{min-height:56px}
+.wedding-portrait-pair{display:flex;justify-content:center;align-items:center;gap:0;margin:26px auto 20px;max-width:390px}
+.wedding-portrait-pair img{width:46%;aspect-ratio:4/5;object-fit:cover;border:7px solid #fffaf2;box-shadow:0 9px 26px rgba(53,35,27,.12)}
+.wedding-portrait-pair img:first-child{transform:rotate(-6deg) translateX(12px)}
+.wedding-portrait-pair img:last-child{transform:rotate(6deg) translateX(-12px)}
+.wedding-feature{grid-template-columns:minmax(0,1fr) 190px!important}
+.wedding-feature-photo{height:100%;min-height:300px;overflow:hidden}
+.wedding-feature-photo img{width:100%;height:100%;object-fit:cover;filter:saturate(.78) sepia(.10)}
+.wedding-experience-list .wedding-tile{background-image:linear-gradient(145deg,rgba(255,255,255,.4),transparent)!important}
+.wedding-discover{font-size:10px!important;text-transform:uppercase;letter-spacing:.09em}
+@media(max-width:520px){.wedding-portrait-pair{max-width:310px}.wedding-portrait-pair img{border-width:5px}.wedding-feature{grid-template-columns:1fr!important}.wedding-feature-photo{height:180px;min-height:180px;grid-row:1}.wedding-feature-photo img{object-position:center 40%}.wedding-feature-body{padding:29px 24px 33px!important}.wedding-real-logo{width:50px;height:50px}}
