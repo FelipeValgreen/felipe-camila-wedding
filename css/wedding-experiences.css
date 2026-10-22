@@ -123,3 +123,37 @@ body.wedding-editorial{background:#f6f0e7;color:var(--ink)}
 .wedding-panel input,.wedding-panel select,.wedding-panel textarea{background:#fffdf8;border-color:#c7bba8;border-radius:2px}
 .wedding-footer{color:#62544c}
 @media(max-width:430px){.wedding-feature-art{min-height:185px}.wedding-feature-body{padding:30px 26px 35px}.wedding-tile{min-height:unset;padding:25px}.wedding-card-illustration{height:100px}}
+
+/* Alignment and identity correction: exact palette used in earlier invitation styles. */
+:root{--ivory:#FAF8F3;--paper:#FAF8F3;--ink:#0F0C0B;--muted:#67605A;--gold:#C5A059;--line:#DACBAE;--wine:#5C1D24}
+body.wedding-editorial{background:#FAF8F3;color:#0F0C0B}
+.wedding-nav{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;background:#FAF8F3;border-bottom:1px solid #DACBAE;padding:8px max(18px,calc((100vw - 680px)/2))}
+.wedding-nav>a:first-child{justify-self:start;text-align:left}.wedding-nav>a:last-child{justify-self:end;text-align:right}.wedding-nav .wedding-brand{justify-self:center;padding:0;min-width:54px}
+.wedding-brand-monogram{display:inline-flex;align-items:baseline;justify-content:center;gap:1px;color:#5C1D24;font:400 30px/1 Newsreader,Georgia,serif;letter-spacing:-.07em;border:1px solid #C5A059;padding:10px 8px 7px;min-width:54px}
+.wedding-brand-amp{font-size:16px;font-style:italic;color:#C5A059;letter-spacing:-.03em}
+.wedding-wrap{width:min(calc(100% - 36px),680px)!important;margin-inline:auto!important}
+.wedding-hero{text-align:center;padding-inline:12px}
+.wedding-hero h1{color:#0F0C0B;margin-inline:auto;max-width:100%;font-size:clamp(47px,10vw,74px);line-height:1.08}
+.wedding-hero p{margin-inline:auto;max-width:470px;text-align:center}
+.wedding-hero-tagline{font-family:Newsreader,Georgia,serif!important;font-size:clamp(21px,5vw,26px)!important;line-height:1.25;color:#5C1D24!important;margin:14px auto!important}
+.wedding-feature-art{background:#0F0C0B;min-height:200px;display:flex;align-items:center;justify-content:center;padding:24px}
+.wedding-feature-lettering{text-align:center;color:#FAF8F3;max-width:100%;padding:12px}
+.wedding-feature-quote{font-family:Newsreader,Georgia,serif;font-size:clamp(39px,8vw,61px);font-style:italic;font-weight:400;line-height:1.03;letter-spacing:-.035em;text-align:center}
+.wedding-feature-divider{width:65px;height:1px;background:#C5A059;margin:18px auto}
+.wedding-feature-signature{font:500 10px/1.5 Inter,system-ui,sans-serif;letter-spacing:.22em;color:#D7C5A2;text-align:center}
+.wedding-feature,.wedding-tile,.wedding-panel{background:#FAF8F3;border-color:#C5A059}
+.wedding-feature h2,.wedding-section-title,.wedding-tile h3,.wedding-panel h2{color:#0F0C0B;overflow-wrap:break-word;hyphens:none}
+.wedding-feature-body{text-align:left}
+.wedding-section-title{line-height:1.12;max-width:100%;text-align:left}
+.wedding-grid{align-items:stretch;grid-template-columns:repeat(2,minmax(0,1fr))}
+.wedding-tile{min-width:0;text-align:left}
+.wedding-tile h3{font-size:clamp(25px,4.8vw,30px);line-height:1.14}
+.wedding-tile p{line-height:1.6}
+.wedding-tile .wedding-arrow{margin-top:auto;padding-top:20px}
+.wedding-action,.wedding-panel button,.wedding-upload-camera{background:#5C1D24;color:#FAF8F3!important;border-color:#5C1D24}
+.wedding-action:hover,.wedding-panel button:hover,.wedding-upload-camera:hover{background:#42141A}
+.wedding-upload-gallery,.wedding-action.secondary{background:#FAF8F3;border-color:#C5A059;color:#0F0C0B!important}
+.wedding-mobile-cta{background:#5C1D24!important;border-color:#C5A059!important}
+.wedding-kicker{color:#795b32}
+.wedding-card-illustration,.wedding-page-art{color:#5C1D24}
+@media(max-width:520px){.wedding-grid{grid-template-columns:1fr}.wedding-nav>a{font-size:11px;letter-spacing:-.01em}.wedding-brand-monogram{font-size:26px;min-width:48px;padding:9px 6px 6px}.wedding-hero{padding-inline:2px}.wedding-feature-art{min-height:180px;padding:15px}.wedding-feature-quote{font-size:clamp(35px,9.5vw,48px)}.wedding-feature-body{padding:29px 25px 34px}.wedding-tile{padding:24px 25px}.wedding-card-illustration{height:100px}}
