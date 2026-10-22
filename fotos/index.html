@@ -2,9 +2,9 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sube tus fotos del matrimonio de Felipe y Camila">
-    <title>Sube tus fotos | Felipe & Camila</title>
+    <title>Fotos y juegos | Felipe & Cami</title>
 
     <!-- Favicons -->
     <link rel="icon" href="/favicon.ico?v=4" sizes="any">
@@ -19,56 +19,75 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/tailwind.min.css">
     <link rel="stylesheet" href="/css/icons.css">
+    <link rel="stylesheet" href="/css/wedding-experiences.css"><link rel="stylesheet" href="/css/wedding-minimal.css"><link rel="stylesheet" href="/css/wedding-atelier.css">
+<link rel="stylesheet" href="/css/wedding-art-direction.css">
 </head>
 
-<body class="font-sans text-dark bg-light min-h-screen flex flex-col antialiased">
+<body class="wedding-editorial min-h-screen flex flex-col antialiased">
 
-    <!-- Top Navigation -->
-    <nav class="w-full py-4 text-center border-b border-dark/10 bg-light/95 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
-            <a href="/?open=1#hero" class="text-xs uppercase tracking-[0.25em] text-muted hover:text-dark transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i> Volver a la invitación
-            </a>
-            <a href="/?open=1#hero" class="flex items-center hover:opacity-85 transition-opacity" aria-label="Felipe & Camila — Inicio">
-                <img src="/images/isotype-fc-200w.png" alt="Monograma Felipe & Camila" class="h-9 w-9 md:h-10 md:w-10 object-contain rounded-full border border-gold/40 shadow-sm">
-            </a>
-            <div class="w-24"></div>
-        </div>
+    <nav class="wedding-nav" aria-label="Navegación principal">
+      <a href="/?open=1#hero">← La invitación</a>
+      <a href="/fotos/" class="wedding-brand" aria-label="Felipe y Cami, inicio de recuerdos"><span class="wedding-typographic-mark" aria-hidden="true">F <em>&amp;</em> C</span></a>
+      <a href="#experiencias">Los juegos ↓</a>
     </nav>
-
-    <!-- Main Content -->
-    <main class="flex-grow flex flex-col items-center justify-center p-6 text-center max-w-lg mx-auto w-full">
-        
-        <div class="mb-6 text-sage animate-bounce">
-            <i class="fa-solid fa-camera-retro text-5xl"></i>
+    <!-- Wedding editorial landing: existing upload fields below remain unchanged -->
+    <main class="wedding-wrap" style="width:min(100% - 36px,680px);margin:0 auto;">
+      <header class="wedding-hero">
+        <span class="wedding-kicker">23 · OCTUBRE · 2026</span>
+        <h1>Felipe &amp; Cami</h1>
+        <div class="wedding-rule"></div><figure class="wedding-portrait-hero"><img src="/images/responsive/hero_1_1080w.jpg" alt="Felipe y Cami en la fotografía de portada de nuestra web" loading="eager"><figcaption>Una historia que seguimos escribiendo juntos.</figcaption></figure>
+        <p class="wedding-hero-tagline">Una noche, mil recuerdos.</p>
+        <p>Sube tus fotos, descubre las sorpresas y participa en lo que quieras. Lo importante es celebrar juntos.</p>
+      </header>
+      <section class="wedding-feature" aria-labelledby="photos-title">
+        <div class="wedding-feature-body">
+          <span class="wedding-kicker">01 — NUESTROS RECUERDOS</span>
+          <h2 id="photos-title">La noche, a través<br>de tus ojos.</h2>
+          <p>Hay momentos que nosotros no alcanzaremos a ver. Nos encantaría descubrirlos a través de tus fotos.</p>
+          <a class="wedding-action" href="#subir-fotos">Compartir mis fotos</a>
         </div>
-        
-        <h1 class="font-serif text-4xl mb-3 text-sage-dark">Sube tus fotos</h1>
-        <p class="text-sm text-slate-500 mb-8 px-4 leading-relaxed">
-            Captura los mejores momentos del matrimonio. Tus fotos se guardarán en nuestra galería especial. <strong class="text-sage-dark">¡Atención! El ganador de la mejor foto tendrá un premio que se dará a conocer en el matrimonio de la iglesia.</strong> ¡Gracias por compartir!
-        </p>
-
+        <div class="wedding-feature-photo wedding-feature-letter" aria-hidden="true"><span class="wedding-letter-top">FELIPE &amp; CAMI</span><span class="wedding-letter-monogram">F <i>&amp;</i> C</span><span class="wedding-letter-bottom">23 · 10 · 2026</span></div>
+      </section>
+      <section id="experiencias" class="wedding-experiences" aria-labelledby="secrets-title">
+        <div class="wedding-section-heading">
+          <span class="wedding-kicker">02 — LAS EXPERIENCIAS</span>
+          <h2 class="wedding-section-title" id="secrets-title">Lo que nos espera<br>esta noche.</h2>
+          <p>Pequeñas sorpresas para disfrutar juntos, a tu ritmo.</p>
+        </div>
+        <div class="wedding-experience-list">
+          <a class="wedding-tile" href="/fotos/raspe/"><span class="wedding-experience-art"><svg viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle cx="49" cy="48" r="29"/><path d="M70 70l29 29M34 48c5-13 16-20 30-19M39 52c5 7 13 12 22 12"/><path d="M45 38c7-6 17-6 24 0"/></svg></span><span class="wedding-experience-copy"><h3>Encuentra al novio</h3><p>Una tarjeta, muchos rostros y un solo Felipe.</p></span><span class="wedding-discover">Entrar a la experiencia</span></a>
+          <a class="wedding-tile" href="/fotos/complice/"><span class="wedding-experience-art"><svg viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M18 37l42-20 42 20v52l-42 20-42-20zM18 37l42 30 42-30M60 67v42"/><path d="M47 45c8-11 18-11 26 0M52 53h16"/></svg></span><span class="wedding-experience-copy"><h3>El cómplice</h3><p>Alguien en tu mesa guarda un secreto.</p></span><span class="wedding-discover">Entrar a la experiencia</span></a>
+          <a class="wedding-tile" href="/plot-twist/"><span class="wedding-experience-art"><svg viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M24 90l72-60M28 35l5 9M49 16l-1 13M80 17l-6 12M96 66l-11-3"/><path d="M60 54l7-19 7 19 19 7-19 7-7 19-7-19-19-7z"/></svg></span><span class="wedding-experience-copy"><h3>Plot Twist</h3><p>Una sorpresa opcional para quienes quieran jugar.</p></span><span class="wedding-discover">Entrar a la experiencia</span></a>
+          <a class="wedding-tile" href="/fotos/premios/"><span class="wedding-experience-art"><svg viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle cx="60" cy="48" r="29"/><circle cx="60" cy="48" r="20"/><path d="M43 72l-8 34 25-12 25 12-8-34M60 35l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z"/></svg></span><span class="wedding-experience-copy"><h3>Premios del civil</h3><p>Un regalo especial para nuestros ganadores.</p></span><span class="wedding-discover">Entrar a la experiencia</span></a>
+        </div>
+      </section>
+      <section class="wedding-upload-section" aria-labelledby="upload-title">
+        <span class="wedding-kicker">COMPARTIR RECUERDOS</span>
+        <h2 class="wedding-section-title" id="upload-title">Tus fotos, nuestra historia</h2>
+        <p class="wedding-upload-intro">Escribe tu nombre y elige las fotos que quieras compartir.</p>
+        <div id="subir-fotos" class="scroll-mt-24" tabindex="-1"></div>
         <!-- Identity Section (Auto-filled by Token or Manual) -->
-        <div class="w-full mb-8 bg-cream p-6 rounded-2xl shadow-sm border border-dark/10">
-            <label class="block text-left text-xs font-bold uppercase tracking-widest text-dark mb-2">Tu Nombre (Requerido)</label>
-            <input type="text" id="guest-name-input" placeholder="Ej: Familia González" required
-                   class="w-full border border-dark/20 bg-light rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all text-sm text-dark">
+        <div class="wedding-identity-field">
+            <label for="guest-name-input" class="wedding-field-label">Tu nombre <span aria-hidden="true">*</span></label>
+            <input type="text" id="guest-name-input" name="guest_name" autocomplete="name" placeholder="Ej.: Camila González" required
+                   class="wedding-name-input">
             <p id="guest-greeting" class="text-xs text-gold font-bold mt-2 hidden">¡Hola! Vimos que vienes desde el código QR 📸</p>
         </div>
 
+        <p class="wedding-upload-hint">Después, selecciona una opción:</p>
         <!-- Action Buttons -->
         <div class="grid grid-cols-1 gap-4 w-full">
             <!-- Camera Capture -->
-            <label class="relative flex items-center justify-center gap-3 w-full bg-gold text-dark font-bold py-4 px-6 rounded-2xl shadow-lg hover:bg-wine hover:text-cream transition-all active:scale-95 cursor-pointer">
+            <label class="wedding-upload-button wedding-upload-camera">
                 <i class="fa-solid fa-camera text-xl"></i>
-                <span class="tracking-widest uppercase text-xs font-semibold">Tomar Foto</span>
+                <span class="wedding-upload-label">Tomar una foto</span>
                 <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden">
             </label>
 
             <!-- Gallery Upload -->
-            <label class="relative flex items-center justify-center gap-3 w-full bg-cream text-dark border-2 border-gold/40 font-bold py-4 px-6 rounded-2xl shadow-sm hover:border-gold transition-all active:scale-95 cursor-pointer">
+            <label class="wedding-upload-button wedding-upload-gallery">
                 <i class="fa-solid fa-images text-xl text-gold"></i>
-                <span class="tracking-widest uppercase text-xs font-semibold">Subir de Galería</span>
+                <span class="wedding-upload-label">Elegir de mi galería</span>
                 <input type="file" id="gallery-input" accept="image/*" multiple class="hidden">
             </label>
         </div>
@@ -84,11 +103,35 @@
             </a>
         </div>
 
-        <p class="text-[10px] text-slate-400 mt-12 uppercase tracking-widest">
+        <p class="wedding-privacy-note">
             Al subir tus fotos, aceptas que puedan aparecer en la galería pública del evento.
         </p>
+      </section>
+      <footer class="wedding-footer">F &amp; C · Gracias por ser parte de nuestra historia</footer>
     </main>
 
+    <a href="#subir-fotos" class="wedding-mobile-cta" aria-label="Ir a subir fotos"><i class="fa-solid fa-camera" aria-hidden="true"></i> Subir fotos</a>
+    <script>
+      (() => {
+        const action = document.querySelector('.wedding-mobile-cta');
+        const upload = document.querySelector('#subir-fotos');
+        if (!action || !upload) return;
+        if ('IntersectionObserver' in window) {
+          const observer = new IntersectionObserver(entries => {
+            action.hidden = entries[0].isIntersecting;
+          }, {rootMargin: '-80px 0px -55% 0px'});
+          observer.observe(upload);
+        }
+        document.querySelectorAll('a[href="#subir-fotos"]').forEach(link => {
+          link.addEventListener('click', () => {
+            window.setTimeout(() => {
+              const name = document.querySelector('#guest-name-input');
+              if (name && !name.value) name.focus({preventScroll: true});
+            }, 400);
+          });
+        });
+      })();
+    </script>
     <!-- Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
