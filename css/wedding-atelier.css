@@ -79,3 +79,11 @@ body.wedding-editorial{background:radial-gradient(ellipse at 50% 0%,#fffdf9 0%,#
 .wedding-experience-list .wedding-tile:nth-child(3) .wedding-experience-art::before{border-radius:30% 70% 60% 40%;transform:rotate(15deg)}
 .wedding-experience-list .wedding-tile:nth-child(4) .wedding-experience-art::before{border-style:double;border-width:4px}
 @media(max-width:520px){.wedding-portrait-hero{max-width:100%}.wedding-portrait-hero img{height:265px}.wedding-experience-art{min-height:105px}.wedding-experience-art::before{width:78px;height:78px;box-shadow:0 0 0 4px rgba(255,250,240,.32)}.wedding-experience-art svg{width:57px;height:57px}}
+
+.wedding-typographic-mark{display:inline-block;font-family:Newsreader,Georgia,serif;font-size:27px;font-weight:500;letter-spacing:-.04em;color:#512c31;white-space:nowrap}
+.wedding-typographic-mark em{font-size:20px;font-weight:400;color:#a07d5a}
+.wedding-feature-letter{display:flex!important;flex-direction:column;align-items:center;justify-content:space-between;min-height:290px;padding:32px 12px;background:#e9dcca;border-left:1px solid #d4c2ac;text-align:center}
+.wedding-letter-top,.wedding-letter-bottom{font-family:Georgia,serif;font-size:11px;letter-spacing:.19em;color:#71534a}
+.wedding-letter-monogram{font-family:Newsreader,Georgia,serif;font-size:57px;color:#5d3039;line-height:1}
+.wedding-letter-monogram i{font-size:37px;font-weight:400;color:#a17a57}
+@media(max-width:520px){.wedding-feature-letter{height:130px;min-height:130px;padding:14px 10px}.wedding-letter-monogram{font-size:42px}.wedding-letter-monogram i{font-size:27px}}
