@@ -19,9 +19,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/tailwind.min.css">
     <link rel="stylesheet" href="/css/icons.css">
+    <link rel="stylesheet" href="/css/wedding-experiences.css">
 </head>
 
-<body class="font-sans text-dark bg-light min-h-screen flex flex-col antialiased">
+<body class="wedding-editorial min-h-screen flex flex-col antialiased">
 
     <!-- Top Navigation -->
     <nav class="w-full py-4 text-center border-b border-dark/10 bg-light/95 backdrop-blur-md sticky top-0 z-50">
@@ -36,43 +37,39 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="flex-grow flex flex-col items-center justify-center p-6 text-center max-w-lg mx-auto w-full">
-        
-        <div class="mb-6 text-sage animate-bounce">
-            <i class="fa-solid fa-camera-retro text-5xl"></i>
+    <!-- Wedding editorial landing: existing upload fields below remain unchanged -->
+    <main class="wedding-wrap" style="width:min(100% - 36px,680px);margin:0 auto;">
+      <header class="wedding-hero">
+        <span class="wedding-kicker">23 · OCTUBRE · 2026</span>
+        <h1>Felipe &amp; Cami</h1>
+        <div class="wedding-rule"></div>
+        <p style="font-family:Newsreader,Georgia,serif;font-size:23px;color:#4c3c37">Una noche, mil recuerdos.</p>
+        <p>Sube tus fotos, descubre las sorpresas y participa en lo que quieras. Lo importante es celebrar juntos.</p>
+      </header>
+      <section class="wedding-feature" aria-labelledby="photos-title">
+        <div class="wedding-feature-art"><img src="/images/isotype-fc-200w.png" alt="Monograma Felipe y Cami"></div>
+        <div class="wedding-feature-body">
+          <span class="wedding-kicker">01 / NUESTROS RECUERDOS</span>
+          <h2 id="photos-title">La noche, a través de tus ojos</h2>
+          <p>Las mejores fotos no siempre las toma el fotógrafo. Comparte esos momentos que solo tú viste.</p>
+          <a class="wedding-action" href="#subir-fotos"><i class="fa-solid fa-camera-retro" aria-hidden="true"></i> Compartir mis fotografías</a>
         </div>
-        
-        <h1 class="font-serif text-4xl mb-3 text-sage-dark">Sube tus fotos</h1>
-        <p class="text-sm text-slate-500 mb-8 px-4 leading-relaxed">
-            Captura los mejores momentos del matrimonio. Tus fotos se guardarán en nuestra galería especial. <strong class="text-sage-dark">¡Atención! El ganador de la mejor foto tendrá un premio que se dará a conocer en el matrimonio de la iglesia.</strong> ¡Gracias por compartir!
-        </p>
-
-        <!-- Wedding hub: the printed QR can keep pointing to /fotos -->
-        <section aria-labelledby="matri-hub-title" class="w-full mb-8 text-left">
-            <div class="text-center mb-5">
-                <p class="text-[10px] uppercase tracking-[0.25em] text-gold font-semibold mb-2">23 · 10 · 26</p>
-                <h2 id="matri-hub-title" class="font-serif text-3xl text-sage-dark">Una noche para recordar</h2>
-                <p class="text-sm text-slate-500 mt-2 leading-relaxed">Comparte tus mejores momentos, descubre las sorpresas y participa solo en lo que quieras.</p>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <a href="#subir-fotos" class="flex items-center gap-3 bg-gold text-dark rounded-2xl px-5 py-5 shadow-sm hover:bg-wine hover:text-cream transition-all focus:outline-none focus:ring-2 focus:ring-gold">
-                    <i class="fa-solid fa-camera-retro text-2xl" aria-hidden="true"></i>
-                    <span class="flex flex-col gap-1"><strong class="text-sm">Subir mis fotos</strong><span class="text-xs opacity-80">Cámara o galería</span></span>
-                </a>
-                <a href="/plot-twist/" class="flex items-center gap-3 bg-cream border border-gold/60 text-dark rounded-2xl px-5 py-5 shadow-sm hover:border-gold hover:bg-gold/10 transition-all focus:outline-none focus:ring-2 focus:ring-gold">
-                    <i class="fa-solid fa-dice text-2xl text-gold" aria-hidden="true"></i>
-                    <span class="flex flex-col gap-1"><strong class="text-sm">Plot Twist</strong><span class="text-xs text-slate-500">Juego opcional entre mesas</span></span>
-                </a>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-                <a href="/fotos/raspe/" class="block rounded-2xl border border-gold/40 bg-cream px-4 py-5 hover:border-gold focus:ring-2 focus:ring-gold"><i class="fa-solid fa-magnifying-glass text-gold text-xl" aria-hidden="true"></i><strong class="block mt-2 text-sm">Encuentra al novio</strong><span class="block text-xs text-slate-500 mt-1">Descubre tu raspe y la misión que te tocó.</span></a>
-                <a href="/fotos/complice/" class="block rounded-2xl border border-gold/40 bg-cream px-4 py-5 hover:border-gold focus:ring-2 focus:ring-gold"><i class="fa-solid fa-user-secret text-gold text-xl" aria-hidden="true"></i><strong class="block mt-2 text-sm">El cómplice</strong><span class="block text-xs text-slate-500 mt-1">Un secreto en tu mesa. Descubre cómo jugar.</span></a>
-                <a href="/fotos/premios/" class="block rounded-2xl border border-gold/40 bg-cream px-4 py-5 hover:border-gold focus:ring-2 focus:ring-gold"><i class="fa-solid fa-gift text-gold text-xl" aria-hidden="true"></i><strong class="block mt-2 text-sm">Premios del civil</strong><span class="block text-xs text-slate-500 mt-1">Cómo solicitar tu vino Bodega Valverde.</span></a>
-            </div>
-            <p class="text-xs text-slate-500 text-center mt-4">Puedes subir fotos sin jugar. Las actividades son voluntarias.</p>
-        </section>
-        <div id="subir-fotos" class="w-full scroll-mt-24"></div>
+      </section>
+      <section aria-labelledby="secrets-title">
+        <span class="wedding-kicker">02 / LAS SORPRESAS</span>
+        <h2 class="wedding-section-title" id="secrets-title">Los secretos de esta noche</h2>
+        <div class="wedding-grid">
+          <a class="wedding-tile" href="/fotos/raspe/"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><h3>Encuentra al novio</h3><p>¿Quién se esconde bajo tu raspe? Descubre tu misión.</p><span class="wedding-arrow">Descubrir mi misión →</span></a>
+          <a class="wedding-tile" href="/fotos/complice/"><i class="fa-solid fa-user-secret" aria-hidden="true"></i><h3>El cómplice</h3><p>Alguien de tu mesa guarda un secreto. ¿Lo descubrirán?</p><span class="wedding-arrow">Cómo jugar →</span></a>
+        </div>
+        <a class="wedding-tile wedding-wide" href="/plot-twist/"><span class="wedding-kicker">03 / JUEGO OPCIONAL</span><h3>Plot Twist</h3><p>Una sorpresa para las mesas que quieran participar. No es necesario jugar para subir fotos.</p><span class="wedding-arrow">Entrar al juego →</span></a>
+        <a class="wedding-tile wedding-wide" href="/fotos/premios/"><span class="wedding-kicker">04 / PREMIOS DEL CIVIL</span><h3>Un regalo para nuestros ganadores</h3><p>Si recibiste un premio en el civil, solicita tu vino Bodega Valverde, sujeto a verificación.</p><span class="wedding-arrow">Reclamar mi premio →</span></a>
+      </section>
+      <section style="margin-top:35px" aria-labelledby="upload-title">
+        <span class="wedding-kicker">COMPARTIR RECUERDOS</span>
+        <h2 class="wedding-section-title" id="upload-title">Tus fotos, nuestra historia</h2>
+        <p style="color:#756a60;line-height:1.7;margin-top:-10px;margin-bottom:22px">Escribe tu nombre y elige las fotos que quieras compartir.</p>
+        <div id="subir-fotos" class="scroll-mt-24"></div>
         <!-- Identity Section (Auto-filled by Token or Manual) -->
         <div class="w-full mb-8 bg-cream p-6 rounded-2xl shadow-sm border border-dark/10">
             <label class="block text-left text-xs font-bold uppercase tracking-widest text-dark mb-2">Tu Nombre (Requerido)</label>
@@ -112,6 +109,8 @@
         <p class="text-[10px] text-slate-400 mt-12 uppercase tracking-widest">
             Al subir tus fotos, aceptas que puedan aparecer en la galería pública del evento.
         </p>
+      </section>
+      <footer class="wedding-footer">F &amp; C · Gracias por ser parte de nuestra historia</footer>
     </main>
 
     <!-- Dependencies -->
