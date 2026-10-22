@@ -1,0 +1,29 @@
+/* Felipe & Cami | Atelier edition — intentional craft, tactile interactions */
+:root{--atelier-ink:#201b19;--atelier-wine:#5c1d24;--atelier-gold:#a88c62;--atelier-paper:#faf8f3}
+body.wedding-editorial{background:radial-gradient(ellipse at 50% 0%,#fffdf9 0%,#faf8f3 60%)!important}
+.wedding-nav{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(250,248,243,.93)!important}
+.wedding-hero{position:relative;isolation:isolate}
+.wedding-hero::after{content:"✦";display:block;position:static;color:var(--atelier-gold);font-size:15px;line-height:1;margin:28px auto 0;opacity:.75}
+.wedding-hero h1{font-weight:400!important;text-wrap:balance}
+.wedding-hero-tagline{font-family:Newsreader,Georgia,serif!important;font-style:italic;font-size:clamp(24px,5vw,32px)!important}
+.wedding-feature{position:relative!important;isolation:isolate;grid-template-columns:minmax(0,1fr) 110px!important;background:#f2ece3!important;border:1px solid #d6c8b6!important;overflow:hidden}
+.wedding-feature::before{content:"";display:block!important;position:absolute;inset:8px;border:1px solid rgba(168,140,98,.32);pointer-events:none;z-index:-1}
+.wedding-feature-body{padding:54px 16px 54px 38px!important}
+.wedding-feature-signoff{writing-mode:initial!important;transform:rotate(-8deg);font-style:italic;opacity:.58}
+.wedding-feature h2{font-style:italic!important}
+.wedding-action{transition:background-color .2s ease,transform .2s ease!important}
+.wedding-action:hover{transform:translateY(-2px)!important}
+.wedding-section-heading h2{font-style:italic!important}
+.wedding-experience-list .wedding-tile{position:relative;transition:background-color .2s ease,padding-left .2s ease!important}
+.wedding-experience-list .wedding-tile:hover{padding-left:12px!important;background:#f4eee7!important}
+.wedding-experience-list .wedding-arrow{transition:transform .2s ease}
+.wedding-experience-list .wedding-tile:hover .wedding-arrow{transform:translate(3px,-3px)}
+.wedding-experience-index{font-family:Newsreader,Georgia,serif!important;font-size:17px!important;font-style:italic;color:#8b6f4e}
+.wedding-experience-copy h3{font-weight:400!important}
+.wedding-upload-section{border-top:1px solid #c9bca8;padding-top:46px!important}
+.wedding-upload-section .wedding-section-title{font-style:italic}
+.wedding-upload-section .wedding-upload-button{transition:transform .18s ease,background-color .18s ease!important}
+.wedding-upload-section .wedding-upload-button:hover{transform:translateY(-2px)}
+.wedding-name-input:focus{border-color:var(--atelier-wine)!important}
+@media(max-width:520px){.wedding-feature{grid-template-columns:minmax(0,1fr) 43px!important}.wedding-feature-body{padding:38px 6px 41px 24px!important}.wedding-feature-signoff{writing-mode:vertical-rl!important;transform:none;font-size:29px!important}.wedding-feature h2{font-size:clamp(37px,10vw,48px)!important}.wedding-experience-list .wedding-tile:hover{padding-left:0!important}}
+@media(prefers-reduced-motion:reduce){.wedding-action,.wedding-experience-list .wedding-tile,.wedding-experience-list .wedding-arrow,.wedding-upload-section .wedding-upload-button{transition:none!important;transform:none!important}}
