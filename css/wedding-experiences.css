@@ -48,3 +48,43 @@ body.wedding-editorial{background:radial-gradient(ellipse at 50% 0%,#fff9ee 0%,#
 .wedding-panel button{width:100%;min-height:52px}
 .wedding-mobile-cta[hidden]{display:none!important}
 @media(max-width:430px){.wedding-page-art{width:96px;height:96px;margin-left:12px}.wedding-page-art svg{width:94px;height:94px}.wedding-inner h1{font-size:44px}}
+
+/* Final visual alignment — canonical website palette (tailwind.config.js).
+   Restrained black/cream stationery, wine actions, fine gold rules. */
+:root{--ivory:#F3EFE7;--paper:#FAF8F3;--ink:#0F0C0B;--muted:#67605A;--gold:#C5A059;--line:#D8C9AE;--wine:#5C1D24}
+body.wedding-editorial{background:#F3EFE7;color:var(--ink)}
+.wedding-nav{background:rgba(250,248,243,.97);border-bottom:1px solid #D8C9AE;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.wedding-nav a{color:#0F0C0B;letter-spacing:.015em}
+.wedding-nav a:hover,.wedding-back:hover{color:#5C1D24}
+.wedding-hero{padding-top:44px}
+.wedding-hero:before{content:"";display:block;width:22px;height:22px;margin:0 auto 19px;background:#C5A059;clip-path:polygon(50% 0%,59% 40%,100% 50%,59% 60%,50% 100%,41% 60%,0 50%,41% 40%)}
+.wedding-hero h1{color:#0F0C0B;letter-spacing:-.065em}
+.wedding-hero p{color:#67605A}
+.wedding-kicker{color:#80612F;font-size:10px;letter-spacing:.22em}
+.wedding-rule{background:#C5A059}
+.wedding-feature,.wedding-tile,.wedding-panel{border:1px solid #D5C4A6;background:#FAF8F3;border-radius:2px;box-shadow:0 14px 34px rgba(15,12,11,.045),inset 0 0 0 6px #FAF8F3,inset 0 0 0 7px rgba(197,160,89,.26)}
+.wedding-feature:after,.wedding-tile:after,.wedding-panel:after{border-color:rgba(197,160,89,.26);border-radius:0}
+.wedding-feature-art{background:#0F0C0B;border-bottom:2px solid #C5A059;min-height:200px}
+.wedding-feature-art:before,.wedding-feature-art:after{color:#C5A059}
+.wedding-feature-art>div{color:#FAF8F3!important}
+.wedding-feature h2,.wedding-section-title,.wedding-tile h3,.wedding-panel h2{color:#0F0C0B;font-style:normal;font-weight:400;letter-spacing:-.035em}
+.wedding-feature h2{font-size:clamp(35px,7vw,48px)}
+.wedding-feature p,.wedding-tile p,.wedding-panel p,.wedding-panel li{color:#625C54}
+.wedding-tile{min-height:0}
+.wedding-tile:hover{border-color:#C5A059;box-shadow:0 18px 38px rgba(15,12,11,.085),inset 0 0 0 6px #FAF8F3,inset 0 0 0 7px rgba(197,160,89,.34)}
+.wedding-tile .wedding-arrow{color:#5C1D24}
+.wedding-card-illustration{background:radial-gradient(circle,#F0E8DA 0%,transparent 70%);border-bottom-color:rgba(197,160,89,.24)}
+.wedding-page-art{background:radial-gradient(circle,#EFE4D2 0%,transparent 74%)}
+.wedding-action,.wedding-panel button,.wedding-upload-camera{background:#5C1D24;color:#FAF8F3!important;border:1px solid #5C1D24;border-radius:2px;box-shadow:none}
+.wedding-action:hover,.wedding-panel button:hover,.wedding-upload-camera:hover{background:#42141A}
+.wedding-upload-gallery{background:#FAF8F3;color:#0F0C0B;border:1px solid #C5A059;border-radius:2px}
+.wedding-upload-gallery:hover{background:#F0E7D9}
+.wedding-mobile-cta{background:#5C1D24!important;color:#FAF8F3!important;border:1px solid #C5A059!important}
+.wedding-panel input,.wedding-panel select,.wedding-panel textarea,#guest-name-input{background:#FFFEFA;border:1px solid #CDBD9E;border-radius:2px;color:#0F0C0B}
+.wedding-panel input:focus,.wedding-panel select:focus,.wedding-panel textarea:focus,#guest-name-input:focus{border-color:#5C1D24}
+.wedding-notice{background:#F3EFE7;border-left-color:#C5A059}
+.wedding-footer{color:#5C1D24}
+.wedding-upload-button .fa-solid{color:inherit}
+.wedding-upload-gallery .fa-solid{color:#5C1D24}
+.wedding-privacy-note{color:#67605A}
+@media(max-width:430px){.wedding-hero{padding-top:30px}.wedding-feature-art{min-height:170px}}
