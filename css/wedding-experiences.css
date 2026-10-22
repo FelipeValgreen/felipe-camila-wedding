@@ -35,3 +35,16 @@ body.wedding-editorial{background:radial-gradient(ellipse at 50% 0%,#fff9ee 0%,#
 .wedding-upload-camera:hover{background:#4b2b35}.wedding-upload-gallery{background:#fffaf1;color:#51383a;border:1px solid #ad8b5b}.wedding-upload-gallery:hover{background:#f4e7d5}
 .wedding-upload-label{font-size:15px;letter-spacing:.005em}.wedding-upload-button input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
 @media(max-width:430px){.wedding-card-illustration{height:105px}.wedding-card-illustration svg{height:100px;width:100px}.wedding-upload-button{min-height:60px}}
+
+/* Detail pages: same illustrated invitation visual language */
+.wedding-page-art{float:right;width:130px;height:130px;margin:0 0 10px 18px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#ebdbc3 0%,transparent 73%)}
+.wedding-page-art svg{width:125px;height:125px;filter:drop-shadow(0 5px 6px rgba(63,35,39,.12))}
+.wedding-inner:after{content:"";display:block;clear:both}
+.wedding-panel a:not(.wedding-action){color:#744650;text-decoration:underline;text-underline-offset:3px;font-weight:600}
+.wedding-panel a:not(.wedding-action):hover{color:#4b2933}
+.wedding-panel ol li::marker{color:#a78350;font-weight:700}
+.wedding-panel input,.wedding-panel select,.wedding-panel textarea{min-height:48px}
+.wedding-panel textarea{min-height:90px}
+.wedding-panel button{width:100%;min-height:52px}
+.wedding-mobile-cta[hidden]{display:none!important}
+@media(max-width:430px){.wedding-page-art{width:96px;height:96px;margin-left:12px}.wedding-page-art svg{width:94px;height:94px}.wedding-inner h1{font-size:44px}}
