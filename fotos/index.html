@@ -39,34 +39,37 @@
         <p>Sube tus fotos, descubre las sorpresas y participa en lo que quieras. Lo importante es celebrar juntos.</p>
       </header>
       <section class="wedding-feature" aria-labelledby="photos-title">
-        <div class="wedding-feature-art" aria-hidden="true"><div class="wedding-feature-lettering"><div class="wedding-feature-quote">Los momentos<br>que quedan</div><div class="wedding-feature-divider"></div><div class="wedding-feature-signature">FELIPE &amp; CAMI · 2026</div></div></div>
         <div class="wedding-feature-body">
-          <span class="wedding-kicker">01 / NUESTROS RECUERDOS</span>
-          <h2 id="photos-title">La noche, a través de tus ojos</h2>
-          <p>Comparte tus fotos de la fiesta. Solo necesitas escribir tu nombre y elegir las imágenes.</p>
-          <a class="wedding-action" href="#subir-fotos"><i class="fa-solid fa-camera-retro" aria-hidden="true"></i> Subir fotos ahora</a>
+          <span class="wedding-kicker">01 — NUESTROS RECUERDOS</span>
+          <h2 id="photos-title">La noche, a través<br>de tus ojos.</h2>
+          <p>Hay momentos que nosotros no alcanzaremos a ver. Nos encantaría descubrirlos a través de tus fotos.</p>
+          <a class="wedding-action" href="#subir-fotos">Compartir mis fotos <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="wedding-feature-signoff" aria-hidden="true"><span>F</span><span class="wedding-feature-signoff-amp">&amp;</span><span>C</span></div>
+      </section>
+      <section id="experiencias" class="wedding-experiences" aria-labelledby="secrets-title">
+        <div class="wedding-section-heading">
+          <span class="wedding-kicker">02 — LAS EXPERIENCIAS</span>
+          <h2 class="wedding-section-title" id="secrets-title">Lo que nos espera<br>esta noche.</h2>
+          <p>Pequeñas sorpresas para disfrutar juntos, a tu ritmo.</p>
+        </div>
+        <div class="wedding-experience-list">
+          <a class="wedding-tile" href="/fotos/raspe/"><span class="wedding-experience-index">01</span><span class="wedding-experience-copy"><h3>Encuentra al novio</h3><p>Una tarjeta, muchos rostros y un solo Felipe.</p></span><span class="wedding-arrow" aria-hidden="true">↗</span></a>
+          <a class="wedding-tile" href="/fotos/complice/"><span class="wedding-experience-index">02</span><span class="wedding-experience-copy"><h3>El cómplice</h3><p>Alguien en tu mesa guarda un secreto.</p></span><span class="wedding-arrow" aria-hidden="true">↗</span></a>
+          <a class="wedding-tile" href="/plot-twist/"><span class="wedding-experience-index">03</span><span class="wedding-experience-copy"><h3>Plot Twist</h3><p>Una sorpresa opcional para quienes quieran jugar.</p></span><span class="wedding-arrow" aria-hidden="true">↗</span></a>
+          <a class="wedding-tile" href="/fotos/premios/"><span class="wedding-experience-index">04</span><span class="wedding-experience-copy"><h3>Premios del civil</h3><p>Un regalo especial para nuestros ganadores.</p></span><span class="wedding-arrow" aria-hidden="true">↗</span></a>
         </div>
       </section>
-      <section id="experiencias" aria-labelledby="secrets-title">
-        <span class="wedding-kicker">02 / LAS SORPRESAS</span>
-        <h2 class="wedding-section-title" id="secrets-title">Los secretos de esta noche</h2>
-        <div class="wedding-grid">
-          <a class="wedding-tile" href="/fotos/raspe/"><span class="wedding-card-illustration" aria-hidden="true"><svg viewBox="0 0 160 160"><use href="/images/wedding-card-icons.svg#scratch"></use></svg></span><h3>Encuentra al novio</h3><p>¿Quién se esconde bajo tu raspe? Descubre tu misión.</p><span class="wedding-arrow">Descubrir mi misión →</span></a>
-          <a class="wedding-tile" href="/fotos/complice/"><span class="wedding-card-illustration" aria-hidden="true"><svg viewBox="0 0 160 160"><use href="/images/wedding-card-icons.svg#secret"></use></svg></span><h3>El cómplice</h3><p>Alguien de tu mesa guarda un secreto. ¿Lo descubrirán?</p><span class="wedding-arrow">Cómo jugar →</span></a>
-        </div>
-        <a class="wedding-tile wedding-wide" href="/plot-twist/"><span class="wedding-card-illustration small" aria-hidden="true"><svg viewBox="0 0 160 160"><use href="/images/wedding-card-icons.svg#twist"></use></svg></span><span class="wedding-kicker">03 / JUEGO OPCIONAL</span><h3>Plot Twist</h3><p>Una sorpresa para las mesas que quieran participar. No es necesario jugar para subir fotos.</p><span class="wedding-arrow">Entrar al juego →</span></a>
-        <a class="wedding-tile wedding-wide" href="/fotos/premios/"><span class="wedding-card-illustration small" aria-hidden="true"><svg viewBox="0 0 160 160"><use href="/images/wedding-card-icons.svg#prize"></use></svg></span><span class="wedding-kicker">04 / PREMIOS DEL CIVIL</span><h3>Un regalo para nuestros ganadores</h3><p>Si recibiste un premio en el civil, solicita tu vino Bodega Valverde, sujeto a verificación.</p><span class="wedding-arrow">Reclamar mi premio →</span></a>
-      </section>
-      <section style="margin-top:35px" aria-labelledby="upload-title">
+      <section class="wedding-upload-section" aria-labelledby="upload-title">
         <span class="wedding-kicker">COMPARTIR RECUERDOS</span>
         <h2 class="wedding-section-title" id="upload-title">Tus fotos, nuestra historia</h2>
-        <p style="color:#756a60;line-height:1.7;margin-top:-10px;margin-bottom:22px">Escribe tu nombre y elige las fotos que quieras compartir.</p>
+        <p class="wedding-upload-intro">Escribe tu nombre y elige las fotos que quieras compartir.</p>
         <div id="subir-fotos" class="scroll-mt-24" tabindex="-1"></div>
         <!-- Identity Section (Auto-filled by Token or Manual) -->
-        <div class="w-full mb-8 bg-cream p-6 rounded-2xl shadow-sm border border-dark/10">
-            <label for="guest-name-input" class="block text-left text-xs font-bold uppercase tracking-widest text-dark mb-2">Tu nombre <span aria-hidden="true">*</span></label>
+        <div class="wedding-identity-field">
+            <label for="guest-name-input" class="wedding-field-label">Tu nombre <span aria-hidden="true">*</span></label>
             <input type="text" id="guest-name-input" name="guest_name" autocomplete="name" placeholder="Ej.: Camila González" required
-                   class="w-full border border-dark/20 bg-light rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all text-sm text-dark">
+                   class="wedding-name-input">
             <p id="guest-greeting" class="text-xs text-gold font-bold mt-2 hidden">¡Hola! Vimos que vienes desde el código QR 📸</p>
         </div>
 
