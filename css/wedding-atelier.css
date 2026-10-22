@@ -56,3 +56,8 @@ body.wedding-editorial{background:radial-gradient(ellipse at 50% 0%,#fffdf9 0%,#
 .wedding-experience-list .wedding-tile{background-image:linear-gradient(145deg,rgba(255,255,255,.4),transparent)!important}
 .wedding-discover{font-size:10px!important;text-transform:uppercase;letter-spacing:.09em}
 @media(max-width:520px){.wedding-portrait-pair{max-width:310px}.wedding-portrait-pair img{border-width:5px}.wedding-feature{grid-template-columns:1fr!important}.wedding-feature-photo{height:180px;min-height:180px;grid-row:1}.wedding-feature-photo img{object-position:center 40%}.wedding-feature-body{padding:29px 24px 33px!important}.wedding-real-logo{width:50px;height:50px}}
+
+.wedding-portrait-hero{max-width:390px;margin:27px auto 23px;padding:10px 10px 15px;background:#fffaf2;box-shadow:0 12px 32px rgba(53,35,27,.13);transform:rotate(-2deg)}
+.wedding-portrait-hero img{display:block;width:100%;height:290px;object-fit:cover;object-position:center 42%;filter:saturate(.88)}
+.wedding-portrait-hero figcaption{text-align:center;padding-top:13px;font-family:Newsreader,Georgia,serif;font-style:italic;font-size:16px;color:#74594c}
+@media(max-width:520px){.wedding-portrait-hero{max-width:300px;margin:23px auto}.wedding-portrait-hero img{height:240px}.wedding-portrait-hero figcaption{font-size:14px}}
