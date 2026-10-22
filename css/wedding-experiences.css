@@ -157,3 +157,22 @@ body.wedding-editorial{background:#FAF8F3;color:#0F0C0B}
 .wedding-kicker{color:#795b32}
 .wedding-card-illustration,.wedding-page-art{color:#5C1D24}
 @media(max-width:520px){.wedding-grid{grid-template-columns:1fr}.wedding-nav>a{font-size:11px;letter-spacing:-.01em}.wedding-brand-monogram{font-size:26px;min-width:48px;padding:9px 6px 6px}.wedding-hero{padding-inline:2px}.wedding-feature-art{min-height:180px;padding:15px}.wedding-feature-quote{font-size:clamp(35px,9.5vw,48px)}.wedding-feature-body{padding:29px 25px 34px}.wedding-tile{padding:24px 25px}.wedding-card-illustration{height:100px}}
+
+/* Interior pages: final mobile readability and typographic rhythm. */
+.wedding-inner{padding-top:42px;padding-bottom:72px}
+.wedding-inner>.wedding-kicker{display:block;text-align:center;margin:0 auto 17px;max-width:100%;line-height:1.5}
+.wedding-inner>.wedding-page-art{display:flex;justify-content:center;align-items:center;float:none;margin:0 auto 15px;max-width:150px}
+.wedding-inner>.wedding-page-art svg{display:block;max-width:100%;height:auto}
+.wedding-inner>h1{font-size:clamp(42px,8.5vw,62px);line-height:1.08;text-align:center;margin:12px auto;max-width:610px;overflow-wrap:break-word}
+.wedding-inner>.wedding-lead{text-align:center;margin:0 auto 30px;max-width:510px}
+.wedding-panel{padding:clamp(22px,5vw,34px);margin:18px 0}
+.wedding-panel h2{line-height:1.16;font-size:clamp(27px,5.4vw,34px)}
+.wedding-panel p,.wedding-panel li{color:#4F4842;overflow-wrap:break-word}
+.wedding-panel ol{padding-left:22px}
+.wedding-panel label{color:#332A26;line-height:1.45}
+.wedding-panel input,.wedding-panel select,.wedding-panel textarea{min-height:48px;width:100%;max-width:100%;font-size:16px;border-radius:2px;background:#FFFEFA;color:#0F0C0B}
+.wedding-panel textarea{min-height:105px}
+.wedding-panel .wedding-action,.wedding-panel button{min-height:48px;max-width:100%;white-space:normal;text-align:center;line-height:1.4}
+.wedding-inner .wedding-panel a:not(.wedding-action){color:#5C1D24;text-decoration:underline;text-underline-offset:3px}
+.wedding-nav .wedding-brand{line-height:1;display:inline-flex;align-items:center;justify-content:center}
+@media(max-width:520px){.wedding-inner{padding-top:28px;padding-bottom:54px}.wedding-inner>.wedding-kicker{font-size:10px;letter-spacing:.11em}.wedding-inner>.wedding-page-art{max-width:110px;margin-bottom:10px}.wedding-inner>.wedding-lead{font-size:15px;line-height:1.6;margin-bottom:22px}.wedding-panel{padding:22px 20px;margin:15px 0}.wedding-panel h2{font-size:28px}.wedding-panel ol{padding-left:19px}.wedding-nav{grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr);gap:5px;padding-inline:12px}.wedding-nav>a:first-child,.wedding-nav>a:last-child{font-size:10px;line-height:1.25}}
