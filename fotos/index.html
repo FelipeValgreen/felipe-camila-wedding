@@ -48,6 +48,26 @@
             Captura los mejores momentos del matrimonio. Tus fotos se guardarán en nuestra galería especial. <strong class="text-sage-dark">¡Atención! El ganador de la mejor foto tendrá un premio que se dará a conocer en el matrimonio de la iglesia.</strong> ¡Gracias por compartir!
         </p>
 
+        <!-- Wedding hub: the printed QR can keep pointing to /fotos -->
+        <section aria-labelledby="matri-hub-title" class="w-full mb-8 text-left">
+            <div class="text-center mb-5">
+                <p class="text-[10px] uppercase tracking-[0.25em] text-gold font-semibold mb-2">23 · 10 · 26</p>
+                <h2 id="matri-hub-title" class="font-serif text-3xl text-sage-dark">Una noche para recordar</h2>
+                <p class="text-sm text-slate-500 mt-2 leading-relaxed">Comparte tus mejores momentos y súmate al juego de las mesas.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <a href="#subir-fotos" class="flex items-center gap-3 bg-gold text-dark rounded-2xl px-5 py-5 shadow-sm hover:bg-wine hover:text-cream transition-all focus:outline-none focus:ring-2 focus:ring-gold">
+                    <i class="fa-solid fa-camera-retro text-2xl" aria-hidden="true"></i>
+                    <span class="flex flex-col gap-1"><strong class="text-sm">Subir mis fotos</strong><span class="text-xs opacity-80">Cámara o galería</span></span>
+                </a>
+                <a href="/plot-twist/" class="flex items-center gap-3 bg-cream border border-gold/60 text-dark rounded-2xl px-5 py-5 shadow-sm hover:border-gold hover:bg-gold/10 transition-all focus:outline-none focus:ring-2 focus:ring-gold">
+                    <i class="fa-solid fa-dice text-2xl text-gold" aria-hidden="true"></i>
+                    <span class="flex flex-col gap-1"><strong class="text-sm">Jugar Plot Twist</strong><span class="text-xs text-slate-500">El desafío de las mesas</span></span>
+                </a>
+            </div>
+            <p class="text-xs text-slate-500 text-center mt-3">Puedes subir fotos sin jugar. Para participar en el juego necesitarás el acceso de tu mesa.</p>
+        </section>
+        <div id="subir-fotos" class="w-full scroll-mt-24"></div>
         <!-- Identity Section (Auto-filled by Token or Manual) -->
         <div class="w-full mb-8 bg-cream p-6 rounded-2xl shadow-sm border border-dark/10">
             <label class="block text-left text-xs font-bold uppercase tracking-widest text-dark mb-2">Tu Nombre (Requerido)</label>
