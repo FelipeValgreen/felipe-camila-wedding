@@ -107,6 +107,27 @@
     </main>
 
     <a href="#subir-fotos" class="wedding-mobile-cta" aria-label="Ir a subir fotos"><i class="fa-solid fa-camera" aria-hidden="true"></i> Subir fotos</a>
+    <script>
+      (() => {
+        const action = document.querySelector('.wedding-mobile-cta');
+        const upload = document.querySelector('#subir-fotos');
+        if (!action || !upload) return;
+        if ('IntersectionObserver' in window) {
+          const observer = new IntersectionObserver(entries => {
+            action.hidden = entries[0].isIntersecting;
+          }, {rootMargin: '-80px 0px -55% 0px'});
+          observer.observe(upload);
+        }
+        document.querySelectorAll('a[href="#subir-fotos"]').forEach(link => {
+          link.addEventListener('click', () => {
+            window.setTimeout(() => {
+              const name = document.querySelector('#guest-name-input');
+              if (name && !name.value) name.focus({preventScroll: true});
+            }, 400);
+          });
+        });
+      })();
+    </script>
     <!-- Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
