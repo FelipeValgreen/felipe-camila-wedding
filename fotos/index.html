@@ -2,9 +2,9 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sube tus fotos del matrimonio de Felipe y Camila">
-    <title>Sube tus fotos | Felipe & Camila</title>
+    <title>Fotos y juegos | Felipe & Cami</title>
 
     <!-- Favicons -->
     <link rel="icon" href="/favicon.ico?v=4" sizes="any">
@@ -24,19 +24,11 @@
 
 <body class="wedding-editorial min-h-screen flex flex-col antialiased">
 
-    <!-- Top Navigation -->
-    <nav class="w-full py-4 text-center border-b border-dark/10 bg-light/95 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
-            <a href="/?open=1#hero" class="text-xs uppercase tracking-[0.25em] text-muted hover:text-dark transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i> Volver a la invitación
-            </a>
-            <a href="/?open=1#hero" class="flex items-center hover:opacity-85 transition-opacity" aria-label="Felipe & Camila — Inicio">
-                <img src="/images/isotype-fc-200w.png" alt="Monograma Felipe & Camila" class="h-9 w-9 md:h-10 md:w-10 object-contain rounded-full border border-gold/40 shadow-sm">
-            </a>
-            <div class="w-24"></div>
-        </div>
+    <nav class="wedding-nav" aria-label="Navegación principal">
+      <a href="/?open=1#hero">← La invitación</a>
+      <a href="/fotos/" aria-label="Felipe y Cami, inicio de recuerdos"><img src="/images/isotype-fc-200w.png" alt="F y C"></a>
+      <a href="#experiencias">Los juegos ↓</a>
     </nav>
-
     <!-- Wedding editorial landing: existing upload fields below remain unchanged -->
     <main class="wedding-wrap" style="width:min(100% - 36px,680px);margin:0 auto;">
       <header class="wedding-hero">
@@ -51,11 +43,11 @@
         <div class="wedding-feature-body">
           <span class="wedding-kicker">01 / NUESTROS RECUERDOS</span>
           <h2 id="photos-title">La noche, a través de tus ojos</h2>
-          <p>Las mejores fotos no siempre las toma el fotógrafo. Comparte esos momentos que solo tú viste.</p>
-          <a class="wedding-action" href="#subir-fotos"><i class="fa-solid fa-camera-retro" aria-hidden="true"></i> Compartir mis fotografías</a>
+          <p>Comparte tus fotos de la fiesta. Solo necesitas escribir tu nombre y elegir las imágenes.</p>
+          <a class="wedding-action" href="#subir-fotos"><i class="fa-solid fa-camera-retro" aria-hidden="true"></i> Subir fotos ahora</a>
         </div>
       </section>
-      <section aria-labelledby="secrets-title">
+      <section id="experiencias" aria-labelledby="secrets-title">
         <span class="wedding-kicker">02 / LAS SORPRESAS</span>
         <h2 class="wedding-section-title" id="secrets-title">Los secretos de esta noche</h2>
         <div class="wedding-grid">
@@ -69,28 +61,29 @@
         <span class="wedding-kicker">COMPARTIR RECUERDOS</span>
         <h2 class="wedding-section-title" id="upload-title">Tus fotos, nuestra historia</h2>
         <p style="color:#756a60;line-height:1.7;margin-top:-10px;margin-bottom:22px">Escribe tu nombre y elige las fotos que quieras compartir.</p>
-        <div id="subir-fotos" class="scroll-mt-24"></div>
+        <div id="subir-fotos" class="scroll-mt-24" tabindex="-1"></div>
         <!-- Identity Section (Auto-filled by Token or Manual) -->
         <div class="w-full mb-8 bg-cream p-6 rounded-2xl shadow-sm border border-dark/10">
-            <label class="block text-left text-xs font-bold uppercase tracking-widest text-dark mb-2">Tu Nombre (Requerido)</label>
-            <input type="text" id="guest-name-input" placeholder="Ej: Familia González" required
+            <label for="guest-name-input" class="block text-left text-xs font-bold uppercase tracking-widest text-dark mb-2">Tu nombre <span aria-hidden="true">*</span></label>
+            <input type="text" id="guest-name-input" name="guest_name" autocomplete="name" placeholder="Ej.: Camila González" required
                    class="w-full border border-dark/20 bg-light rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all text-sm text-dark">
             <p id="guest-greeting" class="text-xs text-gold font-bold mt-2 hidden">¡Hola! Vimos que vienes desde el código QR 📸</p>
         </div>
 
+        <p class="wedding-upload-hint">Después, selecciona una opción:</p>
         <!-- Action Buttons -->
         <div class="grid grid-cols-1 gap-4 w-full">
             <!-- Camera Capture -->
             <label class="relative flex items-center justify-center gap-3 w-full bg-gold text-dark font-bold py-4 px-6 rounded-2xl shadow-lg hover:bg-wine hover:text-cream transition-all active:scale-95 cursor-pointer">
                 <i class="fa-solid fa-camera text-xl"></i>
-                <span class="tracking-widest uppercase text-xs font-semibold">Tomar Foto</span>
+                <span class="tracking-widest uppercase text-xs font-semibold">Tomar una foto</span>
                 <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden">
             </label>
 
             <!-- Gallery Upload -->
             <label class="relative flex items-center justify-center gap-3 w-full bg-cream text-dark border-2 border-gold/40 font-bold py-4 px-6 rounded-2xl shadow-sm hover:border-gold transition-all active:scale-95 cursor-pointer">
                 <i class="fa-solid fa-images text-xl text-gold"></i>
-                <span class="tracking-widest uppercase text-xs font-semibold">Subir de Galería</span>
+                <span class="tracking-widest uppercase text-xs font-semibold">Elegir de mi galería</span>
                 <input type="file" id="gallery-input" accept="image/*" multiple class="hidden">
             </label>
         </div>
@@ -106,13 +99,14 @@
             </a>
         </div>
 
-        <p class="text-[10px] text-slate-400 mt-12 uppercase tracking-widest">
+        <p class="wedding-privacy-note">
             Al subir tus fotos, aceptas que puedan aparecer en la galería pública del evento.
         </p>
       </section>
       <footer class="wedding-footer">F &amp; C · Gracias por ser parte de nuestra historia</footer>
     </main>
 
+    <a href="#subir-fotos" class="wedding-mobile-cta" aria-label="Ir a subir fotos"><i class="fa-solid fa-camera" aria-hidden="true"></i> Subir fotos</a>
     <!-- Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
