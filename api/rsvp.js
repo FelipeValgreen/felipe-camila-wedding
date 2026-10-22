@@ -1,13 +1,31 @@
+import crypto from 'node:crypto';
 import { createRSVP, updateRSVP, readRSVP } from './_lib/rsvp-service.js';
 import { getSupabaseServerKey, sanitizeSupabaseError } from './_lib/supabase-admin.js';
 
-function logSuccessfulRSVPAction(action, rsvpId) {
+// Privacy-preserving request correlation. The secret must be configured in Vercel
+// and never sent to browsers. Without it, no visitor identifier is recorded.
+// Do not treat forwarded headers as proof of a person's identity.
+function getRequestAuditContext(req) {
+    const requestId = req.headers['x-vercel-id'] || null;
+    const agent = String(req.headers['user-agent'] || '').slice(0, 256);
+    const secret = process.env.RSVP_AUDIT_HMAC_KEY;
+    const forwarded = req.headers['x-forwarded-for'];
+    const candidate = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : '';
+    const ip = candidate || req.socket?.remoteAddress || '';
+    const ipTag = secret && ip
+        ? crypto.createHmac('sha256', secret).update(ip).digest('hex').slice(0, 24)
+        : null;
+    return { request_id: String(requestId || '').slice(0, 128) || null, ip_tag: ipTag, user_agent: agent };
+}
+
+function logSuccessfulRSVPAction(action, rsvpId, req) {
     // Deliberately log only the opaque RSVP UUID. Never log manage tokens,
     // names, phone numbers, dietary information or other guest PII.
     console.info('RSVP_AUDIT', JSON.stringify({
         action,
         rsvp_id: rsvpId || null,
-        outcome: 'success'
+        outcome: 'success',
+        ...getRequestAuditContext(req)
     }));
 }
 
@@ -48,7 +66,7 @@ export default async function handler(req, res) {
             if (!result.ok) {
                 return res.status(result.status || 401).json({ ok: false, error: result.error });
             }
-            logSuccessfulRSVPAction('read', body.rsvp_id);
+            logSuccessfulRSVPAction('read', body.rsvp_id, req);
             return res.status(200).json({ ok: true, rsvp: result.rsvp });
 
         } else if (action === 'create') {
@@ -69,7 +87,7 @@ export default async function handler(req, res) {
                 });
             }
 
-            logSuccessfulRSVPAction('create', result.rsvp_id);
+            logSuccessfulRSVPAction('create', result.rsvp_id, req);
             return res.status(200).json({
                 ok: true,
                 rsvp_id: result.rsvp_id,
@@ -93,7 +111,7 @@ export default async function handler(req, res) {
                 });
             }
 
-            logSuccessfulRSVPAction('update', result.rsvp_id);
+            logSuccessfulRSVPAction('update', result.rsvp_id, req);
             return res.status(200).json({
                 ok: true,
                 rsvp_id: result.rsvp_id,
