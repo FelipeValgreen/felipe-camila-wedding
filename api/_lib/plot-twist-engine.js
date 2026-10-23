@@ -10,7 +10,7 @@ export function publicStagePayload(input){if(Array.isArray(input))return input.m
 
 export async function getGame(){const r=await supabaseRequest('plot_twist_games?slug=eq.'+GAME_SLUG+'&select=*');return r?.[0]||null}
 export async function getTableByToken(token){const g=await getGame();if(!g||!token)return null;const r=await supabaseRequest('plot_twist_tables?game_id=eq.'+g.id+'&join_token_hash=eq.'+hash(token)+'&select=*');return r?.[0]||null}
-export async function getTableByCode(code){const g=await getGame();if(!g||!code)return null;const r=await supabaseRequest('plot_twist_tables?game_id=eq.'+g.id+'&join_code_hash=eq.'+hash(code)+'&select=*');return r?.[0]||null}
+export async function getTableByCode(code){const g=await getGame();if(!g||!code)return null;const r=await supabaseRequest('plot_twist_tables?game_id=eq.'+g.id+'&join_code_hash=eq.'+hash(String(code).trim().toLowerCase())+'&select=*');return r?.[0]||null}
 export async function findPlayer(deviceToken){const g=await getGame();if(!g||!deviceToken)return null;const r=await supabaseRequest('plot_twist_players?game_id=eq.'+g.id+'&device_token_hash=eq.'+hash(deviceToken)+'&active=eq.true&select=*');return r?.[0]||null}
 export async function currentStage(game){if(!game?.current_stage_key)return null;const r=await supabaseRequest('plot_twist_stages?game_id=eq.'+game.id+'&stage_key=eq.'+encodeURIComponent(game.current_stage_key)+'&select=*');return r?.[0]||null}
 export async function tableChoices(gameId,excludeId){const rows=await supabaseRequest('plot_twist_tables?game_id=eq.'+gameId+'&id=neq.'+excludeId+'&select=id,team_name&order=team_name.asc');return rows||[]}
