@@ -50,3 +50,7 @@ body.wedding-editorial .wedding-tile .wedding-experience-copy p{font-size:17px!i
  body.wedding-editorial .wedding-nav a{font-size:clamp(13px,3.6vw,16px)!important}
 }
 @media(prefers-reduced-motion:reduce){body.wedding-editorial .wedding-feature *{transition:none!important}}
+
+body.wedding-editorial .wedding-identity-field[hidden]{display:none!important}
+body.wedding-editorial #confirm-photo-upload{cursor:pointer;background:#5b1521;color:#fffaf2;border:0;border-radius:4px}
+body.wedding-editorial #confirm-photo-upload:focus-visible{outline:3px solid #ad8c5d;outline-offset:3px}
