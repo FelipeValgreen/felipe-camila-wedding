@@ -21,3 +21,5 @@ body.wedding-editorial{font-size:18px;line-height:1.65}
 .wedding-panel a:not(.wedding-action){display:inline-block;min-height:44px;line-height:44px;font-size:18px!important}
 .wedding-brand-monogram{font-size:22px!important}
 footer.muted{font-size:16px!important}
+/* Nav links: wedding-minimal.css:128 forces 10px on the first/last link under 520px; keep them readable. */
+body.wedding-editorial .wedding-nav>a:first-child,body.wedding-editorial .wedding-nav>a:last-child{font-size:clamp(14px,3.8vw,16px)!important;line-height:1.35!important}
