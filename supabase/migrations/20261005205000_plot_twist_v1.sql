@@ -1,0 +1,198 @@
+-- Plot Twist V1 isolated schema. Safe additive migration.
+create extension if not exists pgcrypto;
+
+create table if not exists public.plot_twist_games (
+ id uuid primary key default gen_random_uuid(),
+ slug text not null unique,
+ title text not null default 'Plot Twist',
+ status text not null default 'draft' check (status in ('draft','lobby','live','locked','reveal','ended')),
+ current_stage_key text,
+ readiness_threshold numeric(4,3) not null default .75 check (readiness_threshold between 0 and 1),
+ config jsonb not null default '{}'::jsonb,
+ created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+);
+create table if not exists public.plot_twist_tables (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ wedding_table_id uuid references public.wedding_tables(id) on delete set null,
+ join_token_hash text not null, join_code_hash text, team_name text, ready boolean not null default false,
+ score_cache integer not null default 0, secret_score_cache integer not null default 0,
+ created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+ unique(game_id,wedding_table_id), unique(game_id,join_token_hash)
+);
+create table if not exists public.plot_twist_players (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ table_id uuid not null references public.plot_twist_tables(id) on delete cascade,
+ nickname text not null, device_token_hash text not null,
+ role text not null default 'spectator' check (role in ('complice','dupla','spectator')),
+ active boolean not null default true, last_seen_at timestamptz not null default now(), created_at timestamptz not null default now(),
+ unique(game_id,device_token_hash)
+);
+create unique index if not exists plot_twist_one_complice_per_table on public.plot_twist_players(table_id) where role='complice' and active;
+create unique index if not exists plot_twist_one_dupla_per_table on public.plot_twist_players(table_id) where role='dupla' and active;
+create unique index if not exists plot_twist_unique_nickname_per_table on public.plot_twist_players(table_id,lower(nickname)) where active;
+create unique index if not exists plot_twist_unique_join_code_per_game on public.plot_twist_tables(game_id,join_code_hash) where join_code_hash is not null;
+
+create table if not exists public.plot_twist_stages (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ stage_key text not null, position integer not null, type text not null,
+ status text not null default 'draft' check(status in ('draft','queued','open','resolving','revealed','closed','archived')),
+ payload jsonb not null default '{}'::jsonb, opened_at timestamptz, closes_at timestamptz, created_at timestamptz not null default now(),
+ unique(game_id,stage_key), unique(game_id,position)
+);
+create table if not exists public.plot_twist_actions (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ stage_id uuid not null references public.plot_twist_stages(id) on delete cascade,
+ table_id uuid not null references public.plot_twist_tables(id) on delete cascade,
+ player_id uuid references public.plot_twist_players(id) on delete set null,
+ kind text not null, payload jsonb not null default '{}'::jsonb,
+ status text not null default 'accepted' check(status in ('pending','accepted','rejected','superseded')),
+ idempotency_key uuid not null, client_created_at timestamptz, created_at timestamptz not null default now(),
+ unique(game_id,idempotency_key)
+);
+create unique index if not exists plot_twist_one_table_decision_per_stage on public.plot_twist_actions(stage_id,table_id,kind) where status='accepted' and kind='table_decision';
+create unique index if not exists plot_twist_one_individual_vote_per_stage on public.plot_twist_actions(stage_id,player_id,kind) where status='accepted' and kind='individual_vote';
+create unique index if not exists plot_twist_one_wager_per_stage on public.plot_twist_actions(stage_id,table_id,kind) where status='accepted' and kind='wager';
+
+create table if not exists public.plot_twist_score_ledger (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ table_id uuid not null references public.plot_twist_tables(id) on delete cascade,
+ action_id uuid references public.plot_twist_actions(id) on delete set null,
+ delta integer not null, secret_delta integer not null default 0, reason text not null,
+ idempotency_key uuid not null unique, metadata jsonb not null default '{}'::jsonb, created_at timestamptz not null default now()
+);
+create table if not exists public.plot_twist_events (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ table_id uuid references public.plot_twist_tables(id) on delete cascade,
+ event_type text not null, visibility text not null default 'public' check(visibility in ('public','table','operator','hidden')),
+ payload jsonb not null default '{}'::jsonb, reveal_at timestamptz, created_at timestamptz not null default now()
+);
+create table if not exists public.plot_twist_moments (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ moment_key text not null, title text not null, instructions text not null, bonus_points integer not null default 0,
+ active boolean not null default false, config jsonb not null default '{}'::jsonb, unique(game_id,moment_key)
+);
+create table if not exists public.plot_twist_media (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ table_id uuid not null references public.plot_twist_tables(id) on delete cascade,
+ player_id uuid references public.plot_twist_players(id) on delete set null,
+ moment_id uuid references public.plot_twist_moments(id) on delete set null,
+ storage_bucket text not null default 'wedding-photos', storage_path text not null,
+ media_type text not null default 'image', status text not null default 'pending_review' check(status in ('local_pending','uploaded','pending_review','visible','hidden')),
+ score_awarded integer not null default 0, idempotency_key uuid not null unique, created_at timestamptz not null default now()
+);
+create table if not exists public.plot_twist_powers (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ owner_table_id uuid not null references public.plot_twist_tables(id) on delete cascade,
+ target_table_id uuid references public.plot_twist_tables(id) on delete set null,
+ power_key text not null, status text not null default 'available' check(status in ('available','reserved','used','expired','void')),
+ payload jsonb not null default '{}'::jsonb, used_at timestamptz, created_at timestamptz not null default now()
+);
+create table if not exists public.plot_twist_spins (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ table_id uuid not null references public.plot_twist_tables(id) on delete cascade,
+ player_id uuid references public.plot_twist_players(id) on delete set null,
+ result_key text not null, result_payload jsonb not null default '{}'::jsonb, idempotency_key uuid not null unique, created_at timestamptz not null default now()
+);
+create table if not exists public.plot_twist_reactions (
+ id uuid primary key default gen_random_uuid(), event_id uuid not null references public.plot_twist_events(id) on delete cascade,
+ player_id uuid not null references public.plot_twist_players(id) on delete cascade,
+ emoji text not null check(emoji in ('😂','❤️','🔥')), created_at timestamptz not null default now(), unique(event_id,player_id)
+);
+create table if not exists public.plot_twist_operator_log (
+ id uuid primary key default gen_random_uuid(), game_id uuid not null references public.plot_twist_games(id) on delete cascade,
+ actor text not null, action text not null, payload jsonb not null default '{}'::jsonb, created_at timestamptz not null default now()
+);
+
+alter table public.plot_twist_games enable row level security;
+alter table public.plot_twist_tables enable row level security;
+alter table public.plot_twist_players enable row level security;
+alter table public.plot_twist_stages enable row level security;
+alter table public.plot_twist_actions enable row level security;
+alter table public.plot_twist_score_ledger enable row level security;
+alter table public.plot_twist_events enable row level security;
+alter table public.plot_twist_moments enable row level security;
+alter table public.plot_twist_media enable row level security;
+alter table public.plot_twist_powers enable row level security;
+alter table public.plot_twist_spins enable row level security;
+alter table public.plot_twist_reactions enable row level security;
+alter table public.plot_twist_operator_log enable row level security;
+
+-- No anon policies intentionally: guest writes will go through narrowly scoped server/API/RPC logic.
+comment on table public.plot_twist_score_ledger is '[PLOT TWIST] Append-only source of truth for visible and hidden scoring. Corrections are compensating entries.';
+comment on table public.plot_twist_actions is '[PLOT TWIST] Idempotent player/table actions. Do not trust client scoring.';
+
+-- Atomic, idempotent score application. Never mutate score without a ledger row.
+create or replace function public.plot_twist_apply_score(
+ p_game_id uuid,p_table_id uuid,p_action_id uuid,p_delta integer,p_secret_delta integer,p_reason text,p_idempotency_key uuid,p_metadata jsonb default '{}'::jsonb
+) returns void language plpgsql security definer set search_path=public as $$
+begin
+ insert into public.plot_twist_score_ledger(game_id,table_id,action_id,delta,secret_delta,reason,idempotency_key,metadata)
+ values(p_game_id,p_table_id,p_action_id,p_delta,coalesce(p_secret_delta,0),p_reason,p_idempotency_key,coalesce(p_metadata,'{}'::jsonb))
+ on conflict(idempotency_key) do nothing;
+ if found then
+  update public.plot_twist_tables set score_cache=score_cache+p_delta,secret_score_cache=secret_score_cache+coalesce(p_secret_delta,0),updated_at=now() where id=p_table_id and game_id=p_game_id;
+ end if;
+end $$;
+revoke all on function public.plot_twist_apply_score(uuid,uuid,uuid,integer,integer,text,uuid,jsonb) from public,anon,authenticated;
+comment on function public.plot_twist_apply_score is '[PLOT TWIST] Server-only atomic ledger + cache projection; idempotent by UUID.';
+
+create or replace function public.plot_twist_resolve_stage(p_stage_id uuid,p_correct_answer text,p_points integer default 0,p_secret_correct integer default 0)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare a record; awarded integer:=0;
+begin
+ for a in select * from public.plot_twist_actions where stage_id=p_stage_id and kind='table_decision' and status='accepted' loop
+  if a.payload->>'answer'=p_correct_answer then
+   perform public.plot_twist_apply_score(a.game_id,a.table_id,a.id,p_points,p_secret_correct,'stage_correct:'||p_stage_id::text,a.id,jsonb_build_object('answer',p_correct_answer));
+   awarded:=awarded+1;
+  end if;
+ end loop;
+ update public.plot_twist_stages set status='revealed' where id=p_stage_id and status in ('open','resolving');
+ return jsonb_build_object('awarded_tables',awarded,'correct_answer',p_correct_answer);
+end $$;
+revoke all on function public.plot_twist_resolve_stage(uuid,text,integer,integer) from public,anon,authenticated;
+comment on function public.plot_twist_resolve_stage is '[PLOT TWIST] Operator/server-only resolution of an answer stage.';
+
+create or replace function public.plot_twist_ledger_immutable() returns trigger language plpgsql as $$ begin raise exception 'PLOT_TWIST_LEDGER_APPEND_ONLY'; end $$;
+drop trigger if exists plot_twist_ledger_no_mutation on public.plot_twist_score_ledger;
+create trigger plot_twist_ledger_no_mutation before update or delete on public.plot_twist_score_ledger for each row execute function public.plot_twist_ledger_immutable();
+create index if not exists plot_twist_actions_stage_table_status on public.plot_twist_actions(stage_id,table_id,status);
+create index if not exists plot_twist_events_game_created on public.plot_twist_events(game_id,created_at desc);
+create index if not exists plot_twist_media_game_status on public.plot_twist_media(game_id,status,created_at desc);
+
+create or replace function public.plot_twist_resolve_wager(p_stage_id uuid,p_correct_answer text)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare a record; w record; amount integer; correct boolean; n integer:=0;
+begin
+ for a in select * from public.plot_twist_actions where stage_id=p_stage_id and kind='table_decision' and status='accepted' loop
+  select * into w from public.plot_twist_actions where game_id=a.game_id and table_id=a.table_id and kind='wager' and status='accepted' order by created_at desc limit 1;
+  if w.id is not null then
+   amount:=floor(greatest(0,(w.payload->>'scoreSnapshot')::integer)*(w.payload->>'fraction')::numeric);
+   correct:=a.payload->>'answer'=p_correct_answer;
+   perform public.plot_twist_apply_score(a.game_id,a.table_id,a.id,case when correct then amount else -amount end,0,'final_wager:'||p_stage_id::text,a.id,jsonb_build_object('correct',correct,'amount',amount));
+   n:=n+1;
+  end if;
+ end loop;
+ update public.plot_twist_stages set status='revealed' where id=p_stage_id;
+ return jsonb_build_object('resolved_tables',n);
+end $$;
+revoke all on function public.plot_twist_resolve_wager(uuid,text) from public,anon,authenticated;
+
+create or replace function public.plot_twist_advance_stage(p_game_id uuid,p_force boolean default false)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare g record; cur record; nxt record; total integer; ready_count integer; ratio numeric;
+begin
+ select * into g from public.plot_twist_games where id=p_game_id for update;
+ if g.id is null then raise exception 'GAME_NOT_FOUND'; end if;
+ select count(*),count(*) filter(where ready) into total,ready_count from public.plot_twist_tables where game_id=g.id;
+ ratio:=case when total=0 then 0 else ready_count::numeric/total end;
+ if not p_force and ratio<g.readiness_threshold then return jsonb_build_object('advanced',false,'reason','READINESS_THRESHOLD_NOT_MET','ratio',ratio); end if;
+ select * into cur from public.plot_twist_stages where game_id=g.id and stage_key=g.current_stage_key;
+ select * into nxt from public.plot_twist_stages where game_id=g.id and position>coalesce(cur.position,-1) order by position limit 1;
+ if nxt.id is null then return jsonb_build_object('advanced',false,'reason','NO_NEXT_STAGE'); end if;
+ if cur.id is not null and cur.status='open' then update public.plot_twist_stages set status='closed',closes_at=now() where id=cur.id; end if;
+ update public.plot_twist_stages set status='open',opened_at=now() where id=nxt.id;
+ update public.plot_twist_games set current_stage_key=nxt.stage_key,status=case when nxt.type='reveal' then 'reveal' else 'live' end,updated_at=now() where id=g.id;
+ update public.plot_twist_tables set ready=false,updated_at=now() where game_id=g.id;
+ return jsonb_build_object('advanced',true,'stage_key',nxt.stage_key,'ratio',ratio);
+end $$;
+revoke all on function public.plot_twist_advance_stage(uuid,boolean) from public,anon,authenticated;

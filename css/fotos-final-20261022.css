@@ -1,0 +1,15 @@
+/* Preserve the complete real photograph at every viewport width. */
+.wedding-portrait-hero{max-width:100%;margin:28px auto 22px}
+.wedding-portrait-hero img{width:100%;height:auto;aspect-ratio:3/2;object-fit:contain;filter:none}
+.wedding-game-entry{background:#faf6ee;color:#171211;border:1px solid #ad8c5d;padding:32px;margin:24px 0 48px;text-align:left}
+.wedding-game-entry h2{font:400 clamp(28px,5vw,38px)/1.1 Newsreader,Georgia,serif;color:#5b1521;margin:14px 0}
+.wedding-game-entry p{font-size:14px;line-height:1.6}
+.wedding-game-entry label{display:block;font-size:14px;margin:20px 0 8px}
+.wedding-game-entry input{display:block;width:100%;box-sizing:border-box;padding:15px 14px;border:1px solid #ad8c5d;border-radius:4px;background:#fffdf9;color:#171211;font:16px Inter,system-ui,sans-serif}
+.wedding-game-entry button,.game-photo-link{display:block;width:100%;box-sizing:border-box;min-height:50px;margin-top:22px;padding:16px;text-align:center;background:#5b1521;color:#faf6ee;border:0;border-radius:4px;font:600 15px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.wedding-game-entry button:disabled{opacity:.65;cursor:wait}
+.game-return,.game-gallery-link{display:block;text-align:center;padding:16px 0;color:#5b1521;font-size:14px;text-underline-offset:4px}
+.game-photo-link{background:#ad8c5d;color:#171211;margin-top:12px}
+#game-entry-error{color:#5b1521;margin:0}
+.wedding-game-entry :focus-visible{outline:3px solid #ad8c5d;outline-offset:3px}
+@media(max-width:520px){.wedding-game-entry{padding:24px 18px}.wedding-portrait-hero img{height:auto}}

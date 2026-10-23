@@ -27,6 +27,47 @@ document.addEventListener('DOMContentLoaded', () => {
         greeting.classList.remove('hidden');
     }
 
+    // Keep the identity out of the landing until a guest selects photographs.
+    const identity = nameInput?.closest('.wedding-identity-field');
+    const uploadHint = document.querySelector('.wedding-upload-hint');
+    let selectedFiles = null;
+    const confirmButton = document.createElement('button');
+    confirmButton.type = 'button';
+    confirmButton.id = 'confirm-photo-upload';
+    confirmButton.textContent = 'Subir las fotos seleccionadas';
+    confirmButton.className = 'wedding-action';
+    confirmButton.style.cssText = 'width:100%;min-height:56px;margin:16px 0;font-size:18px';
+    confirmButton.hidden = true;
+    identity?.insertAdjacentElement('afterend', confirmButton);
+    const savedName = localStorage.getItem('fc_guest_name');
+    if (!nameInput.value && savedName) nameInput.value = savedName;
+    if (identity) identity.hidden = true;
+    confirmButton.addEventListener('click', () => {
+        if (!selectedFiles?.length) return;
+        if (!nameInput.value.trim()) {
+            nameInput.focus();
+            nameInput.setCustomValidity('Escribe tu nombre para identificar las fotos.');
+            nameInput.reportValidity();
+            return;
+        }
+        nameInput.setCustomValidity('');
+        localStorage.setItem('fc_guest_name', nameInput.value.trim());
+        const files = selectedFiles;
+        selectedFiles = null;
+        confirmButton.hidden = true;
+        handleFiles(files);
+    });
+    nameInput?.addEventListener('input', () => nameInput.setCustomValidity(''));
+    function chooseFiles(files) {
+        if (!files?.length) return;
+        selectedFiles = Array.from(files);
+        if (identity) identity.hidden = false;
+        if (uploadHint) uploadHint.textContent = selectedFiles.length + ' foto(s) seleccionada(s). Confirma tu nombre para compartirlas.';
+        confirmButton.hidden = false;
+        identity?.scrollIntoView({behavior:'smooth',block:'center'});
+        if (!nameInput.value.trim()) nameInput.focus({preventScroll:true});
+    }
+
     // Capture Metadata
     const metadata = {
         device_type: /Mobile|Android|iP(ad|hone)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
@@ -48,6 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let successfulCount = 0;
     let failedCount = 0;
 
+    const escapeHtml = value => String(value).replace(/[&<>"\x27]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","\x27":"&#39;"}[char]));
+
     // Handle File Selection
     function handleFiles(files) {
         if (!files || files.length === 0) return;
@@ -67,10 +110,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (validFiles.length !== files.length) showUploadToast("Algunos archivos no eran imágenes y se omitieron.");
         pendingCount += validFiles.length;
 
         const queueTitle = document.getElementById('queue-title');
-        if (queueTitle) queueTitle.innerHTML = 'Subiendo...';
+        if (queueTitle) queueTitle.textContent = `Subiendo ${pendingCount} foto${pendingCount === 1 ? "" : "s"}…`;
         const viewBtn = document.getElementById('view-photos-btn');
         if (viewBtn) viewBtn.classList.add('hidden');
 
@@ -85,35 +129,41 @@ document.addEventListener('DOMContentLoaded', () => {
                         <img id="preview-${itemId}" src="" class="w-full h-full object-cover">
                     </div>
                     <div class="flex-grow text-left">
-                        <p class="text-xs font-bold text-charcoal truncate w-40">${file.name}</p>
+                        <p class="text-sm font-bold text-dark truncate w-40">${escapeHtml(file.name)}</p>
                         <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                            <div id="progress-${itemId}" class="bg-sage h-1.5 rounded-full" style="width: 10%"></div>
+                            <div id="progress-${itemId}" class="bg-gold h-1.5 rounded-full" style="width: 10%"></div>
                         </div>
                     </div>
-                    <div id="status-${itemId}" class="text-sage text-xl"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                    <div id="status-${itemId}" class="text-gold text-xl"><i class="fa-solid fa-spinner fa-spin"></i></div>
                 </div>
             `;
             queueList.insertAdjacentHTML('afterbegin', itemHtml);
 
             // Set Preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const prev = document.getElementById(`preview-${itemId}`);
-                if (prev) prev.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            const previewUrl = URL.createObjectURL(file);
+            const preview = document.getElementById(`preview-${itemId}`);
+            if (preview) {
+                preview.onload = () => URL.revokeObjectURL(previewUrl);
+                preview.onerror = () => URL.revokeObjectURL(previewUrl);
+                preview.src = previewUrl;
+            } else URL.revokeObjectURL(previewUrl);
 
             // Compress and Upload
+            if (typeof Compressor === "undefined") {
+                scheduleUpload(file, file.name, guestName, itemId);
+                return;
+            }
             new Compressor(file, {
                 quality: 0.8,
                 maxWidth: 1920,
                 maxHeight: 1920,
                 success(compressedResult) {
-                    uploadToSupabase(compressedResult, file.name, guestName, itemId);
+                    scheduleUpload(compressedResult, file.name, guestName, itemId);
                 },
                 error(err) {
-                    console.error('Compression error:', err);
-                    onUploadFinished(itemId, false);
+                    // Compression failed (e.g. unsupported format): upload the original instead of failing.
+                    console.warn('Compression error, uploading original:', err);
+                    scheduleUpload(file, file.name, guestName, itemId);
                 },
             });
         });
@@ -131,27 +181,49 @@ document.addEventListener('DOMContentLoaded', () => {
             failedCount++;
             const statusIcon = document.getElementById(`status-${itemId}`);
             const progressBar = document.getElementById(`progress-${itemId}`);
-            if (progressBar) progressBar.classList.replace('bg-sage', 'bg-red-500');
+            if (progressBar) progressBar.classList.replace('bg-gold', 'bg-red-500');
             if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i>`;
         }
 
+        if (pendingCount > 0) {
+            const queueTitle = document.getElementById("queue-title");
+            if (queueTitle) queueTitle.textContent = `Quedan ${pendingCount} foto${pendingCount === 1 ? "" : "s"} por subir…`;
+        }
         if (pendingCount === 0) {
             const queueTitle = document.getElementById('queue-title');
             const viewBtn = document.getElementById('view-photos-btn');
 
             if (failedCount > 0 && successfulCount === 0) {
-                if (queueTitle) queueTitle.innerHTML = 'Error en la subida. Revisa los detalles arriba.';
+                if (queueTitle) queueTitle.textContent = 'No pudimos subir tus fotos. Revisa tu conexión y vuelve a elegirlas para intentarlo otra vez.';
                 if (viewBtn) viewBtn.classList.add('hidden');
             } else if (failedCount > 0 && successfulCount > 0) {
-                if (queueTitle) queueTitle.innerHTML = 'Subida completada con algunas observaciones.';
+                if (queueTitle) queueTitle.textContent = 'Subida completada con algunas observaciones.';
                 if (viewBtn) viewBtn.classList.remove('hidden');
             } else {
-                if (queueTitle) queueTitle.innerHTML = '¡Subida Exitosa! 🎉';
+                if (queueTitle) queueTitle.textContent = '¡Subida Exitosa! 🎉';
                 if (viewBtn) viewBtn.classList.remove('hidden');
             }
         }
     }
 
+    // Bound simultaneous uploads to protect mobile connections and browser memory.
+    const uploadQueue = [];
+    let activeUploads = 0;
+    const MAX_CONCURRENT_UPLOADS = 2;
+    function scheduleUpload(fileBlob, originalFilename, guestName, itemId) {
+        uploadQueue.push([fileBlob, originalFilename, guestName, itemId]);
+        pumpUploads();
+    }
+    function pumpUploads() {
+        while (activeUploads < MAX_CONCURRENT_UPLOADS && uploadQueue.length) {
+            const args = uploadQueue.shift();
+            activeUploads++;
+            uploadToSupabase(...args).finally(() => {
+                activeUploads--;
+                pumpUploads();
+            });
+        }
+    }
     async function uploadToSupabase(fileBlob, originalFilename, guestName, itemId) {
         const progressBar = document.getElementById(`progress-${itemId}`);
         const statusIcon = document.getElementById(`status-${itemId}`);
@@ -168,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (progressBar) progressBar.style.width = '30%';
 
             const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now();
-            const extension = originalFilename.split('.').pop() || 'jpg';
+            const extension = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/heif": "heif" })[fileBlob.type] || "jpg";
             const storagePath = `guest_uploads/guest_${uniqueId}.${extension}`;
 
             // 1. Storage Upload
@@ -202,20 +274,21 @@ document.addEventListener('DOMContentLoaded', () => {
             // Success Updates
             if (progressBar) {
                 progressBar.style.width = '100%';
-                progressBar.classList.replace('bg-sage', 'bg-green-500');
+                progressBar.classList.replace('bg-gold', 'bg-green-500');
             }
-            if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-check-circle text-green-500"></i>`;
+            if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-green-500"></i>`;
             
             onUploadFinished(itemId, true);
 
-            // Auto hide after 5 seconds to keep queue clean
+            // Keep successful items visible so guests can confirm what was uploaded.
+            /* Auto hide after 5 seconds to keep queue clean
             setTimeout(() => {
                 const el = document.getElementById(itemId);
                 if (el) {
                     el.style.opacity = '0';
                     setTimeout(() => el.remove(), 300);
                 }
-            }, 5000);
+            }, 5000); */
 
         } catch (error) {
             console.error('Upload Failed:', error);
@@ -224,6 +297,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Attach Listeners
-    cameraInput.addEventListener('change', (e) => handleFiles(e.target.files));
-    galleryInput.addEventListener('change', (e) => handleFiles(e.target.files));
+    cameraInput.addEventListener('change', (e) => chooseFiles(e.target.files));
+    galleryInput.addEventListener('change', (e) => chooseFiles(e.target.files));
 });

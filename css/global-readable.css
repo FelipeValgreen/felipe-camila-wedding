@@ -1,0 +1,12 @@
+/* Global legibility layer for public wedding pages. Loaded after page styles. */
+html{font-size:18px;-webkit-text-size-adjust:100%}
+body{font-size:18px;line-height:1.6}
+p,li,blockquote,figcaption{line-height:1.65}
+.text-xs,.text-\[10px\],.text-\[11px\],.text-\[12px\],.text-\[13px\],.text-\[14px\]{font-size:16px!important;line-height:1.5!important}
+.text-sm{font-size:17px!important;line-height:1.55!important}
+.text-base{font-size:18px!important}
+label,input,select,textarea{font-size:18px;line-height:1.5}
+input,select,textarea{min-height:48px}
+button,.btn,[role="button"]{font-size:17px;min-height:44px;line-height:1.45}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #ad8c5d;outline-offset:3px}
+@media(max-width:600px){body{font-size:18px}.tracking-\[0\.3em\],.tracking-\[0\.4em\]{letter-spacing:.13em!important}}

@@ -1,0 +1,17 @@
+# Keep internal material out of the public deployment (2026-10-23)
+docs/
+reports/
+tests/
+supabase/
+supabase_migration.sql
+scripts/
+debug_env/
+.env.example
+*.py
+copy_images.sh
+optimize.js
+extract_scripts.py
+debug_image.html
+debug_storage.js
+AGENTS.md
+.github/

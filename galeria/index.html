@@ -7,18 +7,18 @@
     <title>Galería Completa de Fotos — Felipe & Camila</title>
     
     <!-- Favicons -->
-    <link rel="icon" href="/favicon.ico?v=4" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=4">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=4">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4">
-    <link rel="manifest" href="/site.webmanifest?v=4">
+    <link rel="icon" href="/favicon.ico?v=20261023" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20261023">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20261023">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261023">
+    <link rel="manifest" href="/site.webmanifest?v=20261023">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/tailwind.min.css">
     <link rel="stylesheet" href="/css/icons.css">
-</head>
+<link rel="icon" type="image/svg+xml" href="/assets/fc-monogram.svg?v=20261023"><link rel="stylesheet" href="/css/fc-brand-preview.css?v=4"><link rel="stylesheet" href="/css/global-readable.css?v=20261022"></head>
 <body class="font-sans text-dark bg-light antialiased min-h-screen flex flex-col">
 
     <!-- Navigation -->
@@ -28,7 +28,7 @@
                 <i class="fa-solid fa-arrow-left text-[10px]"></i> Volver a la invitación
             </a>
             <a href="/?open=1#hero" class="flex items-center hover:opacity-85 transition-opacity" aria-label="Felipe & Camila — Inicio">
-                <img src="/images/isotype-fc-200w.png" alt="Monograma Felipe & Camila" class="h-9 w-9 md:h-10 md:w-10 object-contain rounded-full border border-gold/40 shadow-sm">
+                <img src="/assets/fc-monogram.svg?v=20261023" alt="Monograma Felipe & Camila" width="40" height="40" class="h-9 w-9 md:h-10 md:w-10 object-contain">
             </a>
             <div class="w-24"></div>
         </div>
@@ -54,7 +54,7 @@
                 Nuestra historia (<span id="count-historia">--</span>)
             </button>
             <button id="filter-civil" data-filter="civil" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all">
-                Nuestro civil (<span id="count-civil">--</span>)
+                Civil y matri (<span id="count-civil">--</span>)
             </button>
         </div>
 
@@ -232,7 +232,7 @@
 
             function getCategoryLabel(cat) {
                 if (cat === 'historia') return 'Nuestra historia';
-                return 'Nuestro civil';
+                return 'Civil y matri';
             }
 
             function applyFilter(filterKey, updateHistory = true) {

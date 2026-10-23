@@ -1,0 +1,1337 @@
+[
+ {
+  "page": "/fotos/",
+  "width": 320,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "13px a \"← La invitación\"",
+   "13px a \"Las experiencias ↓\"",
+   "14px span.wedding-kicker \"23 · OCTUBRE · 2026\"",
+   "14px span.wedding-kicker \"01 — NUESTROS RECUERDOS\"",
+   "12px span.wedding-letter-top \"FELIPE & CAMI\"",
+   "12px span.wedding-letter-bottom \"23 · 10 · 2026\"",
+   "14px span.wedding-kicker \"02 — LAS EXPERIENCIAS\"",
+   "14px span.wedding-kicker \"COMPARTIR RECUERDOS\"",
+   "14px label.wedding-upload-button \"Tomar una foto\"",
+   "14px label.wedding-upload-button \"Elegir de mi galería\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Supabase JS library not found. Make sure to include the CDN script."
+  ]
+ },
+ {
+  "page": "/plot-twist/",
+  "width": 320,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/raspe/",
+  "width": 320,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Raspa tu tarjeta: solo una e\"",
+   "14px li \"Alguien del matrimonio: busc\"",
+   "14px li \"¡Felipe! Conserva la tarjeta\"",
+   "14px li \"Otro personaje: ¡comparte el\"",
+   "14px p \"Sube la fotografía desde nue\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"¿Quién apareció?\"",
+   "14px p \"Mesa (opcional)\"",
+   "13px label \"Mesa (opcional)\"",
+   "14px p \"Comentario (opcional)\"",
+   "13px label \"Comentario (opcional)\"",
+   "13px button.wedding-action \"Enviar para revisión\"",
+   "14px p.muted \"El formulario registra la so\""
+  ],
+  "tiny": [
+   "182x21 a \"Ir a subir mis fotos →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/complice/",
+  "width": 320,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Alguien de tu mesa guarda un\"",
+   "14px li \"Una tarjeta de agradecimient\"",
+   "14px li \"Durante la cena, conversen y\"",
+   "14px li \"Al postre, la mesa elige a q\"",
+   "14px li \"Si lo descubren, gana la mes\"",
+   "14px p \"¿Se descubrió el secreto? Pu\"",
+   "14px p \"Completa esto después de rev\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"Mesa\"",
+   "13px label \"Mesa\"",
+   "14px p \"¿Lo descubrieron?\"",
+   "14px p \"Registrar resultado\"",
+   "13px button.wedding-action \"Registrar resultado\"",
+   "14px p.muted \"La confirmación queda pendie\""
+  ],
+  "tiny": [
+   "186x21 a \"Compartir una foto →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/premios/",
+  "width": 320,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Un regalo especial para quie\"",
+   "14px p \"Los ganadores autorizados po\"",
+   "14px p \"La entrega requiere corrobor\"",
+   "14px li \"Conserva tu tarjeta de recon\"",
+   "14px li \"Solicita a Felipe, Cami o a \"",
+   "14px li \"Una vez aprobado, podrás coo\"",
+   "14px p.muted \"Importante: el canje digital\"",
+   "13px label \"Nombre y apellido\"",
+   "14px p \"Categoría ganada\"",
+   "13px label \"Categoría ganada\"",
+   "14px p \"Cómo prefieres recibirloReti\"",
+   "13px label \"Cómo prefieres recibirloReti\"",
+   "13px button.wedding-action \"Solicitar revisión\"",
+   "14px p.muted \"No ingreses tu dirección aqu\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/galeria/",
+  "width": 320,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "23x41 a.flex \"\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Error fetching gallery archive: Error: HTTP error 404\n    at fetchAllPublicArchive (http://127.0.0.1:8099/galeria/:186:35)"
+  ]
+ },
+ {
+  "page": "/",
+  "width": 320,
+  "hOverflow": 0,
+  "over": [
+   "div.space-y-1",
+   "span#cd-seconds.font-serif.text-3xl",
+   "span.text-[10px].uppercase"
+  ],
+  "small": [],
+  "tiny": [
+   "192x24 label.block \"Nombre\"",
+   "192x24 label.block \"Apellido\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/",
+  "width": 360,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "13px a \"← La invitación\"",
+   "13px a \"Las experiencias ↓\"",
+   "14px span.wedding-kicker \"23 · OCTUBRE · 2026\"",
+   "14px span.wedding-kicker \"01 — NUESTROS RECUERDOS\"",
+   "12px span.wedding-letter-top \"FELIPE & CAMI\"",
+   "12px span.wedding-letter-bottom \"23 · 10 · 2026\"",
+   "14px span.wedding-kicker \"02 — LAS EXPERIENCIAS\"",
+   "14px span.wedding-kicker \"COMPARTIR RECUERDOS\"",
+   "14px label.wedding-upload-button \"Tomar una foto\"",
+   "14px label.wedding-upload-button \"Elegir de mi galería\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Supabase JS library not found. Make sure to include the CDN script."
+  ]
+ },
+ {
+  "page": "/plot-twist/",
+  "width": 360,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/raspe/",
+  "width": 360,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Raspa tu tarjeta: solo una e\"",
+   "14px li \"Alguien del matrimonio: busc\"",
+   "14px li \"¡Felipe! Conserva la tarjeta\"",
+   "14px li \"Otro personaje: ¡comparte el\"",
+   "14px p \"Sube la fotografía desde nue\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"¿Quién apareció?\"",
+   "14px p \"Mesa (opcional)\"",
+   "13px label \"Mesa (opcional)\"",
+   "14px p \"Comentario (opcional)\"",
+   "13px label \"Comentario (opcional)\"",
+   "13px button.wedding-action \"Enviar para revisión\"",
+   "14px p.muted \"El formulario registra la so\""
+  ],
+  "tiny": [
+   "182x21 a \"Ir a subir mis fotos →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/complice/",
+  "width": 360,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Alguien de tu mesa guarda un\"",
+   "14px li \"Una tarjeta de agradecimient\"",
+   "14px li \"Durante la cena, conversen y\"",
+   "14px li \"Al postre, la mesa elige a q\"",
+   "14px li \"Si lo descubren, gana la mes\"",
+   "14px p \"¿Se descubrió el secreto? Pu\"",
+   "14px p \"Completa esto después de rev\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"Mesa\"",
+   "13px label \"Mesa\"",
+   "14px p \"¿Lo descubrieron?\"",
+   "14px p \"Registrar resultado\"",
+   "13px button.wedding-action \"Registrar resultado\"",
+   "14px p.muted \"La confirmación queda pendie\""
+  ],
+  "tiny": [
+   "186x21 a \"Compartir una foto →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/premios/",
+  "width": 360,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Un regalo especial para quie\"",
+   "14px p \"Los ganadores autorizados po\"",
+   "14px p \"La entrega requiere corrobor\"",
+   "14px li \"Conserva tu tarjeta de recon\"",
+   "14px li \"Solicita a Felipe, Cami o a \"",
+   "14px li \"Una vez aprobado, podrás coo\"",
+   "14px p.muted \"Importante: el canje digital\"",
+   "13px label \"Nombre y apellido\"",
+   "14px p \"Categoría ganada\"",
+   "13px label \"Categoría ganada\"",
+   "14px p \"Cómo prefieres recibirloReti\"",
+   "13px label \"Cómo prefieres recibirloReti\"",
+   "13px button.wedding-action \"Solicitar revisión\"",
+   "14px p.muted \"No ingreses tu dirección aqu\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/galeria/",
+  "width": 360,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "27x41 a.flex \"\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Error fetching gallery archive: Error: HTTP error 404\n    at fetchAllPublicArchive (http://127.0.0.1:8099/galeria/:186:35)"
+  ]
+ },
+ {
+  "page": "/",
+  "width": 360,
+  "hOverflow": 0,
+  "over": [
+   "div.space-y-1",
+   "span#cd-seconds.font-serif.text-3xl",
+   "span.text-[10px].uppercase"
+  ],
+  "small": [],
+  "tiny": [
+   "232x24 label.block \"Nombre\"",
+   "232x24 label.block \"Apellido\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/",
+  "width": 375,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "14px a \"← La invitación\"",
+   "14px a \"Las experiencias ↓\"",
+   "14px span.wedding-kicker \"23 · OCTUBRE · 2026\"",
+   "14px span.wedding-kicker \"01 — NUESTROS RECUERDOS\"",
+   "12px span.wedding-letter-top \"FELIPE & CAMI\"",
+   "12px span.wedding-letter-bottom \"23 · 10 · 2026\"",
+   "14px span.wedding-kicker \"02 — LAS EXPERIENCIAS\"",
+   "14px span.wedding-kicker \"COMPARTIR RECUERDOS\"",
+   "14px label.wedding-upload-button \"Tomar una foto\"",
+   "14px label.wedding-upload-button \"Elegir de mi galería\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Supabase JS library not found. Make sure to include the CDN script."
+  ]
+ },
+ {
+  "page": "/plot-twist/",
+  "width": 375,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/raspe/",
+  "width": 375,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Raspa tu tarjeta: solo una e\"",
+   "14px li \"Alguien del matrimonio: busc\"",
+   "14px li \"¡Felipe! Conserva la tarjeta\"",
+   "14px li \"Otro personaje: ¡comparte el\"",
+   "14px p \"Sube la fotografía desde nue\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"¿Quién apareció?\"",
+   "14px p \"Mesa (opcional)\"",
+   "13px label \"Mesa (opcional)\"",
+   "14px p \"Comentario (opcional)\"",
+   "13px label \"Comentario (opcional)\"",
+   "13px button.wedding-action \"Enviar para revisión\"",
+   "14px p.muted \"El formulario registra la so\""
+  ],
+  "tiny": [
+   "182x21 a \"Ir a subir mis fotos →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/complice/",
+  "width": 375,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Alguien de tu mesa guarda un\"",
+   "14px li \"Una tarjeta de agradecimient\"",
+   "14px li \"Durante la cena, conversen y\"",
+   "14px li \"Al postre, la mesa elige a q\"",
+   "14px li \"Si lo descubren, gana la mes\"",
+   "14px p \"¿Se descubrió el secreto? Pu\"",
+   "14px p \"Completa esto después de rev\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"Mesa\"",
+   "13px label \"Mesa\"",
+   "14px p \"¿Lo descubrieron?\"",
+   "14px p \"Registrar resultado\"",
+   "13px button.wedding-action \"Registrar resultado\"",
+   "14px p.muted \"La confirmación queda pendie\""
+  ],
+  "tiny": [
+   "186x21 a \"Compartir una foto →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/premios/",
+  "width": 375,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Un regalo especial para quie\"",
+   "14px p \"Los ganadores autorizados po\"",
+   "14px p \"La entrega requiere corrobor\"",
+   "14px li \"Conserva tu tarjeta de recon\"",
+   "14px li \"Solicita a Felipe, Cami o a \"",
+   "14px li \"Una vez aprobado, podrás coo\"",
+   "14px p.muted \"Importante: el canje digital\"",
+   "13px label \"Nombre y apellido\"",
+   "14px p \"Categoría ganada\"",
+   "13px label \"Categoría ganada\"",
+   "14px p \"Cómo prefieres recibirloReti\"",
+   "13px label \"Cómo prefieres recibirloReti\"",
+   "13px button.wedding-action \"Solicitar revisión\"",
+   "14px p.muted \"No ingreses tu dirección aqu\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/galeria/",
+  "width": 375,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "28x41 a.flex \"\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Error fetching gallery archive: Error: HTTP error 404\n    at fetchAllPublicArchive (http://127.0.0.1:8099/galeria/:186:35)"
+  ]
+ },
+ {
+  "page": "/",
+  "width": 375,
+  "hOverflow": 0,
+  "over": [
+   "div.space-y-1",
+   "span#cd-seconds.font-serif.text-3xl",
+   "span.text-[10px].uppercase"
+  ],
+  "small": [],
+  "tiny": [
+   "247x24 label.block \"Nombre\"",
+   "247x24 label.block \"Apellido\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/",
+  "width": 390,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "14px a \"← La invitación\"",
+   "14px a \"Las experiencias ↓\"",
+   "14px span.wedding-kicker \"23 · OCTUBRE · 2026\"",
+   "14px span.wedding-kicker \"01 — NUESTROS RECUERDOS\"",
+   "12px span.wedding-letter-top \"FELIPE & CAMI\"",
+   "12px span.wedding-letter-bottom \"23 · 10 · 2026\"",
+   "14px span.wedding-kicker \"02 — LAS EXPERIENCIAS\"",
+   "14px span.wedding-kicker \"COMPARTIR RECUERDOS\"",
+   "14px label.wedding-upload-button \"Tomar una foto\"",
+   "14px label.wedding-upload-button \"Elegir de mi galería\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Supabase JS library not found. Make sure to include the CDN script."
+  ]
+ },
+ {
+  "page": "/plot-twist/",
+  "width": 390,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/raspe/",
+  "width": 390,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Raspa tu tarjeta: solo una e\"",
+   "14px li \"Alguien del matrimonio: busc\"",
+   "14px li \"¡Felipe! Conserva la tarjeta\"",
+   "14px li \"Otro personaje: ¡comparte el\"",
+   "14px p \"Sube la fotografía desde nue\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"¿Quién apareció?\"",
+   "14px p \"Mesa (opcional)\"",
+   "13px label \"Mesa (opcional)\"",
+   "14px p \"Comentario (opcional)\"",
+   "13px label \"Comentario (opcional)\"",
+   "13px button.wedding-action \"Enviar para revisión\"",
+   "14px p.muted \"El formulario registra la so\""
+  ],
+  "tiny": [
+   "182x21 a \"Ir a subir mis fotos →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/complice/",
+  "width": 390,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Alguien de tu mesa guarda un\"",
+   "14px li \"Una tarjeta de agradecimient\"",
+   "14px li \"Durante la cena, conversen y\"",
+   "14px li \"Al postre, la mesa elige a q\"",
+   "14px li \"Si lo descubren, gana la mes\"",
+   "14px p \"¿Se descubrió el secreto? Pu\"",
+   "14px p \"Completa esto después de rev\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"Mesa\"",
+   "13px label \"Mesa\"",
+   "14px p \"¿Lo descubrieron?\"",
+   "14px p \"Registrar resultado\"",
+   "13px button.wedding-action \"Registrar resultado\"",
+   "14px p.muted \"La confirmación queda pendie\""
+  ],
+  "tiny": [
+   "186x21 a \"Compartir una foto →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/premios/",
+  "width": 390,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Un regalo especial para quie\"",
+   "14px p \"Los ganadores autorizados po\"",
+   "14px p \"La entrega requiere corrobor\"",
+   "14px li \"Conserva tu tarjeta de recon\"",
+   "14px li \"Solicita a Felipe, Cami o a \"",
+   "14px li \"Una vez aprobado, podrás coo\"",
+   "14px p.muted \"Importante: el canje digital\"",
+   "13px label \"Nombre y apellido\"",
+   "14px p \"Categoría ganada\"",
+   "13px label \"Categoría ganada\"",
+   "14px p \"Cómo prefieres recibirloReti\"",
+   "13px label \"Cómo prefieres recibirloReti\"",
+   "13px button.wedding-action \"Solicitar revisión\"",
+   "14px p.muted \"No ingreses tu dirección aqu\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/galeria/",
+  "width": 390,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "30x41 a.flex \"\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Error fetching gallery archive: Error: HTTP error 404\n    at fetchAllPublicArchive (http://127.0.0.1:8099/galeria/:186:35)"
+  ]
+ },
+ {
+  "page": "/",
+  "width": 390,
+  "hOverflow": 0,
+  "over": [
+   "div.space-y-1",
+   "span#cd-seconds.font-serif.text-3xl",
+   "span.text-[10px].uppercase"
+  ],
+  "small": [],
+  "tiny": [
+   "262x24 label.block \"Nombre\"",
+   "262x24 label.block \"Apellido\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/",
+  "width": 430,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "15px a \"← La invitación\"",
+   "15px a \"Las experiencias ↓\"",
+   "14px span.wedding-kicker \"23 · OCTUBRE · 2026\"",
+   "14px span.wedding-kicker \"01 — NUESTROS RECUERDOS\"",
+   "12px span.wedding-letter-top \"FELIPE & CAMI\"",
+   "12px span.wedding-letter-bottom \"23 · 10 · 2026\"",
+   "14px span.wedding-kicker \"02 — LAS EXPERIENCIAS\"",
+   "14px span.wedding-kicker \"COMPARTIR RECUERDOS\"",
+   "14px label.wedding-upload-button \"Tomar una foto\"",
+   "14px label.wedding-upload-button \"Elegir de mi galería\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Supabase JS library not found. Make sure to include the CDN script."
+  ]
+ },
+ {
+  "page": "/plot-twist/",
+  "width": 430,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/raspe/",
+  "width": 430,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Raspa tu tarjeta: solo una e\"",
+   "14px li \"Alguien del matrimonio: busc\"",
+   "14px li \"¡Felipe! Conserva la tarjeta\"",
+   "14px li \"Otro personaje: ¡comparte el\"",
+   "14px p \"Sube la fotografía desde nue\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"¿Quién apareció?\"",
+   "14px p \"Mesa (opcional)\"",
+   "13px label \"Mesa (opcional)\"",
+   "14px p \"Comentario (opcional)\"",
+   "13px label \"Comentario (opcional)\"",
+   "13px button.wedding-action \"Enviar para revisión\"",
+   "14px p.muted \"El formulario registra la so\""
+  ],
+  "tiny": [
+   "182x21 a \"Ir a subir mis fotos →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/complice/",
+  "width": 430,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Alguien de tu mesa guarda un\"",
+   "14px li \"Una tarjeta de agradecimient\"",
+   "14px li \"Durante la cena, conversen y\"",
+   "14px li \"Al postre, la mesa elige a q\"",
+   "14px li \"Si lo descubren, gana la mes\"",
+   "14px p \"¿Se descubrió el secreto? Pu\"",
+   "14px p \"Completa esto después de rev\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"Mesa\"",
+   "13px label \"Mesa\"",
+   "14px p \"¿Lo descubrieron?\"",
+   "14px p \"Registrar resultado\"",
+   "13px button.wedding-action \"Registrar resultado\"",
+   "14px p.muted \"La confirmación queda pendie\""
+  ],
+  "tiny": [
+   "186x21 a \"Compartir una foto →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/premios/",
+  "width": 430,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "10px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "10px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Un regalo especial para quie\"",
+   "14px p \"Los ganadores autorizados po\"",
+   "14px p \"La entrega requiere corrobor\"",
+   "14px li \"Conserva tu tarjeta de recon\"",
+   "14px li \"Solicita a Felipe, Cami o a \"",
+   "14px li \"Una vez aprobado, podrás coo\"",
+   "14px p.muted \"Importante: el canje digital\"",
+   "13px label \"Nombre y apellido\"",
+   "14px p \"Categoría ganada\"",
+   "13px label \"Categoría ganada\"",
+   "14px p \"Cómo prefieres recibirloReti\"",
+   "13px label \"Cómo prefieres recibirloReti\"",
+   "13px button.wedding-action \"Solicitar revisión\"",
+   "14px p.muted \"No ingreses tu dirección aqu\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/galeria/",
+  "width": 430,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "33x41 a.flex \"\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Error fetching gallery archive: Error: HTTP error 404\n    at fetchAllPublicArchive (http://127.0.0.1:8099/galeria/:186:35)"
+  ]
+ },
+ {
+  "page": "/",
+  "width": 430,
+  "hOverflow": 0,
+  "over": [
+   "div.space-y-1",
+   "span#cd-seconds.font-serif.text-3xl",
+   "span.text-[10px].uppercase"
+  ],
+  "small": [],
+  "tiny": [
+   "302x24 label.block \"Nombre\"",
+   "302x24 label.block \"Apellido\"",
+   "302x24 label.block \"WhatsApp de Contacto\"",
+   "302x24 label.block \"¿Podrás acompañarnos?\"",
+   "302x24 label.block \"Restricción Alimentaria\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/",
+  "width": 768,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "14px span.wedding-kicker \"23 · OCTUBRE · 2026\"",
+   "14px span.wedding-kicker \"01 — NUESTROS RECUERDOS\"",
+   "12px span.wedding-letter-top \"FELIPE & CAMI\"",
+   "12px span.wedding-letter-bottom \"23 · 10 · 2026\"",
+   "14px span.wedding-kicker \"02 — LAS EXPERIENCIAS\"",
+   "14px span.wedding-kicker \"COMPARTIR RECUERDOS\"",
+   "14px label.wedding-upload-button \"Tomar una foto\"",
+   "14px label.wedding-upload-button \"Elegir de mi galería\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Supabase JS library not found. Make sure to include the CDN script."
+  ]
+ },
+ {
+  "page": "/plot-twist/",
+  "width": 768,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/raspe/",
+  "width": 768,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "11px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "11px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Raspa tu tarjeta: solo una e\"",
+   "14px li \"Alguien del matrimonio: busc\"",
+   "14px li \"¡Felipe! Conserva la tarjeta\"",
+   "14px li \"Otro personaje: ¡comparte el\"",
+   "14px p \"Sube la fotografía desde nue\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"¿Quién apareció?\"",
+   "14px p \"Mesa (opcional)\"",
+   "13px label \"Mesa (opcional)\"",
+   "14px p \"Comentario (opcional)\"",
+   "13px label \"Comentario (opcional)\"",
+   "13px button.wedding-action \"Enviar para revisión\"",
+   "14px p.muted \"El formulario registra la so\""
+  ],
+  "tiny": [
+   "182x21 a \"Ir a subir mis fotos →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/complice/",
+  "width": 768,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "11px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "11px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Alguien de tu mesa guarda un\"",
+   "14px li \"Una tarjeta de agradecimient\"",
+   "14px li \"Durante la cena, conversen y\"",
+   "14px li \"Al postre, la mesa elige a q\"",
+   "14px li \"Si lo descubren, gana la mes\"",
+   "14px p \"¿Se descubrió el secreto? Pu\"",
+   "14px p \"Completa esto después de rev\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"Mesa\"",
+   "13px label \"Mesa\"",
+   "14px p \"¿Lo descubrieron?\"",
+   "14px p \"Registrar resultado\"",
+   "13px button.wedding-action \"Registrar resultado\"",
+   "14px p.muted \"La confirmación queda pendie\""
+  ],
+  "tiny": [
+   "186x21 a \"Compartir una foto →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/premios/",
+  "width": 768,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "11px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "11px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Un regalo especial para quie\"",
+   "14px p \"Los ganadores autorizados po\"",
+   "14px p \"La entrega requiere corrobor\"",
+   "14px li \"Conserva tu tarjeta de recon\"",
+   "14px li \"Solicita a Felipe, Cami o a \"",
+   "14px li \"Una vez aprobado, podrás coo\"",
+   "14px p.muted \"Importante: el canje digital\"",
+   "13px label \"Nombre y apellido\"",
+   "14px p \"Categoría ganada\"",
+   "13px label \"Categoría ganada\"",
+   "14px p \"Cómo prefieres recibirloReti\"",
+   "13px label \"Cómo prefieres recibirloReti\"",
+   "13px button.wedding-action \"Solicitar revisión\"",
+   "14px p.muted \"No ingreses tu dirección aqu\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/galeria/",
+  "width": 768,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "311x24 a.text-xs \"Volver a la invitación\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Error fetching gallery archive: Error: HTTP error 404\n    at fetchAllPublicArchive (http://127.0.0.1:8099/galeria/:186:35)"
+  ]
+ },
+ {
+  "page": "/",
+  "width": 768,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "106x24 a.text-muted \"Historia\"",
+   "158x24 a.text-muted \"Información\"",
+   "133x24 a.text-dark \"Confirmar\"",
+   "95x24 a.text-muted \"Galería\"",
+   "553x26 a.font-sans \"Ver todas las fotos de n\"",
+   "283x24 label.block \"Nombre\"",
+   "283x24 label.block \"Apellido\"",
+   "592x24 label.block \"WhatsApp de Contacto\"",
+   "592x24 label.block \"¿Podrás acompañarnos?\"",
+   "592x24 label.block \"Restricción Alimentaria\"",
+   "407x30 a.font-sans \"Ver todas las fotos del \"",
+   "457x30 a.font-sans \"Ver todas las fotos comp\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/",
+  "width": 1024,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "14px span.wedding-kicker \"23 · OCTUBRE · 2026\"",
+   "14px span.wedding-kicker \"01 — NUESTROS RECUERDOS\"",
+   "12px span.wedding-letter-top \"FELIPE & CAMI\"",
+   "12px span.wedding-letter-bottom \"23 · 10 · 2026\"",
+   "14px span.wedding-kicker \"02 — LAS EXPERIENCIAS\"",
+   "14px span.wedding-kicker \"COMPARTIR RECUERDOS\"",
+   "14px label.wedding-upload-button \"Tomar una foto\"",
+   "14px label.wedding-upload-button \"Elegir de mi galería\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Supabase JS library not found. Make sure to include the CDN script."
+  ]
+ },
+ {
+  "page": "/plot-twist/",
+  "width": 1024,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/raspe/",
+  "width": 1024,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "11px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "11px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Raspa tu tarjeta: solo una e\"",
+   "14px li \"Alguien del matrimonio: busc\"",
+   "14px li \"¡Felipe! Conserva la tarjeta\"",
+   "14px li \"Otro personaje: ¡comparte el\"",
+   "14px p \"Sube la fotografía desde nue\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"¿Quién apareció?\"",
+   "14px p \"Mesa (opcional)\"",
+   "13px label \"Mesa (opcional)\"",
+   "14px p \"Comentario (opcional)\"",
+   "13px label \"Comentario (opcional)\"",
+   "13px button.wedding-action \"Enviar para revisión\"",
+   "14px p.muted \"El formulario registra la so\""
+  ],
+  "tiny": [
+   "182x21 a \"Ir a subir mis fotos →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/complice/",
+  "width": 1024,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "11px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "11px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Alguien de tu mesa guarda un\"",
+   "14px li \"Una tarjeta de agradecimient\"",
+   "14px li \"Durante la cena, conversen y\"",
+   "14px li \"Al postre, la mesa elige a q\"",
+   "14px li \"Si lo descubren, gana la mes\"",
+   "14px p \"¿Se descubrió el secreto? Pu\"",
+   "14px p \"Completa esto después de rev\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"Mesa\"",
+   "13px label \"Mesa\"",
+   "14px p \"¿Lo descubrieron?\"",
+   "14px p \"Registrar resultado\"",
+   "13px button.wedding-action \"Registrar resultado\"",
+   "14px p.muted \"La confirmación queda pendie\""
+  ],
+  "tiny": [
+   "186x21 a \"Compartir una foto →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/premios/",
+  "width": 1024,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "11px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "11px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Un regalo especial para quie\"",
+   "14px p \"Los ganadores autorizados po\"",
+   "14px p \"La entrega requiere corrobor\"",
+   "14px li \"Conserva tu tarjeta de recon\"",
+   "14px li \"Solicita a Felipe, Cami o a \"",
+   "14px li \"Una vez aprobado, podrás coo\"",
+   "14px p.muted \"Importante: el canje digital\"",
+   "13px label \"Nombre y apellido\"",
+   "14px p \"Categoría ganada\"",
+   "13px label \"Categoría ganada\"",
+   "14px p \"Cómo prefieres recibirloReti\"",
+   "13px label \"Cómo prefieres recibirloReti\"",
+   "13px button.wedding-action \"Solicitar revisión\"",
+   "14px p.muted \"No ingreses tu dirección aqu\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/galeria/",
+  "width": 1024,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "311x24 a.text-xs \"Volver a la invitación\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Error fetching gallery archive: Error: HTTP error 404\n    at fetchAllPublicArchive (http://127.0.0.1:8099/galeria/:186:35)"
+  ]
+ },
+ {
+  "page": "/",
+  "width": 1024,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "106x24 a.text-muted \"Historia\"",
+   "158x24 a.text-muted \"Información\"",
+   "133x24 a.text-dark \"Confirmar\"",
+   "95x24 a.text-muted \"Galería\"",
+   "553x26 a.font-sans \"Ver todas las fotos de n\"",
+   "283x24 label.block \"Nombre\"",
+   "283x24 label.block \"Apellido\"",
+   "592x24 label.block \"WhatsApp de Contacto\"",
+   "592x24 label.block \"¿Podrás acompañarnos?\"",
+   "592x24 label.block \"Restricción Alimentaria\"",
+   "407x30 a.font-sans \"Ver todas las fotos del \"",
+   "457x30 a.font-sans \"Ver todas las fotos comp\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/",
+  "width": 1440,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "14px span.wedding-kicker \"23 · OCTUBRE · 2026\"",
+   "14px span.wedding-kicker \"01 — NUESTROS RECUERDOS\"",
+   "12px span.wedding-letter-top \"FELIPE & CAMI\"",
+   "12px span.wedding-letter-bottom \"23 · 10 · 2026\"",
+   "14px span.wedding-kicker \"02 — LAS EXPERIENCIAS\"",
+   "14px span.wedding-kicker \"COMPARTIR RECUERDOS\"",
+   "14px label.wedding-upload-button \"Tomar una foto\"",
+   "14px label.wedding-upload-button \"Elegir de mi galería\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Supabase JS library not found. Make sure to include the CDN script."
+  ]
+ },
+ {
+  "page": "/plot-twist/",
+  "width": 1440,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ]
+ },
+ {
+  "page": "/fotos/raspe/",
+  "width": 1440,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "11px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "11px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Raspa tu tarjeta: solo una e\"",
+   "14px li \"Alguien del matrimonio: busc\"",
+   "14px li \"¡Felipe! Conserva la tarjeta\"",
+   "14px li \"Otro personaje: ¡comparte el\"",
+   "14px p \"Sube la fotografía desde nue\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"¿Quién apareció?\"",
+   "14px p \"Mesa (opcional)\"",
+   "13px label \"Mesa (opcional)\"",
+   "14px p \"Comentario (opcional)\"",
+   "13px label \"Comentario (opcional)\"",
+   "13px button.wedding-action \"Enviar para revisión\"",
+   "14px p.muted \"El formulario registra la so\""
+  ],
+  "tiny": [
+   "182x21 a \"Ir a subir mis fotos →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/complice/",
+  "width": 1440,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "11px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "11px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Alguien de tu mesa guarda un\"",
+   "14px li \"Una tarjeta de agradecimient\"",
+   "14px li \"Durante la cena, conversen y\"",
+   "14px li \"Al postre, la mesa elige a q\"",
+   "14px li \"Si lo descubren, gana la mes\"",
+   "14px p \"¿Se descubrió el secreto? Pu\"",
+   "14px p \"Completa esto después de rev\"",
+   "13px label \"Tu nombre\"",
+   "14px p \"Mesa\"",
+   "13px label \"Mesa\"",
+   "14px p \"¿Lo descubrieron?\"",
+   "14px p \"Registrar resultado\"",
+   "13px button.wedding-action \"Registrar resultado\"",
+   "14px p.muted \"La confirmación queda pendie\""
+  ],
+  "tiny": [
+   "186x21 a \"Compartir una foto →\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/fotos/premios/",
+  "width": 1440,
+  "hOverflow": 0,
+  "over": [],
+  "small": [
+   "11px a \"← Volver a los recuerdos\"",
+   "11px a.wedding-brand \"F&C\"",
+   "11px a \"Los juegos ↓\"",
+   "10px p.wedding-kicker \"Felipe & Cami · 23 de octubr\"",
+   "15px p.wedding-lead \"Un regalo especial para quie\"",
+   "14px p \"Los ganadores autorizados po\"",
+   "14px p \"La entrega requiere corrobor\"",
+   "14px li \"Conserva tu tarjeta de recon\"",
+   "14px li \"Solicita a Felipe, Cami o a \"",
+   "14px li \"Una vez aprobado, podrás coo\"",
+   "14px p.muted \"Importante: el canje digital\"",
+   "13px label \"Nombre y apellido\"",
+   "14px p \"Categoría ganada\"",
+   "13px label \"Categoría ganada\"",
+   "14px p \"Cómo prefieres recibirloReti\"",
+   "13px label \"Cómo prefieres recibirloReti\"",
+   "13px button.wedding-action \"Solicitar revisión\"",
+   "14px p.muted \"No ingreses tu dirección aqu\""
+  ],
+  "tiny": [],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ },
+ {
+  "page": "/galeria/",
+  "width": 1440,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "311x24 a.text-xs \"Volver a la invitación\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Error fetching gallery archive: Error: HTTP error 404\n    at fetchAllPublicArchive (http://127.0.0.1:8099/galeria/:186:35)"
+  ]
+ },
+ {
+  "page": "/",
+  "width": 1440,
+  "hOverflow": 0,
+  "over": [],
+  "small": [],
+  "tiny": [
+   "106x24 a.text-muted \"Historia\"",
+   "158x24 a.text-muted \"Información\"",
+   "133x24 a.text-dark \"Confirmar\"",
+   "95x24 a.text-muted \"Galería\"",
+   "553x26 a.font-sans \"Ver todas las fotos de n\"",
+   "283x24 label.block \"Nombre\"",
+   "283x24 label.block \"Apellido\"",
+   "592x24 label.block \"WhatsApp de Contacto\"",
+   "592x24 label.block \"¿Podrás acompañarnos?\"",
+   "592x24 label.block \"Restricción Alimentaria\"",
+   "407x30 a.font-sans \"Ver todas las fotos del \"",
+   "457x30 a.font-sans \"Ver todas las fotos comp\""
+  ],
+  "errors": [
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "Failed to load resource: the server responded with a status of 404 (File not found)",
+   "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ]
+ }
+]
