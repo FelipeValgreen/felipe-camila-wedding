@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="/css/icons.css">
     <link rel="stylesheet" href="/css/wedding-experiences.css"><link rel="stylesheet" href="/css/wedding-minimal.css"><link rel="stylesheet" href="/css/wedding-atelier.css">
 <link rel="stylesheet" href="/css/wedding-art-direction.css">
-<link rel="icon" type="image/svg+xml" href="/assets/fc-monogram.svg?v=4"><link rel="stylesheet" href="/css/fc-brand-preview.css?v=4"></head>
+<link rel="icon" type="image/svg+xml" href="/assets/fc-monogram.svg?v=4"><link rel="stylesheet" href="/css/fc-brand-preview.css?v=4"><link rel="stylesheet" href="/css/fotos-final-20261022.css"></head>
 
 <body class="wedding-editorial min-h-screen flex flex-col antialiased">
 
@@ -35,10 +35,26 @@
       <header class="wedding-hero">
         <span class="wedding-kicker">23 · OCTUBRE · 2026</span>
         <h1>Felipe &amp; Cami</h1>
-        <div class="wedding-rule"></div><figure class="wedding-portrait-hero"><img src="/images/responsive/shared_5_v3_1080w.jpg" alt="Felipe y Cami, un recuerdo de nuestra historia" loading="eager"><figcaption>Una historia que seguimos escribiendo juntos.</figcaption></figure>
+        <div class="wedding-rule"></div><figure class="wedding-portrait-hero"><img src="/images/responsive/felipe-cami-atardecer-20261022-1536.webp" srcset="/images/responsive/felipe-cami-atardecer-20261022-768.webp 768w, /images/responsive/felipe-cami-atardecer-20261022-1536.webp 1536w" sizes="(max-width: 720px) calc(100vw - 36px), 680px" width="1536" height="1024" alt="Felipe y Cami abrazados frente al mar al atardecer, mostrando su anillo" fetchpriority="high" loading="eager"><figcaption>Una historia que seguimos escribiendo juntos.</figcaption></figure>
         <p class="wedding-hero-tagline">Una noche, mil recuerdos.</p>
         <p>Sube tus fotos, descubre las sorpresas y participa en lo que quieras. Lo importante es celebrar juntos.</p>
       </header>
+      <section class="wedding-game-entry" aria-labelledby="game-entry-title">
+        <span class="wedding-kicker">QUÉ LINDO QUE ESTÉN</span>
+        <h2 id="game-entry-title">Bienvenidos a nuestra noche.</h2>
+        <p>Si te animas a jugar, cuéntanos cómo te llamas y en qué mesa estás.</p>
+        <form id="landing-game-form">
+          <label for="game-nickname">Tu nombre o apodo</label>
+          <input id="game-nickname" name="nickname" autocomplete="given-name" required maxlength="32" pattern=".*\S.*" placeholder="¿Cómo te llamas?">
+          <label for="game-table">Número de mesa</label>
+          <input id="game-table" name="table" type="text" inputmode="numeric" pattern="[0-9]{1,3}" maxlength="3" required placeholder="Ej.: 8" aria-describedby="game-entry-error">
+          <button type="submit">Entrar al juego</button>
+        </form>
+        <a class="game-return" href="/plot-twist/">¿Ya estabas jugando?</a>
+        <p id="game-entry-error" role="status" aria-live="polite"></p>
+        <a class="game-photo-link" href="#subir-fotos">Subir fotos del matrimonio</a>
+        <a class="game-gallery-link" href="/galeria/">Ver la galería de fotografías →</a>
+      </section>
       <section class="wedding-feature" aria-labelledby="photos-title">
         <div class="wedding-feature-body">
           <span class="wedding-kicker">01 — NUESTROS RECUERDOS</span>
@@ -136,6 +152,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
     
+    <script type="module" src="/js/feature/fotos-game-entry-20261022.js"></script>
     <!-- App Logic -->
     <script src="../js/supabase-client.js"></script>
     <script src="../js/feature/upload.js"></script>
