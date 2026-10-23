@@ -27,6 +27,48 @@ document.addEventListener('DOMContentLoaded', () => {
         greeting.classList.remove('hidden');
     }
 
+    // Keep the identity out of the landing until a guest selects photographs.
+    const identity = nameInput?.closest('.wedding-identity-field');
+    const uploadHint = document.querySelector('.wedding-upload-hint');
+    let selectedFiles = null;
+    const confirmButton = document.createElement('button');
+    confirmButton.type = 'button';
+    confirmButton.id = 'confirm-photo-upload';
+    confirmButton.textContent = 'Subir las fotos seleccionadas';
+    confirmButton.className = 'wedding-action';
+    confirmButton.style.cssText = 'width:100%;min-height:56px;margin:16px 0;font-size:18px;display:none';
+    identity?.insertAdjacentElement('afterend', confirmButton);
+    const savedName = localStorage.getItem('fc_guest_name');
+    if (!nameInput.value && savedName) nameInput.value = savedName;
+    if (identity) identity.hidden = true;
+    confirmButton.addEventListener('click', () => {
+        if (!selectedFiles?.length) return;
+        if (!nameInput.value.trim()) {
+            nameInput.focus();
+            nameInput.setCustomValidity('Escribe tu nombre para identificar las fotos.');
+            nameInput.reportValidity();
+            return;
+        }
+        nameInput.setCustomValidity('');
+        localStorage.setItem('fc_guest_name', nameInput.value.trim());
+        const files = selectedFiles;
+        selectedFiles = null;
+        confirmButton.style.display = 'none';
+        handleFiles(files);
+    });
+    nameInput?.addEventListener('input', () => nameInput.setCustomValidity(''));
+    function chooseFiles(files) {
+        if (!files?.length) return;
+        selectedFiles = Array.from(files);
+        if (identity) identity.hidden = false;
+        if (uploadHint) uploadHint.textContent = selectedFiles.length + ' foto(s) seleccionada(s). Confirma tu nombre para compartirlas.';
+        confirmButton.style.display = 'flex';
+        confirmButton.style.alignItems = 'center';
+        confirmButton.style.justifyContent = 'center';
+        identity?.scrollIntoView({behavior:'smooth',block:'center'});
+        if (!nameInput.value.trim()) nameInput.focus({preventScroll:true});
+    }
+
     // Capture Metadata
     const metadata = {
         device_type: /Mobile|Android|iP(ad|hone)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
@@ -236,6 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Attach Listeners
-    cameraInput.addEventListener('change', (e) => handleFiles(e.target.files));
-    galleryInput.addEventListener('change', (e) => handleFiles(e.target.files));
+    cameraInput.addEventListener('change', (e) => chooseFiles(e.target.files));
+    galleryInput.addEventListener('change', (e) => chooseFiles(e.target.files));
 });
