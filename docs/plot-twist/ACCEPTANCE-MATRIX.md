@@ -37,3 +37,15 @@ No marcar PASS sin evidencia de ejecución.
 
 ## Evidencia
 Al ejecutar un test, registrar fecha, commit SHA, entorno, dispositivo/browser y evidencia/resultados en TEST-REPORT.md. “Funciona en código” no equivale a PASS.
+
+
+## QR landing release — 2026-10-22
+Scope: real photograph, responsive presentation and entry form reusing the existing Plot Twist client. No game rules, API, scores, migrations or seating changed.
+- Preview 6decbfe: real WebP loaded at 680 × 453; no face cropping (intrinsic 3:2 ratio).
+- Browser validation: zero and alphabetic table input rejected; 8 accepted by format validation. This does not prove mesa 8 exists.
+- /fotos/, /plot-twist/, /galeria/, upload script, WebP and /api/gallery returned HTTP 200.
+- Gallery rendered 177 photographs; upload anchor navigation verified. No real upload or successful join executed.
+- Existing 9 payload/integration-contract tests passed.
+- BLOCKED: production session endpoint returns SUPABASE_ERROR_404. Supabase public schema lacks plot_twist_* tables. Game activation requires a separate reviewed initialization with real table mapping; none was invented.
+- NOT RUN: physical iPhone/Safari and mobile browser emulation (browser dependencies unavailable).
+- Rollback: redeploy production commit 5e0e7a1b81d0ce024ded8b072214c652bbf73a86.
