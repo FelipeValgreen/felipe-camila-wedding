@@ -5,8 +5,9 @@ const table = document.querySelector('#game-table');
 table.addEventListener('input', () => table.setCustomValidity(''));
 form.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!/^[0-9]{1,3}$/.test(table.value) || Number(table.value) < 1) {
-    table.setCustomValidity('Escribe un número de mesa mayor que cero.');
+  const tableCode = table.value.trim().toLowerCase();
+  if (!/^(?:[1-9][0-9]{0,2}|novios)$/.test(tableCode)) {
+    table.setCustomValidity('Escribe tu número de mesa o la palabra novios.');
     table.reportValidity();
     return;
   }
@@ -18,7 +19,7 @@ form.addEventListener('submit', async event => {
   try {
     const existing = await restore();
     if (!existing?.player) {
-      await join({nickname: document.querySelector('#game-nickname').value.trim(), tableCode: table.value});
+      await join({nickname: document.querySelector('#game-nickname').value.trim(), tableCode});
     }
     location.assign('/plot-twist/');
   } catch (err) {
