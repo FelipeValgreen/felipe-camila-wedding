@@ -28,7 +28,7 @@
     <nav class="wedding-nav" aria-label="Navegación principal">
       <a href="/?open=1#hero">← La invitación</a>
       <a href="/fotos/" class="wedding-brand" aria-label="Felipe y Cami, inicio de recuerdos"><img src="/assets/fc-monogram.svg?v=4" alt="" width="62" height="62" style="width:62px;height:62px;object-fit:contain"></a>
-      <a href="#experiencias">Los juegos ↓</a>
+      <a href="#experiencias">Las experiencias ↓</a>
     </nav>
     <!-- Wedding editorial landing: existing upload fields below remain unchanged -->
     <main class="wedding-wrap" style="width:min(100% - 36px,680px);margin:0 auto;">
@@ -39,22 +39,6 @@
         <p class="wedding-hero-tagline">Una noche, mil recuerdos.</p>
         <p>Sube tus fotos, descubre las sorpresas y participa en lo que quieras. Lo importante es celebrar juntos.</p>
       </header>
-      <section class="wedding-game-entry" aria-labelledby="game-entry-title">
-        <span class="wedding-kicker">QUÉ LINDO QUE ESTÉN</span>
-        <h2 id="game-entry-title">Bienvenidos a nuestra noche.</h2>
-        <p>Si te animas a jugar, cuéntanos cómo te llamas y en qué mesa estás.</p>
-        <form id="landing-game-form">
-          <label for="game-nickname">Tu nombre o apodo</label>
-          <input id="game-nickname" name="nickname" autocomplete="given-name" required maxlength="32" pattern=".*\S.*" placeholder="¿Cómo te llamas?">
-          <label for="game-table">Mesa (número o novios)</label>
-          <input id="game-table" name="table" type="text" inputmode="text" pattern="(?:[1-9][0-9]{0,2}|[Nn][Oo][Vv][Ii][Oo][Ss])" maxlength="6" required placeholder="Ej.: 8 o novios" aria-describedby="game-entry-error">
-          <button type="submit">Entrar al juego</button>
-        </form>
-        <a class="game-return" href="/plot-twist/">¿Ya estabas jugando?</a>
-        <p id="game-entry-error" role="status" aria-live="polite"></p>
-        <a class="game-photo-link" href="#subir-fotos">Subir fotos del matrimonio</a>
-        <a class="game-gallery-link" href="/galeria/">Ver la galería de fotografías →</a>
-      </section>
       <section class="wedding-feature" aria-labelledby="photos-title">
         <div class="wedding-feature-body">
           <span class="wedding-kicker">01 — NUESTROS RECUERDOS</span>
@@ -152,7 +136,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
     
-    <script type="module" src="/js/feature/fotos-game-entry-20261022.js?v=novios1"></script>
     <!-- App Logic -->
     <script src="../js/supabase-client.js"></script>
     <script src="../js/feature/upload.js"></script>
