@@ -16,7 +16,7 @@ export default async function handler(req, res) {
         if (limit > 100) limit = 100;
 
         const offset = page * limit;
-        const endpoint = `${SUPABASE_URL}/rest/v1/guest_photos?select=url,created_at&order=created_at.asc&offset=${offset}&limit=${limit}`;
+        const endpoint = `${SUPABASE_URL}/rest/v1/guest_photos?select=url,created_at&order=created_at.desc&offset=${offset}&limit=${limit}`;
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -65,7 +65,10 @@ export default async function handler(req, res) {
             let category = 'historia';
             let alt = 'Recuerdo de nuestra historia';
 
-            if (createdAt >= '2026-03-28') {
+            if (createdAt >= '2026-10-23') {
+                category = 'civil';
+                alt = 'Recuerdo de nuestro matrimonio';
+            } else if (createdAt >= '2026-03-28') {
                 category = 'civil';
                 alt = 'Recuerdo de nuestro matrimonio civil';
             }

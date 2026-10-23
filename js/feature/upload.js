@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmButton.id = 'confirm-photo-upload';
     confirmButton.textContent = 'Subir las fotos seleccionadas';
     confirmButton.className = 'wedding-action';
-    confirmButton.style.cssText = 'width:100%;min-height:56px;margin:16px 0;font-size:18px;display:none';
+    confirmButton.style.cssText = 'width:100%;min-height:56px;margin:16px 0;font-size:18px';
+    confirmButton.hidden = true;
     identity?.insertAdjacentElement('afterend', confirmButton);
     const savedName = localStorage.getItem('fc_guest_name');
     if (!nameInput.value && savedName) nameInput.value = savedName;
@@ -53,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('fc_guest_name', nameInput.value.trim());
         const files = selectedFiles;
         selectedFiles = null;
-        confirmButton.style.display = 'none';
+        confirmButton.hidden = true;
         handleFiles(files);
     });
     nameInput?.addEventListener('input', () => nameInput.setCustomValidity(''));
@@ -62,9 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedFiles = Array.from(files);
         if (identity) identity.hidden = false;
         if (uploadHint) uploadHint.textContent = selectedFiles.length + ' foto(s) seleccionada(s). Confirma tu nombre para compartirlas.';
-        confirmButton.style.display = 'flex';
-        confirmButton.style.alignItems = 'center';
-        confirmButton.style.justifyContent = 'center';
+        confirmButton.hidden = false;
         identity?.scrollIntoView({behavior:'smooth',block:'center'});
         if (!nameInput.value.trim()) nameInput.focus({preventScroll:true});
     }
@@ -130,12 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <img id="preview-${itemId}" src="" class="w-full h-full object-cover">
                     </div>
                     <div class="flex-grow text-left">
-                        <p class="text-xs font-bold text-charcoal truncate w-40">${escapeHtml(file.name)}</p>
+                        <p class="text-sm font-bold text-dark truncate w-40">${escapeHtml(file.name)}</p>
                         <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                            <div id="progress-${itemId}" class="bg-sage h-1.5 rounded-full" style="width: 10%"></div>
+                            <div id="progress-${itemId}" class="bg-gold h-1.5 rounded-full" style="width: 10%"></div>
                         </div>
                     </div>
-                    <div id="status-${itemId}" class="text-sage text-xl"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                    <div id="status-${itemId}" class="text-gold text-xl"><i class="fa-solid fa-spinner fa-spin"></i></div>
                 </div>
             `;
             queueList.insertAdjacentHTML('afterbegin', itemHtml);
@@ -161,8 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadToSupabase(compressedResult, file.name, guestName, itemId);
                 },
                 error(err) {
-                    console.error('Compression error:', err);
-                    onUploadFinished(itemId, false);
+                    // Compression failed (e.g. unsupported format): upload the original instead of failing.
+                    console.warn('Compression error, uploading original:', err);
+                    uploadToSupabase(file, file.name, guestName, itemId);
                 },
             });
         });
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             failedCount++;
             const statusIcon = document.getElementById(`status-${itemId}`);
             const progressBar = document.getElementById(`progress-${itemId}`);
-            if (progressBar) progressBar.classList.replace('bg-sage', 'bg-red-500');
+            if (progressBar) progressBar.classList.replace('bg-gold', 'bg-red-500');
             if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i>`;
         }
 
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const viewBtn = document.getElementById('view-photos-btn');
 
             if (failedCount > 0 && successfulCount === 0) {
-                if (queueTitle) queueTitle.textContent = 'Error en la subida. Revisa los detalles arriba.';
+                if (queueTitle) queueTitle.textContent = 'No pudimos subir tus fotos. Revisa tu conexión y vuelve a elegirlas para intentarlo otra vez.';
                 if (viewBtn) viewBtn.classList.add('hidden');
             } else if (failedCount > 0 && successfulCount > 0) {
                 if (queueTitle) queueTitle.textContent = 'Subida completada con algunas observaciones.';
@@ -255,9 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Success Updates
             if (progressBar) {
                 progressBar.style.width = '100%';
-                progressBar.classList.replace('bg-sage', 'bg-green-500');
+                progressBar.classList.replace('bg-gold', 'bg-green-500');
             }
-            if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-check-circle text-green-500"></i>`;
+            if (statusIcon) statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-green-500"></i>`;
             
             onUploadFinished(itemId, true);
 

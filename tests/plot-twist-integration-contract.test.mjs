@@ -24,12 +24,24 @@ test('individual vote snapshot scopes query to current player',()=>{
  assert.match(engine,/stage\.type==='individual_callback'\?'&player_id=eq\.'\+player\.id/);
 });
 
-test('wager UI requires explicit confirmation of loss risk',()=>{
+// The guest client currently served is the autonomous "Express" trivia (plot-twist/app.js → /api/plot-twist/express).
+// The full-engine UI checks below only apply when that client is restored (see docs/plot-twist/ESTADO-2026-10-23.md).
+const isExpressClient=()=>/\/api\/plot-twist\/express/.test(file('plot-twist/app.js'));
+test('wager UI requires explicit confirmation of loss risk',{skip:isExpressClient()&&'Express client has no wager UI'},()=>{
  const app=file('plot-twist/app.js');
  assert.match(app,/Esta apuesta compromete/);
  assert.match(app,/perderán esa cantidad/);
 });
-test('only responsible players see alliance acceptance controls',()=>{
+test('only responsible players see alliance acceptance controls',{skip:isExpressClient()&&'Express client has no alliances UI'},()=>{
  const app=file('plot-twist/app.js');
  assert.match(app,/isResponsible\(\)\?' <button class=accept/);
 });
+test('express client guards double submits and retries nickname collisions',{skip:!isExpressClient()&&'full client served'},()=>{
+ const app=file('plot-twist/app.js');
+ assert.match(app,/if\(busy\)return;busy=true/);
+ assert.match(app,/NICKNAME_TAKEN/);
+ const api=file('api/plot-twist/express.js');
+ assert.match(api,/ANSWER_OUT_OF_ORDER/);
+ assert.match(api,/op==='health'/);
+});
+

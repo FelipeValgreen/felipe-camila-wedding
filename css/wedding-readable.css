@@ -13,6 +13,11 @@ body.wedding-editorial{font-size:18px;line-height:1.65}
 .wedding-field-label,.wedding-upload-section label{font-size:18px!important}
 .wedding-name-input{font-size:18px!important;min-height:54px}
 .wedding-footer{font-size:16px!important;line-height:1.5}
-.wedding-panel p,.wedding-panel li,.wedding-panel label,.wedding-notice,.wedding-back{font-size:18px!important;line-height:1.6}
+.wedding-panel p,.wedding-panel li,.wedding-lead,.muted,.wedding-panel label,.wedding-notice,.wedding-back{font-size:18px!important;line-height:1.6}
 .wedding-panel input,.wedding-panel select,.wedding-panel textarea,.wedding-panel button{font-size:18px!important;min-height:52px}
 @media(max-width:560px){.wedding-nav{gap:8px;padding:12px}.wedding-nav a{font-size:14px!important}.wedding-tile{min-height:230px!important}.wedding-hero p{max-width:100%}}
+.wedding-lead{font-size:20px!important;line-height:1.55!important}
+.muted{color:#5f5750}
+.wedding-panel a:not(.wedding-action){display:inline-block;min-height:44px;line-height:44px;font-size:18px!important}
+.wedding-brand-monogram{font-size:22px!important}
+footer.muted{font-size:16px!important}

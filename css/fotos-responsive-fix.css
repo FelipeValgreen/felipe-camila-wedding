@@ -31,10 +31,11 @@ body.wedding-editorial .wedding-feature h2{
 }
 body.wedding-editorial .wedding-feature h2 br{display:none}
 body.wedding-editorial .wedding-feature p{font-size:18px!important;line-height:1.55!important}
-body.wedding-editorial .wedding-feature .wedding-action{
+body.wedding-editorial .wedding-feature .wedding-action,body.wedding-editorial #confirm-photo-upload{
  display:flex!important;width:100%!important;min-height:56px!important;
- font-size:18px!important;text-align:center!important;
+ font-size:18px!important;text-align:center!important;align-items:center!important;justify-content:center!important;
 }
+body.wedding-editorial #confirm-photo-upload[hidden],body.wedding-editorial [hidden]{display:none!important}
 body.wedding-editorial .wedding-mobile-cta{display:none!important}
 body.wedding-editorial .wedding-experiences{scroll-margin-top:24px}
 body.wedding-editorial .wedding-upload-section{scroll-margin-top:24px}
@@ -59,5 +60,5 @@ body.wedding-editorial #confirm-photo-upload:focus-visible{outline:3px solid #ad
 body.wedding-editorial .wedding-feature h2{font-size:clamp(32px,7vw,43px)!important;line-height:1.16!important;letter-spacing:-.025em!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important}
 body.wedding-editorial .wedding-feature h2 br{display:block!important;content:''!important}
 body.wedding-editorial .wedding-portrait-hero figcaption{font-size:18px!important;line-height:1.55!important;color:#4d3a34!important}
-body.wedding-editorial .wedding-hero-tagline{font-size:clamp(22px,5.5vw,28px)!important;line-height:1.3!important}
+body.wedding-editorial .wedding-hero-tagline{font-size:clamp(22px,5.5vw,28px)!important;line-height:1.3!important;color:#5C1D24!important}
 @media(max-width:430px){body.wedding-editorial .wedding-feature h2{font-size:clamp(31px,7.7vw,36px)!important}body.wedding-editorial .wedding-feature-body{padding-inline:20px!important}}

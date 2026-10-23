@@ -54,7 +54,7 @@
                 Nuestra historia (<span id="count-historia">--</span>)
             </button>
             <button id="filter-civil" data-filter="civil" class="px-5 py-2.5 rounded-full text-xs uppercase tracking-[0.2em] font-medium border border-dark/20 bg-transparent text-dark hover:border-dark transition-all">
-                Nuestro civil (<span id="count-civil">--</span>)
+                Civil y matri (<span id="count-civil">--</span>)
             </button>
         </div>
 
@@ -232,7 +232,7 @@
 
             function getCategoryLabel(cat) {
                 if (cat === 'historia') return 'Nuestra historia';
-                return 'Nuestro civil';
+                return 'Civil y matri';
             }
 
             function applyFilter(filterKey, updateHistory = true) {
