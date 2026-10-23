@@ -8,7 +8,10 @@ export const uuid=()=>crypto.randomUUID();
 const PUBLIC_STAGE_BLOCKED_KEYS=new Set(['correctanswer','correct_answer','correctoption','correct_option','answerkey','answer_key','is_correct','iscorrect','secret','secretanswer','secret_answer','resolution','solution','private','hidden','explanation_private','scoring_key']);
 export function publicStagePayload(input){if(Array.isArray(input))return input.map(publicStagePayload);if(input&&typeof input==='object')return Object.fromEntries(Object.entries(input).filter(([k])=>!PUBLIC_STAGE_BLOCKED_KEYS.has(k.toLowerCase())).map(([k,v])=>[k,publicStagePayload(v)]));return input}
 
-export async function getGame(){const r=await supabaseRequest('plot_twist_games?slug=eq.'+GAME_SLUG+'&select=*');return r?.[0]||null}
+// The game row is read on every request; cache it briefly per function instance (status/stage changes
+// are operator-only and surface within GAME_CACHE_MS). Pass {fresh:true} to bypass.
+const GAME_CACHE_MS=20000;let gameCache={at:0,value:null};
+export async function getGame({fresh=false}={}){if(!fresh&&gameCache.value&&Date.now()-gameCache.at<GAME_CACHE_MS)return gameCache.value;const r=await supabaseRequest('plot_twist_games?slug=eq.'+GAME_SLUG+'&select=*');const game=r?.[0]||null;if(game)gameCache={at:Date.now(),value:game};return game}
 export async function getTableByToken(token){const g=await getGame();if(!g||!token)return null;const r=await supabaseRequest('plot_twist_tables?game_id=eq.'+g.id+'&join_token_hash=eq.'+hash(token)+'&select=*');return r?.[0]||null}
 export async function getTableByCode(code){const g=await getGame();if(!g||!code)return null;const r=await supabaseRequest('plot_twist_tables?game_id=eq.'+g.id+'&join_code_hash=eq.'+hash(String(code).trim().toLowerCase())+'&select=*');return r?.[0]||null}
 export async function findPlayer(deviceToken){const g=await getGame();if(!g||!deviceToken)return null;const r=await supabaseRequest('plot_twist_players?game_id=eq.'+g.id+'&device_token_hash=eq.'+hash(deviceToken)+'&active=eq.true&select=*');return r?.[0]||null}
