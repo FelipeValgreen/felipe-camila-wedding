@@ -140,16 +140,17 @@ document.addEventListener('DOMContentLoaded', () => {
             queueList.insertAdjacentHTML('afterbegin', itemHtml);
 
             // Set Preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const prev = document.getElementById(`preview-${itemId}`);
-                if (prev) prev.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            const previewUrl = URL.createObjectURL(file);
+            const preview = document.getElementById(`preview-${itemId}`);
+            if (preview) {
+                preview.onload = () => URL.revokeObjectURL(previewUrl);
+                preview.onerror = () => URL.revokeObjectURL(previewUrl);
+                preview.src = previewUrl;
+            } else URL.revokeObjectURL(previewUrl);
 
             // Compress and Upload
             if (typeof Compressor === "undefined") {
-                uploadToSupabase(file, file.name, guestName, itemId);
+                scheduleUpload(file, file.name, guestName, itemId);
                 return;
             }
             new Compressor(file, {
@@ -157,12 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 maxWidth: 1920,
                 maxHeight: 1920,
                 success(compressedResult) {
-                    uploadToSupabase(compressedResult, file.name, guestName, itemId);
+                    scheduleUpload(compressedResult, file.name, guestName, itemId);
                 },
                 error(err) {
                     // Compression failed (e.g. unsupported format): upload the original instead of failing.
                     console.warn('Compression error, uploading original:', err);
-                    uploadToSupabase(file, file.name, guestName, itemId);
+                    scheduleUpload(file, file.name, guestName, itemId);
                 },
             });
         });
@@ -205,6 +206,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Bound simultaneous uploads to protect mobile connections and browser memory.
+    const uploadQueue = [];
+    let activeUploads = 0;
+    const MAX_CONCURRENT_UPLOADS = 2;
+    function scheduleUpload(fileBlob, originalFilename, guestName, itemId) {
+        uploadQueue.push([fileBlob, originalFilename, guestName, itemId]);
+        pumpUploads();
+    }
+    function pumpUploads() {
+        while (activeUploads < MAX_CONCURRENT_UPLOADS && uploadQueue.length) {
+            const args = uploadQueue.shift();
+            activeUploads++;
+            uploadToSupabase(...args).finally(() => {
+                activeUploads--;
+                pumpUploads();
+            });
+        }
+    }
     async function uploadToSupabase(fileBlob, originalFilename, guestName, itemId) {
         const progressBar = document.getElementById(`progress-${itemId}`);
         const statusIcon = document.getElementById(`status-${itemId}`);
