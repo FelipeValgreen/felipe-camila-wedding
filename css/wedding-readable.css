@@ -1,0 +1,18 @@
+/* Accessible reading sizes for guests, especially on mobile. */
+html{font-size:18px;-webkit-text-size-adjust:100%}
+body.wedding-editorial{font-size:18px;line-height:1.65}
+.wedding-nav a{font-size:16px!important;line-height:1.4}
+.wedding-kicker{font-size:14px!important;letter-spacing:.1em}
+.wedding-hero p,.wedding-feature p,.wedding-tile p,.wedding-section-heading p,.wedding-upload-intro,.wedding-upload-hint,.wedding-privacy-note{font-size:18px!important;line-height:1.65!important}
+.wedding-portrait-hero figcaption{font-size:16px!important;line-height:1.5}
+.wedding-feature h2,.wedding-section-title{font-size:clamp(36px,7vw,46px)!important;line-height:1.15!important}
+.wedding-experience-copy h3{font-size:clamp(30px,6vw,38px)!important;line-height:1.15!important}
+.wedding-experience-copy p{font-size:18px!important;line-height:1.55!important}
+.wedding-discover{font-size:16px!important;letter-spacing:.02em!important;line-height:1.5}
+.wedding-action,.wedding-upload-button,.wedding-upload-label,.wedding-mobile-cta{font-size:18px!important;min-height:56px;line-height:1.4}
+.wedding-field-label,.wedding-upload-section label{font-size:18px!important}
+.wedding-name-input{font-size:18px!important;min-height:54px}
+.wedding-footer{font-size:16px!important;line-height:1.5}
+.wedding-panel p,.wedding-panel li,.wedding-panel label,.wedding-notice,.wedding-back{font-size:18px!important;line-height:1.6}
+.wedding-panel input,.wedding-panel select,.wedding-panel textarea,.wedding-panel button{font-size:18px!important;min-height:52px}
+@media(max-width:560px){.wedding-nav{gap:8px;padding:12px}.wedding-nav a{font-size:14px!important}.wedding-tile{min-height:230px!important}.wedding-hero p{max-width:100%}}
